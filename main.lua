@@ -1,17 +1,20 @@
 local skynet = require "skynet"
 local snax = require "skynet.snax"
-local sprotoloader = require "sprotoloader"
 
 local is_windows = package.config:sub(1,1) == '\\'
 
 skynet.start(function()
 	skynet.error("Skynet/IOT Start")
-	skynet.uniqueservice("protoloader")
 	if not is_windows and not skynet.getenv "daemon" then
 		local console = skynet.newservice("console")
 	end
-	skynet.newservice("debug_console",7001)
+	skynet.newservice("debug_console",7000)
 	skynet.newservice("cfg")
+
+	local appmgr = snax.uniqueservice("appmgr")
+	appmgr.req.start("XXXX", {test="AAA"})
+
+	--[[
 	local serial = snax.newservice("serial", "/tmp/ttyS10")
 	local serial2 = snax.newservice("serial", "/tmp/ttyS11")
 
@@ -31,4 +34,6 @@ skynet.start(function()
 
 		skynet.exit()
 	end)
+	]]--
+	skynet.exit()
 end)
