@@ -55,21 +55,26 @@ function response.ping()
 	return "PONG"
 end
 
-function response.connect()
-	local clean_session = true
+function response.connect(clean_session, username, password)
+	local clean_session = clean_session or true
 	local client = mosq.new(mqtt_id, clean_session)
-	client.ON_CONNECT = function(...) 
-		log.debug("ON_CONNECT", ...) 
-		mqtt_client = client
-		for _, v in ipairs(topics) do
-			local pid = client:subscribe(mqtt_id.."/"..v, 1)
-		end
-		for _, v in ipairs(wildtopics) do
-			local pid = client:subscribe(mqtt_id.."/"..v, 1)
+	if username then
+		client:login_set(username, password)
+	end
+	client.ON_CONNECT = function(success, rc, msg) 
+		if success then
+			log.notice("ON_CONNECT", success, rc, msg) 
+			mqtt_client = client
+			for _, v in ipairs(topics) do
+				local pid = client:subscribe(mqtt_id.."/"..v, 1)
+			end
+			for _, v in ipairs(wildtopics) do
+				local pid = client:subscribe(mqtt_id.."/"..v, 1)
+			end
 		end
 	end
-	client.ON_DISCONNECT = function(...) 
-		log.warning("ON_DISCONNECT", ...) 
+	client.ON_DISCONNECT = function(success, rc, msg) 
+		log.warning("ON_DISCONNECT", success, rc, msg) 
 	end
 
 	--[[
