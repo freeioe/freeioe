@@ -12,7 +12,10 @@ skynet.start(function()
 	skynet.newservice("cfg")
 
 	local appmgr = snax.uniqueservice("appmgr")
-	appmgr.req.start("XXXX", {test="AAA"})
+	--appmgr.req.start("XXXX", {test="AAA"})
+
+	local cloud = snax.uniqueservice("cloud", "IDIDIDID", "localhost")
+	local r, err = cloud.req.connect()
 
 	--[[
 	local serial = snax.newservice("serial", "/tmp/ttyS10")
@@ -35,5 +38,11 @@ skynet.start(function()
 		skynet.exit()
 	end)
 	]]--
+	--[[
+	skynet.sleep(300)
+	cloud.req.disconnect()
+	]]--
+	cloud.post.enable_log(true)
+
 	skynet.exit()
 end)
