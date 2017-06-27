@@ -23,7 +23,7 @@ function serial:open()
 	end
 	local ok, err = port:open()
 	if not ok then
-		return nil, err
+		return nil, tostring(err)
 	end
 	self._port = port
 

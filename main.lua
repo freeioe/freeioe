@@ -12,7 +12,7 @@ skynet.start(function()
 	skynet.newservice("cfg")
 
 	local appmgr = snax.uniqueservice("appmgr")
-	--appmgr.req.start("XXXX", {test="AAA"})
+	local app = appmgr.req.start("XXXX", {test="AAA"})
 
 	local cloud = snax.uniqueservice("cloud", "IDIDIDID", "localhost")
 	local r, err = cloud.req.connect()

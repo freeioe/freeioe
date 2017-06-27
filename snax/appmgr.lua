@@ -6,9 +6,10 @@ local applist = {}
 
 ---
 -- Return instance id
-function response.start(name, ...)
-	local inst = snax.newservice("ita", name)
-	local r, err = inst.req.start(...)
+function response.start(name, conf)
+	local s = snax.self()
+	local inst = snax.newservice("appwrap", name, conf, s.handle, s.type)
+	local r, err = inst.req.start()
 	if not r then
 		log.error("Failed start app. Error: "..err)
 		return nil, "Failed start app. Error: "..err
@@ -16,18 +17,19 @@ function response.start(name, ...)
 
 	applist[inst] = {
 		name = name,
-		cfg = cfg,
-		m = r,
+		conf = conf,
+		mgr = mgr,
 	}
 	return inst
 end
 
-function response.stop(instance, ...)
+function response.stop(instance, reason)
 	local inst = applist[instance]
 	if not inst then
 		return nil, "App instance "..instance.." does not exits!"
 	end
-	snax.kill(instance, ...)
+	snax.kill(instance, reason)
+	applist[instance] = nil
 	return true
 end
 
