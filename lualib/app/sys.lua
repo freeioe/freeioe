@@ -6,7 +6,6 @@ local api = require 'app.api'
 local cjson = require 'cjson'
 
 local sys = class("APP_MGR_SYS")
-local args = {...}
 
 function sys:sleep(ms)
 	return skynet.sleep(ms / 10)
