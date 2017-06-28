@@ -1,6 +1,7 @@
 local skynet = require "skynet.manager"
 local httpdown = require "httpdown"
 local log = require 'utils.log'
+local lfs = require 'lfs'
 
 local tasks = {}
 local command = {}
@@ -19,7 +20,8 @@ local function create_task(func, task_name, ...)
 end
 
 local function get_target_folder(inst_name)
-	return os.getenv("PWD").."/iot/apps/"..inst_name
+	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
+	--return os.getenv("PWD").."/iot/apps/"..inst_name
 end
 
 local function create_download(app_name, cb)
@@ -54,6 +56,8 @@ end
 function command.install_app(name, inst_name)
 	local inst_name = inst_name
 	local target_folder = get_target_folder(inst_name)
+	lfs.mkdir(target_folder)
+
 	create_download(name, function(r, path)
 		if r then
 			os.execute("unzip "..path.." -d "..target_folder)

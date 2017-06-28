@@ -3,6 +3,7 @@ local snax = require 'skynet.snax'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local api = require 'app.api'
+local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
 
@@ -91,7 +92,8 @@ function sys:wakeup(co)
 end
 
 function sys:app_dir()
-	return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
+	return lfs.currentdir().."/iot/apps/"..self._app_name.."/"
+	--return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
 end
 
 function sys:initialize(mgr_inst, app_name, snax_handle, snax_type)
