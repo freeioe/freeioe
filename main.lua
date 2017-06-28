@@ -15,35 +15,10 @@ skynet.start(function()
 --	local app = appmgr.req.start("XXXX", {test="AAA"})
 	local app = appmgr.req.start("modbus", {test="AAA"})
 
-	local cloud = snax.uniqueservice("cloud", "IDIDIDID", "localhost")
+	local sn = os.getenv("IOT_SN") or "IDIDIDIDID"
+	local cloud = snax.uniqueservice("cloud", sn, "localhost")
 	local r, err = cloud.req.connect()
-
-	--[[
-	local serial = snax.newservice("serial", "/tmp/ttyS10")
-	local serial2 = snax.newservice("serial", "/tmp/ttyS11")
-
-	skynet.fork(function()
-		local r, err = serial.req.open()
-		if r then
-			serial.req.write("AABBCC")
-		else
-			skynet.error("Open Serial Failed With Error", err)
-		end
-		local r, err = serial2.req.open()
-		if r then
-			serial2.req.write("AABBCC")
-		else
-			skynet.error("Open Serial Failed With Error", err)
-		end
-
-		skynet.exit()
-	end)
-	]]--
-	--[[
-	skynet.sleep(300)
-	cloud.req.disconnect()
-	]]--
-	cloud.post.enable_log(true)
+	--cloud.post.enable_log(true)
 
 	skynet.exit()
 end)
