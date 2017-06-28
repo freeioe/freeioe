@@ -18,7 +18,6 @@ function response.start(name, conf)
 	applist[inst] = {
 		name = name,
 		conf = conf,
-		mgr = mgr,
 	}
 	return inst
 end

@@ -91,14 +91,13 @@ function sys:wakeup(co)
 end
 
 function sys:app_dir()
-	return "./iot/apps/"..self._app_name.."/"
+	return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
 end
 
 function sys:initialize(mgr_inst, app_name, snax_handle, snax_type)
 	self._mgr_snax = snax.bind(snax_handle, snax_type)
 	self._app_name = app_name
 	self._app_inst = app_inst
-	os.execute('mkdir -p ./iot/conf/'..app_name)
 end
 
 return sys
