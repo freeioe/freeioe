@@ -42,6 +42,8 @@ function response.start()
 		app:start()
 		skynet.fork(work_proc)
 		return true
+	else
+		return nil, "app is nil"
 	end
 end
 
@@ -53,11 +55,12 @@ function response.stop(reason)
 end
 
 function init(name, conf, mgr_handle, mgr_type)
-	log.debug("App "..app_name.." starting")
-
 	app_name = name
+
+	log.debug("App "..app_name.." starting")
 	local r, m = pcall(require, app_name..".app")
 	if not r then
+		log.error("App loading failed "..m)
 		return nil, m
 	end
 

@@ -16,39 +16,16 @@ function sys:log(level, ...)
 	return f(...)
 end
 
-function sys:fork(func, ...)
-	local args = {...}
-	skynet.fork(function()
-		func(table.unpack(args))
-	end)
+function sys:fork(func)
+	skynet.fork(func)
 end
 
-function sys:get_data_api(app_name)
-	local app_name = app_name or self._app_name
-	return api:new(app_name, self._mgr_snax)
+function sys:data_api()
+	return api:new(self._app_name, self._mgr_snax)
 end
 
-function sys:read_json(file_name)
-	local fp = "./iot/conf/"..self._app_name.."/"..file_name
-	local f, err = io.open(fp, "r")
-	if not f then
-		return nil, err
-	end
-	local str = f:read("a")
-	f:close()
-	return cjson.decode(str)
-end
-
-function sys:write_json(file_name, data)
-	local fp = "./iot/conf/"..self._app_name.."/"..file_name
-	local f, err = io.open(fp, "w+")
-	if not f then
-		return nil, err
-	end
-	local str = cjson.encode(data)
-	f:write(str)
-	f:close()
-	return true
+function sys:app_dir()
+	return "./iot/apps/"..self._app_name.."/"
 end
 
 function sys:initialize(mgr_inst, app_name, snax_handle, snax_type)
