@@ -10,6 +10,11 @@ local conf = {
 	port = 8000,
 }
 
+local function get_target_folder(inst_name)
+	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
+	--return os.getenv("PWD").."/iot/apps/"..inst_name
+end
+
 local function create_task(func, task_name, ...)
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
@@ -19,16 +24,11 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
-local function get_target_folder(inst_name)
-	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
-	--return os.getenv("PWD").."/iot/apps/"..inst_name
-end
-
-local function create_download(app_name, cb)
+local function create_download(app_name, version, cb)
 	local app_name = app_name
 	local cb = cb
 	local down = function()
-		local fn = "/tmp/"..app_name..".zip"
+		local fn = "/tmp/"..app_name.."_"..version..".zip"
 		local file, err = io.open(fn, "w+")
 		if not file then
 			log.error("Failed to create temp file. Error: "..err)
@@ -53,12 +53,12 @@ function command.upgrade_app(inst_name)
 	end, "Upgrade App "..inst_name)
 end
 
-function command.install_app(name, inst_name)
+function command.install_app(name, version, inst_name)
 	local inst_name = inst_name
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 
-	create_download(name, function(r, path)
+	create_download(name, version, function(r, path)
 		if r then
 			os.execute("unzip "..path.." -d "..target_folder)
 			appmgr.start(inst_name, {})
@@ -76,11 +76,12 @@ function command.uninstall_app(inst_name)
 	end
 end
 
-function command.upgrade_core()
-	create_task(function()
-		print("XXXXXXXXXX")
-		skynet.sleep(10000)
-	end, "Upgrade App "..inst_name)
+function command.upgrade_core(version)
+	create_download('iot', version, function(r, path)
+		if r then
+			os.execute("unzip "..path.." -d "..target_folder)
+		end
+	end)
 end
 
 function command.list()
