@@ -15,8 +15,7 @@ skynet.start(function()
 --	local app = appmgr.req.start("XXXX", {test="AAA"})
 	local app = appmgr.req.start("modbus", {test="AAA"})
 
-	local sn = os.getenv("IOT_SN") or "IDIDIDIDID"
-	local cloud = snax.uniqueservice("cloud", sn, "localhost")
+	local cloud = snax.uniqueservice("cloud")
 	local r, err = cloud.req.connect()
 	--cloud.post.enable_log(true)
 
