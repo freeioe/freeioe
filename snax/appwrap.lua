@@ -64,9 +64,8 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, m
 	end
 
-	local s = snax.self()
-	local mgr_inst = snax.bind(mgr_handle, mgr_type)
-	local sys = app_sys:new(mgr_inst, app_name, s.handle, s.type)
+	local mgr_snax = snax.bind(mgr_handle, mgr_type)
+	local sys = app_sys:new(app_name, mgr_snax, snax.self())
 
 	app = assert(m:new(app_name, conf, sys))
 end

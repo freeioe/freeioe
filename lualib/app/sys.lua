@@ -76,7 +76,7 @@ function sys:sleep(ms)
 end
 
 function sys:data_api()
-	return api:new(self._app_name, self._mgr_snax)
+	return api:new(self._app_name, self._mgr_snax, self._wrap_snax)
 end
 
 function sys:self_co()
@@ -96,10 +96,10 @@ function sys:app_dir()
 	--return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
 end
 
-function sys:initialize(mgr_inst, app_name, snax_handle, snax_type)
-	self._mgr_snax = snax.bind(snax_handle, snax_type)
+function sys:initialize(app_name, mgr_snax, wrap_snax)
+	self._mgr_snax = mgr_snax
+	self._wrap_snax = wrap_snax
 	self._app_name = app_name
-	self._app_inst = app_inst
 end
 
 return sys

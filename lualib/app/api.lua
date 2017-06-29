@@ -6,9 +6,10 @@ local mc = require 'skynet.multicast'
 
 local api = class("APP_MGR_API")
 
-function api:initialize(app_name, mgr_snax)
+function api:initialize(app_name, mgr_snax, wrap_snax)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax
+	self._wrap_snax = wrap_snax
 
 	self._data_chn = mc.new ({
 		channel = mgr_snax.req.get_channel('data'),
@@ -62,6 +63,7 @@ function api:list_devices(app)
 end
 
 function api:add_device(sn, props)
+	self._data_chn:publish(sn, props)
 end
 
 function api:del_device(sn)
