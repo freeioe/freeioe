@@ -76,7 +76,7 @@ function sys:sleep(ms)
 end
 
 function sys:data_api()
-	return api:new(self._app_name, self._mgr_snax, self._wrap_snax)
+	return api:new(self._app_name, self._mgr_snax)
 end
 
 function sys:self_co()
