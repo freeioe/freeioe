@@ -3,7 +3,9 @@ local snax = require 'skynet.snax'
 local mosq = require 'mosquitto'
 local log = require 'utils.log'
 local coroutine = require 'skynet.coroutine'
+local datacenter = require 'skynet.datacenter'
 
+local mqtt_id = "UNKNOWN.CLLIENT.ID"
 local mqtt_host = "cloud.symgrid.cn"
 local mqtt_port = 1883
 local mqtt_keepalive = 300
@@ -11,6 +13,7 @@ local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
 local enable_async = true
+local enable_data_upload = true
 
 local topics = {
 	"app",
@@ -46,6 +49,13 @@ end
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
 	log.debug("msg_callback", packet_id, topic, data, qos, retained)
+end
+
+local function load_conf()
+	mqtt_id = datacenter.get("CLOUD", "ID") or mqtt_id
+	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
+	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
+	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
 end
 
 function response.ping()
@@ -144,17 +154,18 @@ function accept.enable_log(enable)
 	end
 end
 
+function accept.enable_data_upload(enable)
+	enable_data_upload = enable
+end
+
 function accept.log(lvl, ...)
 	if mqtt_client then
 		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({...}, '\t'), 1, false)
 	end
 end
 
-function init(id, host, port, timeout)
-	mqtt_id = assert(id)
-	mqtt_host = host or mqtt_host
-	mqtt_port = port or mqtt_port
-	mqtt_timeout = timeout or mqtt_timeout
+function init()
+	load_conf()
 	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
 
 	mosq.init()

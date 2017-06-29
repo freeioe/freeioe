@@ -2,13 +2,10 @@ local skynet = require "skynet.manager"
 local httpdown = require "httpdown"
 local log = require 'utils.log'
 local lfs = require 'lfs'
+local datacenter = require 'skynet.datacenter'
 
 local tasks = {}
 local command = {}
-local conf = {
-	host = "cloud.symgrid.cn",
-	port = 8000,
-}
 
 local function get_target_folder(inst_name)
 	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
@@ -34,7 +31,8 @@ local function create_download(app_name, version, cb)
 			log.error("Failed to create temp file. Error: "..err)
 			return cb(nil, err)
 		end
-		local status, header, body = httpdown.get(conf.host, "/download_app", {}, {app=app_name})
+		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
+		local status, header, body = httpdown.get(pkg_host, "/download_app", {}, {app=app_name})
 		if not status then
 			log.error("Failed download app, error: "..header)
 			return cb(nil, header)

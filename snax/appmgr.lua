@@ -1,8 +1,11 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local log = require 'utils.log'
+local mc = require 'skynet.multicast'
+local dc = require 'skynet.datacenter'
 
 local applist = {}
+local mc_map = {}
 
 ---
 -- Return instance id
@@ -36,13 +39,36 @@ function response.list()
 	return applist
 end
 
+function response.get_channel(name)
+	local c = mc_map[string.upper(name)]
+	if c then
+		return c.channel
+	end
+	return nil, "No multicast channel for "..name
+end
+
 function init(...)
 	log.info("AppMgr service starting...")
+	local chn = mc.new()
+	dc.set("MC", "APP", "DATA", channel.channel)
+	mc_map['DATA'] = chn
+	local chn = mc.new()
+	dc.set("MC", "APP", "CTRL", channel.channel)
+	mc_map['CTRL'] = chn
+	local chn = mc.new()
+	dc.set("MC", "APP", "COMM", channel.channel)
+	mc_map['COMM'] = chn
 end
 
 function exit(...)
 	for k,v in applist do
 		snax.kill(instance, "force")
+	end
+	dc.set("MC", "APP", "DATA", nil)
+	dc.set("MC", "APP", "CTRL", nil)
+	dc.set("MC", "APP", "COMM", nil)
+	for k,v in mc_map do
+		v:delete()
 	end
 	log.info("AppMgr service closed!")
 end

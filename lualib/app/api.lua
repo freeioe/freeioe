@@ -2,10 +2,13 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local log = require 'utils.log'
 local class = require 'middleclass'
+local datacenter = require 'datacenter'
 
 local api = class("APP_MGR_API")
 
 function api:initialize(app_name, mgr_snax)
+	self._app_name = app_name
+	self._mgr_snax = mgr_snax
 end
 
 --[[
