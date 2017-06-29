@@ -44,7 +44,19 @@ local function load_conf(path)
 	db = cjson.decode(str) or {}
 end
 
+local function set_defaults()
+	local dc = require 'skynet.datacenter'
+
+	dc.set("CLOUD", "ID", "IDIDIDIDID")
+	dc.set("CLOUD", "HOST", "localhost")
+	dc.set("CLOUD", "PORT", 1883)
+	dc.set("CLOUD", "TIMEOUT", 300)
+
+	dc.set("CLOUD", "PKG_HOST_URL", "http://localhost:8000")
+end
+
 skynet.start(function()
+	set_defaults()
 	load_conf(db_file)
 
 	skynet.dispatch("lua", function(session, address, cmd, ...)

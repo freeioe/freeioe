@@ -50,13 +50,13 @@ end
 function init(...)
 	log.info("AppMgr service starting...")
 	local chn = mc.new()
-	dc.set("MC", "APP", "DATA", channel.channel)
+	dc.set("MC", "APP", "DATA", chn.channel)
 	mc_map['DATA'] = chn
 	local chn = mc.new()
-	dc.set("MC", "APP", "CTRL", channel.channel)
+	dc.set("MC", "APP", "CTRL", chn.channel)
 	mc_map['CTRL'] = chn
 	local chn = mc.new()
-	dc.set("MC", "APP", "COMM", channel.channel)
+	dc.set("MC", "APP", "COMM", chn.channel)
 	mc_map['COMM'] = chn
 end
 

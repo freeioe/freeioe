@@ -3,24 +3,12 @@ local snax = require "skynet.snax"
 
 local is_windows = package.config:sub(1,1) == '\\'
 
-local function set_defaults()
-	local dc = require 'skynet.datacenter'
-
-	dc.set("CLOUD", "ID", "IDIDIDIDID")
-	dc.set("CLOUD", "HOST", "localhost")
-	dc.set("CLOUD", "PORT", 1883)
-	dc.set("CLOUD", "TIMEOUT", 300)
-
-	dc.set("CLOUD", "PKG_HOST_URL", "http://localhost:8000")
-end
-
 skynet.start(function()
 	skynet.error("Skynet/IOT Start")
 	if not is_windows and not skynet.getenv "daemon" then
 		local console = skynet.newservice("console")
 	end
 	skynet.newservice("debug_console",7000)
-	set_defaults()
 	skynet.newservice("cfg")
 
 	local appmgr = snax.uniqueservice("appmgr")

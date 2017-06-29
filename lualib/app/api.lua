@@ -2,13 +2,49 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local log = require 'utils.log'
 local class = require 'middleclass'
-local datacenter = require 'datacenter'
+local mc = require 'skynet.multicast'
 
 local api = class("APP_MGR_API")
 
 function api:initialize(app_name, mgr_snax)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax
+
+	self._data_chn = mc.new ({
+		channel = mgr_snax.req.get_channel('data'),
+		dispatch = function(channel, source, ...)
+			self.data_dispatch(self, channel, source, ...)
+		end
+	})
+	self._data_chn:subscribe()
+
+	self._ctrl_chn = mc.new ({
+		channel = mgr_snax.req.get_channel('ctrl'),
+		dispatch = function(channel, source, ...)
+			self.ctrl_dispatch(self, channel, source, ...)
+		end
+	})
+	self._ctrl_chn:subscribe()
+
+	self._comm_chn = mc.new ({
+		channel = mgr_snax.req.get_channel('comm'),
+		dispatch = function(channel, source, ...)
+			self.comm_dispatch(self, channel, source, ...)
+		end
+	})
+	self._comm_chn:subscribe()
+end
+
+function api:data_dispatch(channel, source, ...)
+	log.trace('Data Dispatch', channel, source, ...)
+end
+
+function api:ctrl_dispatch(channel, source, ...)
+	log.trace('Ctrl Dispatch', channel, source, ...)
+end
+
+function api:comm_dispatch(channel, source, ...)
+	log.trace('Comm Dispatch', channel, source, ...)
 end
 
 --[[
