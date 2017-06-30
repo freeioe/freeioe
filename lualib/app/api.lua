@@ -33,10 +33,11 @@ end
 
 function api:set_handler(handler)
 	self._handler = handler
+	local mgr = self._mgr_snax
 
 	if handler then
 		self._data_chn = mc.new ({
-			channel = mgr_snax.req.get_channel('data'),
+			channel = mgr.req.get_channel('data'),
 			dispatch = function(channel, source, ...)
 				self.data_dispatch(self, channel, source, ...)
 			end
@@ -48,7 +49,7 @@ function api:set_handler(handler)
 
 	if handler and handler.on_ctrl then
 		self._ctrl_chn = mc.new ({
-			channel = mgr_snax.req.get_channel('ctrl'),
+			channel = mgr.req.get_channel('ctrl'),
 			dispatch = function(channel, source, ...)
 				self.ctrl_dispatch(self, channel, source, ...)
 			end
@@ -60,7 +61,7 @@ function api:set_handler(handler)
 
 	if handler and handler.on_comm then
 		self._comm_chn = mc.new ({
-			channel = mgr_snax.req.get_channel('comm'),
+			channel = mgr.req.get_channel('comm'),
 			dispatch = function(channel, source, ...)
 				self.comm_dispatch(self, channel, source, ...)
 			end
@@ -81,6 +82,11 @@ end
 
 function api:add_device(sn, props)
 	self._data_chn:publish('add_device', self._app_name, sn, props)
+	return dc.set('DEVICES', sn, props)
+end
+
+function api:mod_device(sn, props)
+	self._data_chn:publish('mod_device', self._app_name, sn, props)
 	return dc.set('DEVICES', sn, props)
 end
 

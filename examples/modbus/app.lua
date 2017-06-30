@@ -18,30 +18,38 @@ function app:start()
 	dev:connect()
 	self._dev = dev
 
-	self._api:add_device("xxxx", {name="ddddd"})
+	self._api:set_handler({
+		on_ctrl = function(...)
+			print(...)
+		end,
+		on_comm = function(...)
+			print(...)
+		end,
+		on_add_device = function(...)
+			print(...)
+		end,
+		on_del_device = function(...)
+			print(...)
+		end,
+		on_mod_device = function(...)
+			print(...)
+		end,
+		on_set_device_prop = function(...)
+			print(...)
+		end
+	})
+	local args = {}
+	for i = 1, 10 do
+		args[#args + 1] = 'tag'..i
+	end
+	self._api:add_device("xxxx", args)
+	self._api:del_device("xxxx")
+
 	return true
 end
 
 function app:close(reason)
 	print(self._name, reason)
-end
-
-function app:list_devices()
-	return {
-		dev_a = {
-			name = "Device A",
-			desc = "Description A Device",
-		}
-	}
-end
-
-function app:list_props(device)
-	return {
-		prop_a = {
-			name = "Property A",
-			desc = "Property A Description",
-		}
-	}
 end
 
 function app:run(tms)
@@ -63,8 +71,12 @@ function app:run(tms)
 	end
 
 	for r,v in ipairs(regs) do
+		--[[
 		print(string.format("register (offset %d) %d: %d (%#x): %#x (%d)",
 		r, r, r + base_address - 1, r + base_address -1, v, v))
+		]]--
+		--self._api:set_prop_value("xxxx", 'tag'..r, "current", math.tointeger(v))
+		self._api:set_prop_value("xxxx", 'tag'..r, "current", string.format("%d", v))
 	end
 
 end
