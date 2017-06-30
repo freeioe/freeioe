@@ -17,7 +17,6 @@ skynet.start(function()
 
 	local cloud = snax.uniqueservice("cloud")
 	local r, err = cloud.req.connect()
-	--cloud.post.enable_log(true)
 
 	skynet.exit()
 end)

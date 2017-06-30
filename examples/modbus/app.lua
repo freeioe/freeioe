@@ -22,21 +22,6 @@ function app:start()
 		on_ctrl = function(...)
 			print(...)
 		end,
-		on_comm = function(...)
-			print(...)
-		end,
-		on_add_device = function(...)
-			print(...)
-		end,
-		on_del_device = function(...)
-			print(...)
-		end,
-		on_mod_device = function(...)
-			print(...)
-		end,
-		on_set_device_prop = function(...)
-			print(...)
-		end
 	})
 	local args = {}
 	for i = 1, 10 do
@@ -67,7 +52,8 @@ function app:run(tms)
 	print(sec * 1000 + usec / 1000)
 	local regs, err = dev:read_registers(base_address, 10)
 	if not regs then 
-		error("read failed: " .. err) 
+		self._sys:log("error", "read failed: " .. err) 
+		return
 	end
 
 	for r,v in ipairs(regs) do
@@ -78,6 +64,8 @@ function app:run(tms)
 		--self._api:set_prop_value("xxxx", 'tag'..r, "current", math.tointeger(v))
 		self._api:set_prop_value("xxxx", 'tag'..r, "current", string.format("%d", v))
 	end
+
+	self._sys:dump_comm('IN', "xxxxxxxxxx")
 
 end
 

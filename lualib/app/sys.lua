@@ -16,6 +16,10 @@ function sys:error(...)
 	return skynet.error(...)
 end
 
+function sys:dump_comm(app, dir, ...)
+	return self._data_api:dump_comm(app, dir, ...)
+end
+
 function sys:fork(func, ...)
 	skynet.fork(func, ...)
 end
@@ -76,7 +80,7 @@ function sys:sleep(ms)
 end
 
 function sys:data_api()
-	return api:new(self._app_name, self._mgr_snax)
+	return self._data_api
 end
 
 function sys:self_co()
@@ -100,6 +104,7 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
 	self._wrap_snax = wrap_snax
 	self._app_name = app_name
+	self._data_api = api:new(app_name, mgr_snax)
 end
 
 return sys

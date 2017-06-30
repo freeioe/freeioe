@@ -4,6 +4,7 @@ local mosq = require 'mosquitto'
 local log = require 'utils.log'
 local coroutine = require 'skynet.coroutine'
 local datacenter = require 'skynet.datacenter'
+local app_api = require 'app.api'
 
 local mqtt_id = "UNKNOWN.CLLIENT.ID"
 local mqtt_host = "cloud.symgrid.cn"
@@ -13,7 +14,11 @@ local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
 local enable_async = true
-local enable_data_upload = true
+local enable_data_upload = nil
+local enable_comm_upload = nil
+local enable_log_upload = nil
+
+local api = nil
 
 local topics = {
 	"app",
@@ -43,20 +48,75 @@ local log_callback = function(level, ...)
 		--log_func[mosq.LOG_DEBUG] = log.debug
 	end
 
-	local func = log_func[level] or print
-	func(...)
+	local func = log_func[level]
+	if func then
+		func(...)
+	else
+		print(level, ...)
+	end
 end
 
+local msg_buffer = {}
 local msg_callback = function(packet_id, topic, data, qos, retained)
+	--[[
+	print('msg_callback', packet_id, topic, data, qos, retained)
+	msg_buffer[#msg_buffer] = {
+		packet_id, topic, data, qos, retained
+	}
+	]]--
 	log.debug("msg_callback", packet_id, topic, data, qos, retained)
 end
 
+local function on_enable_log_upload(enable)
+	local logger = snax.uniqueservice('logger')
+	local obj = snax.self()
+	if enable then
+		logger.post.reg_snax(obj.handle, obj.type)
+	else
+		logger.post.unreg_snax(obj.handle)
+	end
+end
+
+--[[
+-- loading configruation from datacenter
+--]]
 local function load_conf()
 	mqtt_id = datacenter.get("CLOUD", "ID") or mqtt_id
 	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
+	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
+	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD") or true
 end
+
+--[[
+-- Api Handler
+--]]
+local Handler = {
+	on_comm = function(app, dir, ...)
+		log.trace('on_comm', app, dir, ...)
+		if mqtt_client and enable_comm_upload then
+			mqtt_client:publish(mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
+		end
+	end,
+	on_add_device = function(...)
+		log.trace('on_add_device', ...)
+	end,
+	on_del_device = function(...)
+		log.trace('on_del_device', ...)
+	end,
+	on_mod_device = function(...)
+		log.trace('on_mod_device', ...)
+	end,
+	on_set_device_prop = function(app, sn, prop, prop_type, value)
+		log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
+		if mqtt_client and enable_data_upload then
+			local t = {mqtt_id, "data", app, sn, prop, prop_type}
+			mqtt_client:publish(table.concat(t, '/'), value, 1, false)
+		end
+	end,
+}
 
 function response.ping()
 	if mqtt_client then
@@ -94,7 +154,7 @@ function response.connect(clean_session, username, password)
 	--client.ON_LOG = function(...) log.debug("ON_LOG", ...) end
 	]]--
 
-	client.ON_LOG = log_callback
+	--client.ON_LOG = log_callback
 	client.ON_MESSAGE = msg_callback
 
 	if enable_async then
@@ -103,6 +163,17 @@ function response.connect(clean_session, username, password)
 
 		-- If we do not sleep, we will got crash :-(
 		skynet.sleep(10)
+		skynet.fork(function()
+			while mqtt_client do
+				if #msg_buffer > 0 then
+					for _, v in ipairs(msg_buffer) do
+					end
+					msg_buffer = {}
+				else
+					skynet.sleep(1)
+				end
+			end
+		end)
 	else
 		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 		mqtt_client = client
@@ -113,6 +184,13 @@ function response.connect(clean_session, username, password)
 				skynet.sleep(0)
 			end
 		end)
+	end
+
+	api = app_api:new('CLOUD')
+	api:set_handler(Handler, true)
+
+	if enable_log_upload then
+		on_enable_log_upload(enable_log_upload)
 	end
 
 	return true
@@ -145,21 +223,23 @@ function response.disconnect()
 end
 
 function accept.enable_log(enable)
-	local logger = snax.uniqueservice('logger')
-	local obj = snax.self()
-	if enable then
-		logger.post.reg_snax(obj.handle, obj.type)
-	else
-		logger.post.unreg_snax(obj.handle)
-	end
+	enable_log_upload = enable
+	datacenter.set("CLOUD", "LOG_UPLOAD", enable)
+	on_enable_log_upload(enable)
 end
 
-function accept.enable_data_upload(enable)
+function accept.enable_data(enable)
 	enable_data_upload = enable
+	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
+end
+
+function accept.enable_comm(enable)
+	enable_comm_upload = enable
+	datacenter.set("CLOUD", "COMM_UPLOAD", enable)
 end
 
 function accept.log(lvl, ...)
-	if mqtt_client then
+	if mqtt_client and enable_log_upload then
 		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({...}, '\t'), 1, false)
 	end
 end

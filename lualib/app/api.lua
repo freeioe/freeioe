@@ -14,7 +14,7 @@ function api:initialize(app_name, mgr_snax, cloud_snax)
 end
 
 function api:data_dispatch(channel, source, cmd, app, sn, ...)
-	log.trace('Data Dispatch', channel, source, cmd, app, sn)
+	--log.trace('Data Dispatch', channel, source, cmd, app, sn, ...)
 	local f = self._handler['on_'..cmd]
 	if f then
 		return f(app, sn, ...)
@@ -25,13 +25,25 @@ end
 
 function api:ctrl_dispatch(channel, source, ...)
 	log.trace('Ctrl Dispatch', channel, source, ...)
+	local f = self._handler.on_ctrl
+	if f then
+		return f(...)
+	else
+		log.trace('No handler for on_ctrl')
+	end
 end
 
 function api:comm_dispatch(channel, source, ...)
 	log.trace('Comm Dispatch', channel, source, ...)
+	local f = self._handler.on_comm
+	if f then
+		return f(...)
+	else
+		log.trace('No handler for on_comm')
+	end
 end
 
-function api:set_handler(handler)
+function api:set_handler(handler, watch_data)
 	self._handler = handler
 	local mgr = self._mgr_snax
 
@@ -42,33 +54,48 @@ function api:set_handler(handler)
 				self.data_dispatch(self, channel, source, ...)
 			end
 		})
-		self._data_chn:subscribe()
+		if watch_data then
+			self._data_chn:subscribe()
+		end
 	else
-		self._data_chn:unsubscribe()
+		if self._data_chn then
+			self._data_chn:unsubscribe()
+			self._data_chn = nil
+		end
 	end
 
-	if handler and handler.on_ctrl then
+	if handler then
 		self._ctrl_chn = mc.new ({
 			channel = mgr.req.get_channel('ctrl'),
 			dispatch = function(channel, source, ...)
 				self.ctrl_dispatch(self, channel, source, ...)
 			end
 		})
-		self._ctrl_chn:subscribe()
+		if handler.on_ctrl then
+			self._ctrl_chn:subscribe()
+		end
 	else
-		self._ctrl_chn:unsubscribe()
+		if self._ctrl_chn then
+			self._ctrl_chn:unsubscribe()
+			self._ctrl_chn = nil
+		end
 	end
 
-	if handler and handler.on_comm then
+	if handler then
 		self._comm_chn = mc.new ({
 			channel = mgr.req.get_channel('comm'),
 			dispatch = function(channel, source, ...)
 				self.comm_dispatch(self, channel, source, ...)
 			end
 		})
-		self._comm_chn:subscribe()
+		if handler.on_comm then
+			self._comm_chn:subscribe()
+		end
 	else
-		self._comm_chn:unsubscribe()
+		if self._comm_chn then
+			self._comm_chn:unsubscribe()
+			self._comm_chn = nil
+		end
 	end
 end
 
@@ -99,6 +126,10 @@ function api:get_device(sn)
 	return dc.get('DEVICES', sn)
 end
 
+function api:set_device_ctrl(sn, cmd, params)
+	self._ctrl_chn:publish(self._app_name, sn, cmd, params)
+end
+
 function api:get_prop_value(sn, prop, type)
 	return dc.set('DEVICE', sn, prop, type)
 end
@@ -106,6 +137,10 @@ end
 function api:set_prop_value(sn, prop, type, value)
 	self._data_chn:publish('set_device_prop', self._app_name, sn, prop, type, value)
 	return dc.set('DEVICES', sn, prop, type, value)
+end
+
+function api:dump_comm(app, dir, ...)
+	return self._comm_chn:publish(self._app_name, app, dir, ...)
 end
 
 --[[
