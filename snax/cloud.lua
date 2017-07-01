@@ -70,6 +70,14 @@ local msg_handler = {
 			snax.self().post.enable_comm(tonumber(data) == 1)
 		end
 		if topic == '/conf' then
+			local conf = cjson.decode(data)
+			if conf then
+				datacenter.set("CLOUD", "ID", conf.id)
+				datacenter.set("CLOUD", "HOST", conf.host)
+				datacenter.set("CLOUD", "PORT", conf.port)
+				datacenter.set("CLOUD", "TIMEOUT", conf.timeout)
+			end
+			snax.self().post.reconnect()
 		end
 	end,
 	output = function(topic, data, qos, retained)
@@ -202,9 +210,9 @@ function response.connect(clean_session, username, password)
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("ON_DISCONNECT", success, rc, msg) 
-		if not enable_async then
+		if not enable_async and mqtt_client then
 			skynet.fork(function()
-				client:reconnect()
+				mqtt_client:reconnect()
 			end)
 		end
 	end
@@ -311,6 +319,11 @@ function accept.log(ts, lvl, ...)
 	if mqtt_client and enable_log_upload then
 		mqtt_client:publish("/"..mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 	end
+end
+
+function accept.reconnect()
+	snax.self().req.disconnect()
+	snax.self().req.connect()
 end
 
 function init()
