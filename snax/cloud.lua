@@ -154,6 +154,7 @@ function response.connect(clean_session, username, password)
 	--client.ON_LOG = function(...) log.debug("ON_LOG", ...) end
 	]]--
 
+	-- Do not have on_log callback it crashes
 	--client.ON_LOG = log_callback
 	client.ON_MESSAGE = msg_callback
 
@@ -163,17 +164,6 @@ function response.connect(clean_session, username, password)
 
 		-- If we do not sleep, we will got crash :-(
 		skynet.sleep(10)
-		skynet.fork(function()
-			while mqtt_client do
-				if #msg_buffer > 0 then
-					for _, v in ipairs(msg_buffer) do
-					end
-					msg_buffer = {}
-				else
-					skynet.sleep(1)
-				end
-			end
-		end)
 	else
 		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 		mqtt_client = client
