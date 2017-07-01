@@ -52,23 +52,34 @@ local wildtopics = {
 }
 
 local msg_handler = {
-	data = function(...)
-		log.trace('MSG.DATA', ...)
+	data = function(topic, data, qos, retained)
+		--log.trace('MSG.DATA', topic, data, qos, retained)
 	end,
-	app = function(...)
-		log.trace('MSG.SYS', ...)
+	app = function(topic, data, qos, retained)
+		--log.trace('MSG.APP', topic, data, qos, retained)
 	end,
-	sys = function(...)
-		log.trace('MSG.SYS', ...)
+	sys = function(topic, data, qos, retained)
+		--log.trace('MSG.SYS', topic, data, qos, retained)
+		if topic == '/enable/data' then
+			snax.self().post.enable_data(tonumber(data) == 1)
+		end
+		if topic == '/enable/log' then
+			snax.self().post.enable_log(tonumber(data) == 1)
+		end
+		if topic == '/enable/comm' then
+			snax.self().post.enable_comm(tonumber(data) == 1)
+		end
+		if topic == '/conf' then
+		end
 	end,
-	output = function(...)
-		log.trace('MSG.OUTPUT', ...)
+	output = function(topic, data, qos, retained)
+		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
 	end,
 }
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
 	log.debug("msg_callback", packet_id, topic, data, qos, retained)
-	local id, t, sub = topic:match('^/([^/]+)/([^/]+)(.-)')
+	local id, t, sub = topic:match('^/([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "*" then
 		return
 	end
@@ -108,9 +119,9 @@ local function load_conf()
 	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
-	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD") or true
-	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD") or true
-	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD") or true
+	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
+	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
 
 	if enable_log_upload then
 		on_enable_log_upload(enable_log_upload)
@@ -286,6 +297,9 @@ end
 function accept.enable_data(enable)
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
+	if enable and cov then
+		cov:clean()	
+	end
 end
 
 function accept.enable_comm(enable)
