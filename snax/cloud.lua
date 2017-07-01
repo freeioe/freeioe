@@ -14,27 +14,13 @@ local mqtt_keepalive = 300
 local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
-local enable_async = true
+local enable_async = false
 local enable_data_upload = nil
 local enable_comm_upload = nil
 local enable_log_upload = nil
 
 local api = nil
 local cov = nil
-
-local topics = {
-	"app",
-	"sys",
-	"data",
-	"comm",
-}
-
-local wildtopics = {
-	"app/+",
-	"sys/+",
-	"data/+",
-	"comm/+",
-}
 
 local log_func = nil
 local null_log_print = function() end
@@ -58,15 +44,40 @@ local log_callback = function(level, ...)
 	end
 end
 
-local msg_buffer = {}
+local wildtopics = {
+	"app/#",
+	"sys/#",
+	"output/#",
+	"data/#",
+}
+
+local msg_handler = {
+	data = function(...)
+		log.trace('MSG.DATA', ...)
+	end,
+	app = function(...)
+		log.trace('MSG.SYS', ...)
+	end,
+	sys = function(...)
+		log.trace('MSG.SYS', ...)
+	end,
+	output = function(...)
+		log.trace('MSG.OUTPUT', ...)
+	end,
+}
+
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	--[[
-	print('msg_callback', packet_id, topic, data, qos, retained)
-	msg_buffer[#msg_buffer] = {
-		packet_id, topic, data, qos, retained
-	}
-	]]--
 	log.debug("msg_callback", packet_id, topic, data, qos, retained)
+	local id, t, sub = topic:match('^/([^/]+)/([^/]+)(.-)')
+	if id ~= mqtt_id and id ~= "*" then
+		return
+	end
+	if id and t then
+		local f = msg_handler[t]
+		if f then
+			f(sub, data, qos, retained)
+		end
+	end
 end
 
 local function on_enable_log_upload(enable)
@@ -98,8 +109,12 @@ local function load_conf()
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD") or true
-	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
-	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
+	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD") or true
+	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD") or true
+
+	if enable_log_upload then
+		on_enable_log_upload(enable_log_upload)
+	end
 
 	load_cov_conf()
 end
@@ -111,7 +126,7 @@ local Handler = {
 	on_comm = function(app, dir, ...)
 		log.trace('on_comm', app, dir, ...)
 		if mqtt_client and enable_comm_upload then
-			mqtt_client:publish(mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
+			mqtt_client:publish('/'..mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
 		end
 	end,
 	on_add_device = function(...)
@@ -131,7 +146,7 @@ local Handler = {
 			quality or 0
 		}
 		if mqtt_client and enable_data_upload then
-			local key = table.concat({mqtt_id, "data", app, sn, prop, prop_type}, '/')
+			local key = "/"..table.concat({mqtt_id, "data", app, sn, prop, prop_type}, '/')
 			if cov then
 				cov:handle(key, value, function(key, value)
 					log.trace("Publish data", key, value, timestamp, quality)
@@ -149,7 +164,7 @@ local Handler = {
 
 function response.ping()
 	if mqtt_client then
-		mqtt_client:publish(mqtt_id.."/app", "ping........", 1, true)
+		mqtt_client:publish("/"..mqtt_id.."/app", "ping........", 1, true)
 	end
 	return "PONG"
 end
@@ -164,16 +179,23 @@ function response.connect(clean_session, username, password)
 		if success then
 			log.notice("ON_CONNECT", success, rc, msg) 
 			mqtt_client = client
-			for _, v in ipairs(topics) do
-				local pid = client:subscribe(mqtt_id.."/"..v, 1)
-			end
 			for _, v in ipairs(wildtopics) do
-				local pid = client:subscribe(mqtt_id.."/"..v, 1)
+				client:subscribe("/*/"..v, 1)
+				client:subscribe("/"..mqtt_id.."/"..v, 1)
 			end
+		else
+			skynet.fork(function()
+				client:reconnect()
+			end)
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("ON_DISCONNECT", success, rc, msg) 
+		if not enable_async then
+			skynet.fork(function()
+				client:reconnect()
+			end)
+		end
 	end
 
 	--[[
@@ -188,12 +210,11 @@ function response.connect(clean_session, username, password)
 	client.ON_MESSAGE = msg_callback
 
 	if enable_async then
+		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
 		client:loop_start()
 
-		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
-
 		-- If we do not sleep, we will got crash :-(
-		--skynet.sleep(10)
+		skynet.sleep(10)
 	else
 		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 		mqtt_client = client
@@ -208,10 +229,6 @@ function response.connect(clean_session, username, password)
 
 	api = app_api:new('CLOUD')
 	api:set_handler(Handler, true)
-
-	if enable_log_upload then
-		on_enable_log_upload(enable_log_upload)
-	end
 
 	return true
 end
@@ -278,7 +295,7 @@ end
 
 function accept.log(ts, lvl, ...)
 	if mqtt_client and enable_log_upload then
-		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+		mqtt_client:publish("/"..mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 	end
 end
 
