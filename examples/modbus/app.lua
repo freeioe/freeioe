@@ -14,7 +14,7 @@ end
 function app:start()
 	local dev = modbus.new_tcp_pi("127.0.0.1", 1502)
 	--local dev = modbus.new_rtu("/tmp/ttyS10", 115200, "none", 8, 1)
-	dev:set_debug()
+	--dev:set_debug()
 	dev:connect()
 	self._dev = dev
 
@@ -46,9 +46,9 @@ function app:run(tms)
 	dev:set_slave(1)
 	local base_address = 0x00
 	local sec, usec = dev:get_byte_timeout()
-	print(sec * 1000 + usec / 1000)
+	--print(sec * 1000 + usec / 1000)
 	local sec, usec = dev:get_response_timeout()
-	print(sec * 1000 + usec / 1000)
+	--print(sec * 1000 + usec / 1000)
 	local regs, err = dev:read_registers(base_address, 10)
 	if not regs then 
 		self._sys:log("error", "read failed: " .. err) 

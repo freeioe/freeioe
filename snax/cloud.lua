@@ -134,13 +134,13 @@ local Handler = {
 			local key = table.concat({mqtt_id, "data", app, sn, prop, prop_type}, '/')
 			if cov then
 				cov:handle(key, value, function(key, value)
-					local value = cjson.encode(val) or value
 					log.trace("Publish data", key, value, timestamp, quality)
+					local value = cjson.encode(val) or value
 					mqtt_client:publish(key, value, 1, false)
 				end)
 			else
-				local value = cjson.encode(val) or value
 				log.trace("Publish data", key, value, timestamp, quality)
+				local value = cjson.encode(val) or value
 				mqtt_client:publish(key, val, 1, false)
 			end
 		end
