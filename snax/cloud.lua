@@ -5,6 +5,7 @@ local log = require 'utils.log'
 local coroutine = require 'skynet.coroutine'
 local datacenter = require 'skynet.datacenter'
 local app_api = require 'app.api'
+local cjson = require 'cjson.safe'
 
 local mqtt_id = "UNKNOWN.CLLIENT.ID"
 local mqtt_host = "cloud.symgrid.cn"
@@ -19,6 +20,7 @@ local enable_comm_upload = nil
 local enable_log_upload = nil
 
 local api = nil
+local cov = nil
 
 local topics = {
 	"app",
@@ -77,6 +79,16 @@ local function on_enable_log_upload(enable)
 	end
 end
 
+local function load_cov_conf()
+	local enable_cov = datacenter.get("CLOUD", "COV") or true
+	if enable_cov then
+		local cov_m = require 'cov'
+		cov = cov_m:new()
+	else
+		cov = nil
+	end
+end
+
 --[[
 -- loading configruation from datacenter
 --]]
@@ -85,9 +97,11 @@ local function load_conf()
 	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
-	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD") or true
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
-	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD") or true
+	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
+
+	load_cov_conf()
 end
 
 --[[
@@ -109,11 +123,26 @@ local Handler = {
 	on_mod_device = function(...)
 		log.trace('on_mod_device', ...)
 	end,
-	on_set_device_prop = function(app, sn, prop, prop_type, value)
-		log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
+	on_set_device_prop = function(app, sn, prop, prop_type, value, timestamp, quality)
+		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
+		local val = {
+			timestamp or skynet.time(),
+			value,
+			quality or 0
+		}
 		if mqtt_client and enable_data_upload then
-			local t = {mqtt_id, "data", app, sn, prop, prop_type}
-			mqtt_client:publish(table.concat(t, '/'), value, 1, false)
+			local key = table.concat({mqtt_id, "data", app, sn, prop, prop_type}, '/')
+			if cov then
+				cov:handle(key, value, function(key, value)
+					local value = cjson.encode(val) or value
+					log.trace("Publish data", key, value, timestamp, quality)
+					mqtt_client:publish(key, value, 1, false)
+				end)
+			else
+				local value = cjson.encode(val) or value
+				log.trace("Publish data", key, value, timestamp, quality)
+				mqtt_client:publish(key, val, 1, false)
+			end
 		end
 	end,
 }
@@ -159,11 +188,12 @@ function response.connect(clean_session, username, password)
 	client.ON_MESSAGE = msg_callback
 
 	if enable_async then
-		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
 		client:loop_start()
 
+		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
+
 		-- If we do not sleep, we will got crash :-(
-		skynet.sleep(10)
+		--skynet.sleep(10)
 	else
 		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 		mqtt_client = client
@@ -212,6 +242,24 @@ function response.disconnect()
 	return true
 end
 
+function response.list_cfg_keys()
+	return {
+		"ID",
+		"HOST",
+		"PORT",
+		"TIMEOUT",
+		"DATA_UPLOAD",
+		"LOG_UPLOAD",
+		"COMM_UPLOAD",
+		"COV",
+	}
+end
+
+function accept.enable_cov(enable)
+	datacenter.set("CLOUD", "COV", enable)
+	load_cov_conf()
+end
+
 function accept.enable_log(enable)
 	enable_log_upload = enable
 	datacenter.set("CLOUD", "LOG_UPLOAD", enable)
@@ -228,9 +276,9 @@ function accept.enable_comm(enable)
 	datacenter.set("CLOUD", "COMM_UPLOAD", enable)
 end
 
-function accept.log(lvl, ...)
+function accept.log(ts, lvl, ...)
 	if mqtt_client and enable_log_upload then
-		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({...}, '\t'), 1, false)
+		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 	end
 end
 

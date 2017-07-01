@@ -12,8 +12,8 @@ function app:initialize(name, conf, sys)
 end
 
 function app:start()
-	--local dev = modbus.new_tcp_pi("127.0.0.1", 1502)
-	local dev = modbus.new_rtu("/tmp/ttyS10", 115200, "none", 8, 1)
+	local dev = modbus.new_tcp_pi("127.0.0.1", 1502)
+	--local dev = modbus.new_rtu("/tmp/ttyS10", 115200, "none", 8, 1)
 	dev:set_debug()
 	dev:connect()
 	self._dev = dev
@@ -38,7 +38,6 @@ function app:close(reason)
 end
 
 function app:run(tms)
-	self._sys:sleep(tms)
 	local dev = self._dev
 	if not dev then
 		return
@@ -65,8 +64,8 @@ function app:run(tms)
 		self._api:set_prop_value("xxxx", 'tag'..r, "current", string.format("%d", v))
 	end
 
-	self._sys:dump_comm('IN', "xxxxxxxxxx")
-
+	--self._sys:dump_comm('IN', "xxxxxxxxxx")
+	return tms
 end
 
 return app

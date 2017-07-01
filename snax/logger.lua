@@ -11,7 +11,7 @@ function accept.log(lvl, ...)
 	end
 	f(...)
 	for handle, srv in pairs(reg_map) do
-		srv.post.log(lvl, ...)
+		srv.post.log(skynet.time(), lvl, ...)
 	end
 end
 

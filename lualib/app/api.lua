@@ -134,8 +134,8 @@ function api:get_prop_value(sn, prop, type)
 	return dc.set('DEVICE', sn, prop, type)
 end
 
-function api:set_prop_value(sn, prop, type, value)
-	self._data_chn:publish('set_device_prop', self._app_name, sn, prop, type, value)
+function api:set_prop_value(sn, prop, type, value, quality)
+	self._data_chn:publish('set_device_prop', self._app_name, sn, prop, type, value, skynet.time(), quality)
 	return dc.set('DEVICES', sn, prop, type, value)
 end
 

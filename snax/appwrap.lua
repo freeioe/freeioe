@@ -12,10 +12,10 @@ local on_close = function()
 end
 
 local function work_proc()
+	local timeout = 1000
 	while app do
-		log.trace("work_proc")
-		app:run(1000)
-		skynet.sleep(0)
+		timeout = app:run(timeout) or timeout
+		skynet.sleep(timeout / 10)
 	end
 end
 
