@@ -116,8 +116,8 @@ local msg_handler = {
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
 	log.debug("msg_callback", packet_id, topic, data, qos, retained)
-	local id, t, sub = topic:match('^/([^/]+)/([^/]+)(.-)$')
-	if id ~= mqtt_id and id ~= "*" then
+	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
+	if id ~= mqtt_id and id ~= "ALL" then
 		return
 	end
 	if id and t then
@@ -234,8 +234,8 @@ function response.connect(clean_session, username, password)
 			log.notice("ON_CONNECT", success, rc, msg) 
 			mqtt_client = client
 			for _, v in ipairs(wildtopics) do
-				client:subscribe("/*/"..v, 1)
-				client:subscribe("/"..mqtt_id.."/"..v, 1)
+				client:subscribe("ALL/"..v, 1)
+				client:subscribe(mqtt_id.."/"..v, 1)
 			end
 			if enable_data_upload then
 				snax.self().post.fire_data_snapshot()
