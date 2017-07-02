@@ -32,7 +32,7 @@ local function create_download(app_name, version, cb)
 			return cb(nil, err)
 		end
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
-		local status, header, body = httpdown.get(pkg_host, "/download_app", {}, {app=app_name})
+		local status, header, body = httpdown.get(pkg_host, "/download", {}, {app=app_name})
 		if not status then
 			log.error("Failed download app, error: "..header)
 			return cb(nil, header)
