@@ -65,6 +65,18 @@ local msg_handler = {
 	end,
 	app = function(topic, data, qos, retained)
 		--log.trace('MSG.APP', topic, data, qos, retained)
+		if topic == '/install' then
+			local app = cjson.decode(data)
+			snax.self().post.app_install(app)
+		end
+		if topic == '/uninstall' then
+			local app = cjson.decode(data)
+			snax.self().post.app_uninstall(app)
+		end
+		if topic == '/upgrade' then
+			local app = cjson.decode(data)
+			snax.self().post.app_upgrade(app)
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
@@ -86,6 +98,10 @@ local msg_handler = {
 				datacenter.set("CLOUD", "TIMEOUT", conf.timeout)
 			end
 			snax.self().post.reconnect()
+		end
+		if topic == '/upgrade' then
+			local core = cjson.decode(data)
+			snax.self().post.sys_upgrade(core)
 		end
 	end,
 	output = function(topic, data, qos, retained)
@@ -390,6 +406,22 @@ function accept.fire_data_snapshot()
 			mqtt_client:publish("/"..mqtt_id.."/snapshot/"..key, v, 1, true)
 		end
 	end)
+end
+
+function accept.app_install(app)
+	local r, err = skynet.call("UPGRADER", "lua", "install_app", app.name, app.version, app.inst)
+end
+
+function accept.app_uninstall(app)
+	local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", app.inst)
+end
+
+function accept.app_upgrade(app)
+	local r, err = skynet.call("UPGRADER", "lua", "upgrade_app", app.inst, app.version)
+end
+
+function accept.sys_upgrade(core)
+	local r, err = skynet.call("UPGRADER", "lua", "upgrade_core", app.version)
 end
 
 function init()

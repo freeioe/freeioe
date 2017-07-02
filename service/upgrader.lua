@@ -44,7 +44,7 @@ local function create_download(app_name, version, cb)
 	create_task(down, "Download App "..app_name)
 end
 
-function command.upgrade_app(inst_name)
+function command.upgrade_app(inst_name, version)
 	create_task(function()
 		print("XXXXXXXXXX")
 		skynet.sleep(10000)
