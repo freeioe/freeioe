@@ -178,7 +178,7 @@ local Handler = {
 		log.trace('on_comm', app, dir, ...)
 		--[[
 		if mqtt_client and enable_comm_upload then
-			mqtt_client:publish('/'..mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
+			mqtt_client:publish(mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
 		end
 		]]--
 
@@ -186,7 +186,7 @@ local Handler = {
 		if enable_comm_upload then
 			comm_buffer:handle(function(app, dir, ...)
 				if mqtt_client then
-					mqtt_client:publish('/'..id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
+					mqtt_client:publish(id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
 					return true
 				end
 			end, app, dir, ...)
@@ -210,7 +210,7 @@ local Handler = {
 			if mqtt_client and enable_data_upload then
 				log.trace("Publish data", key, value, timestamp, quality)
 				local value = cjson.encode(val) or value
-				mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
+				mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, false)
 			end
 		end)
 	end,
@@ -218,7 +218,7 @@ local Handler = {
 
 function response.ping()
 	if mqtt_client then
-		mqtt_client:publish("/"..mqtt_id.."/app", "ping........", 1, true)
+		mqtt_client:publish(mqtt_id.."/app", "ping........", 1, true)
 	end
 	return "PONG"
 end
@@ -350,14 +350,14 @@ local log_buffer = nil
 function accept.log(ts, lvl, ...)
 	--[[
 	if mqtt_client and enable_log_upload then
-		mqtt_client:publish("/"..mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 	end
 	]]--
 	local id = mqtt_id
 	if enable_log_upload then
 		log_buffer:handle(function(ts, lvl, ...)
 			if mqtt_client then
-				mqtt_client:publish("/"..id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+				mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 				return true
 			end
 		end, ts, lvl, ...)
@@ -400,7 +400,7 @@ function accept.fire_data_snapshot()
 	cov:fire_snapshot(function(key, v)
 		if mqtt_client then
 			local value = cjson.encode({ skynet.time(), v, 0 })
-			mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
+			mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, false)
 		end
 	end)
 end
