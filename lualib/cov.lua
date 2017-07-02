@@ -51,4 +51,10 @@ function cov:handle(key, value, cb, threshold)
 	end
 end
 
+function cov:fire_snapshot(cb)
+	for k,v in pairs(self._retained_map) do
+		cb(k,v)
+	end
+end
+
 return cov

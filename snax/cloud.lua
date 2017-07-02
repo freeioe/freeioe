@@ -202,6 +202,9 @@ function response.connect(clean_session, username, password)
 				client:subscribe("/*/"..v, 1)
 				client:subscribe("/"..mqtt_id.."/"..v, 1)
 			end
+			if cov then
+				cov:clean()
+			end
 		else
 			snax.self().post.reconnect_inter()
 		end
