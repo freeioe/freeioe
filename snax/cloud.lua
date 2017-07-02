@@ -7,6 +7,7 @@ local datacenter = require 'skynet.datacenter'
 local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
 
+--- Connection options
 local mqtt_id = "UNKNOWN.CLLIENT.ID"
 local mqtt_host = "cloud.symgrid.cn"
 local mqtt_port = 1883
@@ -14,7 +15,10 @@ local mqtt_keepalive = 300
 local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
+--- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
+
+--- Cloud options
 local enable_data_upload = nil
 local enable_comm_upload = nil
 local enable_log_upload = nil
@@ -22,6 +26,7 @@ local enable_log_upload = nil
 local api = nil
 local cov = nil
 
+--- Log function handler
 local log_func = nil
 local null_log_print = function() end
 local log_callback = function(level, ...)
@@ -44,6 +49,7 @@ local log_callback = function(level, ...)
 	end
 end
 
+--- Wild topics match
 local wildtopics = {
 	"app/#",
 	"sys/#",
@@ -51,6 +57,7 @@ local wildtopics = {
 	"data/#",
 }
 
+--- MQTT Publish Message Handler
 local msg_handler = {
 	data = function(topic, data, qos, retained)
 		--log.trace('MSG.DATA', topic, data, qos, retained)
@@ -257,17 +264,6 @@ function response.disconnect()
 	local client = mqtt_client
 	log.debug("Cloud Connection Closing!")
 
-	--[[
-	for _, v in ipairs(topics) do
-	client:unsubscribe(mqtt_id.."/"..v)
-	end
-	for _, v in ipairs(wildtopics) do
-	client:unsubscribe(mqtt_id.."/"..v)
-	end
-
-	skynet.sleep(100)
-	]]--
-
 	mqtt_client = nil
 	client:disconnect()
 	if enable_async then
@@ -316,17 +312,26 @@ function accept.enable_comm(enable)
 	datacenter.set("CLOUD", "COMM_UPLOAD", enable)
 end
 
+---
+-- When register to logger service, this is used to handle the log messages
+--
 function accept.log(ts, lvl, ...)
 	if mqtt_client and enable_log_upload then
 		mqtt_client:publish("/"..mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 	end
 end
 
+---
+-- Disconnect and reconnect again to server
+--
 function accept.reconnect()
 	snax.self().req.disconnect()
 	snax.self().req.connect()
 end
 
+---
+-- Used by disconnected event for reconnect
+--
 function accept.reconnect_inter()
 	local client = mqtt_client
 	if not client then
@@ -351,6 +356,7 @@ function init()
 
 	mosq.init()
 
+	--- Worker thread
 	skynet.fork(function()
 		while true do
 			if mqtt_client then
