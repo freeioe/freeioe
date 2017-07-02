@@ -91,6 +91,11 @@ local msg_handler = {
 	output = function(topic, data, qos, retained)
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
 	end,
+	input = function(topic, data, qos, retained)
+		if topic == "/snapshot" then
+			snax.self().post.fire_data_snapshot()
+		end
+	end,
 }
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
@@ -186,17 +191,17 @@ local Handler = {
 			quality or 0
 		}
 		if mqtt_client and enable_data_upload then
-			local key = "/"..table.concat({mqtt_id, "data", app, sn, prop, prop_type}, '/')
+			local key = table.concat({app, sn, prop, prop_type}, '/')
 			if cov then
 				cov:handle(key, value, function(key, value)
 					log.trace("Publish data", key, value, timestamp, quality)
 					local value = cjson.encode(val) or value
-					mqtt_client:publish(key, value, 1, false)
+					mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
 				end)
 			else
 				log.trace("Publish data", key, value, timestamp, quality)
 				local value = cjson.encode(val) or value
-				mqtt_client:publish(key, val, 1, false)
+				mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
 			end
 		end
 	end,
@@ -374,6 +379,17 @@ function accept.reconnect_inter()
 		end
 	end
 	mqtt_client = client
+end
+
+---
+-- Fire data snapshot
+---
+function accept.fire_data_snapshot()
+	cov:fire_snapshot(function(key, v)
+		if mqtt_client then
+			mqtt_client:publish("/"..mqtt_id.."/snapshot/"..key, v, 1, true)
+		end
+	end)
 end
 
 function init()
