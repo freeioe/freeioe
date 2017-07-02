@@ -6,6 +6,7 @@ local coroutine = require 'skynet.coroutine'
 local datacenter = require 'skynet.datacenter'
 local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
+local cyclebuffer = require 'cyclebuffer'
 
 --- Connection options
 local mqtt_id = "UNKNOWN.CLLIENT.ID"
@@ -148,11 +149,24 @@ end
 --[[
 -- Api Handler
 --]]
+local comm_buffer = cyclebuffer:new(100)
 local Handler = {
 	on_comm = function(app, dir, ...)
 		log.trace('on_comm', app, dir, ...)
+		--[[
 		if mqtt_client and enable_comm_upload then
 			mqtt_client:publish('/'..mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
+		end
+		]]--
+
+		local id = mqtt_id
+		if enable_comm_upload then
+			comm_buffer:handle(function(app, dir, ...)
+				if mqtt_client then
+					mqtt_client:publish('/'..id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
+					return true
+				end
+			end, app, dir, ...)
 		end
 	end,
 	on_add_device = function(...)
@@ -315,9 +329,21 @@ end
 ---
 -- When register to logger service, this is used to handle the log messages
 --
+local log_buffer = cyclebuffer:new(100)
 function accept.log(ts, lvl, ...)
+	--[[
 	if mqtt_client and enable_log_upload then
 		mqtt_client:publish("/"..mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+	end
+	]]--
+	local id = mqtt_id
+	if enable_log_upload then
+		log_buffer:handle(function(ts, lvl, ...)
+			if mqtt_client then
+				mqtt_client:publish("/"..id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+				return true
+			end
+		end, ts, lvl, ...)
 	end
 end
 
