@@ -203,11 +203,7 @@ local Handler = {
 	end,
 	on_set_device_prop = function(app, sn, prop, prop_type, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
-		local val = {
-			timestamp or skynet.time(),
-			value,
-			quality or 0
-		}
+		local val = { timestamp or skynet.time(), value, quality or 0 }
 		local key = table.concat({app, sn, prop, prop_type}, '/')
 
 		cov:handle(key, value, function(key, value)
@@ -241,7 +237,9 @@ function response.connect(clean_session, username, password)
 				client:subscribe("/*/"..v, 1)
 				client:subscribe("/"..mqtt_id.."/"..v, 1)
 			end
-			cov:clean()
+			if enable_data_upload then
+				snax.self().post.fire_data_snapshot()
+			end
 		else
 			snax.self().post.reconnect_inter()
 		end
@@ -333,8 +331,8 @@ function accept.enable_data(enable)
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
 	if enable then
-		log.debug("Cloud data enabled, reset COV")
-		cov:clean()	
+		log.debug("Cloud data enabled, fire snapshot")
+		snax.self().post.fire_data_snapshot()
 	else
 		log.debug("Cloud data upload disabled!", enable)
 	end
@@ -401,7 +399,8 @@ end
 function accept.fire_data_snapshot()
 	cov:fire_snapshot(function(key, v)
 		if mqtt_client then
-			mqtt_client:publish("/"..mqtt_id.."/snapshot/"..key, v, 1, true)
+			local value = cjson.encode({ skynet.time(), v, 0 })
+			mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
 		end
 	end)
 end
