@@ -203,17 +203,13 @@ function response.connect(clean_session, username, password)
 				client:subscribe("/"..mqtt_id.."/"..v, 1)
 			end
 		else
-			skynet.fork(function()
-				client:reconnect()
-			end)
+			snax.self().post.reconnect_inter()
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("ON_DISCONNECT", success, rc, msg) 
 		if not enable_async and mqtt_client then
-			skynet.fork(function()
-				mqtt_client:reconnect()
-			end)
+			snax.self().post.reconnect_inter()
 		end
 	end
 
@@ -235,15 +231,17 @@ function response.connect(clean_session, username, password)
 		-- If we do not sleep, we will got crash :-(
 		skynet.sleep(10)
 	else
-		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+		local r, err
+		while not r do
+			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+			if not r then
+				log.error("Connect to broker failed!", err)
+				skynet.sleep(500)
+			end
+		end
+
 		mqtt_client = client
 
-		skynet.fork(function()
-			while mqtt_client do
-				mqtt_client:loop(50, 1)
-				skynet.sleep(0)
-			end
-		end)
 	end
 
 	api = app_api:new('CLOUD')
@@ -326,11 +324,40 @@ function accept.reconnect()
 	snax.self().req.connect()
 end
 
+function accept.reconnect_inter()
+	local client = mqtt_client
+	if not client then
+		return
+	end
+
+	mqtt_client = nil
+	local r, err
+	while not r do
+		r, err = client:reconnect()
+		if not r then
+			log.error("Reconnect to broker failed!", err)
+			skynet.sleep(500)
+		end
+	end
+	mqtt_client = client
+end
+
 function init()
 	load_conf()
 	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
 
 	mosq.init()
+
+	skynet.fork(function()
+		while true do
+			if mqtt_client then
+				mqtt_client:loop(50, 1)
+				skynet.sleep(0)
+			else
+				skynet.sleep(50)
+			end
+		end
+	end)
 end
 
 function exit(...)
