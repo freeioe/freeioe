@@ -35,6 +35,10 @@ end
 
 function cov:handle(key, value, cb, threshold)
 	local opt = self._opt
+	if opt.disable then
+		return cb(key, value)
+	end
+
 	local threshold = threshold or opt.float_threshold
 	-- 
 	if type(value) == 'number' then

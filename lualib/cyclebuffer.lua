@@ -38,3 +38,5 @@ end
 function cb:size()
 	return #self._buf
 end
+
+return cb

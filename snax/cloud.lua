@@ -140,12 +140,14 @@ end
 
 local function load_cov_conf()
 	local enable_cov = datacenter.get("CLOUD", "COV") or true
-	if enable_cov then
-		local cov_m = require 'cov'
-		cov = cov_m:new()
-	else
-		cov = nil
+
+	local cov_m = require 'cov'
+	local opt = {}
+	if not enable_cov then
+		opt.disable = true
 	end
+
+	cov = cov_m:new(opt)
 end
 
 --[[
@@ -170,7 +172,7 @@ end
 --[[
 -- Api Handler
 --]]
-local comm_buffer = cyclebuffer:new(100)
+local comm_buffer = nil
 local Handler = {
 	on_comm = function(app, dir, ...)
 		log.trace('on_comm', app, dir, ...)
@@ -206,20 +208,15 @@ local Handler = {
 			value,
 			quality or 0
 		}
-		if mqtt_client and enable_data_upload then
-			local key = table.concat({app, sn, prop, prop_type}, '/')
-			if cov then
-				cov:handle(key, value, function(key, value)
-					log.trace("Publish data", key, value, timestamp, quality)
-					local value = cjson.encode(val) or value
-					mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
-				end)
-			else
+		local key = table.concat({app, sn, prop, prop_type}, '/')
+
+		cov:handle(key, value, function(key, value)
+			if mqtt_client and enable_data_upload then
 				log.trace("Publish data", key, value, timestamp, quality)
 				local value = cjson.encode(val) or value
 				mqtt_client:publish("/"..mqtt_id.."/data/"..key, value, 1, false)
 			end
-		end
+		end)
 	end,
 }
 
@@ -244,9 +241,7 @@ function response.connect(clean_session, username, password)
 				client:subscribe("/*/"..v, 1)
 				client:subscribe("/"..mqtt_id.."/"..v, 1)
 			end
-			if cov then
-				cov:clean()
-			end
+			cov:clean()
 		else
 			snax.self().post.reconnect_inter()
 		end
@@ -337,8 +332,11 @@ end
 function accept.enable_data(enable)
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
-	if enable and cov then
+	if enable then
+		log.debug("Cloud data enabled, reset COV")
 		cov:clean()	
+	else
+		log.debug("Cloud data upload disabled!", enable)
 	end
 end
 
@@ -350,7 +348,7 @@ end
 ---
 -- When register to logger service, this is used to handle the log messages
 --
-local log_buffer = cyclebuffer:new(100)
+local log_buffer = nil
 function accept.log(ts, lvl, ...)
 	--[[
 	if mqtt_client and enable_log_upload then
@@ -427,6 +425,9 @@ end
 function init()
 	load_conf()
 	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
+
+	comm_buffer = cyclebuffer:new(100)
+	log_buffer = cyclebuffer:new(100)
 
 	mosq.init()
 
