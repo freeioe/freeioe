@@ -210,7 +210,7 @@ local Handler = {
 			if mqtt_client and enable_data_upload then
 				log.trace("Publish data", key, value, timestamp, quality)
 				local value = cjson.encode(val) or value
-				mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, false)
+				mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, true)
 			end
 		end)
 	end,
@@ -400,7 +400,7 @@ function accept.fire_data_snapshot()
 	cov:fire_snapshot(function(key, v)
 		if mqtt_client then
 			local value = cjson.encode({ skynet.time(), v, 0 })
-			mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, false)
+			mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, true)
 		end
 	end)
 end
