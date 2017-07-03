@@ -14,7 +14,7 @@ function app:initialize(name, conf, sys)
 	print(sys:read_json("xx.json"))
 	]]--
 
-	local modbus = require(name..".modbus")
+	--local modbus = require(name..".modbus")
 end
 
 function app:start()
@@ -24,7 +24,9 @@ function app:start()
 		self._sys:log('debug', 'testing sys:fork end')
 	end)
 
-	self._api = self._sys:get_data_api()
+	self._api = self._sys:data_api()
+	local sn = self._api:gen_sn()
+	self._api:add_device(sn, {"tag1"})
 
 	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
 	local r, err = port:open()
@@ -64,10 +66,10 @@ function app:list_props(device)
 end
 
 function app:run(tms)
-	self._sys:sleep(tms)
 	if self._port then
 		self._port:write("BBBB")
 	end
+	self._api:set_prop_value("xxxx", 'tag'..r, "current", string.format("%d", v))
 end
 
 return app

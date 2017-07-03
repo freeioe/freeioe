@@ -6,6 +6,7 @@ local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 
 local api = class("APP_MGR_API")
+local dev_api = class("APP_MGR_DEV_API")
 
 function api:initialize(app_name, mgr_snax, cloud_snax)
 	self._app_name = app_name
@@ -109,38 +110,30 @@ end
 
 function api:add_device(sn, props)
 	self._data_chn:publish('add_device', self._app_name, sn, props)
-	return dc.set('DEVICES', sn, props)
+	dc.set('DEVICES', sn, props)
+	return dev_api:new(self._app_name, sn, props, data_chn)
 end
 
-function api:mod_device(sn, props)
-	self._data_chn:publish('mod_device', self._app_name, sn, props)
-	return dc.set('DEVICES', sn, props)
-end
-
-function api:del_device(sn)
+function api:del_device(dev)
+	local sn = dev._sn
+	local props = dev._props
 	self._data_chn:publish('del_device', self._app_name, sn, props)
+
+	dev:clean_up()
 	return dc.set('DEVICES', sn, props)
 end
 
 function api:get_device(sn)
-	return dc.get('DEVICES', sn)
+	local props = dc.get('DEVICES', sn)
+	return dev_api:new(nil, sn, props)
 end
 
 function api:set_device_ctrl(sn, cmd, params)
 	self._ctrl_chn:publish(self._app_name, sn, cmd, params)
 end
 
-function api:get_prop_value(sn, prop, type)
-	return dc.set('DEVICE', sn, prop, type)
-end
-
-function api:set_prop_value(sn, prop, type, value, quality)
-	self._data_chn:publish('set_device_prop', self._app_name, sn, prop, type, value, skynet.time(), quality)
-	return dc.set('DEVICES', sn, prop, type, value)
-end
-
-function api:dump_comm(app, dir, ...)
-	return self._comm_chn:publish(self._app_name, app, dir, ...)
+function api:dump_comm(dir, ...)
+	return self._comm_chn:publish(self._app_name, "APP", dir, ...)
 end
 
 --[[
@@ -162,6 +155,58 @@ end
 --]]
 function api:set_conf(sn, conf)
 	return self._cloud_snax.req.set_device_conf(sn)
+end
+
+
+function dev_api:initialize(app_name, sn, props, data_chn)
+	self._app_name = app_name
+	self._sn = sn
+	self._props = props
+	self._data_chn = data_chn
+
+	self._props_map = {}
+	for _, t in props do
+		self._props_map[t] = true
+	end
+end
+
+function dev_api:clean_up()
+	self._app_name = nil
+	self._sn = nil
+	self._props = nil
+	self._props_map = nil
+	self._data_chn = nil
+end
+
+function dev_api:mod(props)
+	assert(self._app_name, "This is not created device")
+	self._data_chn:publish('mod_device', self._app_name, self._sn, props)
+	self._props = props
+
+	self._props_map = {}
+	for _, t in props do
+		self._props_map[t] = true
+	end
+
+	return dc.set('DEVICES', sn, props)
+end
+
+function dev_api:get_prop_value(prop, type)
+	return dc.set('DEVICE', self._sn, prop, type)
+end
+
+function dev_api:set_prop_value(prop, type, value, quality)
+	assert(self._app_name, "This is not created device")
+	if not self._props_map[prop] then
+		return nil, "Property "..prop.." does not exits in device "..self._sn
+	end
+
+	self._data_chn:publish('set_device_prop', self._app_name, self._sn, prop, type, value, skynet.time(), quality)
+	return dc.set('DEVICES', self._sn, prop, type, value)
+end
+
+function dev_api:dump_comm(dir, ...)
+	return self._comm_chn:publish(self._app_name, self._sn, dir, ...)
 end
 
 return api
