@@ -202,7 +202,7 @@ function dev_api:set_prop_value(prop, type, value, quality)
 	end
 
 	self._data_chn:publish('set_device_prop', self._app_name, self._sn, prop, type, value, skynet.time(), quality)
-	return dc.set('DEVICES', self._sn, prop, type, value)
+	return dc.set('DEVICE', self._sn, prop, type, value)
 end
 
 function dev_api:dump_comm(dir, ...)

@@ -34,6 +34,7 @@ function app:start()
 	local sn = '666'--self._api:gen_sn()
 	self._dev1 = self._api:add_device(sn, {"tag1"})
 
+	--[[
 	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
 	local r, err = port:open()
 	if not r then
@@ -44,12 +45,15 @@ function app:start()
 		print(data, err)
 	end)
 	self._port = port
+	]]--
 	return true
 end
 
 function app:close(reason)
+	--[[
 	self._port:close()
 	self._port = nil
+	]]--
 	print(self._name, reason)
 end
 
@@ -72,9 +76,11 @@ function app:list_props(device)
 end
 
 function app:run(tms)
+	--[[
 	if self._port then
 		self._port:write("BBBB")
 	end
+	]]--
 	self._dev1:set_prop_value('tag1', "current", self._sys:now())
 end
 

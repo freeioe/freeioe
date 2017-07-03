@@ -52,7 +52,7 @@ local function set_defaults()
 	dc.set("CLOUD", "PORT", 1883)
 	dc.set("CLOUD", "TIMEOUT", 300)
 
-	dc.set("CLOUD", "PKG_HOST_URL", "http://localhost:8000")
+	dc.set("CLOUD", "PKG_HOST_URL", "localhost")
 end
 
 skynet.start(function()
@@ -68,4 +68,10 @@ skynet.start(function()
 		end
 	end)
 	skynet.register "CFG"
+
+	skynet.fork(function()
+		while true do
+
+		end
+	end)
 end)

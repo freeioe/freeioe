@@ -34,7 +34,7 @@ function _M.get(host, url, header, query, content)
 	local httpc = init_httpc()
     local r, status, body = pcall(httpc.request, 'GET', host, url, recvheader, header, content)
 	if not r then
-		return nil, "failed call request"
+		return nil, status
 	else
 		return status, recvheader, body
 	end

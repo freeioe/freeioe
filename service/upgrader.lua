@@ -1,5 +1,6 @@
-local skynet = require "skynet.manager"
-local httpdown = require "httpdown"
+local skynet = require 'skynet.manager'
+local snax = require 'skynet.snax'
+local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
@@ -28,13 +29,14 @@ local function create_download(app_name, version, cb)
 		local fn = "/tmp/"..app_name.."_"..version..".zip"
 		local file, err = io.open(fn, "w+")
 		if not file then
-			log.error("Failed to create temp file. Error: "..err)
 			return cb(nil, err)
 		end
+
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
-		local status, header, body = httpdown.get(pkg_host, "/download", {}, {app=app_name})
+
+		local url = "/download/"..app_name.."/ver_"..version..".zip"
+		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
-			log.error("Failed download app, error: "..header)
 			return cb(nil, header)
 		end
 		file:write(body)
@@ -49,29 +51,42 @@ function command.upgrade_app(inst_name, version)
 		print("XXXXXXXXXX")
 		skynet.sleep(10000)
 	end, "Upgrade App "..inst_name)
+	return true
 end
 
 function command.install_app(name, version, inst_name)
+	if datacenter.get("APPS", inst_name) then
+		return nil, "Application already installed"
+	end
+	local appmgr = snax.uniqueservice("appmgr")
 	local inst_name = inst_name
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 
-	create_download(name, version, function(r, path)
+	create_download(name, version, function(r, info)
 		if r then
-			os.execute("unzip "..path.." -d "..target_folder)
-			appmgr.start(inst_name, {})
+			log.debug("Download application finished")
+			os.execute("unzip -oq "..info.." -d "..target_folder)
+			appmgr.req.start(inst_name, {})
+			datacenter.set("APPS", inst_name, {name=name, version=version})
+		else
+			log.error("Failed to download App. Error: "..info)
 		end
 	end)
+	return true
 end
 
 function command.uninstall_app(inst_name)
 	local appmgr = snax.uniqueservice("appmgr")
 	local target_folder = get_target_folder(inst_name)
 
-	local r, err = appmgr.stop(inst_name, "Uninstall App")
+	local r, err = appmgr.req.stop(inst_name, "Uninstall App")
 	if r then
 		os.execute("rm -rf "..target_folder)
+		datacenter.set("APPS", inst_name, nil)
+		return true
 	end
+	return nil, err
 end
 
 function command.upgrade_core(version)
@@ -80,6 +95,7 @@ function command.upgrade_core(version)
 			os.execute("unzip "..path.." -d "..target_folder)
 		end
 	end)
+	return true
 end
 
 function command.list()
@@ -88,7 +104,7 @@ end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(session, address, cmd, ...)
-		local f = command[string.upper(cmd)]
+		local f = command[string.lower(cmd)]
 		if f then
 			skynet.ret(skynet.pack(f(...)))
 		else

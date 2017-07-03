@@ -64,7 +64,7 @@ local msg_handler = {
 		--log.trace('MSG.DATA', topic, data, qos, retained)
 	end,
 	app = function(topic, data, qos, retained)
-		--log.trace('MSG.APP', topic, data, qos, retained)
+		log.trace('MSG.APP', topic, data, qos, retained)
 		if topic == '/install' then
 			local app = cjson.decode(data)
 			snax.self().post.app_install(app)
@@ -412,18 +412,30 @@ end
 
 function accept.app_install(app)
 	local r, err = skynet.call("UPGRADER", "lua", "install_app", app.name, app.version, app.inst)
+	if not r then
+		log.error("App Install Failed. Error: ", err)
+	end
 end
 
 function accept.app_uninstall(app)
 	local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", app.inst)
+	if not r then
+		log.error("App Uninstall Failed. Error: ", err)
+	end
 end
 
 function accept.app_upgrade(app)
 	local r, err = skynet.call("UPGRADER", "lua", "upgrade_app", app.inst, app.version)
+	if not r then
+		log.error("App Upgrade Failed. Error: ", err)
+	end
 end
 
 function accept.sys_upgrade(core)
 	local r, err = skynet.call("UPGRADER", "lua", "upgrade_core", app.version)
+	if not r then
+		log.error("SYS Upgrade Failed. Error: ", err)
+	end
 end
 
 function init()
