@@ -16,8 +16,8 @@ function sys:error(...)
 	return skynet.error(...)
 end
 
-function sys:dump_comm(app, dir, ...)
-	return self._data_api:dump_comm(app, dir, ...)
+function sys:dump_comm(sn, dir, ...)
+	return self._data_api:dump_comm(sn, dir, ...)
 end
 
 function sys:fork(func, ...)

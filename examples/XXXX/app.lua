@@ -7,6 +7,7 @@ function app:initialize(name, conf, sys)
 	self._name = name
 	self._conf = conf
 	self._sys = sys
+	self._api = self._sys:data_api()
 	sys:log("debug", "XXXX Application initlized")
 	print("folder", sys:app_dir())
 	--[[
@@ -24,9 +25,14 @@ function app:start()
 		self._sys:log('debug', 'testing sys:fork end')
 	end)
 
-	self._api = self._sys:data_api()
-	local sn = self._api:gen_sn()
-	self._api:add_device(sn, {"tag1"})
+	self._api:set_handler({
+		on_ctrl = function(...)
+			print(...)
+		end,
+	})
+
+	local sn = '666'--self._api:gen_sn()
+	self._dev1 = self._api:add_device(sn, {"tag1"})
 
 	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
 	local r, err = port:open()
@@ -69,7 +75,7 @@ function app:run(tms)
 	if self._port then
 		self._port:write("BBBB")
 	end
-	self._api:set_prop_value("xxxx", 'tag'..r, "current", string.format("%d", v))
+	self._dev1:set_prop_value('tag1', "current", self._sys:now())
 end
 
 return app

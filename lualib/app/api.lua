@@ -111,7 +111,7 @@ end
 function api:add_device(sn, props)
 	self._data_chn:publish('add_device', self._app_name, sn, props)
 	dc.set('DEVICES', sn, props)
-	return dev_api:new(self._app_name, sn, props, data_chn)
+	return dev_api:new(self._app_name, sn, props, self._data_chn)
 end
 
 function api:del_device(dev)
@@ -132,15 +132,15 @@ function api:set_device_ctrl(sn, cmd, params)
 	self._ctrl_chn:publish(self._app_name, sn, cmd, params)
 end
 
-function api:dump_comm(dir, ...)
-	return self._comm_chn:publish(self._app_name, "APP", dir, ...)
+function api:dump_comm(sn, dir, ...)
+	return self._comm_chn:publish(self._app_name, sn, dir, ...)
 end
 
 --[[
 -- generate device serial number
 --]]
 function api:gen_sn()
-	return self._cloud_snax.req.get_sn()
+	return self._cloud_snax.req.gen_sn()
 end
 
 --[[
@@ -165,7 +165,7 @@ function dev_api:initialize(app_name, sn, props, data_chn)
 	self._data_chn = data_chn
 
 	self._props_map = {}
-	for _, t in props do
+	for _, t in ipairs(props) do
 		self._props_map[t] = true
 	end
 end

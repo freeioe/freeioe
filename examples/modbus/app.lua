@@ -27,7 +27,7 @@ function app:start()
 	for i = 1, 10 do
 		args[#args + 1] = 'tag'..i
 	end
-	self._api:add_device("xxxx", args)
+	self._dev1 = self._api:add_device("xxxx", args)
 	--self._api:del_device("xxxx")
 
 	return true
@@ -60,7 +60,7 @@ function app:run(tms)
 		print(string.format("register (offset %d) %d: %d (%#x): %#x (%d)",
 		r, r, r + base_address - 1, r + base_address -1, v, v))
 		]]--
-		self._api:set_prop_value("xxxx", 'tag'..r, "current", math.tointeger(v))
+		self._dev1:set_prop_value('tag'..r, "current", math.tointeger(v))
 		--self._api:set_prop_value("xxxx", 'tag'..r, "current", string.format("%d", v))
 	end
 

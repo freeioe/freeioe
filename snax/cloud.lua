@@ -316,6 +316,11 @@ function response.list_cfg_keys()
 	}
 end
 
+function response.gen_sn()
+	local uuid = require 'uuid'
+	return uuid.new()
+end
+
 function accept.enable_cov(enable)
 	datacenter.set("CLOUD", "COV", enable)
 	load_cov_conf()
