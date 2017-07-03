@@ -18,20 +18,20 @@ function response.start(name, conf)
 		return nil, "Failed start app. Error: "..err
 	end
 
-	applist[inst] = {
-		name = name,
+	applist[name] = {
+		inst = inst,
 		conf = conf,
 	}
 	return inst
 end
 
-function response.stop(instance, reason)
-	local inst = applist[instance]
-	if not inst then
-		return nil, "App instance "..instance.." does not exits!"
+function response.stop(name, reason)
+	local app = applist[name]
+	if not app then
+		return nil, "App instance "..name.." does not exits!"
 	end
-	snax.kill(instance, reason)
-	applist[instance] = nil
+	snax.kill(app.inst, reason)
+	applist[name] = nil
 	return true
 end
 
@@ -58,6 +58,13 @@ function init(...)
 	local chn = mc.new()
 	dc.set("MC", "APP", "COMM", chn.channel)
 	mc_map['COMM'] = chn
+
+	skynet.fork(function()
+		local apps = dc.get("APPS")
+		for k,v in pairs(apps) do
+			snax.self().req.start(k, {})
+		end
+	end)
 end
 
 function exit(...)

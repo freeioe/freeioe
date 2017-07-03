@@ -7,6 +7,10 @@ local app = nil
 local app_name = "UNKNOWN"
 
 local on_close = function()
+	if app then
+		app:close(reason)
+		app = nil
+	end
 	app_name = "UNKNOWN"
 	app = nil
 end
@@ -48,9 +52,6 @@ function response.start()
 end
 
 function response.stop(reason)
-	if app then
-		app:close(reason)
-	end
 	on_close()
 end
 
