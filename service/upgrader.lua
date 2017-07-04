@@ -89,6 +89,10 @@ function command.uninstall_app(inst_name)
 	return nil, err
 end
 
+function command.list_app()
+	return datacenter.get("APPS")
+end
+
 function command.upgrade_core(version)
 	create_download('iot', version, function(r, path)
 		if r then

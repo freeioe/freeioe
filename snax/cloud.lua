@@ -77,6 +77,9 @@ local msg_handler = {
 			local app = cjson.decode(data)
 			snax.self().post.app_upgrade(app)
 		end
+		if topic == '/list' then
+			snax.self().post.app_list()
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
@@ -429,6 +432,15 @@ function accept.app_upgrade(app)
 	if not r then
 		log.error("App Upgrade Failed. Error: ", err)
 	end
+end
+
+function accept.app_list()
+	local r, err = skynet.call("UPGRADER", "lua", "list_app")
+	if r then
+		if mqtt_client then
+			mqtt_client:publish(mqtt_id.."/app/installed", cjson.encode(r), 1, true)
+		end
+	end	
 end
 
 function accept.sys_upgrade(core)
