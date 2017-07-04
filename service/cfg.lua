@@ -85,7 +85,7 @@ skynet.start(function()
 			local str = cjson.encode(cfg)
 			local sum = md5.sumhexa(str)
 			if sum ~= md5sum then
-				print(sum, md5sum)
+				--print(sum, md5sum)
 				md5sum = sum
 				save_cfg(cfg, db_file)
 			end
