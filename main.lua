@@ -12,12 +12,12 @@ skynet.start(function()
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
 
+	local cloud = snax.uniqueservice("cloud")
+	local r, err = cloud.req.connect()
+
 	local appmgr = snax.uniqueservice("appmgr")
 	--local app = appmgr.req.start("XXXX", {test="AAA"})
 	--local app = appmgr.req.start("modbus", {test="AAA"})
-
-	local cloud = snax.uniqueservice("cloud")
-	local r, err = cloud.req.connect()
 
 	skynet.exit()
 end)

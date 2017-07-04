@@ -198,19 +198,23 @@ local Handler = {
 			end, app, dir, ...)
 		end
 	end,
-	on_add_device = function(...)
-		log.trace('on_add_device', ...)
+	on_add_device = function(app, sn, props)
+		log.trace('on_add_device', app, sn, props)
+		snax.self().post.fire_devices()
 	end,
-	on_del_device = function(...)
-		log.trace('on_del_device', ...)
+	on_del_device = function(app, sn)
+		log.trace('on_del_device', app, sn)
+		snax.self().post.fire_devices()
 	end,
-	on_mod_device = function(...)
-		log.trace('on_mod_device', ...)
+	on_mod_device = function(app, sn, props)
+		log.trace('on_mod_device', app, sn, props)
+		snax.self().post.fire_devices()
 	end,
 	on_set_device_prop = function(app, sn, prop, prop_type, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
 		local val = { timestamp or skynet.time(), value, quality or 0 }
-		local key = table.concat({app, sn, prop, prop_type}, '/')
+		--local key = table.concat({app, sn, prop, prop_type}, '/')
+		local key = table.concat({sn, prop, prop_type}, '/')
 
 		cov:handle(key, value, function(key, value)
 			if mqtt_client and enable_data_upload then
@@ -417,6 +421,13 @@ function accept.fire_data_snapshot()
 			mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, true)
 		end
 	end)
+end
+
+function accept.fire_devices()
+	if mqtt_client then
+		local value = cjson.encode(datacenter.get('DEVICES'))
+		mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
+	end
 end
 
 function accept.app_install(app)

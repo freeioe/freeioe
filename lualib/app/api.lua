@@ -109,18 +109,18 @@ function api:list_devices(app)
 end
 
 function api:add_device(sn, props)
-	self._data_chn:publish('add_device', self._app_name, sn, props)
 	dc.set('DEVICES', sn, props)
+	self._data_chn:publish('add_device', self._app_name, sn, props)
 	return dev_api:new(self._app_name, sn, props, self._data_chn)
 end
 
 function api:del_device(dev)
 	local sn = dev._sn
 	local props = dev._props
-	self._data_chn:publish('del_device', self._app_name, sn, props)
-
 	dev:clean_up()
-	return dc.set('DEVICES', sn, props)
+	dc.set('DEVICES', sn, nil)
+	self._data_chn:publish('del_device', self._app_name, sn, props)
+	return true
 end
 
 function api:get_device(sn)
@@ -180,15 +180,16 @@ end
 
 function dev_api:mod(props)
 	assert(self._app_name, "This is not created device")
-	self._data_chn:publish('mod_device', self._app_name, self._sn, props)
 	self._props = props
 
 	self._props_map = {}
 	for _, t in props do
 		self._props_map[t] = true
 	end
+	dc.set('DEVICES', sn, props)
 
-	return dc.set('DEVICES', sn, props)
+	self._data_chn:publish('mod_device', self._app_name, self._sn, props)
+	return true
 end
 
 function dev_api:get_prop_value(prop, type)
@@ -201,8 +202,9 @@ function dev_api:set_prop_value(prop, type, value, quality)
 		return nil, "Property "..prop.." does not exits in device "..self._sn
 	end
 
+	dc.set('DEVICE', self._sn, prop, type, value)
 	self._data_chn:publish('set_device_prop', self._app_name, self._sn, prop, type, value, skynet.time(), quality)
-	return dc.set('DEVICE', self._sn, prop, type, value)
+	return true
 end
 
 function dev_api:dump_comm(dir, ...)
