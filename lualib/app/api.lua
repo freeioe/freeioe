@@ -140,7 +140,7 @@ end
 -- generate device serial number
 --]]
 function api:gen_sn()
-	return self._cloud_snax.req.gen_sn()
+	return self._cloud_snax.req.gen_sn(self._app_name)
 end
 
 --[[

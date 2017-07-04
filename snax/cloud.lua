@@ -1,5 +1,6 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
+local crypt = require 'skynet.crypt'
 local mosq = require 'mosquitto'
 local log = require 'utils.log'
 local coroutine = require 'skynet.coroutine'
@@ -7,6 +8,8 @@ local datacenter = require 'skynet.datacenter'
 local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
 local cyclebuffer = require 'cyclebuffer'
+local uuid = require 'uuid'
+local md5 = require 'md5'
 
 --- Connection options
 local mqtt_id = "UNKNOWN.CLLIENT.ID"
@@ -319,9 +322,12 @@ function response.list_cfg_keys()
 	}
 end
 
-function response.gen_sn()
-	local uuid = require 'uuid'
-	return uuid.new()
+function response.gen_sn(app_name)
+	-- Frappe autoname 
+	--hashlib.sha224((txt or "") + repr(time.time()) + repr(random_string(8))).hexdigest()
+	--
+	local key = app_name..uuid.new()
+	return md5.sumhexa(key):sub(1, 10)
 end
 
 function accept.enable_cov(enable)
