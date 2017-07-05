@@ -59,19 +59,13 @@ end
 
 function app:list_devices()
 	return {
-		dev_a = {
-			name = "Device A",
-			desc = "Description A Device",
-		}
+		['666'] = "Description A Device",
 	}
 end
 
 function app:list_props(device)
 	return {
-		prop_a = {
-			name = "Property A",
-			desc = "Property A Description",
-		}
+		tag1 = "Property A Description",
 	}
 end
 

@@ -52,7 +52,7 @@ end
 local function set_defaults()
 	local dc = require 'skynet.datacenter'
 
-	dc.set("CLOUD", "ID", "IDIDIDIDID")
+	dc.set("CLOUD", "ID", os.getenv("SYS_ID") or "IDIDIDIDID")
 	dc.set("CLOUD", "HOST", "localhost")
 	dc.set("CLOUD", "PORT", 1883)
 	dc.set("CLOUD", "TIMEOUT", 300)

@@ -334,6 +334,10 @@ function response.gen_sn(app_name)
 	return md5.sumhexa(key):sub(1, 10)
 end
 
+function response.get_id()
+	return mqtt_id
+end
+
 function accept.enable_cov(enable)
 	datacenter.set("CLOUD", "COV", enable)
 	load_cov_conf()

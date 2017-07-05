@@ -47,26 +47,28 @@ function sys:cancelable_timeout(ms, func)
 	return cancel
 end
 
+-- Current Application exit
 function sys:exit()
 	skynet.exit()
 end
 
+-- System abort
 function sys:abort()
 	skynet.abort()
 end
 
--- ms
+-- ms uptime
 function sys:now()
 	return skynet.now() * 10
 end
 
 
--- seconds
+-- seconds (UTC now)
 function sys:time()
 	return skynet.time()
 end
 
--- seconds
+-- seconds (UTC system start time)
 function sys:start_time()
 	return skynet.starttime()
 end
@@ -98,6 +100,12 @@ end
 function sys:app_dir()
 	return lfs.currentdir().."/iot/apps/"..self._app_name.."/"
 	--return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
+end
+
+-- System ID
+function sys:id()
+	local dc = require 'skynet.datacenter'
+	return dc.get("CLOUD", "ID")
 end
 
 function sys:initialize(app_name, mgr_snax, wrap_snax)
