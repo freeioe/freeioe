@@ -7,6 +7,7 @@ local datacenter = require 'skynet.datacenter'
 
 local tasks = {}
 local command = {}
+local cloud = nil
 
 local function get_target_folder(inst_name)
 	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
@@ -46,6 +47,13 @@ local function create_download(app_name, version, cb)
 	create_task(down, "Download App "..app_name)
 end
 
+local function log_info(lvl, ...)
+	log[lvl](...)
+	if cloud then
+		cloud.post.install_log(lvl, ...)
+	end
+end
+
 function command.upgrade_app(inst_name, version)
 	create_task(function()
 		print("XXXXXXXXXX")
@@ -65,12 +73,17 @@ function command.install_app(name, version, inst_name)
 
 	create_download(name, version, function(r, info)
 		if r then
-			log.debug("Download application finished")
+			log_info("error", "Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
-			appmgr.req.start(inst_name, {})
-			datacenter.set("APPS", inst_name, {name=name, version=version})
+			local r, err = appmgr.req.start(inst_name, {})
+			if r then
+				log_info("notice", "Application "..name.." started")
+				datacenter.set("APPS", inst_name, {name=name, version=version})
+			else
+				log_info("error", "Failed to start App. Error: "..err)
+			end
 		else
-			log.error("Failed to download App. Error: "..info)
+			log_info("error", "Failed to download App. Error: "..info)
 		end
 	end)
 	return true
@@ -104,6 +117,10 @@ end
 
 function command.list()
 	return tasks
+end
+
+function command.bind_cloud(handle, type)
+	cloud = snax.bind(handle, type)
 end
 
 skynet.start(function()

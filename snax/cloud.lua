@@ -386,6 +386,17 @@ function accept.log(ts, lvl, ...)
 	end
 end
 
+function accept.install_log(lvl, ...)
+	local id = mqtt_id
+	local ts = skynet.time()
+	log_buffer:handle(function(ts, lvl, ...)
+		if mqtt_client then
+			mqtt_client:publish(id.."/install_log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+			return true
+		end
+	end, ts, lvl, ...)
+end
+
 ---
 -- Disconnect and reconnect again to server
 --
@@ -437,21 +448,27 @@ end
 function accept.app_install(app)
 	local r, err = skynet.call("UPGRADER", "lua", "install_app", app.name, app.version, app.inst)
 	if not r then
-		log.error("App Install Failed. Error: ", err)
+		local err = "App Install Failed. Error: "..err 
+		log.error(err)
+		snax.self().post.install_log(err)
 	end
 end
 
 function accept.app_uninstall(app)
 	local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", app.inst)
 	if not r then
-		log.error("App Uninstall Failed. Error: ", err)
+		local err = "App Uninstall Failed. Error: "..err
+		log.error(err)
+		snax.self().post.install_log(err)
 	end
 end
 
 function accept.app_upgrade(app)
 	local r, err = skynet.call("UPGRADER", "lua", "upgrade_app", app.inst, app.version)
 	if not r then
-		log.error("App Upgrade Failed. Error: ", err)
+		local err = "App Upgrade Failed. Error: "..err
+		log.error(err)
+		snax.self().post.install_log(err)
 	end
 end
 
@@ -467,7 +484,9 @@ end
 function accept.sys_upgrade(core)
 	local r, err = skynet.call("UPGRADER", "lua", "upgrade_core", app.version)
 	if not r then
-		log.error("SYS Upgrade Failed. Error: ", err)
+		local err = "SYS Upgrade Failed. Error: "..err
+		log.error(err)
+		snax.self().post.install_log(err)
 	end
 end
 
