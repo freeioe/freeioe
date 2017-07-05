@@ -35,9 +35,16 @@ end
 
 function app:list_props(device)
 	return {
-		cpuload = "Upload device cpu-load every minutes",
-		uptime = "Upload device uptime every minutes",
-		startime = "Upload device start-time every minutes",
+		input = {
+			cpuload = "Upload device cpu-load every minutes",
+			uptime = "Upload device uptime every minutes",
+			startime = "Upload device start-time every minutes",
+		},
+		output = {
+		},
+		command = {
+
+		}
 	}
 end
 
