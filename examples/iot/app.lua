@@ -44,11 +44,11 @@ end
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
-		self._dev:set_prop_value('startime', "current", self._start_time)
+		self._dev:set_prop_value('startime', "value", self._start_time)
 	end
-	self._dev:set_prop_value('uptime', "current", self._sys:now())
+	self._dev:set_prop_value('uptime', "value", self._sys:now())
 	local loadavg = sysinfo.loadavg()
-	self._dev:set_prop_value('cpuload', "current", loadavg.lavg_1)
+	self._dev:set_prop_value('cpuload', "value", loadavg.lavg_15)
 	return 1000 * 60
 end
 

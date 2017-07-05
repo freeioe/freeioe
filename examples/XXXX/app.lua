@@ -75,7 +75,7 @@ function app:run(tms)
 		self._port:write("BBBB")
 	end
 	]]--
-	self._dev1:set_prop_value('tag1', "current", self._sys:now())
+	self._dev1:set_prop_value('tag1', "value", self._sys:now())
 end
 
 return app
