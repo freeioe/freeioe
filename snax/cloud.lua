@@ -58,7 +58,7 @@ local wildtopics = {
 	"app/#",
 	"sys/#",
 	"output/#",
-	"data/#",
+	--"data/#",
 }
 
 --- MQTT Publish Message Handler
@@ -459,7 +459,7 @@ function accept.app_list()
 	local r, err = skynet.call("UPGRADER", "lua", "list_app")
 	if r then
 		if mqtt_client then
-			mqtt_client:publish(mqtt_id.."/app/installed", cjson.encode(r), 1, true)
+			mqtt_client:publish(mqtt_id.."/apps", cjson.encode(r), 1, true)
 		end
 	end	
 end
