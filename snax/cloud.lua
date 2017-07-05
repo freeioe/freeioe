@@ -244,7 +244,7 @@ function response.connect(clean_session, username, password)
 			log.notice("ON_CONNECT", success, rc, msg) 
 			mqtt_client = client
 			for _, v in ipairs(wildtopics) do
-				client:subscribe("ALL/"..v, 1)
+				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
 			if enable_data_upload then
