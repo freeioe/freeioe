@@ -386,17 +386,6 @@ function accept.log(ts, lvl, ...)
 	end
 end
 
-function accept.install_log(lvl, ...)
-	local id = mqtt_id
-	local ts = skynet.time()
-	log_buffer:handle(function(ts, lvl, ...)
-		if mqtt_client then
-			mqtt_client:publish(id.."/install_log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
-			return true
-		end
-	end, ts, lvl, ...)
-end
-
 ---
 -- Disconnect and reconnect again to server
 --
@@ -445,31 +434,16 @@ function accept.fire_devices()
 	end
 end
 
-function accept.app_install(app)
-	local r, err = skynet.call("UPGRADER", "lua", "install_app", app.name, app.version, app.inst)
-	if not r then
-		local err = "App Install Failed. Error: "..err 
-		log.error(err)
-		snax.self().post.install_log(err)
-	end
+function accept.app_install(args)
+	skynet.call("UPGRADER", "lua", "install_app", args)
 end
 
-function accept.app_uninstall(app)
-	local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", app.inst)
-	if not r then
-		local err = "App Uninstall Failed. Error: "..err
-		log.error(err)
-		snax.self().post.install_log(err)
-	end
+function accept.app_uninstall(args)
+	skynet.call("UPGRADER", "lua", "uninstall_app", args)
 end
 
-function accept.app_upgrade(app)
-	local r, err = skynet.call("UPGRADER", "lua", "upgrade_app", app.inst, app.version)
-	if not r then
-		local err = "App Upgrade Failed. Error: "..err
-		log.error(err)
-		snax.self().post.install_log(err)
-	end
+function accept.app_upgrade(args)
+	skynet.call("UPGRADER", "lua", "upgrade_app", args)
 end
 
 function accept.app_list()
@@ -481,12 +455,18 @@ function accept.app_list()
 	end	
 end
 
-function accept.sys_upgrade(core)
-	local r, err = skynet.call("UPGRADER", "lua", "upgrade_core", app.version)
-	if not r then
-		local err = "SYS Upgrade Failed. Error: "..err
-		log.error(err)
-		snax.self().post.install_log(err)
+function accept.sys_upgrade(args)
+	skynet.call("UPGRADER", "lua", "upgrade_core", args)
+end
+
+function accept.action_result(id, result, message)
+	if mqtt_client then
+		local r = {
+			id = id,
+			result = result,
+			message = message,
+		}
+		mqtt_client:publish(mqtt_id.."/action_result", cjson.encode(r), 1, false)
 	end
 end
 
@@ -510,6 +490,8 @@ function init()
 			end
 		end
 	end)
+	local s = snax.self()
+	skynet.call("UPGRADER", "lua", "bind_cloud", s.handle, s.type)
 end
 
 function exit(...)

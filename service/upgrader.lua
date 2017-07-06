@@ -47,14 +47,22 @@ local function create_download(app_name, version, cb)
 	create_task(down, "Download App "..app_name)
 end
 
-local function log_info(lvl, ...)
-	log[lvl](...)
+local function install_result(id, result, ...)
+	if result then
+		log.info(...)
+	else
+		log.error(...)
+	end
+
 	if cloud then
-		cloud.post.install_log(lvl, ...)
+		cloud.post.action_result(id, result, ...)
 	end
 end
 
-function command.upgrade_app(inst_name, version)
+function command.upgrade_app(args)--inst_name, version)
+	local id = args.id
+	local inst_name = args.inst
+	local version = args.version
 	create_task(function()
 		print("XXXXXXXXXX")
 		skynet.sleep(10000)
@@ -62,9 +70,16 @@ function command.upgrade_app(inst_name, version)
 	return true
 end
 
-function command.install_app(name, version, inst_name)
+function command.install_app(args) --name, version, inst_name)
+	local id = args.id
+	local name = args.name
+	local inst_name = args.inst
+	local version = args.version
+
 	if datacenter.get("APPS", inst_name) then
-		return nil, "Application already installed"
+		local err = "Application already installed"
+		install_result(id, false, "Failed to install App. Error: "..err)
+		return
 	end
 	local appmgr = snax.uniqueservice("appmgr")
 	local inst_name = inst_name
@@ -73,23 +88,25 @@ function command.install_app(name, version, inst_name)
 
 	create_download(name, version, function(r, info)
 		if r then
-			log_info("error", "Download application finished")
+			log.debug("Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
 			local r, err = appmgr.req.start(inst_name, {})
 			if r then
-				log_info("notice", "Application "..name.." started")
 				datacenter.set("APPS", inst_name, {name=name, version=version})
+				install_result(id, true, "Application installtion is done")
 			else
-				log_info("error", "Failed to start App. Error: "..err)
+				install_result(id, false, "Failed to start App. Error: "..err)
 			end
 		else
-			log_info("error", "Failed to download App. Error: "..info)
+			install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end)
-	return true
 end
 
-function command.uninstall_app(inst_name)
+function command.uninstall_app(args) --inst_name)
+	local id = args.id
+	local inst_name = args.inst
+
 	local appmgr = snax.uniqueservice("appmgr")
 	local target_folder = get_target_folder(inst_name)
 
@@ -97,9 +114,9 @@ function command.uninstall_app(inst_name)
 	if r then
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
-		return true
+		install_result(id, true, "Application uninstall is done")
 	end
-	return nil, err
+	install_result(id, false, "Application uninstall failed, Error: "..err)
 end
 
 function command.list_app()
@@ -107,12 +124,14 @@ function command.list_app()
 end
 
 function command.upgrade_core(version)
+	local id = args.id
+	local version = args.version
+
 	create_download('iot', version, function(r, path)
 		if r then
 			os.execute("unzip "..path.." -d "..target_folder)
 		end
 	end)
-	return true
 end
 
 function command.list()
