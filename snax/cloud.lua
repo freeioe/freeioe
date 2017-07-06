@@ -210,7 +210,7 @@ local Handler = {
 		log.trace('on_mod_device', app, sn, props)
 		snax.self().post.fire_devices()
 	end,
-	on_set_device_prop = function(app, sn, prop, prop_type, value, timestamp, quality)
+	on_input = function(app, sn, prop, prop_type, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
 		local val = { timestamp or skynet.time(), value, quality or 0 }
 		--local key = table.concat({app, sn, prop, prop_type}, '/')

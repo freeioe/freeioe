@@ -24,18 +24,21 @@ function api:data_dispatch(channel, source, cmd, app, sn, ...)
 	end
 end
 
-function api:ctrl_dispatch(channel, source, ...)
-	log.trace('Ctrl Dispatch', channel, source, ...)
-	local f = self._handler.on_ctrl
+function api:ctrl_dispatch(channel, source, ctrl, app, sn, ...)
+	if app == self._app_name then
+		return
+	end
+	--log.trace('Ctrl Dispatch', channel, source, ctrl, app, sn, ...)
+	local f = self._handler['on_'..ctrl]
 	if f then
-		return f(...)
+		return f(app, sn, ...)
 	else
-		log.trace('No handler for on_ctrl')
+		log.trace('No handler for '..ctrl)
 	end
 end
 
 function api:comm_dispatch(channel, source, ...)
-	log.trace('Comm Dispatch', channel, source, ...)
+	--log.trace('Comm Dispatch', channel, source, ...)
 	local f = self._handler.on_comm
 	if f then
 		return f(...)
@@ -72,7 +75,7 @@ function api:set_handler(handler, watch_data)
 				self.ctrl_dispatch(self, channel, source, ...)
 			end
 		})
-		if handler.on_ctrl then
+		if handler.on_ctrl or handler.on_output or handler.on_command then
 			self._ctrl_chn:subscribe()
 		end
 	else
@@ -102,16 +105,16 @@ end
 
 --[[
 -- List devices
--- @param app: default is "*"
 --]]
-function api:list_devices(app)
+function api:list_devices()
 	return dc.get('DEVICES')
 end
 
-function api:add_device(sn, props)
+function api:add_device(sn, inputs, outputs, commands)
+	local props = {inputs = inputs, outputs = outputs, commands = commands}
 	dc.set('DEVICES', sn, props)
 	self._data_chn:publish('add_device', self._app_name, sn, props)
-	return dev_api:new(self._app_name, sn, props, self._data_chn)
+	return dev_api:new(self, sn, props)
 end
 
 function api:del_device(dev)
@@ -123,13 +126,15 @@ function api:del_device(dev)
 	return true
 end
 
+-- Get readonly device object to access input / fire command / output
 function api:get_device(sn)
 	local props = dc.get('DEVICES', sn)
-	return dev_api:new(nil, sn, props)
+	return dev_api:new(self, sn, props, true)
 end
 
-function api:set_device_ctrl(sn, cmd, params)
-	self._ctrl_chn:publish(self._app_name, sn, cmd, params)
+-- Applicaiton control
+function api:send_ctrl(app, ctrl, params)
+	self._ctrl_chn:publish('ctrl', self._app_name, app, cmd, params)
 end
 
 function api:dump_comm(sn, dir, ...)
@@ -158,15 +163,18 @@ function api:set_conf(sn, conf)
 end
 
 
-function dev_api:initialize(app_name, sn, props, data_chn)
-	self._app_name = app_name
+function dev_api:initialize(api, sn, props, readonly)
 	self._sn = sn
 	self._props = props
-	self._data_chn = data_chn
+	self._app_name = api._app_name
+	self._data_chn = api._data_chn
+	self._ctrl_chn = api._ctrl_chn
+	self._comm_chn = api._comm_chn
+	self._readonly = readonly
 
-	self._props_map = {}
-	for _, t in ipairs(props) do
-		self._props_map[t] = true
+	self._inputs_map = {}
+	for _, t in ipairs(props.inputs) do
+		self._inputs_map[t] = true
 	end
 end
 
@@ -174,17 +182,21 @@ function dev_api:clean_up()
 	self._app_name = nil
 	self._sn = nil
 	self._props = nil
-	self._props_map = nil
+	self._inputs_map = nil
 	self._data_chn = nil
 end
 
-function dev_api:mod(props)
-	assert(self._app_name, "This is not created device")
-	self._props = props
+function dev_api:mod(inputs, outputs, commands)
+	assert(not self._readonly, "This is not created device")
+	self._props = {
+		inputs = inputs,
+		outputs = outputs,
+		commands = commands,
+	}
 
-	self._props_map = {}
-	for _, t in props do
-		self._props_map[t] = true
+	self._inputs_map = {}
+	for _, t in ipairs(inputs) do
+		self._inputs_map[t] = true
 	end
 	dc.set('DEVICES', sn, props)
 
@@ -192,19 +204,38 @@ function dev_api:mod(props)
 	return true
 end
 
-function dev_api:get_prop_value(prop, type)
-	return dc.set('DEVICE', self._sn, prop, type)
+function dev_api:get_input_prop(input, prop)
+	return dc.set('INPUT', self._sn, input, prop)
 end
 
-function dev_api:set_prop_value(prop, type, value, quality)
-	assert(self._app_name, "This is not created device")
-	if not self._props_map[prop] then
-		return nil, "Property "..prop.." does not exits in device "..self._sn
+function dev_api:set_input_prop(input, prop, value, quality)
+	assert(not self._readonly, "This is not created device")
+	if not self._inputs_map[input] then
+		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
 
-	dc.set('DEVICE', self._sn, prop, type, value)
-	self._data_chn:publish('set_device_prop', self._app_name, self._sn, prop, type, value, skynet.time(), quality)
+	dc.set('INPUT', self._sn, input, prop, value)
+	self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, skynet.time(), quality)
 	return true
+end
+
+function dev_api:set_output_prop(output, prop, value)
+	dc.set('OUTPUT', self._sn, output, prop, value)
+	self._ctrl_chn:publish('output', self._app_name, self._sn, input, prop, value, skynet.time())
+	return true
+end
+
+function dev_api:get_output_prop(output, prop)
+	return dc.get('OUTPUT', self._sn, output, prop)
+end
+
+function dev_api:send_command(command, param)
+	self._ctrl_chn:publish("command", self._app_name, self._sn, command, param)
+	return true
+end
+
+function dev_api:list_props()
+	return self._props
 end
 
 function dev_api:dump_comm(dir, ...)

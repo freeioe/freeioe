@@ -26,6 +26,12 @@ function app:start()
 	end)
 
 	self._api:set_handler({
+		on_input = function(...)
+			print(...)
+		end,
+		on_output = function(...)
+			print(...)
+		end,
 		on_ctrl = function(...)
 			print(...)
 		end,
@@ -75,7 +81,7 @@ function app:run(tms)
 		self._port:write("BBBB")
 	end
 	]]--
-	self._dev1:set_prop_value('tag1', "value", self._sys:now())
+	self._dev1:set_input_prop('tag1', "value", self._sys:now())
 end
 
 return app

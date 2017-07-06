@@ -60,8 +60,8 @@ function app:run(tms)
 		print(string.format("register (offset %d) %d: %d (%#x): %#x (%d)",
 		r, r, r + base_address - 1, r + base_address -1, v, v))
 		]]--
-		self._dev1:set_prop_value('tag'..r, "value", math.tointeger(v))
-		--self._api:set_prop_value("xxxx", 'tag'..r, "value", string.format("%d", v))
+		self._dev1:set_input_prop('tag'..r, "value", math.tointeger(v))
+		--self._api:set_input_prop("xxxx", 'tag'..r, "value", string.format("%d", v))
 	end
 
 	--self._sys:dump_comm('IN', "xxxxxxxxxx")

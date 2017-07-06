@@ -12,6 +12,9 @@ end
 
 function app:start()
 	self._api:set_handler({
+		on_output = function(...)
+			print(...)
+		end,
 		on_ctrl = function(...)
 			print(...)
 		end,
@@ -28,34 +31,37 @@ function app:close(reason)
 end
 
 function app:list_devices()
+	local props = self._dev:list_props()
 	return {
 		sys = "System Device Statistics",
 	}
 end
 
-function app:list_props(device)
+function app:list_tpl()
 	return {
-		input = {
-			cpuload = "Upload device cpu-load every minutes",
-			uptime = "Upload device uptime every minutes",
-			startime = "Upload device start-time every minutes",
+		{
+			name = "System Information Statistics",
+			input = {
+				cpuload = "Upload device cpu-load every minutes",
+				uptime = "Upload device uptime every minutes",
+				startime = "Upload device start-time every minutes",
+			},
+			output = {
+			},
+			command = {
+			}
 		},
-		output = {
-		},
-		command = {
-
-		}
 	}
 end
 
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
-		self._dev:set_prop_value('startime', "value", self._start_time)
+		self._dev:set_input_prop('startime', "value", self._start_time)
 	end
-	self._dev:set_prop_value('uptime', "value", self._sys:now())
+	self._dev:set_input_prop('uptime', "value", self._sys:now())
 	local loadavg = sysinfo.loadavg()
-	self._dev:set_prop_value('cpuload', "value", loadavg.lavg_15)
+	self._dev:set_input_prop('cpuload', "value", loadavg.lavg_15)
 	return 1000 * 60
 end
 
