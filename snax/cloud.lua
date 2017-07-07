@@ -186,11 +186,11 @@ local Handler = {
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		comm_buffer:handle(function(app, sn, dir, ts, content)
 			if mqtt_client and enable_comm_upload then
-				local key = id.."/comm/"..app
+				local key = id.."/comm/"
 				if sn then
-					key = key.."/"..sn.."/"..dir
+					key = key..sn.."/"..dir
 				else
-					key = key.."/"..dir
+					key = key..app.."/"..dir
 				end
 				return mqtt_client:publish(key, ts..'\t'..content, 1, false)
 			end
