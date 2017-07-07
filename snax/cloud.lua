@@ -464,8 +464,8 @@ function init()
 	load_conf()
 	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
 
-	comm_buffer = cyclebuffer:new(100)
-	log_buffer = cyclebuffer:new(100)
+	comm_buffer = cyclebuffer:new(32)
+	log_buffer = cyclebuffer:new(128)
 
 	mosq.init()
 
