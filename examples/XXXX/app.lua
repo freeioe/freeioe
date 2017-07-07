@@ -82,6 +82,7 @@ function app:run(tms)
 	end
 	]]--
 	self._dev1:set_input_prop('tag1', "value", self._sys:now())
+	self._dev1:dump_comm("IN", "XXXXXXXXXXXX")
 end
 
 return app

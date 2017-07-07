@@ -138,7 +138,7 @@ function api:send_ctrl(app, ctrl, params)
 end
 
 function api:dump_comm(sn, dir, ...)
-	return self._comm_chn:publish(self._app_name, skynet.time(), sn, dir, ...)
+	return self._comm_chn:publish(self._app_name, sn, dir, skynet.time(), ...)
 end
 
 --[[
@@ -239,7 +239,7 @@ function dev_api:list_props()
 end
 
 function dev_api:dump_comm(dir, ...)
-	return self._comm_chn:publish(self._app_name, skynet.time(), self._sn, dir, ...)
+	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
 end
 
 return api

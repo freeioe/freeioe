@@ -85,7 +85,7 @@ local msg_handler = {
 		end
 	end,
 	sys = function(topic, data, qos, retained)
-		--log.trace('MSG.SYS', topic, data, qos, retained)
+		log.trace('MSG.SYS', topic, data, qos, retained)
 		if topic == '/enable/data' then
 			snax.self().post.enable_data(tonumber(data) == 1)
 		end
@@ -111,7 +111,7 @@ local msg_handler = {
 		end
 	end,
 	output = function(topic, data, qos, retained)
-		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
+		log.trace('MSG.OUTPUT', topic, data, qos, retained)
 	end,
 	input = function(topic, data, qos, retained)
 		if topic == "/snapshot" then
@@ -180,15 +180,20 @@ end
 --]]
 local comm_buffer = nil
 local Handler = {
-	on_comm = function(app, ts, sn, dir, ...)
-		log.trace('on_comm', app, ts, sn, dir, ...)
+	on_comm = function(app, sn, dir, ts, ...)
+		--log.trace('on_comm', app, sn, dir, ts, ...)
 		local id = mqtt_id
-		comm_buffer:handle(function(app, ts, sn, dir, ...)
+		comm_buffer:handle(function(app, sn, dir, ts, ...)
 			if mqtt_client and enable_comm_upload then
-				mqtt_client:publish(id.."/comm/"..app.."/"..dir, table.concat({ts, sn, ...}, '\t'), 1, false)
-				return true
+				local key = id.."/comm/"..app
+				if sn then
+					key = key.."/"..sn.."/"..dir
+				else
+					key = key.."/"..dir
+				end
+				return mqtt_client:publish(key, table.concat({ts, ...}, '\t'), 1, false)
 			end
-		end, app, ts, sn, dir, ...)
+		end, app, sn, dir, ts, ...)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
@@ -365,8 +370,7 @@ function accept.log(ts, lvl, ...)
 	local id = mqtt_id
 	log_buffer:handle(function(ts, lvl, ...)
 		if mqtt_client and enable_log_upload then
-			mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
-			return true
+			return mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 		end
 	end, ts, lvl, ...)
 end
