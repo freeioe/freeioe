@@ -30,30 +30,6 @@ function app:close(reason)
 	--print(self._name, reason)
 end
 
-function app:list_devices()
-	local props = self._dev:list_props()
-	return {
-		sys = "System Device Statistics",
-	}
-end
-
-function app:list_tpl()
-	return {
-		{
-			name = "System Information Statistics",
-			input = {
-				cpuload = "Upload device cpu-load every minutes",
-				uptime = "Upload device uptime every minutes",
-				startime = "Upload device start-time every minutes",
-			},
-			output = {
-			},
-			command = {
-			}
-		},
-	}
-end
-
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
