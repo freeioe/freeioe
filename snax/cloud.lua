@@ -181,9 +181,10 @@ end
 local comm_buffer = nil
 local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
-		--log.trace('on_comm', app, sn, dir, ts, ...)
+		log.trace('on_comm', app, sn, dir, ts, ...)
 		local id = mqtt_id
-		comm_buffer:handle(function(app, sn, dir, ts, ...)
+		local content = crypt.base64encode(table.concat({...}, '\t'))
+		comm_buffer:handle(function(app, sn, dir, ts, content)
 			if mqtt_client and enable_comm_upload then
 				local key = id.."/comm/"..app
 				if sn then
@@ -191,9 +192,9 @@ local Handler = {
 				else
 					key = key.."/"..dir
 				end
-				return mqtt_client:publish(key, table.concat({ts, ...}, '\t'), 1, false)
+				return mqtt_client:publish(key, ts..'\t'..content, 1, false)
 			end
-		end, app, sn, dir, ts, ...)
+		end, app, sn, dir, ts, content)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
