@@ -180,23 +180,15 @@ end
 --]]
 local comm_buffer = nil
 local Handler = {
-	on_comm = function(app, dir, ...)
-		log.trace('on_comm', app, dir, ...)
-		--[[
-		if mqtt_client and enable_comm_upload then
-			mqtt_client:publish(mqtt_id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
-		end
-		]]--
-
+	on_comm = function(app, ts, sn, dir, ...)
+		log.trace('on_comm', app, ts, sn, dir, ...)
 		local id = mqtt_id
-		if enable_comm_upload then
-			comm_buffer:handle(function(app, dir, ...)
-				if mqtt_client then
-					mqtt_client:publish(id.."/comm/"..app.."/"..dir, table.concat({...}, '\t'), 1, false)
-					return true
-				end
-			end, app, dir, ...)
-		end
+		comm_buffer:handle(function(app, ts, sn, dir, ...)
+			if mqtt_client and enable_comm_upload then
+				mqtt_client:publish(id.."/comm/"..app.."/"..dir, table.concat({ts, sn, ...}, '\t'), 1, false)
+				return true
+			end
+		end, app, ts, sn, dir, ...)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
@@ -370,20 +362,13 @@ end
 --
 local log_buffer = nil
 function accept.log(ts, lvl, ...)
-	--[[
-	if mqtt_client and enable_log_upload then
-		mqtt_client:publish(mqtt_id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
-	end
-	]]--
 	local id = mqtt_id
-	if enable_log_upload then
-		log_buffer:handle(function(ts, lvl, ...)
-			if mqtt_client then
-				mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
-				return true
-			end
-		end, ts, lvl, ...)
-	end
+	log_buffer:handle(function(ts, lvl, ...)
+		if mqtt_client and enable_log_upload then
+			mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+			return true
+		end
+	end, ts, lvl, ...)
 end
 
 ---
