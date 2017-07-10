@@ -25,7 +25,9 @@ local enable_async = false
 --- Cloud options
 local enable_data_upload = nil
 local enable_comm_upload = nil
+local max_enable_comm_upload = 60 * 10
 local enable_log_upload = nil
+local max_enable_log_upload = 60 * 10
 
 local api = nil
 local cov = nil
@@ -90,10 +92,10 @@ local msg_handler = {
 			snax.self().post.enable_data(tonumber(data) == 1)
 		end
 		if topic == '/enable/log' then
-			snax.self().post.enable_log(tonumber(data) == 1)
+			snax.self().post.enable_log(tonumber(data))
 		end
 		if topic == '/enable/comm' then
-			snax.self().post.enable_comm(tonumber(data) == 1)
+			snax.self().post.enable_comm(tonumber(data))
 		end
 		if topic == '/conf' then
 			local conf = cjson.decode(data)
@@ -165,8 +167,17 @@ local function load_conf()
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	local now = os.time()
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
+	if enable_comm_upload < now then
+		enable_comm_upload=  nil
+		datacenter.get("CLOUD", "COMM_UPLOAD", nil)
+	end	
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
+	if enable_log_upload < now then
+		enable_log_upload=  nil
+		datacenter.get("CLOUD", "LOG_UPLOAD", nil)
+	end
 
 	load_cov_conf()
 end
@@ -181,7 +192,7 @@ local Handler = {
 		local id = mqtt_id
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		comm_buffer:handle(function(app, sn, dir, ts, content)
-			if mqtt_client and enable_comm_upload then
+			if mqtt_client and (enable_comm_upload and ts < enable_comm_upload) then
 				local key = id.."/comm/"
 				if sn then
 					key = key..sn.."/"..dir
@@ -337,12 +348,6 @@ function accept.enable_cov(enable)
 	load_cov_conf()
 end
 
-function accept.enable_log(enable)
-	enable_log_upload = enable
-	datacenter.set("CLOUD", "LOG_UPLOAD", enable)
-	on_enable_log_upload(enable)
-end
-
 function accept.enable_data(enable)
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
@@ -354,9 +359,24 @@ function accept.enable_data(enable)
 	end
 end
 
-function accept.enable_comm(enable)
-	enable_comm_upload = enable
-	datacenter.set("CLOUD", "COMM_UPLOAD", enable)
+function accept.enable_log(sec)
+	local sec = tonumber(sec)
+	if sec and sec > 0 and sec < max_enable_log_upload then
+		enable_log_upload = os.time() + sec
+	else
+		enable_log_upload = nil
+	end
+	datacenter.set("CLOUD", "LOG_UPLOAD", enable_log_upload)
+end
+
+function accept.enable_comm(sec)
+	local sec = tonumber(sec)
+	if sec and sec > 0 and sec < max_enable_comm_upload then
+		enable_comm_upload = os.time() + sec
+	else
+		enable_comm_upload = nil
+	end
+	datacenter.set("CLOUD", "COMM_UPLOAD", enable_comm_upload)
 end
 
 ---
@@ -366,7 +386,7 @@ local log_buffer = nil
 function accept.log(ts, lvl, ...)
 	local id = mqtt_id
 	log_buffer:handle(function(ts, lvl, ...)
-		if mqtt_client and enable_log_upload then
+		if mqtt_client and (enable_log_upload and ts < enable_log_upload) then
 			return mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
 		end
 	end, ts, lvl, ...)

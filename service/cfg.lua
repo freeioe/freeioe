@@ -89,7 +89,7 @@ skynet.start(function()
 				md5sum = sum
 				save_cfg(cfg, db_file)
 			end
-			skynet.sleep(500)
+			skynet.sleep(50)
 		end
 	end)
 end)
