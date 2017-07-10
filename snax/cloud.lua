@@ -134,7 +134,7 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 	end
 end
 
-local function on_enable_log_upload(enable)
+local function connect_log_server(enable)
 	local logger = snax.uniqueservice('logger')
 	local obj = snax.self()
 	if enable then
@@ -167,10 +167,6 @@ local function load_conf()
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
-
-	if enable_log_upload then
-		on_enable_log_upload(enable_log_upload)
-	end
 
 	load_cov_conf()
 end
@@ -464,10 +460,12 @@ function init()
 	load_conf()
 	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
 
-	comm_buffer = cyclebuffer:new(32)
-	log_buffer = cyclebuffer:new(128)
+	comm_buffer = cyclebuffer:new(32, "COMM")
+	log_buffer = cyclebuffer:new(128, "LOG")
 
 	mosq.init()
+
+	connect_log_server(true)
 
 	--- Worker thread
 	skynet.fork(function()

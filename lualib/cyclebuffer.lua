@@ -2,8 +2,9 @@ local class = require 'middleclass'
 
 local cb = class("_CycleBuffer_LIB")
 
-function cb:initialize(size)
+function cb:initialize(size, name)
 	self._max_size = size
+	self._name = name or "unknown cycle buffer"
 	self._buf = {}
 end
 
