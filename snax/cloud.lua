@@ -248,6 +248,7 @@ function response.connect(clean_session, username, password)
 		if success then
 			log.notice("ON_CONNECT", success, rc, msg) 
 			mqtt_client = client
+			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			for _, v in ipairs(wildtopics) do
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
@@ -276,6 +277,8 @@ function response.connect(clean_session, username, password)
 	-- Do not have on_log callback it crashes
 	--client.ON_LOG = log_callback
 	client.ON_MESSAGE = msg_callback
+
+	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
 
 	if enable_async then
 		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
