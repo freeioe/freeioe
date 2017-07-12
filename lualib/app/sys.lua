@@ -43,7 +43,7 @@ end
 
 
 function sys:cancelable_timeout(ms, func)
-	local cancel = cancelable_timeout(ms / 10, dosomething)
+	local cancel = cancelable_timeout(ms / 10, func)
 	return cancel
 end
 

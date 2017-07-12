@@ -436,11 +436,23 @@ function accept.fire_data_snapshot()
 	end)
 end
 
+local fire_device_timer = nil
 function accept.fire_devices()
-	if mqtt_client then
-		local value = cjson.encode(datacenter.get('DEVICES'))
-		mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
+	if fire_device_timer then
+		return
 	end
+	fire_device_timer = function()
+		if mqtt_client then
+			local value = cjson.encode(datacenter.get('DEVICES'))
+			mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
+		end
+	end
+	skynet.timeout(10, function()
+		if fire_device_timer then
+			fire_device_timer()
+			fire_device_timer = nil
+		end
+	end)
 end
 
 function accept.app_install(args)
@@ -506,5 +518,6 @@ function init()
 end
 
 function exit(...)
+	fire_device_timer = nil
 	mosq.cleanup()
 end
