@@ -247,8 +247,8 @@ function response.connect(clean_session, username, password)
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
 			log.notice("ON_CONNECT", success, rc, msg) 
-			mqtt_client = client
 			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
+			mqtt_client = client
 			for _, v in ipairs(wildtopics) do
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
