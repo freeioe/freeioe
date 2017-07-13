@@ -60,7 +60,7 @@ local wildtopics = {
 	"app/#",
 	"sys/#",
 	"output/#",
-	--"data/#",
+	"command/#",
 }
 
 --- MQTT Publish Message Handler
@@ -119,6 +119,10 @@ local msg_handler = {
 		if topic == "/snapshot" then
 			snax.self().post.fire_data_snapshot()
 		end
+	end,
+	command = function(topic, data, qos, retained)
+		local cmd = cjson.decode(data)
+		-- TODO:
 	end,
 }
 
@@ -253,9 +257,11 @@ function response.connect(clean_session, username, password)
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
+			--[[
 			if enable_data_upload then
 				snax.self().post.fire_data_snapshot()
 			end
+			]]--
 		else
 			snax.self().post.reconnect_inter()
 		end
