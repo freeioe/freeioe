@@ -25,7 +25,10 @@ function app:start()
 	})
 	local args = {}
 	for i = 1, 10 do
-		args[#args + 1] = 'tag'..i
+		args[#args + 1] = { 
+			name='tag'..i,
+			desc='tag'..i..' description',
+		}
 	end
 	self._dev1 = self._api:add_device("xxxx", args)
 	--self._api:del_device("xxxx")

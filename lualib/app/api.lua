@@ -174,7 +174,7 @@ function dev_api:initialize(api, sn, props, readonly)
 
 	self._inputs_map = {}
 	for _, t in ipairs(props.inputs) do
-		self._inputs_map[t] = true
+		self._inputs_map[t.name] = true
 	end
 end
 
@@ -196,7 +196,7 @@ function dev_api:mod(inputs, outputs, commands)
 
 	self._inputs_map = {}
 	for _, t in ipairs(inputs) do
-		self._inputs_map[t] = true
+		self._inputs_map[t.name] = true
 	end
 	dc.set('DEVICES', sn, props)
 

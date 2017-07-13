@@ -21,7 +21,21 @@ function app:start()
 	})
 
 	local sys_id = self._sys:id()
-	self._dev = self._api:add_device(sys_id, {"cpuload", "uptime", "starttime"})
+	local inputs = {
+		{
+			name = 'cpuload',
+			desc = 'System CPU Load'
+		},
+		{
+			name = "uptime",
+			desc = "System uptime"
+		},
+		{
+			name = "starttime",
+			desc = "System start time in UTC"
+		},
+	}
+	self._dev = self._api:add_device(sys_id, inputs)
 
 	return true
 end

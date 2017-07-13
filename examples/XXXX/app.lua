@@ -38,7 +38,7 @@ function app:start()
 	})
 
 	local sn = '666'--self._api:gen_sn()
-	self._dev1 = self._api:add_device(sn, {"tag1"})
+	self._dev1 = self._api:add_device(sn, {{name="tag1", desc="tag1 desc"}})
 
 	--[[
 	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
@@ -65,13 +65,21 @@ end
 
 function app:list_devices()
 	return {
-		['666'] = "Description A Device",
+		{
+			name = '666',
+			desc = "Description A Device",
+		}
 	}
 end
 
 function app:list_props(device)
 	return {
-		tag1 = "Property A Description",
+		inputs = {
+			{
+				name="tag1",
+				desc = "Property A Description",
+			}
+		}
 	}
 end
 
