@@ -122,7 +122,10 @@ local msg_handler = {
 	end,
 	command = function(topic, data, qos, retained)
 		local cmd = cjson.decode(data)
-		-- TODO:
+		local topic = topic or data.topic
+		if cmd.id then
+			snax.self().post.action_result('command', cmd.id, true, "OK")
+		end
 	end,
 }
 
@@ -492,8 +495,10 @@ function accept.action_result(action, id, result, message)
 			id = id,
 			result = result,
 			message = message,
+			timestamp = skynet.time(),
+			timestamp_str = os.date(),
 		}
-		mqtt_client:publish(mqtt_id.."/"..action.."/result", cjson.encode(r), 1, false)
+		mqtt_client:publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
 

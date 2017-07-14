@@ -12,6 +12,7 @@ function api:initialize(app_name, mgr_snax, cloud_snax)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax or snax.uniqueservice('appmgr')
 	self._cloud_snax = cloud_snax or snax.uniqueservice('cloud')
+	self._app_sn = nil
 end
 
 function api:data_dispatch(channel, source, cmd, app, sn, ...)
@@ -145,7 +146,8 @@ end
 -- Generate device application
 --]]
 function api:gen_sn(dev_name)
-	return self._cloud_snax.req.gen_sn(self._app_name, dev_name)
+	assert(self._app_sn)
+	return self._app_sn..'.'..self._cloud_snax.req.gen_sn(self._app_name, dev_name)
 end
 
 --[[

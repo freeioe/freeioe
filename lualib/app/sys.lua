@@ -83,6 +83,10 @@ function sys:sleep(ms)
 end
 
 function sys:data_api()
+	if not self._data_api then
+		self._data_api = api:new(app_name, self._mgr_snax)
+		self._data_api._app_sn = self:app_sn()
+	end
 	return self._data_api
 end
 
@@ -118,7 +122,6 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
 	self._wrap_snax = wrap_snax
 	self._app_name = app_name
-	self._data_api = api:new(app_name, mgr_snax)
 end
 
 return sys
