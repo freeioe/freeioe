@@ -55,11 +55,11 @@ local function install_result(id, result, ...)
 	end
 
 	if cloud then
-		cloud.post.action_result(id, result, ...)
+		cloud.post.action_result("app", id, result, ...)
 	end
 end
 
-function command.upgrade_app(args)--inst_name, version)
+function command.upgrade_app(args)
 	local id = args.id
 	local inst_name = args.inst
 	local version = args.version
@@ -70,11 +70,12 @@ function command.upgrade_app(args)--inst_name, version)
 	return true
 end
 
-function command.install_app(args) --name, version, inst_name)
+function command.install_app(args)
 	local id = args.id
 	local name = args.name
 	local inst_name = args.inst
 	local version = args.version
+	local sn = args.sn or cloud.req.gen_sn(inst_name)
 
 	if datacenter.get("APPS", inst_name) then
 		local err = "Application already installed"
@@ -92,7 +93,7 @@ function command.install_app(args) --name, version, inst_name)
 			os.execute("unzip -oq "..info.." -d "..target_folder)
 			local r, err = appmgr.req.start(inst_name, {})
 			if r then
-				datacenter.set("APPS", inst_name, {name=name, version=version})
+				datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn})
 				install_result(id, true, "Application installtion is done")
 			else
 				install_result(id, false, "Failed to start App. Error: "..err)
@@ -103,7 +104,7 @@ function command.install_app(args) --name, version, inst_name)
 	end)
 end
 
-function command.uninstall_app(args) --inst_name)
+function command.uninstall_app(args)
 	local id = args.id
 	local inst_name = args.inst
 

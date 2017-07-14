@@ -486,14 +486,14 @@ function accept.sys_upgrade(args)
 	skynet.call("UPGRADER", "lua", "upgrade_core", args)
 end
 
-function accept.action_result(id, result, message)
+function accept.action_result(action, id, result, message)
 	if mqtt_client then
 		local r = {
 			id = id,
 			result = result,
 			message = message,
 		}
-		mqtt_client:publish(mqtt_id.."/action_result", cjson.encode(r), 1, false)
+		mqtt_client:publish(mqtt_id.."/"..action.."/result", cjson.encode(r), 1, false)
 	end
 end
 
