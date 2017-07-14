@@ -83,10 +83,6 @@ function sys:sleep(ms)
 end
 
 function sys:data_api()
-	if not self._data_api then
-		self._data_api = api:new(app_name, self._mgr_snax)
-		self._data_api._app_sn = self:app_sn()
-	end
 	return self._data_api
 end
 
@@ -110,7 +106,20 @@ end
 -- Application SN
 function sys:app_sn()
 	app = dc.get("APPS", self._app_name)
-	return app.sn
+	if app then
+		return app.sn
+	end
+
+	local cloud = snax.uniqueservice('cloud')
+	return cloud.req.gen_sn(self._app_name)
+end
+
+--[[
+-- Generate device application
+--]]
+function sys:gen_sn(dev_name)
+	local cloud = snax.uniqueservice('cloud')
+	return self:app_sn() ..'.'.. cloud.req.gen_sn(self._app_name, dev_name)
 end
 
 -- System ID
@@ -122,6 +131,7 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
 	self._wrap_snax = wrap_snax
 	self._app_name = app_name
+	self._data_api = api:new(app_name, mgr_snax)
 end
 
 return sys
