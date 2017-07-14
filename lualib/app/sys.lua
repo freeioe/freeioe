@@ -1,5 +1,6 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
+local dc = require 'skynet.datacenter'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local api = require 'app.api'
@@ -102,9 +103,14 @@ function sys:app_dir()
 	--return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
 end
 
+-- Application SN
+function sys:app_sn()
+	app = dc.get("APPS", self._app_name)
+	return app.sn
+end
+
 -- System ID
 function sys:id()
-	local dc = require 'skynet.datacenter'
 	return dc.get("CLOUD", "ID")
 end
 

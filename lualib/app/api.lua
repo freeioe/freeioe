@@ -142,18 +142,10 @@ function api:dump_comm(sn, dir, ...)
 end
 
 --[[
--- Get device application serial number
---]]
-function api:get_sn()
-	app = dc.get("APPS", self._app_name)
-	return app.sn
-end
-
---[[
 -- Generate device application
 --]]
-function api:gen_sn()
-	return self._cloud_snax.req.gen_sn(self._app_name)
+function api:gen_sn(dev_name)
+	return self._cloud_snax.req.gen_sn(self._app_name, dev_name)
 end
 
 --[[
