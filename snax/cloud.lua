@@ -206,6 +206,7 @@ local Handler = {
 				else
 					key = key..app.."/"..dir
 				end
+				--log.trace('publish comm', key, ts, content)
 				return mqtt_client:publish(key, ts..'\t'..content, 1, false)
 			end
 		end, app, sn, dir, ts, content)
@@ -223,7 +224,7 @@ local Handler = {
 		snax.self().post.fire_devices()
 	end,
 	on_input = function(app, sn, prop, prop_type, value, timestamp, quality)
-		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value)
+		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value, timestamp, quality)
 		local val = { timestamp or skynet.time(), value, quality or 0 }
 		--local key = table.concat({app, sn, prop, prop_type}, '/')
 		local key = table.concat({sn, prop, prop_type}, '/')
