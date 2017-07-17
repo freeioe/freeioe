@@ -122,7 +122,7 @@ local msg_handler = {
 	end,
 	command = function(topic, data, qos, retained)
 		local cmd = cjson.decode(data)
-		local topic = topic or data.topic
+		print(topic, data)
 		if cmd.id then
 			snax.self().post.action_result('command', cmd.id, true, "OK")
 		end

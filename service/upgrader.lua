@@ -116,8 +116,9 @@ function command.uninstall_app(args)
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
 		install_result(id, true, "Application uninstall is done")
+	else
+		install_result(id, false, "Application uninstall failed, Error: "..err)
 	end
-	install_result(id, false, "Application uninstall failed, Error: "..err)
 end
 
 function command.list_app()
