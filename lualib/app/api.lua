@@ -12,7 +12,6 @@ function api:initialize(app_name, mgr_snax, cloud_snax)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax or snax.uniqueservice('appmgr')
 	self._cloud_snax = cloud_snax or snax.uniqueservice('cloud')
-	self._app_sn = nil
 end
 
 function api:data_dispatch(channel, source, cmd, app, sn, ...)
@@ -138,7 +137,8 @@ function api:send_ctrl(app, ctrl, params)
 	self._ctrl_chn:publish('ctrl', self._app_name, app, cmd, params)
 end
 
-function api:dump_comm(sn, dir, ...)
+function api:_dump_comm(sn, dir, ...)
+	assert(sn)
 	return self._comm_chn:publish(self._app_name, sn, dir, skynet.time(), ...)
 end
 

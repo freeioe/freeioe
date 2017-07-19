@@ -14,7 +14,7 @@ end
 function app:start()
 	local dev = modbus.new_tcp_pi("127.0.0.1", 1502)
 	--local dev = modbus.new_rtu("/tmp/ttyS10", 115200, "none", 8, 1)
-	--dev:set_debug()
+	dev:set_debug()
 	dev:connect()
 	self._dev = dev
 

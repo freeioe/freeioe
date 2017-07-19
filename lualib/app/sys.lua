@@ -18,7 +18,9 @@ function sys:error(...)
 end
 
 function sys:dump_comm(sn, dir, ...)
-	return self._data_api:dump_comm(sn, dir, ...)
+	local sn = sn or self:app_sn()
+	print(sn)
+	return self._data_api:_dump_comm(sn, dir, ...)
 end
 
 function sys:fork(func, ...)
@@ -105,13 +107,22 @@ end
 
 -- Application SN
 function sys:app_sn()
-	app = dc.get("APPS", self._app_name)
-	if app then
-		return app.sn
+	local app_sn = self._app_sn
+	if app_sn then
+		return app_sn
 	end
 
-	local cloud = snax.uniqueservice('cloud')
-	return cloud.req.gen_sn(self._app_name)
+	app = dc.get("APPS", self._app_name)
+	if app then
+		app_sn = app.sn
+	end
+	if not app_sn then
+		local cloud = snax.uniqueservice('cloud')
+		app_sn = cloud.req.gen_sn(self._app_name)
+	end
+	self._app_sn = app_sn
+
+	return self._app_sn
 end
 
 --[[
@@ -132,6 +143,7 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._wrap_snax = wrap_snax
 	self._app_name = app_name
 	self._data_api = api:new(app_name, mgr_snax)
+	self._app_sn = nil
 end
 
 return sys
