@@ -2,14 +2,41 @@ local class = require 'middleclass'
 local socket = require 'skynet.socket'
 local modbus = require 'modbus.init'
 
-local app = class("XXXX_App")
+local app = class("SSKL_BMS_App")
 
 function app:initialize(name, conf, sys)
 	self._name = name
 	self._conf = conf
 	self._sys = sys
 	self._api = sys:data_api()
-	sys:log("debug", name.." Application initlized")
+end
+
+local function create_stream(dev, sock)
+	local dev = dev
+	local sock = sock
+	return {
+		send = function(msg)
+			dev:dump_comm('OUT', msg)
+			socket.write(sock, msg)
+		end,
+		read = function(check, timeout)
+			timeout = os.time() + timeout
+			local buf = ""
+			while os.time() < timeout do
+				local str, err = socket.read(sock)
+				if not str then
+					return nil, err
+				end
+				dev:dump_comm('IN', str)
+				buf = buf..str
+				local pdu, err = check(buf)
+				if pdu then
+					return pdu
+				end
+			end
+			return nil, "timeout"
+		end,
+	}
 end
 
 function app:start()
@@ -20,7 +47,7 @@ function app:start()
 			self._dev1:dump_comm('OUT', msg)
 			socket.write(stream, msg)
 		end,
-		read = function(check, timeout)
+		read = function(t, check, timeout)
 			timeout = os.time() + timeout
 			local buf = ""
 			while os.time() < timeout do
@@ -30,9 +57,9 @@ function app:start()
 				end
 				self._dev1:dump_comm('IN', str)
 				buf = buf..str
-				local pdu, err = check(buf)
-				if pdu then
-					return pdu
+				local r, b, e = check(buf, t, port_config, {unit=1, ecm="1"})
+				if r then
+					return r
 				end
 			end
 			return nil, "timeout"
