@@ -17,7 +17,7 @@ function cb:handle(cb, ...)
 			if ne and cb(table.unpack(v)) then
 				--
 			else
-				ne = true
+				ne = false
 				nbuf[#nbuf + 1] = v
 			end
 		end

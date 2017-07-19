@@ -19,7 +19,6 @@ end
 
 function sys:dump_comm(sn, dir, ...)
 	local sn = sn or self:app_sn()
-	print(sn)
 	return self._data_api:_dump_comm(sn, dir, ...)
 end
 
