@@ -18,8 +18,8 @@ end
 local function work_proc()
 	local timeout = 1000
 	while app do
-		timeout = app:run(timeout) or timeout
 		skynet.sleep(timeout / 10)
+		timeout = app:run(timeout) or timeout
 	end
 end
 

@@ -76,7 +76,7 @@ local inputs = {
 	{ name = "SOC", desc = "剩余容量%"},
 	{ name = "CMax", desc = "额定容量Ah"},
 	{ name = "CLeft", desc = "剩余容量"},
-	{ name = "BNo", desc = "电池组号", vt="integer"},
+	{ name = "BNo", desc = "电池组号", vt="int"},
 }
 
 function app:start()
