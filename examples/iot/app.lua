@@ -51,7 +51,7 @@ function app:run(tms)
 	end
 	self._dev:set_input_prop('uptime', "value", self._sys:now())
 	local loadavg = sysinfo.loadavg()
-	self._dev:set_input_prop('cpuload', "value", loadavg.lavg_15)
+	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))
 	return 1000 * 60
 end
 

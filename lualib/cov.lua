@@ -20,16 +20,9 @@ function cov:handle_number(key, value, cb, threshold)
 		self._retained_map[key] = value
 		return cb(key, value)
 	end
-	if math.tointeger(value) then
-		if value ~= org_value then
-			self._retained_map[key] = value
-			return cb(key, value)
-		end
-	else
-		if math.abs(value - org_value) > threshold then
-			self._retained_map[key] = value
-			return cb(key, value)
-		end
+	if math.abs(value - org_value) > threshold then
+		self._retained_map[key] = value
+		return cb(key, value)
 	end
 end
 

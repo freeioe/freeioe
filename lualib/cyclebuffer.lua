@@ -9,31 +9,35 @@ function cb:initialize(size, name)
 end
 
 function cb:handle(cb, ...)
-	local buf = self._buf
-	local ne = true
-	if #buf > 0 then
-		local nbuf = {}
-		for _, v in ipairs(buf) do
-			if ne and cb(table.unpack(v)) then
-				--
-			else
-				ne = false
-				nbuf[#nbuf + 1] = v
-			end
-		end
-		buf = nbuf
-	end
-
+	local ne = self:fire_all(cb)
 	if ne and cb(...) then
-		self._buf = buf
 		return
 	end
 
-	buf[#buf + 1] = {...}
-	if #buf > self._max_size then
-		table.remove(buf, 1)	
+	self._buf[#self._buf + 1] = {...}
+	if #self._buf > self._max_size then
+		table.remove(self._buf, 1)	
 	end
-	self._buf = buf
+end
+
+function cb:fire_all(cb)
+	local buf = self._buf
+	local ne = true
+	if #buf <= 0 then
+		return true
+	end
+
+	local nbuf = {}
+	for _, v in ipairs(buf) do
+		if ne and cb(table.unpack(v)) then
+			--
+		else
+			ne = false
+			nbuf[#nbuf + 1] = v
+		end
+	end
+	self._buf = nbuf
+	return ne
 end
 
 function cb:size()

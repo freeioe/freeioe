@@ -227,15 +227,17 @@ local Handler = {
 	end,
 	on_input = function(app, sn, prop, prop_type, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value, timestamp, quality)
-		local val = { timestamp or skynet.time(), value, quality or 0 }
 		--local key = table.concat({app, sn, prop, prop_type}, '/')
 		local key = table.concat({sn, prop, prop_type}, '/')
+		local timestamp = timestamp or skynet.time()
+		local quality = quality or 0
 
 		cov:handle(key, value, function(key, value)
 			if mqtt_client and enable_data_upload then
 				log.trace("Publish data", key, value, timestamp, quality)
-				local value = cjson.encode(val) or value
-				mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, true)
+
+				local val = cjson.encode({ timestamp, value, quality}) or value
+				mqtt_client:publish(mqtt_id.."/data/"..key, val, 1, true)
 			end
 		end)
 	end,
