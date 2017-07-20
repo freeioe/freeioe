@@ -20,7 +20,7 @@ local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
 --- Whether using the async mode (which cause crashes for now -_-!)
-local enable_async = false
+local enable_async = true
 
 --- Cloud options
 local enable_data_upload = nil
@@ -69,7 +69,7 @@ local msg_handler = {
 		--log.trace('MSG.DATA', topic, data, qos, retained)
 	end,
 	app = function(topic, data, qos, retained)
-		log.trace('MSG.APP', topic, data, qos, retained)
+		--log.trace('MSG.APP', topic, data, qos, retained)
 		if topic == '/install' then
 			local app = cjson.decode(data)
 			snax.self().post.app_install(app)
@@ -87,7 +87,7 @@ local msg_handler = {
 		end
 	end,
 	sys = function(topic, data, qos, retained)
-		log.trace('MSG.SYS', topic, data, qos, retained)
+		--log.trace('MSG.SYS', topic, data, qos, retained)
 		if topic == '/enable/data' then
 			snax.self().post.enable_data(tonumber(data) == 1)
 		end
@@ -113,7 +113,7 @@ local msg_handler = {
 		end
 	end,
 	output = function(topic, data, qos, retained)
-		log.trace('MSG.OUTPUT', topic, data, qos, retained)
+		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
 	end,
 	input = function(topic, data, qos, retained)
 		if topic == "/snapshot" then
@@ -130,7 +130,7 @@ local msg_handler = {
 }
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	log.debug("msg_callback", packet_id, topic, data, qos, retained)
+	--log.debug("msg_callback", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		return
@@ -518,17 +518,19 @@ function init()
 
 	connect_log_server(true)
 
-	--- Worker thread
-	skynet.fork(function()
-		while true do
-			if mqtt_client then
-				mqtt_client:loop(50, 1)
-				skynet.sleep(0)
-			else
-				skynet.sleep(50)
+	if not enable_async then
+		--- Worker thread
+		skynet.fork(function()
+			while true do
+				if mqtt_client then
+					mqtt_client:loop(50, 1)
+					skynet.sleep(0)
+				else
+					skynet.sleep(50)
+				end
 			end
-		end
-	end)
+		end)
+	end
 	local s = snax.self()
 	skynet.call("UPGRADER", "lua", "bind_cloud", s.handle, s.type)
 end
