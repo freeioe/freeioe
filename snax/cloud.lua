@@ -20,7 +20,8 @@ local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
 --- Whether using the async mode (which cause crashes for now -_-!)
-local enable_async = true
+local enable_async = false
+local close_connection = false
 
 --- Cloud options
 local enable_data_upload = nil
@@ -250,9 +251,9 @@ function response.ping()
 	return "PONG"
 end
 
-function response.connect(clean_session, username, password)
+function connect_proc(clean_session, username, password)
 	local clean_session = clean_session or true
-	local client = mosq.new(mqtt_id, clean_session)
+	local client = assert(mosq.new(mqtt_id, clean_session))
 	if username then
 		client:login_set(username, password)
 	end
@@ -265,31 +266,20 @@ function response.connect(clean_session, username, password)
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
-			--[[
-			if enable_data_upload then
-				snax.self().post.fire_data_snapshot()
-			end
-			]]--
 		else
-			snax.self().post.reconnect_inter()
+			mqtt_client = nil
+			skynet.timeout(100, function() connect_proc() end)
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("ON_DISCONNECT", success, rc, msg) 
 		if not enable_async and mqtt_client then
-			snax.self().post.reconnect_inter()
+			mqtt_client = nil
+			skynet.timeout(100, function() connect_proc() end)
 		end
 	end
 
-	--[[
-	client.ON_PUBLISH = function(...) log.debug("ON_PUBLISH", ...) end
-	client.ON_SUBSCRIBE = function(...) log.debug("ON_SUBSCRIBE", ...) end
-	client.ON_UNSUBSCRIBE = function(...) log.debug("ON_UNSUBSCRIBE", ...) end
-	--client.ON_LOG = function(...) log.debug("ON_LOG", ...) end
-	]]--
-
-	-- Do not have on_log callback it crashes
-	--client.ON_LOG = log_callback
+	client.ON_LOG = log_callback
 	client.ON_MESSAGE = msg_callback
 
 	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
@@ -297,10 +287,8 @@ function response.connect(clean_session, username, password)
 	if enable_async then
 		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
 		client:loop_start()
-
-		-- If we do not sleep, we will got crash :-(
-		skynet.sleep(10)
 	else
+		close_connection = false
 		local r, err
 		while not r do
 			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
@@ -312,26 +300,34 @@ function response.connect(clean_session, username, password)
 
 		mqtt_client = client
 
+		--- Worker thread
+		while mqtt_client and not close_connection do
+			skynet.sleep(0)
+			if mqtt_client then
+				mqtt_client:loop(50, 1)
+			else
+				skynet.sleep(50)
+			end
+		end
+		if mqtt_client then
+			mqtt_client:disconnect()
+			log.notice("Cloud Connection Closed!")
+		end
 	end
-
-	api = app_api:new('CLOUD')
-	api:set_handler(Handler, true)
-
-	return true
 end
 
 function response.disconnect()
 	local client = mqtt_client
 	log.debug("Cloud Connection Closing!")
 
-	mqtt_client = nil
-	client:disconnect()
 	if enable_async then
+		mqtt_client = nil
+		client:disconnect()
 		client:loop_stop()
+		log.notice("Cloud Connection Closed!")
+	else
+		close_connection = true
 	end
-	client:destroy()
-
-	log.notice("Cloud Connection Closed!")
 	return true
 end
 
@@ -410,35 +406,6 @@ function accept.log(ts, lvl, ...)
 end
 
 ---
--- Disconnect and reconnect again to server
---
-function accept.reconnect()
-	snax.self().req.disconnect()
-	snax.self().req.connect()
-end
-
----
--- Used by disconnected event for reconnect
---
-function accept.reconnect_inter()
-	local client = mqtt_client
-	if not client then
-		return
-	end
-
-	mqtt_client = nil
-	local r, err
-	while not r do
-		r, err = client:reconnect()
-		if not r then
-			log.error("Reconnect to broker failed!", err)
-			skynet.sleep(500)
-		end
-	end
-	mqtt_client = client
-end
-
----
 -- Fire data snapshot
 ---
 function accept.fire_data_snapshot()
@@ -508,31 +475,24 @@ function accept.action_result(action, id, result, message)
 end
 
 function init()
+	mosq.init()
+
 	load_conf()
 	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
 
 	comm_buffer = cyclebuffer:new(32, "COMM")
 	log_buffer = cyclebuffer:new(128, "LOG")
 
-	mosq.init()
-
 	connect_log_server(true)
 
-	if not enable_async then
-		--- Worker thread
-		skynet.fork(function()
-			while true do
-				if mqtt_client then
-					mqtt_client:loop(50, 1)
-					skynet.sleep(0)
-				else
-					skynet.sleep(50)
-				end
-			end
-		end)
-	end
 	local s = snax.self()
 	skynet.call("UPGRADER", "lua", "bind_cloud", s.handle, s.type)
+
+	skynet.fork(function()
+		api = app_api:new('CLOUD')
+		api:set_handler(Handler, true)
+	end)
+	skynet.timeout(10, function() connect_proc() end)
 end
 
 function exit(...)

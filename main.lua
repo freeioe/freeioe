@@ -13,8 +13,6 @@ skynet.start(function()
 	skynet.newservice("upgrader")
 
 	local cloud = snax.uniqueservice("cloud")
-	local r, err = cloud.req.connect()
-
 	local appmgr = snax.uniqueservice("appmgr")
 	--local app = appmgr.req.start("XXXX", {test="AAA"})
 	local app = appmgr.req.start("iot")
