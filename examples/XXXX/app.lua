@@ -9,7 +9,7 @@ function app:initialize(name, conf, sys)
 	self._sys = sys
 	self._api = self._sys:data_api()
 	sys:log("debug", "XXXX Application initlized")
-	print("folder", sys:app_dir())
+	--print("folder", sys:app_dir())
 	--[[
 	print(sys:write_json("xx.json", conf))
 	print(sys:read_json("xx.json"))

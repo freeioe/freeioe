@@ -131,7 +131,7 @@ local msg_handler = {
 }
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	--log.debug("msg_callback", packet_id, topic, data, qos, retained)
+	log.debug("msg_callback", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		return
