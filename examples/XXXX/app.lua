@@ -93,6 +93,7 @@ function app:run(tms)
 	--self._dev1:set_input_prop('tag1', "value", self._sys:now())
 	self._dev1:set_input_prop('tag1', "value", math.random())
 	self._sys:dump_comm(nil, "IN", "XXXXXXXXXXXX")
+	return 10000
 end
 
 return app

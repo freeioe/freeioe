@@ -237,7 +237,7 @@ local Handler = {
 
 		cov:handle(function(key, value, timestamp, quality)
 			if mqtt_client and enable_data_upload then
-				log.trace("Publish data", key, value, timestamp, quality)
+				--log.trace("Publish data", key, value, timestamp, quality)
 
 				local val = cjson.encode({ timestamp, value, quality}) or value
 				mqtt_client:publish(mqtt_id.."/data/"..key, val, 1, true)
