@@ -44,7 +44,9 @@ end
 function response.start()
 	if app then
 		app:start()
-		skynet.fork(work_proc)
+		if app.run then
+			skynet.fork(work_proc)
+		end
 		return true
 	else
 		return nil, "app is nil"

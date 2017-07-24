@@ -28,11 +28,13 @@ function app:start()
 		},
 		{
 			name = "uptime",
-			desc = "System uptime"
+			desc = "System uptime",
+			vt = "int",
 		},
 		{
 			name = "starttime",
-			desc = "System start time in UTC"
+			desc = "System start time in UTC",
+			vt = "int",
 		},
 	}
 	self._dev = self._api:add_device(sys_id, inputs)
@@ -47,7 +49,7 @@ end
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
-		self._dev:set_input_prop('startime', "value", self._start_time)
+		self._dev:set_input_prop('starttime', "value", self._start_time)
 	end
 	self._dev:set_input_prop('uptime', "value", self._sys:now())
 	local loadavg = sysinfo.loadavg()

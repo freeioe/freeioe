@@ -78,6 +78,7 @@ function app:list_props(device)
 			{
 				name="tag1",
 				desc = "Property A Description",
+				-- vt = "int",
 			}
 		}
 	}
@@ -89,7 +90,8 @@ function app:run(tms)
 		self._port:write("BBBB")
 	end
 	]]--
-	self._dev1:set_input_prop('tag1', "value", self._sys:now())
+	--self._dev1:set_input_prop('tag1', "value", self._sys:now())
+	self._dev1:set_input_prop('tag1', "value", math.random())
 	self._sys:dump_comm(nil, "IN", "XXXXXXXXXXXX")
 end
 

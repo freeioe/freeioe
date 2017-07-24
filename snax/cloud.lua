@@ -161,6 +161,8 @@ local function load_cov_conf()
 	local opt = {}
 	if not enable_cov then
 		opt.disable = true
+	else
+		opt.ttl = 60 -- 60 seconds
 	end
 
 	cov = cov_m:new(opt)
@@ -198,7 +200,7 @@ local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
 		local hex = crypt.hexencode(table.concat({...}, '\t'))
 		hex = string.gsub(hex, "%w%w", "%1 ")
-		log.trace('on_comm', app, sn, dir, ts, hex)
+		--log.trace('on_comm', app, sn, dir, ts, hex)
 		local id = mqtt_id
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		comm_buffer:handle(function(app, sn, dir, ts, content)
@@ -233,14 +235,14 @@ local Handler = {
 		local timestamp = timestamp or skynet.time()
 		local quality = quality or 0
 
-		cov:handle(key, value, function(key, value)
+		cov:handle(function(key, value, timestamp, quality)
 			if mqtt_client and enable_data_upload then
 				log.trace("Publish data", key, value, timestamp, quality)
 
 				local val = cjson.encode({ timestamp, value, quality}) or value
 				mqtt_client:publish(mqtt_id.."/data/"..key, val, 1, true)
 			end
-		end)
+		end, key, value, timestamp, quality)
 	end,
 }
 
@@ -251,7 +253,7 @@ function response.ping()
 	return "PONG"
 end
 
-function connect_proc(clean_session, username, password)
+local function connect_proc(clean_session, username, password)
 	local clean_session = clean_session or true
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	if username then
@@ -409,10 +411,11 @@ end
 -- Fire data snapshot
 ---
 function accept.fire_data_snapshot()
-	cov:fire_snapshot(function(key, v)
+	local now = skynet.time()
+	cov:fire_snapshot(function(key, value, timestamp, quality)
 		if mqtt_client then
-			local value = cjson.encode({ skynet.time(), v, 0 })
-			mqtt_client:publish(mqtt_id.."/data/"..key, value, 1, true)
+			local val = cjson.encode({ timestamp or now, value, quality or 0 })
+			mqtt_client:publish(mqtt_id.."/data/"..key, val, 1, true)
 		end
 	end)
 end

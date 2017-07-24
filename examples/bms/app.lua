@@ -4,6 +4,8 @@ local modbus = require 'modbus.init'
 
 local app = class("SSKL_BMS_App")
 
+local enable_fake_test = true
+
 function app:initialize(name, conf, sys)
 	self._name = name
 	self._conf = conf
@@ -39,6 +41,7 @@ local function create_stream(dev, sock)
 	}
 end
 
+local TestU = {}
 local inputs = {
 	{ name = "Us01", desc = "单体电压01"},
 	{ name = "Us02", desc = "单体电压02"},
@@ -78,6 +81,9 @@ local inputs = {
 	{ name = "CLeft", desc = "剩余容量"},
 	{ name = "BNo", desc = "电池组号", vt="int"},
 }
+if enable_fake_test then
+	inputs[#inputs + 1] = { name = "TestU", desc = "测试数据"}
+end
 
 function app:start()
 	self._api:set_handler({
@@ -102,6 +108,18 @@ function app:start()
 		}
 	end
 	self._devs = devs
+
+	if enable_fake_test then
+		self._sys:fork(function()
+			while true do
+				TestU = {
+					math.random(),
+					math.random()
+				}
+				self._sys:sleep(10000)
+			end
+		end)
+	end
 
 	return true
 end
@@ -150,7 +168,7 @@ local regs = {
 	{ "BNo", "uint16", 2 },
 }
 
-local function read_bms(dev, client)
+function app:read_bms(dev, client, no)
 	local base_address = 0x00
 	local req = {
 		func = 0x03,
@@ -168,6 +186,7 @@ local function read_bms(dev, client)
 	assert(len >= 38 * 2)
 
 	local index = 1
+	local now = self._sys:time()
 	for _, reg in ipairs(regs) do
 		local df = d[reg[2]]
 		assert(df)
@@ -175,16 +194,25 @@ local function read_bms(dev, client)
 		index = index + reg[3]
 		if reg[4] then
 			val = val * reg[4]
-			dev:set_input_prop(reg[1], "value", val)
+			dev:set_input_prop(reg[1], "value", val, now, 0)
 		else
-			dev:set_input_prop(reg[1], "value", math.tointeger(val))
+			if enable_fake_test then
+				if reg[1] == "BNo" then
+					dev:set_input_prop(reg[1], "value", no, now, 0)
+					dev:set_input_prop("TestU", "value", TestU[no], now, 0)
+				else
+					dev:set_input_prop(reg[1], "value", math.tointeger(val), now, 0)
+				end
+			else
+				dev:set_input_prop(reg[1], "value", math.tointeger(val), now, 0)
+			end
 		end
 	end
 end
 
 function app:run(tms)
-	for _, d in ipairs(self._devs) do
-		read_bms(d.dev, d.client)
+	for i, d in ipairs(self._devs) do
+		self:read_bms(d.dev, d.client, i)
 	end
 	return 1000
 end

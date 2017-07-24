@@ -202,14 +202,15 @@ function dev_api:get_input_prop(input, prop)
 	return dc.set('INPUT', self._sn, input, prop)
 end
 
-function dev_api:set_input_prop(input, prop, value, quality)
+function dev_api:set_input_prop(input, prop, value, timestamp, quality)
 	assert(not self._readonly, "This is not created device")
+	assert(input and prop and value)
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
 
 	dc.set('INPUT', self._sn, input, prop, value)
-	self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, skynet.time(), quality)
+	self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp or skynet.time(), quality or 0)
 	return true
 end
 
