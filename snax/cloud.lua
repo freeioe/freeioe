@@ -203,7 +203,7 @@ local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
 		local hex = crypt.hexencode(table.concat({...}, '\t'))
 		hex = string.gsub(hex, "%w%w", "%1 ")
-		log.trace('on_comm', app, sn, dir, ts, hex)
+		--log.trace('on_comm', app, sn, dir, ts, hex)
 		local id = mqtt_id
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		comm_buffer:handle(function(app, sn, dir, ts, content)
