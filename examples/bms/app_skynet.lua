@@ -1,6 +1,8 @@
 local class = require 'middleclass'
 local modbus = require 'modbus.init'
 local sm_client = require 'modbus.skynet_client'
+local socketchannel = require 'skynet.socketchannel'
+local serialchannel = require 'serialchannel'
 
 local app = class("SSKL_BMS_App")
 
@@ -82,6 +84,7 @@ local inputs = {
 	{ name = "CLeft", desc = "剩余容量"},
 	{ name = "BNo", desc = "电池组号", vt="int"},
 }
+
 if enable_fake_test then
 	inputs[#inputs + 1] = { name = "TestU", desc = "测试数据"}
 end
@@ -100,7 +103,23 @@ function app:start()
 	local devs = {}
 	for i = 1, battery_group_count do
 		local dev = self._api:add_device(app_sn..".bg"..i, inputs)
-		local client = sm_client("127.0.0.1", 1502, i)
+
+		--[[
+		local opt = {
+			host = "127.0.0.1",
+			port = 1502,
+			nodelay = true,
+		}
+		local client = sm_client(socketchannel, opt, modbus.apdu_tcp, i)
+		]]--
+		local opt = {
+			port = "/tmp/ttyS10",
+			opt = {
+				baudrate = 115200
+			}
+		}
+		local client = sm_client(serialchannel, opt, modbus.apdu_rtu, i)
+
 		client:set_io_cb(function(io, msg)
 			dev:dump_comm(io, msg)
 		end)

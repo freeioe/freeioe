@@ -23,14 +23,16 @@ function app:start()
 		read = function(check, timeout)
 			timeout = os.time() + timeout
 			local buf = ""
+			local pdu = nil
+			local need_len = 5
 			while os.time() < timeout do
-				local str, err = socket.read(stream)
+				local str, err = socket.read(stream, need_len)
 				if not str then
 					return nil, err
 				end
 				self._dev1:dump_comm('IN', str)
 				buf = buf..str
-				local pdu, err = check(buf)
+				pdu, buf, need_len = check(buf)
 				if pdu then
 					return pdu
 				end
@@ -84,7 +86,7 @@ function app:run(tms)
 		addr = base_address,
 		len = 10,
 	}
-	local raw, err = client:request(req)
+	local raw, err = client:request(req, 1000)
 	if not raw then 
 		self._sys:log("error", "read failed: " .. err) 
 		return
