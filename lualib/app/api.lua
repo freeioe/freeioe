@@ -25,9 +25,10 @@ function api:data_dispatch(channel, source, cmd, app, sn, ...)
 end
 
 function api:ctrl_dispatch(channel, source, ctrl, app, sn, ...)
-	if app == self._app_name then
+	if app ~= self._app_name then
 		return
 	end
+
 	--log.trace('Ctrl Dispatch', channel, source, ctrl, app, sn, ...)
 	local f = self._handler['on_'..ctrl]
 	if f then
@@ -37,11 +38,11 @@ function api:ctrl_dispatch(channel, source, ctrl, app, sn, ...)
 	end
 end
 
-function api:comm_dispatch(channel, source, ...)
+function api:comm_dispatch(channel, source, app, sn, ...)
 	--log.trace('Comm Dispatch', channel, source, ...)
 	local f = self._handler.on_comm
 	if f then
-		return f(...)
+		return f(app, sn, ...)
 	else
 		log.trace('No handler for on_comm')
 	end
@@ -113,6 +114,7 @@ end
 function api:add_device(sn, inputs, outputs, commands)
 	local props = {inputs = inputs, outputs = outputs, commands = commands}
 	dc.set('DEVICES', sn, props)
+	dc.set('DEV_IN_APP', sn, self._app_name)
 	self._data_chn:publish('add_device', self._app_name, sn, props)
 	return dev_api:new(self, sn, props)
 end
@@ -122,6 +124,7 @@ function api:del_device(dev)
 	local props = dev._props
 	dev:clean_up()
 	dc.set('DEVICES', sn, nil)
+	dc.set('DEV_IN_APP', sn, nil)
 	self._data_chn:publish('del_device', self._app_name, sn, props)
 	return true
 end
@@ -160,7 +163,11 @@ end
 function dev_api:initialize(api, sn, props, readonly)
 	self._sn = sn
 	self._props = props
-	self._app_name = api._app_name
+	if readonly then
+		self._app_name = dc.get('DEV_IN_APP', sn) or api._app_name
+	else
+		self._app_name = api._app_name
+	end
 	self._data_chn = api._data_chn
 	self._ctrl_chn = api._ctrl_chn
 	self._comm_chn = api._comm_chn
@@ -216,7 +223,7 @@ end
 
 function dev_api:set_output_prop(output, prop, value)
 	dc.set('OUTPUT', self._sn, output, prop, value)
-	self._ctrl_chn:publish('output', self._app_name, self._sn, input, prop, value, skynet.time())
+	self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, skynet.time())
 	return true
 end
 

@@ -13,10 +13,13 @@ end
 function app:start()
 	self._api:set_handler({
 		on_output = function(...)
-			print(...)
+			print('on_output', ...)
+		end,
+		on_command = function(...)
+			print('on_command', ...)
 		end,
 		on_ctrl = function(...)
-			print(...)
+			print('on_ctrl', ...)
 		end,
 	})
 

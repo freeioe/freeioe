@@ -32,6 +32,9 @@ function app:start()
 		on_output = function(...)
 			print(...)
 		end,
+		on_command = function(...)
+			print(...)
+		end,	
 		on_ctrl = function(...)
 			print(...)
 		end,

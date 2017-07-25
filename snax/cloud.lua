@@ -115,6 +115,10 @@ local msg_handler = {
 	end,
 	output = function(topic, data, qos, retained)
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
+		local oi = cjson.decode(data)
+		if oi then
+			snax.self().post.output_to_app(oi)
+		end
 	end,
 	input = function(topic, data, qos, retained)
 		if topic == "/snapshot" then
@@ -123,9 +127,8 @@ local msg_handler = {
 	end,
 	command = function(topic, data, qos, retained)
 		local cmd = cjson.decode(data)
-		print(topic, data)
-		if cmd.id then
-			snax.self().post.action_result('command', cmd.id, true, "OK")
+		if cmd and cmd.id then
+			snax.self().post.command_to_app(cmd)
 		end
 	end,
 }
@@ -200,7 +203,7 @@ local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
 		local hex = crypt.hexencode(table.concat({...}, '\t'))
 		hex = string.gsub(hex, "%w%w", "%1 ")
-		--log.trace('on_comm', app, sn, dir, ts, hex)
+		log.trace('on_comm', app, sn, dir, ts, hex)
 		local id = mqtt_id
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		comm_buffer:handle(function(app, sn, dir, ts, content)
@@ -462,6 +465,26 @@ end
 
 function accept.sys_upgrade(args)
 	skynet.call("UPGRADER", "lua", "upgrade_core", args)
+end
+
+function accept.output_to_app(info)
+	local id = info.id
+	local device = info.device
+	local dev = api:get_device(device)
+	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
+	if r then
+		snax.self().post.action_result('output', id, r, err or "Done")
+	end
+end
+
+function accept.command_to_app(cmd)
+	local id = cmd.id
+	local device = cmd.device
+	if id and device then
+		local dev = api:get_device(device)
+		local r, err = dev:send_command(cmd.cmd, cmd.param)
+		snax.self().post.action_result('command', cmd.id, r, err or "OK")
+	end
 end
 
 function accept.action_result(action, id, result, message)
