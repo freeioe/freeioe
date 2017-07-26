@@ -472,6 +472,9 @@ end
 local function rs232_read(port, len)
 	while true do
 		local ilen, err = port:in_queue()
+		if not ilen then
+			return nil, err
+		end
 		if ilen and ilen >= len then
 			return port:read(len, 10)
 		end

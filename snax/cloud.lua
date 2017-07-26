@@ -159,13 +159,14 @@ end
 
 local function load_cov_conf()
 	local enable_cov = datacenter.get("CLOUD", "COV") or true
+	local ttl = datacenter.get("CLOUD", "COV_TTL") or 60 -- 60 seconds
 
 	local cov_m = require 'cov'
 	local opt = {}
 	if not enable_cov then
 		opt.disable = true
 	else
-		opt.ttl = 60 -- 60 seconds
+		opt.ttl = ttl
 	end
 
 	cov = cov_m:new(opt)
