@@ -291,7 +291,7 @@ local function try_connect(self , once)
 		elseif once then
 			return err
 		else
-			skynet.error("serial: connect", err)
+			skynet.error(string.format("serial: connect to %s failed (%s)", self.__port, err))
 		end
 		if t > 1000 then
 			skynet.error("serial: try to reconnect", self.__port)

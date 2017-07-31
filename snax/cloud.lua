@@ -262,6 +262,8 @@ local function connect_proc(clean_session, username, password)
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	if username then
 		client:login_set(username, password)
+	else
+		client:login_set('root', 'root')
 	end
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
