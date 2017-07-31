@@ -87,4 +87,13 @@ function cov:fire_snapshot(cb)
 	end
 end
 
+function cov:timer(now)
+	local opt = self._opt
+	for key, v in pairs(self._retained_map) do
+		if math.abs(now - v[2]) > opt.ttl then
+			self._retained_map[key] = nil
+		end
+	end
+end
+
 return cov

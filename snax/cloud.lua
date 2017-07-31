@@ -170,6 +170,13 @@ local function load_cov_conf()
 	end
 
 	cov = cov_m:new(opt)
+
+	skynet.fork(function()
+		while true do
+			skynet.sleep(ttl * 3)
+			cov:timer(skynet.time())
+		end
+	end)
 end
 
 --[[
