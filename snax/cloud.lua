@@ -183,7 +183,7 @@ end
 -- loading configruation from datacenter
 --]]
 local function load_conf()
-	mqtt_id = datacenter.get("CLOUD", "ID") or mqtt_id
+	mqtt_id = datacenter.get("CLOUD", "ID") or os.getenv("IOT_SN") or mqtt_id
 	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
@@ -270,7 +270,8 @@ local function connect_proc(clean_session, username, password)
 	if username then
 		client:login_set(username, password)
 	else
-		client:login_set('root', 'root')
+		--client:login_set('root', 'root')
+		client:login_set(mqtt_id, 'ZGV2aWNlIGlkCg==')
 	end
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then

@@ -36,7 +36,7 @@ function init(...)
 		-- Writer
 		require 'log.writer.list'.new(               -- multi writers:
 			require "log.writer.console.color".new(),  -- * console color
-			require 'log.writer.file.roll'.new('./logs', lname..".log", 64, 32*1024*1024)
+			require 'log.writer.file.roll'.new('./logs', lname..".log", 4, 4*1024*1024)
 		),
 
 		-- Formatter
