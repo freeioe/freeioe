@@ -17,6 +17,7 @@ cp -r cservice __install/cservice
 cp README.md __install/
 cp HISTORY.md __install/
 cp LICENSE __install/
+cp skynet __install/
 
 # copy lwf files
 
@@ -53,10 +54,6 @@ du __release/* -sh
 # Clean up the rootfs files
 #sudo rm -rf __install
 rm -rf __install
-
-# Release example (modbus)
-# Release iot
-./scripts/release_app.sh iot
 
 ###################
 ##
