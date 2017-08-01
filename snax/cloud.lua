@@ -415,7 +415,7 @@ function accept.log(ts, lvl, ...)
 	local id = mqtt_id
 	log_buffer:handle(function(ts, lvl, ...)
 		if mqtt_client and (enable_log_upload and ts < enable_log_upload) then
-			return mqtt_client:publish(id.."/log/"..lvl, table.concat({ts, ...}, '\t'), 1, false)
+			return mqtt_client:publish(id.."/log/"..lvl, cjson.encode({ts, ...}), 1, false)
 		end
 	end, ts, lvl, ...)
 end
