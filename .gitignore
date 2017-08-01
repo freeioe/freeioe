@@ -45,3 +45,5 @@ lwf
 conf
 apps
 *.swp
+__install
+__release

@@ -11,12 +11,12 @@ mkdir __install
 
 # Copy files
 cp -r lualib __install/lualib
+cp -r luaclib __install/luaclib
 cp -r service __install/service
-cp -r snax __install/snax
-cp config __install/
-cp main.lua __install/
-cp preload.lua __install/
+cp -r cservice __install/cservice
 cp README.md __install/
+cp HISTORY.md __install/
+cp LICENSE __install/
 
 # copy lwf files
 
@@ -34,18 +34,14 @@ echo 'Revision:'$REVISION
 echo $VERSION > __install/version
 echo $REVISION >> __install/version
 
-# For pre-installed applications
-mkdir __install/apps
-./scripts/pre_inst.sh iot iot 1.2.0
-
 # Compile lua files
 # ./scripts/compile_lua.sh 
 
 # Create the cramfs image
 #sudo chown -R root:root __install
-#mkfs.cramfs __install __release/skynet_iot.$VERSION.cramfs
+#mkfs.cramfs __install __release/skynet.$VERSION.cramfs
 mksquashfs __install __release/core_gz.$VERSION.sfs -all-root > /dev/null
-#mksquashfs __install __release/skynet_iot_mips.sfs -nopad -noappend -root-owned -comp xz -Xpreset 9 -Xe -Xlc 0 -Xlp 2 -Xpb 2
+#mksquashfs __install __release/skynet_mips.sfs -nopad -noappend -root-owned -comp xz -Xpreset 9 -Xe -Xlc 0 -Xlp 2 -Xpb 2
 mksquashfs __install __release/core_xz.$VERSION.sfs -all-root -comp xz > /dev/null
 
 #################################
@@ -66,10 +62,10 @@ rm -rf __install
 ##
 ##################
 cd __release
-mkdir skynet_iot-1.0
-cp core_xz.$VERSION.sfs skynet_iot-1.0/skynet_iot.sfs
-tar czvf skynet_iot-1.0.tar.gz skynet_iot-1.0 > /dev/null
-rm -rf skynet_iot-1.0
+mkdir skynet-1.0
+cp core_xz.$VERSION.sfs skynet-1.0/skynet.sfs
+tar czvf skynet-1.0.tar.gz skynet-1.0 > /dev/null
+rm -rf skynet-1.0
 
 cd - > /dev/null
 # Done
