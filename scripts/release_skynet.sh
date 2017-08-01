@@ -43,8 +43,7 @@ echo $REVISION >> __install/version
 ##
 ##################
 cd __install
-find . -name '*~' -ok rm -f {} \;
-tar czvf ../iot/__release/skynet-1.0.tar.gz * > /dev/null
+tar czvf ../iot/__release/skynet_$VERSION.tar.gz * > /dev/null
 cd - > /dev/null
 
 # Clean up the rootfs files
