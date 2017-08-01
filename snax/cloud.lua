@@ -222,7 +222,7 @@ local Handler = {
 					key = key..app.."/"..dir
 				end
 				--log.trace('publish comm', key, ts, content)
-				return mqtt_client:publish(key, ts..'\t'..content, 1, false)
+				return mqtt_client:publish(key, cjson.encode({ts, content}), 1, false)
 			end
 		end, app, sn, dir, ts, content)
 	end,

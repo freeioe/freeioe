@@ -208,7 +208,6 @@ function app:read_bms(dev, client, no)
 		self._sys:log("error", "read failed: " .. err) 
 		return
 	end
-	dev:dump_comm('DD', pdu)
 
 	local d = modbus.decode
 	local len = d.uint8(pdu, 2)
