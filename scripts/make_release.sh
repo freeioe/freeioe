@@ -41,22 +41,10 @@ mkdir __install/apps
 # Compile lua files
 # ./scripts/compile_lua.sh 
 
-# Create the cramfs image
-#sudo chown -R root:root __install
-#mkfs.cramfs __install __release/skynet_iot.$VERSION.cramfs
-mksquashfs __install __release/core_gz.$VERSION.sfs -all-root > /dev/null
-#mksquashfs __install __release/skynet_iot_mips.sfs -nopad -noappend -root-owned -comp xz -Xpreset 9 -Xe -Xlc 0 -Xlp 2 -Xpb 2
-mksquashfs __install __release/core_xz.$VERSION.sfs -all-root -comp xz > /dev/null
-
 #################################
 # Count the file sizes
 ################################
 du __install -sh
-du __release/* -sh
-
-# Clean up the rootfs files
-#sudo rm -rf __install
-rm -rf __install
 
 # Release example (modbus)
 # Release iot
@@ -65,12 +53,17 @@ rm -rf __install
 ###################
 ##
 ##################
-cd __release
-mkdir skynet_iot-1.0
-cp core_xz.$VERSION.sfs skynet_iot-1.0/skynet_iot.sfs
-tar czvf skynet_iot-1.0.tar.gz skynet_iot-1.0 > /dev/null
-rm -rf skynet_iot-1.0
-
+cd __install
+find . -name '*~' -ok rm -f {} \;
+tar czvf ../__release/skynet_iot-1.0.tar.gz * > /dev/null
 cd - > /dev/null
+
+# Clean up the rootfs files
+#sudo rm -rf __install
+rm -rf __install
+
+# Release Skynet
+./scripts/release_skynet.sh ~/mycode/skynet
+
 # Done
 echo 'May GOD with YOU always!'

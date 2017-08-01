@@ -1,8 +1,6 @@
 # !/usr/bin/env sh
 
-rm __release/* -rf
-# Make the release folder
-mkdir -p __release
+cd $1
 
 # Clean up the cramfs folder
 #sudo rm -rf __install
@@ -18,6 +16,9 @@ cp README.md __install/
 cp HISTORY.md __install/
 cp LICENSE __install/
 cp skynet __install/
+cd __install/
+ln -s ../skynet_iot ./iot
+cd -
 
 # copy lwf files
 
@@ -38,32 +39,15 @@ echo $REVISION >> __install/version
 # Compile lua files
 # ./scripts/compile_lua.sh 
 
-# Create the cramfs image
-#sudo chown -R root:root __install
-#mkfs.cramfs __install __release/skynet.$VERSION.cramfs
-mksquashfs __install __release/core_gz.$VERSION.sfs -all-root > /dev/null
-#mksquashfs __install __release/skynet_mips.sfs -nopad -noappend -root-owned -comp xz -Xpreset 9 -Xe -Xlc 0 -Xlp 2 -Xpb 2
-mksquashfs __install __release/core_xz.$VERSION.sfs -all-root -comp xz > /dev/null
-
-#################################
-# Count the file sizes
-################################
-du __install -sh
-du __release/* -sh
+###################
+##
+##################
+cd __install
+find . -name '*~' -ok rm -f {} \;
+tar czvf ../iot/__release/skynet-1.0.tar.gz * > /dev/null
+cd - > /dev/null
 
 # Clean up the rootfs files
 #sudo rm -rf __install
 rm -rf __install
 
-###################
-##
-##################
-cd __release
-mkdir skynet-1.0
-cp core_xz.$VERSION.sfs skynet-1.0/skynet.sfs
-tar czvf skynet-1.0.tar.gz skynet-1.0 > /dev/null
-rm -rf skynet-1.0
-
-cd - > /dev/null
-# Done
-echo 'May GOD with YOU always!'
