@@ -41,6 +41,7 @@ du __install -sh
 # Release example (modbus)
 # Release iot
 ./scripts/release_app.sh iot $VERSION
+./scripts/release_app.sh bms $VERSION
 
 # For pre-installed applications
 mkdir __install/apps
