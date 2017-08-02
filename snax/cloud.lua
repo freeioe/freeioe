@@ -270,7 +270,8 @@ local function connect_proc(clean_session, username, password)
 		client:login_set(username, password)
 	else
 		--client:login_set('root', 'root')
-		client:login_set(mqtt_id, 'ZGV2aWNlIGlkCg==')
+		local pwd = md5.sumhexa(mqtt_id..'ZGV2aWNlIGlkCg==')
+		client:login_set(mqtt_id, pwd)
 	end
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then

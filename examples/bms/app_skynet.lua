@@ -208,6 +208,7 @@ function app:read_bms(dev, client, no)
 		self._sys:log("error", "read failed: " .. err) 
 		return
 	end
+	self._sys:log("trace", "read input registers done!")
 
 	local d = modbus.decode
 	local len = d.uint8(pdu, 2)
