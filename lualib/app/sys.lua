@@ -134,7 +134,7 @@ end
 
 -- System ID
 function sys:id()
-	return dc.get("CLOUD", "ID")
+	return dc.wait("CLOUD", "ID")
 end
 
 function sys:initialize(app_name, mgr_snax, wrap_snax)

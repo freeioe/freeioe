@@ -47,11 +47,12 @@ local function load_conf(path)
 	local str = file:read("*a")
 	file:close()
 	db = cjson.decode(str) or {}
+
+	dc.set("CLOUD", db.cloud)
+	dc.set("APPS", db.apps)
 end
 
 local function set_defaults()
-	local dc = require 'skynet.datacenter'
-
 	dc.set("CLOUD", "ID", os.getenv("SYS_ID") or "IDIDIDIDID")
 	dc.set("CLOUD", "HOST", "symid.com")
 	dc.set("CLOUD", "PORT", 1883)
@@ -63,8 +64,6 @@ end
 skynet.start(function()
 	set_defaults()
 	load_conf(db_file)
-	dc.set("CLOUD", db.cloud)
-	dc.set("APPS", db.apps)
 
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.upper(cmd)]
