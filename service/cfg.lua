@@ -53,11 +53,11 @@ local function set_defaults()
 	local dc = require 'skynet.datacenter'
 
 	dc.set("CLOUD", "ID", os.getenv("SYS_ID") or "IDIDIDIDID")
-	dc.set("CLOUD", "HOST", "localhost")
+	dc.set("CLOUD", "HOST", "symid.com")
 	dc.set("CLOUD", "PORT", 1883)
 	dc.set("CLOUD", "TIMEOUT", 300)
 
-	dc.set("CLOUD", "PKG_HOST_URL", "localhost")
+	dc.set("CLOUD", "PKG_HOST_URL", "symid.com")
 end
 
 skynet.start(function()

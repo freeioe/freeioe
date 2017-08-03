@@ -60,7 +60,7 @@ function init(...)
 	mc_map['COMM'] = chn
 
 	skynet.fork(function()
-		local apps = dc.get("APPS")
+		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
 			snax.self().req.start(k, {})
 		end

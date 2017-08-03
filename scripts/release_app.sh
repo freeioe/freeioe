@@ -5,8 +5,9 @@ if [ $# != 2 ] ; then
 fi
 
 # zip files
+mkdir -p __release/$1
 cd ./examples/$1
-zip -r -q ../../__release/$1_$2.zip * -x *~
+zip -r -q ../../__release/$1/ver_$2.zip * -x *~
 cd ../../
 
 # copy to web server folder

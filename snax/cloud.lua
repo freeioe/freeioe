@@ -189,14 +189,14 @@ local function load_conf()
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	local now = os.time()
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
-	if enable_comm_upload < now then
+	if enable_comm_upload and enable_comm_upload < now then
 		enable_comm_upload=  nil
-		datacenter.get("CLOUD", "COMM_UPLOAD", nil)
+		datacenter.set("CLOUD", "COMM_UPLOAD", nil)
 	end	
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
-	if enable_log_upload < now then
+	if enable_log_upload and enable_log_upload < now then
 		enable_log_upload=  nil
-		datacenter.get("CLOUD", "LOG_UPLOAD", nil)
+		datacenter.set("CLOUD", "LOG_UPLOAD", nil)
 	end
 
 	load_cov_conf()
