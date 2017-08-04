@@ -115,7 +115,7 @@ function app:start()
 		]]--
 		local opt = {
 			--port = "/tmp/ttyS10",
-			port = "/tmp/ttymxc1",
+			port = "/dev/ttymxc1",
 			opt = {
 				baudrate = 115200
 			}
