@@ -129,7 +129,7 @@ end
 --]]
 function sys:gen_sn(dev_name)
 	local cloud = snax.uniqueservice('cloud')
-	return self:app_sn() ..'.'.. cloud.req.gen_sn(self._app_name, dev_name)
+	return cloud.req.gen_sn(dev_name)
 end
 
 -- System ID

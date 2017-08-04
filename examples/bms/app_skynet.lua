@@ -96,13 +96,14 @@ function app:start()
 		end,
 	})
 
-	local app_sn = self._sys:app_sn()
+	local sys_id = self._sys:id()
 	local battery_group_count = 2
 
 
 	local devs = {}
 	for i = 1, battery_group_count do
-		local dev = self._api:add_device(app_sn..".bg"..i, inputs)
+		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
+		local dev = self._api:add_device(dev_sn, inputs)
 
 		--[[
 		local opt = {
@@ -113,7 +114,8 @@ function app:start()
 		local client = sm_client(socketchannel, opt, modbus.apdu_tcp, i)
 		]]--
 		local opt = {
-			port = "/tmp/ttyS10",
+			--port = "/tmp/ttyS10",
+			port = "/tmp/ttymxc1",
 			opt = {
 				baudrate = 115200
 			}

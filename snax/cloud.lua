@@ -360,11 +360,11 @@ function response.list_cfg_keys()
 	}
 end
 
-function response.gen_sn(app_name, dev_name)
+function response.gen_sn(sid)
 	-- Frappe autoname 
 	--hashlib.sha224((txt or "") + repr(time.time()) + repr(random_string(8))).hexdigest()
 	--
-	local key = app_name..(dev_name or uuid.new())
+	local key = mqtt_id..(sid or uuid.new())
 	return md5.sumhexa(key):sub(1, 10)
 end
 
