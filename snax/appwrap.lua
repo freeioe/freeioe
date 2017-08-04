@@ -63,7 +63,9 @@ function init(name, conf, mgr_handle, mgr_type)
 	log.debug("App "..app_name.." starting")
 	package.path = package.path..";./iot/apps/"..name.."/?.lua;./iot/apps/"..name.."/?.luac"
 	package.cpath = package.cpath..";./iot/apps/"..name.."/luaclib/?.so"
-	local r, m = pcall(require, "app")
+	--local r, m = pcall(require, "app")
+	local f, err = loadfile("./iot/apps/"..name.."/app.lua")
+	local r, m = pcall(f)
 	if not r then
 		log.error("App loading failed "..m)
 		return nil, m
