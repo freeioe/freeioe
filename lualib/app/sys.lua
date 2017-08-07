@@ -13,8 +13,8 @@ function sys:log(level, ...)
 	return f(...)
 end
 
-function sys:error(...)
-	return skynet.error(...)
+function sys:logger()
+	return log
 end
 
 function sys:dump_comm(sn, dir, ...)

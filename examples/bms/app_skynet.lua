@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 local modbus = require 'modbus.init'
 local sm_client = require 'modbus.skynet_client'
-local socketchannel = require 'skynet.socketchannel'
+local socketchannel = require 'socketchannel'
 local serialchannel = require 'serialchannel'
 
 local app = class("SSKL_BMS_App")
@@ -13,6 +13,7 @@ function app:initialize(name, conf, sys)
 	self._conf = conf
 	self._sys = sys
 	self._api = sys:data_api()
+	self._log = sys:logger()
 end
 
 local TestU = {}
@@ -68,7 +69,6 @@ function app:start()
 	})
 
 	local sys_id = self._sys:id()
-	local battery_group_count = 2
 	local config = self._sys:get_conf({
 		port = "/dev/ttymxc1",
 		baudrate = 115200
@@ -82,15 +82,17 @@ function app:start()
 	assert(config)
 
 	local devs = {}
-	for i = 1, battery_group_count do
+	for i, v in ipairs(config.devs) do
+		assert(v.port)
+		self._log.info("Creating device via port", v.port)
 		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
 		local dev = self._api:add_device(dev_sn, inputs)
 		local client = nil
 
 		if config.channel_type == 'socket' then
-			client = sm_client(socketchannel, config, modbus.apdu_tcp, i)
+			client = sm_client(socketchannel, v, modbus.apdu_tcp, i)
 		else
-			client = sm_client(serialchannel, config, modbus.apdu_rtu, i)
+			client = sm_client(serialchannel, v, modbus.apdu_rtu, i)
 		end
 
 		client:set_io_cb(function(io, msg)
@@ -173,15 +175,15 @@ function app:read_bms(dev, client, no)
 		return client:request(req, timeout)
 	end, req, 1000)
 	if not r then
-		self._sys:log("error", pdu, err)
+		self._log.error(pdu, err)
 		return
 	end
 
 	if not pdu then 
-		self._sys:log("error", "read failed: " .. err) 
+		self._log.error("read failed: " .. err) 
 		return
 	end
-	self._sys:log("trace", "read input registers done!")
+	self._log.trace("read input registers done!")
 
 	local d = modbus.decode
 	local len = d.uint8(pdu, 2)

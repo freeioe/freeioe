@@ -460,26 +460,35 @@ channel_meta.__gc = channel.close
 
 local function wrapper_serial_function(f)
 	return function(self, ...)
-		local result = f(self[1], ...)
+		local result, err = f(self[1], ...)
 		if not result then
-			error(serial_error)
+			error(err or serial_error)
 		else
 			return result
 		end
 	end
 end
 
-local function rs232_read(port, len)
-	while true do
+local function rs232_read(port, len, timeout)
+	local timeout = timeout or 3000
+	return port:read(len, timeout, 1)
+
+	--[[
+	local timeout = (timeout or 3 * 1000) / 10
+
+	local start = skynet.now()
+	while skynet.now() - start < timeout do
 		local ilen, err = port:in_queue()
 		if not ilen then
-			return nil, err
+			return false, err
 		end
 		if ilen and ilen >= len then
 			return port:read(len, 10)
 		end
 		skynet.sleep(1)
 	end
+	return false, "RS232 reading timeout...."
+	]]--
 end
 
 channel_serial.read = wrapper_serial_function(function(port, ...)
