@@ -22,20 +22,20 @@ local channel_serial_meta = {
 local serial_error = setmetatable({}, {__tostring = function() return "[Error: Serial]" end })	-- alias for error object
 serial_channel.error = serial_error
 
-local function map_serial_opt(opt)
+local function map_serial_opt(desc)
 	return {
-		baud = '_'..(opt.baudrate or 9600),
-		data_bits = '_'..(opt.bytesize or 8),
-		parity = string.upper(opt.parity or "NONE"),
-		stop_bits = '_'..(opt.stopbits or 1),
-		flow_control = string.upper(opt.flowcontrol or "OFF")
+		baud = '_'..(desc.baudrate or 9600),
+		data_bits = '_'..(desc.bytesize or 8),
+		parity = string.upper(desc.parity or "NONE"),
+		stop_bits = '_'..(desc.stopbits or 1),
+		flow_control = string.upper(desc.flowcontrol or "OFF")
 	}
 end
 
 function serial_channel.channel(desc)
 	local c = {
 		__port = assert(desc.port),
-		__opt = assert(desc.opt),
+		__opt = map_serial_opt(desc),
 		__backup = desc.backup,
 		__auth = desc.auth,
 		__response = desc.response,	-- It's for session mode
@@ -210,7 +210,7 @@ local function dispatch_function(self)
 end
 
 local function open_rs232(port, opt)
-	local port, err = rs232.port(port, map_serial_opt(opt))
+	local port, err = rs232.port(port, opt)
 	if not port then
 		return nil, err
 	end

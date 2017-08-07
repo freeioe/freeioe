@@ -69,29 +69,29 @@ function app:start()
 
 	local sys_id = self._sys:id()
 	local battery_group_count = 2
-
+	local config = self._sys:get_conf({
+		port = "/dev/ttymxc1",
+		baudrate = 115200
+		--[[
+		channel_type = "socket",
+		host = "127.0.0.1",
+		port = 1502,
+		nodelay = true,
+		]]--
+	})
+	assert(config)
 
 	local devs = {}
 	for i = 1, battery_group_count do
 		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
 		local dev = self._api:add_device(dev_sn, inputs)
+		local client = nil
 
-		--[[
-		local opt = {
-			host = "127.0.0.1",
-			port = 1502,
-			nodelay = true,
-		}
-		local client = sm_client(socketchannel, opt, modbus.apdu_tcp, i)
-		]]--
-		local opt = {
-			--port = "/tmp/ttyS10",
-			port = "/dev/ttymxc1",
-			opt = {
-				baudrate = 115200
-			}
-		}
-		local client = sm_client(serialchannel, opt, modbus.apdu_rtu, i)
+		if config.channel_type == 'socket' then
+			client = sm_client(socketchannel, config, modbus.apdu_tcp, i)
+		else
+			client = sm_client(serialchannel, config, modbus.apdu_rtu, i)
+		end
 
 		client:set_io_cb(function(io, msg)
 			dev:dump_comm(io, msg)

@@ -75,7 +75,11 @@ function init(name, conf, mgr_handle, mgr_type)
 	package.cpath = package.cpath..";./iot/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
 	local f, err = loadfile("./iot/apps/"..name.."/app.lua")
-	local r, m = pcall(f)
+	if not f then
+		log.error("Loading app failed "..err)
+		return nil, err
+	end
+	local r, m = xpcall(f, debug.traceback)
 	if not r then
 		log.error("App loading failed "..m)
 		return nil, m
