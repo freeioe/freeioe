@@ -124,6 +124,23 @@ function sys:app_sn()
 	return self._app_sn
 end
 
+function sys:get_conf(default_config)
+	app = dc.get("APPS", self._app_name)
+	if app then
+		return app.conf or default_config
+	end
+	return default_config
+end
+
+function sys:set_conf(config)
+	app = dc.get("APPS", self._app_name)
+	if app then
+		app.conf = config
+		dc.set("APPS", self._app_name, app)
+		return  true
+	end
+end
+
 --[[
 -- Generate device application
 --]]

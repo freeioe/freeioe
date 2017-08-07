@@ -39,6 +39,14 @@ function response.list()
 	return applist
 end
 
+function response.set_conf(inst, conf)
+	local app = applist[inst]
+	if not app or not app.inst then
+		return nil, "There is no app instance name is "..inst
+	end
+	return app.inst.req.set_conf(conf)
+end
+
 function response.get_channel(name)
 	local c = mc_map[string.upper(name)]
 	if c then

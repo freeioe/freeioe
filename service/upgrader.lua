@@ -80,6 +80,7 @@ function command.install_app(args)
 	local inst_name = args.inst
 	local version = args.version
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
+	local conf = args.conf
 
 	if datacenter.get("APPS", inst_name) then
 		local err = "Application already installed"
@@ -97,7 +98,7 @@ function command.install_app(args)
 			os.execute("unzip -oq "..info.." -d "..target_folder)
 			local r, err = appmgr.req.start(inst_name, {})
 			if r then
-				datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn})
+				datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
 				install_result(id, true, "Application installtion is done")
 			else
 				install_result(id, false, "Failed to start App. Error: "..err)

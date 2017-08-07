@@ -85,6 +85,12 @@ local msg_handler = {
 		if topic == '/list' then
 			snax.self().post.app_list()
 		end
+		if topic == '/conf' then
+			local args = cjson.decode(data)
+			if args then
+				snax.self().post.app_conf(args)
+			end
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
@@ -463,6 +469,14 @@ end
 
 function accept.app_upgrade(args)
 	skynet.call("UPGRADER", "lua", "upgrade_app", args)
+end
+
+function accept.app_conf(args)
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.set_conf(args.inst, args.conf)
+	if not r then
+		-- TODO:
+	end
 end
 
 function accept.app_list()

@@ -15,35 +15,6 @@ function app:initialize(name, conf, sys)
 	self._api = sys:data_api()
 end
 
-local function create_stream(dev, sock)
-	local dev = dev
-	local sock = sock
-	return {
-		send = function(msg)
-			socket.write(sock, msg)
-		end,
-		read = function(check, timeout)
-			timeout = os.time() + timeout
-			local buf = ""
-			local pdu = nil
-			local need_len = 4
-			while os.time() < timeout do
-				local str, lstr = socket.read(sock, need_len)
-				if not str then
-					return nil, "disconnected"
-				end
-				dev:dump_comm('IN', str)
-				buf = buf..str
-				pdu, buf, need_len = check(buf)
-				if pdu then
-					return pdu
-				end
-			end
-			return nil, "timeout"
-		end,
-	}
-end
-
 local TestU = {}
 local inputs = {
 	{ name = "Us01", desc = "单体电压01"},

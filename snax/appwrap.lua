@@ -5,6 +5,8 @@ local app_sys = require 'app.sys'
 
 local app = nil
 local app_name = "UNKNOWN"
+local mgr_snax = nil
+local sys_api = nil
 
 local on_close = function()
 	if app then
@@ -57,6 +59,14 @@ function response.stop(reason)
 	on_close()
 end
 
+function response.set_conf(conf)
+	sys_api:set_conf(conf)	
+	if app and app.reload then
+		return app:reload(conf)
+	end
+	return nil, "application does not support change configuration when running"
+end
+
 function init(name, conf, mgr_handle, mgr_type)
 	app_name = name
 
@@ -71,10 +81,10 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, m
 	end
 
-	local mgr_snax = snax.bind(mgr_handle, mgr_type)
-	local sys = app_sys:new(app_name, mgr_snax, snax.self())
+	mgr_snax = snax.bind(mgr_handle, mgr_type)
+	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 
-	app = assert(m:new(app_name, conf, sys))
+	app = assert(m:new(app_name, conf, sys_api))
 end
 
 function exit()
