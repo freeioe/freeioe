@@ -70,52 +70,49 @@ local msg_handler = {
 	end,
 	app = function(topic, data, qos, retained)
 		--log.trace('MSG.APP', topic, data, qos, retained)
-		if topic == '/install' then
-			local app = cjson.decode(data)
-			snax.self().post.app_install(app)
+		local args = assert(cjson.decode(data))
+		local action = args.action or topic
+
+		if action == '/install' then
+			snax.self().post.app_install(args.data)
 		end
-		if topic == '/uninstall' then
-			local app = cjson.decode(data)
-			snax.self().post.app_uninstall(app)
+		if action == '/uninstall' then
+			snax.self().post.app_uninstall(args.data)
 		end
-		if topic == '/upgrade' then
-			local app = cjson.decode(data)
-			snax.self().post.app_upgrade(app)
+		if action == '/upgrade' then
+			snax.self().post.app_upgrade(args.data)
 		end
-		if topic == '/list' then
+		if action == '/list' then
 			snax.self().post.app_list()
 		end
-		if topic == '/conf' then
-			local args = cjson.decode(data)
-			if args then
-				snax.self().post.app_conf(args)
-			end
+		if action == '/conf' then
+			snax.self().post.app_conf(args.data)
 		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
-		if topic == '/enable/data' then
-			snax.self().post.enable_data(tonumber(data) == 1)
+		local args = assert(cjson.decode(data))
+		local action = args.action or topic
+
+		if action == '/enable/data' then
+			snax.self().post.enable_data(tonumber(args.data) == 1)
 		end
-		if topic == '/enable/log' then
-			snax.self().post.enable_log(tonumber(data))
+		if action == '/enable/log' then
+			snax.self().post.enable_log(tonumber(args.data))
 		end
-		if topic == '/enable/comm' then
-			snax.self().post.enable_comm(tonumber(data))
+		if action == '/enable/comm' then
+			snax.self().post.enable_comm(tonumber(args.data))
 		end
-		if topic == '/conf' then
-			local conf = cjson.decode(data)
-			if conf then
-				datacenter.set("CLOUD", "ID", conf.id)
-				datacenter.set("CLOUD", "HOST", conf.host)
-				datacenter.set("CLOUD", "PORT", conf.port)
-				datacenter.set("CLOUD", "TIMEOUT", conf.timeout)
-			end
+		if action == '/conf' then
+			local conf = args.data
+			datacenter.set("CLOUD", "ID", conf.id)
+			datacenter.set("CLOUD", "HOST", conf.host)
+			datacenter.set("CLOUD", "PORT", conf.port)
+			datacenter.set("CLOUD", "TIMEOUT", conf.timeout)
 			snax.self().post.reconnect()
 		end
-		if topic == '/upgrade' then
-			local core = cjson.decode(data)
-			snax.self().post.sys_upgrade(core)
+		if action == '/upgrade' then
+			snax.self().post.sys_upgrade(args.data)
 		end
 	end,
 	output = function(topic, data, qos, retained)
@@ -126,7 +123,9 @@ local msg_handler = {
 		end
 	end,
 	input = function(topic, data, qos, retained)
-		if topic == "/snapshot" then
+		local args = assert(cjson.decode(data))
+		local action = args.action or topic
+		if action == "/snapshot" then
 			snax.self().post.fire_data_snapshot()
 		end
 	end,
@@ -221,14 +220,12 @@ local Handler = {
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		comm_buffer:handle(function(app, sn, dir, ts, content)
 			if mqtt_client and (enable_comm_upload and ts < enable_comm_upload) then
-				local key = id.."/comm/"
-				if sn then
-					key = key..sn.."/"..dir
-				else
-					key = key..app.."/"..dir
-				end
-				--log.trace('publish comm', key, ts, content)
-				return mqtt_client:publish(key, cjson.encode({ts, content}), 1, false)
+				local key = id.."/comm"
+				local msg = {
+					(sn or app).."/"..dir, ts, content
+				}
+				--log.trace('publish comm', key, table.concat(msg))
+				return mqtt_client:publish(key, cjson.encode(msg), 1, false)
 			end
 		end, app, sn, dir, ts, content)
 	end,
@@ -255,8 +252,8 @@ local Handler = {
 			if mqtt_client and enable_data_upload then
 				--log.trace("Publish data", key, value, timestamp, quality)
 
-				local val = cjson.encode({ timestamp, value, quality}) or value
-				mqtt_client:publish(mqtt_id.."/data/"..key, val, 1, true)
+				local val = cjson.encode({ key, timestamp, value, quality}) or value
+				mqtt_client:publish(mqtt_id.."/data", val, 1, true)
 			end
 		end, key, value, timestamp, quality)
 	end,
@@ -422,7 +419,7 @@ function accept.log(ts, lvl, ...)
 	local id = mqtt_id
 	log_buffer:handle(function(ts, lvl, ...)
 		if mqtt_client and (enable_log_upload and ts < enable_log_upload) then
-			return mqtt_client:publish(id.."/log/"..lvl, cjson.encode({ts, ...}), 1, false)
+			return mqtt_client:publish(id.."/log", cjson.encode({lvl, ts, ...}), 1, false)
 		end
 	end, ts, lvl, ...)
 end
@@ -434,8 +431,8 @@ function accept.fire_data_snapshot()
 	local now = skynet.time()
 	cov:fire_snapshot(function(key, value, timestamp, quality)
 		if mqtt_client then
-			local val = cjson.encode({ timestamp or now, value, quality or 0 })
-			mqtt_client:publish(mqtt_id.."/data/"..key, val, 1, true)
+			local val = cjson.encode({ key, timestamp or now, value, quality or 0 })
+			mqtt_client:publish(mqtt_id.."/data", val, 1, true)
 		end
 	end)
 end
