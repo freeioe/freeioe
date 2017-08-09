@@ -74,19 +74,19 @@ local msg_handler = {
 		local action = args.action or topic
 
 		if action == '/install' then
-			snax.self().post.app_install(args.data)
+			snax.self().post.app_install(args.id, args.data)
 		end
 		if action == '/uninstall' then
-			snax.self().post.app_uninstall(args.data)
+			snax.self().post.app_uninstall(args.id, args.data)
 		end
 		if action == '/upgrade' then
-			snax.self().post.app_upgrade(args.data)
+			snax.self().post.app_upgrade(args.id, args.data)
 		end
 		if action == '/list' then
 			snax.self().post.app_list()
 		end
 		if action == '/conf' then
-			snax.self().post.app_conf(args.data)
+			snax.self().post.app_conf(args.id, args.data)
 		end
 	end,
 	sys = function(topic, data, qos, retained)
@@ -112,14 +112,14 @@ local msg_handler = {
 			snax.self().post.reconnect()
 		end
 		if action == '/upgrade' then
-			snax.self().post.sys_upgrade(args.data)
+			snax.self().post.sys_upgrade(args.id, args.data)
 		end
 	end,
 	output = function(topic, data, qos, retained)
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
 		local oi = cjson.decode(data)
-		if oi then
-			snax.self().post.output_to_app(oi)
+		if oi and oi.id then
+			snax.self().post.output_to_app(oi.id, oi.data)
 		end
 	end,
 	input = function(topic, data, qos, retained)
@@ -132,7 +132,7 @@ local msg_handler = {
 	command = function(topic, data, qos, retained)
 		local cmd = cjson.decode(data)
 		if cmd and cmd.id then
-			snax.self().post.command_to_app(cmd)
+			snax.self().post.command_to_app(cmd.id, cmd.data)
 		end
 	end,
 }
@@ -269,6 +269,7 @@ end
 local function connect_proc(clean_session, username, password)
 	local clean_session = clean_session or true
 	local client = assert(mosq.new(mqtt_id, clean_session))
+	client:version_set(mosq.PROTOCOL_V311)
 	if username then
 		client:login_set(username, password)
 	else
@@ -456,24 +457,22 @@ function accept.fire_devices()
 	end)
 end
 
-function accept.app_install(args)
-	skynet.call("UPGRADER", "lua", "install_app", args)
+function accept.app_install(id, args)
+	skynet.call("UPGRADER", "lua", "install_app", id, args)
 end
 
-function accept.app_uninstall(args)
-	skynet.call("UPGRADER", "lua", "uninstall_app", args)
+function accept.app_uninstall(id, args)
+	skynet.call("UPGRADER", "lua", "uninstall_app", id, args)
 end
 
-function accept.app_upgrade(args)
-	skynet.call("UPGRADER", "lua", "upgrade_app", args)
+function accept.app_upgrade(id, args)
+	skynet.call("UPGRADER", "lua", "upgrade_app", id, args)
 end
 
-function accept.app_conf(args)
+function accept.app_conf(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.set_conf(args.inst, args.conf)
-	if not r then
-		-- TODO:
-	end
+	snax.self().post.action_result('app', id, r, err or "Done")
 end
 
 function accept.app_list()
@@ -485,11 +484,11 @@ function accept.app_list()
 	end	
 end
 
-function accept.sys_upgrade(args)
-	skynet.call("UPGRADER", "lua", "upgrade_core", args)
+function accept.sys_upgrade(id, args)
+	skynet.call("UPGRADER", "lua", "upgrade_core", id, args)
 end
 
-function accept.output_to_app(info)
+function accept.output_to_app(id, info)
 	local id = info.id
 	local device = info.device
 	local dev = api:get_device(device)
@@ -499,13 +498,12 @@ function accept.output_to_app(info)
 	end
 end
 
-function accept.command_to_app(cmd)
-	local id = cmd.id
+function accept.command_to_app(id, cmd)
 	local device = cmd.device
-	if id and device then
+	if device then
 		local dev = api:get_device(device)
 		local r, err = dev:send_command(cmd.cmd, cmd.param)
-		snax.self().post.action_result('command', cmd.id, r, err or "OK")
+		snax.self().post.action_result('command', id, r, err or "OK")
 	end
 end
 

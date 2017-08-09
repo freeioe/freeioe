@@ -74,8 +74,7 @@ function command.upgrade_app(args)
 	return true
 end
 
-function command.install_app(args)
-	local id = args.id
+function command.install_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
 	local version = args.version
@@ -109,8 +108,7 @@ function command.install_app(args)
 	end)
 end
 
-function command.uninstall_app(args)
-	local id = args.id
+function command.uninstall_app(id, args)
 	local inst_name = args.inst
 
 	local appmgr = snax.uniqueservice("appmgr")
@@ -130,8 +128,7 @@ function command.list_app()
 	return datacenter.get("APPS")
 end
 
-function command.upgrade_core(version)
-	local id = args.id
+function command.upgrade_core(id, args)
 	local version = args.version
 
 	create_download('iot', version, function(r, path)
