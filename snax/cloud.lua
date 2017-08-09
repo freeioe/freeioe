@@ -73,19 +73,19 @@ local msg_handler = {
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
-		if action == '/install' then
+		if action == 'install' then
 			snax.self().post.app_install(args.id, args.data)
 		end
-		if action == '/uninstall' then
+		if action == 'uninstall' then
 			snax.self().post.app_uninstall(args.id, args.data)
 		end
-		if action == '/upgrade' then
+		if action == 'upgrade' then
 			snax.self().post.app_upgrade(args.id, args.data)
 		end
-		if action == '/list' then
+		if action == 'list' then
 			snax.self().post.app_list()
 		end
-		if action == '/conf' then
+		if action == 'conf' then
 			snax.self().post.app_conf(args.id, args.data)
 		end
 	end,
@@ -94,16 +94,16 @@ local msg_handler = {
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
-		if action == '/enable/data' then
+		if action == 'enable/data' then
 			snax.self().post.enable_data(tonumber(args.data) == 1)
 		end
-		if action == '/enable/log' then
+		if action == 'enable/log' then
 			snax.self().post.enable_log(tonumber(args.data))
 		end
-		if action == '/enable/comm' then
+		if action == 'enable/comm' then
 			snax.self().post.enable_comm(tonumber(args.data))
 		end
-		if action == '/conf' then
+		if action == 'conf' then
 			local conf = args.data
 			datacenter.set("CLOUD", "ID", conf.id)
 			datacenter.set("CLOUD", "HOST", conf.host)
@@ -111,7 +111,7 @@ local msg_handler = {
 			datacenter.set("CLOUD", "TIMEOUT", conf.timeout)
 			snax.self().post.reconnect()
 		end
-		if action == '/upgrade' then
+		if action == 'upgrade' then
 			snax.self().post.sys_upgrade(args.id, args.data)
 		end
 	end,
@@ -125,7 +125,7 @@ local msg_handler = {
 	input = function(topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
-		if action == "/snapshot" then
+		if action == "snapshot" then
 			snax.self().post.fire_data_snapshot()
 		end
 	end,
@@ -146,6 +146,9 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 	if id and t then
 		local f = msg_handler[t]
 		if f then
+			if sub then
+				sub = string.sub(sub, 2)
+			end
 			f(sub, data, qos, retained)
 		end
 	end
