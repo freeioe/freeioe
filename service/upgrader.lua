@@ -36,7 +36,7 @@ local function create_download(app_name, version, md5, cb)
 
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
 
-		local url = "/download/"..app_name.."/ver_"..version..".zip"
+		local url = "/download/"..app_name.."/"..version..".zip"
 		log.trace('Start Download From URL:', pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
@@ -103,11 +103,12 @@ function command.install_app(id, args)
 		if r then
 			log.debug("Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
-			local r, err = appmgr.req.start(inst_name, {})
+			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
-				datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
 				install_result(id, true, "Application installtion is done")
 			else
+				datacenter.set("APPS", inst_name, nil)
 				os.execute("rm -rf "..target_folder)
 				install_result(id, false, "Failed to start App. Error: "..err)
 			end
@@ -137,14 +138,42 @@ function command.list_app()
 	return datacenter.get("APPS")
 end
 
+local function download_upgrade_skynet(id, platform, version, cb)
+	local version = args.version or 'latest'
+	local kname = 'skynet' -- default is linux(amd64)
+	if args.platform then
+		kname = args.platform.."_"..kname
+	end
+
+	create_download(kname, version, md5, function(r, info)
+		if r then
+			cb(info)
+		else
+			install_result(id, false, "Failed to download App. Error: "..info)
+		end
+	end)
+
+end
+
+local function start_upgrade_proc(iot_path, skynet_path)
+	print(iot_path, skynet_path)
+	log.warning("Core System Upgrade....")
+end
+
 function command.upgrade_core(id, args)
 	local version = args.version or 'latest'
 	local md5 = args.md5
+	-- TODO:
+	-- local platform = args.platform
+	local skynet = args.skynet
 
-	create_download('skynet_iot', version, md5, function(r, path)
+	create_download('skynet_iot', version, md5, function(r, info)
 		if r then
-			--os.execute("unzip "..path.." -d "..target_folder)
-			-- TODO:
+			if skynet then
+				download_upgrade_skynet(id, skynet, function(path) start_upgrade_proc(info, path) end)
+			else
+				start_upgrade_proc(path)
+			end
 		else
 			install_result(id, false, "Failed to download App. Error: "..info)
 		end

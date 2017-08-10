@@ -141,6 +141,11 @@ function sys:set_conf(config)
 	end
 end
 
+function sys:version()
+	app = dc.get("APPS", self._app_name)
+	return app.name, app.version
+end
+
 --[[
 -- Generate device application
 --]]

@@ -44,7 +44,11 @@ function response.set_conf(inst, conf)
 	if not app or not app.inst then
 		return nil, "There is no app instance name is "..inst
 	end
-	return app.inst.req.set_conf(conf)
+	local r, err = app.inst.req.set_conf(conf)
+	if r then
+		app.conf = conf
+	end
+	return r, err
 end
 
 function response.get_channel(name)
@@ -70,7 +74,7 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
-			snax.self().req.start(k, {})
+			snax.self().req.start(k, v.conf)
 		end
 	end)
 end

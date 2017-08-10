@@ -69,22 +69,22 @@ function app:start()
 	})
 
 	local sys_id = self._sys:id()
-	local config = self._sys:get_conf({
+	local config = self._conf or {
 		devs = {
 			{
 				port = "/dev/ttymxc1",
 				baudrate = 115200
-				--[[
-				{
+			}
+			--[[
+			{
 				channel_type = "socket",
 				host = "127.0.0.1",
 				port = 1502,
 				nodelay = true,
-				},
-				]]--
 			},
+			]]--
 		}
-	})
+	}
 	assert(config)
 
 	local devs = {}
