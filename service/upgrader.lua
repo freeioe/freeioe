@@ -100,6 +100,7 @@ function command.install_app(id, args)
 				datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
 				install_result(id, true, "Application installtion is done")
 			else
+				os.execute("rm -rf "..target_folder)
 				install_result(id, false, "Failed to start App. Error: "..err)
 			end
 		else
