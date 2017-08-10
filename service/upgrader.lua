@@ -2,6 +2,7 @@ local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local httpdown = require 'httpdown'
 local log = require 'utils.log'
+local helper = require 'utils.helper'
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
 
@@ -23,12 +24,12 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
-local function create_download(app_name, version, cb)
+local function create_download(app_name, version, md5, cb)
 	local app_name = app_name
 	local cb = cb
 	local down = function()
-		local fn = "/tmp/"..app_name.."_"..version..".zip"
-		local file, err = io.open(fn, "w+")
+		local path = "/tmp/"..app_name.."_"..version..".zip"
+		local file, err = io.open(path, "w+")
 		if not file then
 			return cb(nil, err)
 		end
@@ -46,7 +47,13 @@ local function create_download(app_name, version, cb)
 		end
 		file:write(body)
 		file:close()
-		cb(true, fn)
+		if md5 then
+			local sum = helper.md5sum(path)
+			if sum ~= md5 then
+				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
+			end
+		end
+		cb(true, path)
 	end
 	create_task(down, "Download App "..app_name)
 end
@@ -77,9 +84,10 @@ end
 function command.install_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
-	local version = args.version
+	local version = args.version or 'latest'
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
+	local md5 = args.md5
 
 	if datacenter.get("APPS", inst_name) then
 		local err = "Application already installed"
@@ -91,7 +99,7 @@ function command.install_app(id, args)
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 
-	create_download(name, version, function(r, info)
+	create_download(name, version, md5, function(r, info)
 		if r then
 			log.debug("Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
@@ -130,11 +138,15 @@ function command.list_app()
 end
 
 function command.upgrade_core(id, args)
-	local version = args.version
+	local version = args.version or 'latest'
+	local md5 = args.md5
 
-	create_download('iot', version, function(r, path)
+	create_download('skynet_iot', version, md5, function(r, path)
 		if r then
-			os.execute("unzip "..path.." -d "..target_folder)
+			--os.execute("unzip "..path.." -d "..target_folder)
+			-- TODO:
+		else
+			install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end)
 end

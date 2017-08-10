@@ -33,4 +33,16 @@ function _M.encode_query_string (t, sep)
 	return table.concat(buf)
 end
 
+_M.md5sum = function(file_path)
+	local f = io.popen('md5sum '..file_path)
+	if not f then
+		return nil, err
+	end
+	local s = f:read('*a')
+	f:close()
+	print(s)
+
+	return s:match('^(%w+)[^%w]+(%g+)')
+end
+
 return _M

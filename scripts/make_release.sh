@@ -2,7 +2,7 @@
 
 #rm __release/* -rf
 # Make the release folder
-mkdir -p __release
+mkdir -p __release/skynet_iot
 
 # Clean up the cramfs folder
 #sudo rm -rf __install
@@ -51,7 +51,8 @@ mkdir __install/apps
 ##
 ##################
 cd __install
-tar czvf ../__release/skynet_iot_$VERSION.tar.gz * > /dev/null
+tar czvf ../__release/skynet_iot/$VERSION.tar.gz * > /dev/null
+cp -f ../__release/skynet_iot/$VERSION.tar.gz ../__release/skynet_iot/latest.tar.gz
 cd - > /dev/null
 
 # Clean up the rootfs files
