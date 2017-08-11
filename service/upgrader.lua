@@ -163,14 +163,18 @@ local function download_upgrade_skynet(id, args, cb)
 end
 
 local function get_ps_e()
-	print(os.execute("ps -e"))
+	local r, status, code = os.execute("ps -e")
+	if not r then
+		return "ps"
+	end
+	return "ps -e"
 end
 
 local function start_upgrade_proc(iot_path, skynet_path)
 	assert(iot_path)
 	log.warning("Core System Upgrade....")
 	log.trace(iot_path, skynet_path)
-	get_ps_e()
+	local ps_e = get_ps_e()
 
 	local base_dir = os.getenv('IOT_DIR') or lfs.currentdir().."/../"
 	local f, err = io.open(base_dir.."/upgrade.sh", "w+")
@@ -193,7 +197,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("cd -\n")
 
 	f:write("sleep 5\n")
-	f:write("ps | grep skynet | grep -v grep\n")
+	f:write(ps_e.." | grep skynet | grep -v grep\n")
 	f:write("if [ $? -eq 0 ]\nthen\n")
 	f:write("\techo \"skynet process exits......\"\n")
 	f:write("\tcp -f "..iot_path.." ./skynet_iot.tar.gz\n")

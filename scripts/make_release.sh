@@ -10,7 +10,7 @@ rm -rf __install
 mkdir __install
 
 # Copy files
-git archive master | tar -x -C __install
+git archive HEAD | tar -x -C __install
 rm -rf __install/examples
 rm -rf __install/scripts
 
