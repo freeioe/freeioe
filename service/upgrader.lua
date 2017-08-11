@@ -183,6 +183,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		return nil, err
 	end
 	f:write("sleep 5\n")
+	f:write("export daemon=1\n")
 	f:write("cd "..base_dir.."\n")
 	if skynet_path then
 		f:write("cd skynet\n")
@@ -215,7 +216,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("fi\n\n")
 	f:close()
 
-	if os.getenv("PWD") == "/home/cch/mycode/skynet:=" then
+	if not skynet.getenv("daemon") then
 		return
 	end
 
