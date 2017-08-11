@@ -138,13 +138,19 @@ function command.list_app()
 	return datacenter.get("APPS")
 end
 
+local function get_core_name(name, platform)
+	local name = name
+	local platform = platform or os.getenv("IOT_PLATFORM")
+	if platform then
+		name = platform.."_"..kname
+	end
+	return name
+end
+
 local function download_upgrade_skynet(id, args, cb)
 	local is_windows = package.config:sub(1,1) == '\\'
 	local version = args.version or 'latest'
-	local kname = 'skynet' -- default is linux(amd64)
-	if args.platform then
-		kname = args.platform.."_"..kname
-	end
+	local kname = get_core_name('skynet', args.platform)
 
 	create_download(kname, version, md5, function(r, info)
 		if r then
@@ -157,8 +163,47 @@ local function download_upgrade_skynet(id, args, cb)
 end
 
 local function start_upgrade_proc(iot_path, skynet_path)
+	assert(iot_path)
 	log.warning("Core System Upgrade....")
 	log.trace(iot_path, skynet_path)
+
+	local base_dir = os.getenv('IOT_DIR') or lfs.currentdir().."/../"
+	local f, err = io.open(base_dir.."/upgrade.sh", "w+")
+	if not f then
+		print(base_dir.."/upgrade.sh", err)
+		return nil, err
+	end
+	f:write("sleep 10\n")
+	f:write("cd "..base_dir.."\n")
+	if skynet_path then
+		f:write("cd skynet\n")
+		f:write("tar xzvf "..skynet_path.."\n")
+		f:write("cd -\n")
+	end
+	f:write("cd skynet_iot\n")
+	f:write("tar xzvf "..iot_path.."\n")
+	f:write("cd -\n")
+	f:write("cd skynet\n")
+	f:write("skynet iot/config &\n")
+	f:write("cd -\n")
+
+	f:write("sleep 5\n")
+	f:write("ps | grep skynet | grep -v grep\n")
+	f:write("if [$? -ne 0]\nthen\n")
+	f:write("\tcp -f "..iot_path.." ./skynet_iot.tar.gz\n")
+	if skynet_path then
+		f:write("\tcp -f "..skynet_path.." ./skynet.tar.gz\n")
+	end
+	f:write("\techo \"upgrade is done!\"\n")
+	f:write("else\n\tcd skynet_iot\n\ttar xzvf ../skynet_iot.tar.gz\n\tcd -\n")
+	if skynet_path then
+		f:write("\tcd skynet\n\ttar xzvf ../skynet.tar.gz\n\tcd -\n")
+	end
+	f:write("\tskynet iot/config &\n")
+	f:write("\tcd -\n")
+	f:write("\techo \"rollback done\"\n")
+	f:write("fi\n")
+	f:close()
 end
 
 function command.upgrade_core(id, args)
