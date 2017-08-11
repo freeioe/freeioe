@@ -41,7 +41,7 @@ local function create_download(app_name, version, md5, cb, ext)
 		log.trace('Start Download From URL:', pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
-			return cb(nil, header)
+			return cb(nil, tostring(header))
 		end
 		if status < 200 or status > 400 then
 			return cb(nil, "Download failed, status code "..status)

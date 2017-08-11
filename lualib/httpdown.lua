@@ -3,11 +3,13 @@ local class = require 'middleclass'
 
 local _M = {}
 
-local function init_httpc()
+local function init_httpc(timeout)
 	local httpc = require 'http.httpc'
 
 	httpc.dns()
-	httpc.timeout = 10
+	if timeout then
+		httpc.timeout = timeout
+	end
 	return httpc
 end
 

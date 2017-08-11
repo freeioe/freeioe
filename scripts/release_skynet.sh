@@ -43,7 +43,7 @@ echo $REVISION >> __install/version
 ##
 ##################
 cd __install
-mkdir ../iot/__release/skynet
+mkdir -p ../iot/__release/skynet
 tar czvf ../iot/__release/skynet/$VERSION.tar.gz * > /dev/null
 cp -f ../iot/__release/skynet/$VERSION.tar.gz ../iot/__release/skynet/latest.tar.gz
 cd - > /dev/null
