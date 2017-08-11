@@ -216,7 +216,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("fi\n\n")
 	f:close()
 
-	if not skynet.getenv("daemon") then
+	if not os.getenv("daemon") then
 		return
 	end
 
