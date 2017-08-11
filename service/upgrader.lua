@@ -142,7 +142,7 @@ local function get_core_name(name, platform)
 	local name = name
 	local platform = platform or os.getenv("IOT_PLATFORM")
 	if platform then
-		name = platform.."_"..kname
+		name = platform.."_"..name
 	end
 	return name
 end
@@ -162,10 +162,15 @@ local function download_upgrade_skynet(id, args, cb)
 
 end
 
+local function get_ps_e()
+	print(os.execute("ps -e"))
+end
+
 local function start_upgrade_proc(iot_path, skynet_path)
 	assert(iot_path)
 	log.warning("Core System Upgrade....")
 	log.trace(iot_path, skynet_path)
+	get_ps_e()
 
 	local base_dir = os.getenv('IOT_DIR') or lfs.currentdir().."/../"
 	local f, err = io.open(base_dir.."/upgrade.sh", "w+")
@@ -184,12 +189,13 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("tar xzvf "..iot_path.."\n")
 	f:write("cd -\n")
 	f:write("cd skynet\n")
-	f:write("skynet iot/config &\n")
+	f:write("./skynet iot/config &\n")
 	f:write("cd -\n")
 
 	f:write("sleep 5\n")
 	f:write("ps | grep skynet | grep -v grep\n")
-	f:write("if [$? -ne 0]\nthen\n")
+	f:write("if [ $? -eq 0 ]\nthen\n")
+	f:write("\techo \"skynet process exits......\"\n")
 	f:write("\tcp -f "..iot_path.." ./skynet_iot.tar.gz\n")
 	if skynet_path then
 		f:write("\tcp -f "..skynet_path.." ./skynet.tar.gz\n")
@@ -199,10 +205,10 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	if skynet_path then
 		f:write("\tcd skynet\n\ttar xzvf ../skynet.tar.gz\n\tcd -\n")
 	end
-	f:write("\tskynet iot/config &\n")
+	f:write("\t./skynet iot/config &\n")
 	f:write("\tcd -\n")
 	f:write("\techo \"rollback done\"\n")
-	f:write("fi\n")
+	f:write("fi\n\n")
 	f:close()
 end
 
