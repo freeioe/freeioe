@@ -176,7 +176,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	log.trace(iot_path, skynet_path)
 	local ps_e = get_ps_e()
 
-	local base_dir = os.getenv('IOT_DIR') or lfs.currentdir().."/../"
+	local base_dir = os.getenv('IOT_DIR') or lfs.currentdir().."/.."
 	local f, err = io.open(base_dir.."/upgrade.sh", "w+")
 	if not f then
 		print(base_dir.."/upgrade.sh", err)
