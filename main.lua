@@ -8,7 +8,7 @@ skynet.start(function()
 	if not is_windows and not os.getenv("IOT_RUN_AS_DAEMON") then
 		local console = skynet.newservice("console")
 	end
-	skynet.newservice("debug_console",7000)
+	--skynet.newservice("debug_console",7000)
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
 
