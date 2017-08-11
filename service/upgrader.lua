@@ -182,7 +182,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		print(base_dir.."/upgrade.sh", err)
 		return nil, err
 	end
-	f:write("sleep 10\n")
+	f:write("sleep 5\n")
 	f:write("cd "..base_dir.."\n")
 	if skynet_path then
 		f:write("cd skynet\n")
@@ -214,6 +214,16 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("\techo \"rollback done\"\n")
 	f:write("fi\n\n")
 	f:close()
+
+	if os.getenv("PWD") == "/home/cch/mycode/skynet:=" then
+		return
+	end
+
+	os.execute("sh "..base_dir.."/upgrade.sh &")
+
+	skynet.timeout(50, function()
+		skynet.abort()
+	end)
 end
 
 function command.upgrade_core(id, args)
