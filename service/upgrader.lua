@@ -187,11 +187,11 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("cd "..base_dir.."\n")
 	if skynet_path then
 		f:write("cd skynet\n")
-		f:write("tar xzfp "..skynet_path.."\n")
+		f:write("tar xzf "..skynet_path.."\n")
 		f:write("cd -\n")
 	end
 	f:write("cd skynet_iot\n")
-	f:write("tar xzfp "..iot_path.."\n")
+	f:write("tar xzf "..iot_path.."\n")
 	f:write("cd -\n")
 	f:write("cd skynet\n")
 	f:write("./skynet iot/config &\n")
@@ -206,9 +206,9 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		f:write("\tmv -f "..skynet_path.." ./skynet.tar.gz\n")
 	end
 	f:write("\techo \"upgrade is done!\"\n")
-	f:write("else\n\tcd skynet_iot\n\ttar xzfp ../skynet_iot.tar.gz\n\tcd -\n")
+	f:write("else\n\tcd skynet_iot\n\ttar xzf ../skynet_iot.tar.gz\n\tcd -\n")
 	if skynet_path then
-		f:write("\tcd skynet\n\ttar xzfp ../skynet.tar.gz\n\tcd -\n")
+		f:write("\tcd skynet\n\ttar xzf ../skynet.tar.gz\n\tcd -\n")
 	end
 	f:write("\t./skynet iot/config &\n")
 	f:write("\tcd -\n")
