@@ -40,8 +40,6 @@ _M.md5sum = function(file_path)
 	end
 	local s = f:read('*a')
 	f:close()
-	print(s)
-
 	return s:match('^(%w+)[^%w]+(%g+)')
 end
 

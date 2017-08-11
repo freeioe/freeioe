@@ -24,11 +24,12 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
-local function create_download(app_name, version, md5, cb)
+local function create_download(app_name, version, md5, cb, ext)
 	local app_name = app_name
 	local cb = cb
+	local ext = ext or ".zip"
 	local down = function()
-		local path = "/tmp/"..app_name.."_"..version..".zip"
+		local path = "/tmp/"..app_name.."_"..version..ext
 		local file, err = io.open(path, "w+")
 		if not file then
 			return cb(nil, err)
@@ -36,7 +37,7 @@ local function create_download(app_name, version, md5, cb)
 
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
 
-		local url = "/download/"..app_name.."/"..version..".zip"
+		local url = "/download/"..app_name.."/"..version..ext
 		log.trace('Start Download From URL:', pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
@@ -47,11 +48,10 @@ local function create_download(app_name, version, md5, cb)
 		end
 		file:write(body)
 		file:close()
-		if md5 then
-			local sum = helper.md5sum(path)
-			if sum ~= md5 then
-				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
-			end
+		local sum = helper.md5sum(path)
+		log.trace("Downloaded file md5 sum", sum)
+		if md5 and sum ~= md5 then
+			return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
 		end
 		cb(true, path)
 	end
@@ -138,7 +138,8 @@ function command.list_app()
 	return datacenter.get("APPS")
 end
 
-local function download_upgrade_skynet(id, platform, version, cb)
+local function download_upgrade_skynet(id, args, cb)
+	local is_windows = package.config:sub(1,1) == '\\'
 	local version = args.version or 'latest'
 	local kname = 'skynet' -- default is linux(amd64)
 	if args.platform then
@@ -151,20 +152,19 @@ local function download_upgrade_skynet(id, platform, version, cb)
 		else
 			install_result(id, false, "Failed to download App. Error: "..info)
 		end
-	end)
+	end, ".tar.gz")
 
 end
 
 local function start_upgrade_proc(iot_path, skynet_path)
-	print(iot_path, skynet_path)
 	log.warning("Core System Upgrade....")
+	log.trace(iot_path, skynet_path)
 end
 
 function command.upgrade_core(id, args)
+	local is_windows = package.config:sub(1,1) == '\\'
 	local version = args.version or 'latest'
 	local md5 = args.md5
-	-- TODO:
-	-- local platform = args.platform
 	local skynet = args.skynet
 
 	create_download('skynet_iot', version, md5, function(r, info)
@@ -177,7 +177,7 @@ function command.upgrade_core(id, args)
 		else
 			install_result(id, false, "Failed to download App. Error: "..info)
 		end
-	end)
+	end, ".tar.gz")
 end
 
 function command.list()
