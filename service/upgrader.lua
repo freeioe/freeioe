@@ -197,7 +197,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("./skynet iot/config &\n")
 	f:write("cd -\n")
 
-	f:write("sleep 5\n")
+	f:write("sleep 50\n")
 	f:write(ps_e.." | grep skynet | grep -v grep\n")
 	f:write("if [ $? -eq 0 ]\nthen\n")
 	f:write("\techo \"skynet process exits......\"\n")
