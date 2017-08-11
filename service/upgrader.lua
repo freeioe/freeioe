@@ -200,9 +200,9 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write(ps_e.." | grep skynet | grep -v grep\n")
 	f:write("if [ $? -eq 0 ]\nthen\n")
 	f:write("\techo \"skynet process exits......\"\n")
-	f:write("\tcp -f "..iot_path.." ./skynet_iot.tar.gz\n")
+	f:write("\tmv -f "..iot_path.." ./skynet_iot.tar.gz\n")
 	if skynet_path then
-		f:write("\tcp -f "..skynet_path.." ./skynet.tar.gz\n")
+		f:write("\tmv -f "..skynet_path.." ./skynet.tar.gz\n")
 	end
 	f:write("\techo \"upgrade is done!\"\n")
 	f:write("else\n\tcd skynet_iot\n\ttar xzfp ../skynet_iot.tar.gz\n\tcd -\n")
