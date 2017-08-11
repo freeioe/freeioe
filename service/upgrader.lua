@@ -183,7 +183,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		return nil, err
 	end
 	f:write("sleep 5\n")
-	f:write("export daemon=1\n")
+	f:write("export IOT_RUN_AS_DAEMON=1\n")
 	f:write("cd "..base_dir.."\n")
 	if skynet_path then
 		f:write("cd skynet\n")
@@ -216,7 +216,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	f:write("fi\n\n")
 	f:close()
 
-	if not os.getenv("daemon") then
+	if not os.getenv("IOT_RUN_AS_DAEMON") then
 		return
 	end
 

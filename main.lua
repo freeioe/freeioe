@@ -5,7 +5,7 @@ local is_windows = package.config:sub(1,1) == '\\'
 
 skynet.start(function()
 	skynet.error("Skynet/IOT Start")
-	if not is_windows and not os.getenv("daemon") then
+	if not is_windows and not os.getenv("IOT_RUN_AS_DAEMON") then
 		local console = skynet.newservice("console")
 	end
 	skynet.newservice("debug_console",7000)
