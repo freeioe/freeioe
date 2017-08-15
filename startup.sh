@@ -22,6 +22,8 @@ then
 		echo "Failed to run upgrage script" >> $STARTUP_LOG
 		exit $?
 	fi
+else
+	echo "NO upgrade needed!" >> $STARTUP_LOG
 fi
 
 if [ -f $IOT_DIR/ipt/rollback ]
@@ -34,6 +36,8 @@ then
 		echo "Failed to run rollback script" >> $STARTUP_LOG
 		exit $?
 	fi
+else
+	echo "NO rollback needed!" >> $STARTUP_LOG
 fi
 
 echo "Startup Script Done!" >> $STARTUP_LOG
