@@ -11,7 +11,7 @@ SKYNET_IOT_DIR=$SKYNET_DIR/iot
 
 PM_BIN=process-monitor
 SKYNET_BIN=$SKYNET_DIR/skynet
-STARTUP_SH=kynet/iot/startup.sh
+STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
 
 if [ -f /etc/openwrt_release ]
 then
