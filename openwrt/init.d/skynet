@@ -9,13 +9,18 @@ BASE_DIR=/mnt
 SKYNET_DIR=$BASE_DIR/skynet
 SKYNET_IOT_DIR=$SKYNET_DIR/iot
 
-PROG_BIN=$SKYNET_IOT_DIR/openwrt/bin/process-monitor
 SKYNET_BIN=$SKYNET_DIR/skynet
 STARTUP_SH=kynet/iot/startup.sh
 
+if [ -f /etc/openwrt_release ]
+then
+	source /etc/openwrt_release
+	PATH=$SKYNET_IOT_DIR/openwrt/$DISTRIB_ARCH:$PATH
+fi
+
 start_service () {
 	procd_open_instance
-	procd_set_param command "$PROG_BIN" -M 2 -D "$SKYNET_DIR" -S "sh $STARTUP_SH $BASE_DIR" $SKYNET_BIN iot/config
+	procd_set_param command process-monitor -M 2 -D "$SKYNET_DIR" -S "sh $STARTUP_SH $BASE_DIR" $SKYNET_BIN iot/config
 	procd_set_param respawn
 	procd_close_instance
 }
