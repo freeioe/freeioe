@@ -261,19 +261,19 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	lfs.mkdir(base_dir.."/ipt")
 	local str = string.format(rollback_sh_str, base_dir, "skynet", "skynet_iot")
 	local r, err = write_script(base_dir.."/ipt/rollback.sh.new", str)
-	if not then
+	if not r then
 		return false, err
 	end
 
 	local str = string.format(upgrade_ack_sh_str, base_dir)
 	local r, err = write_script(base_dir.."/ipt/upgrade_ack.sh", str)
-	if not then
+	if not r then
 		return false, err
 	end
 
 	local str = string.format(upgrade_sh_str, base_dir, skynet_path, "skynet", iot_path, "skynet_iot")
 	local r, err = write_script(base_dir.."/ipt/upgrade.sh", str)
-	if not then
+	if not r then
 		return false, err
 	end
 
