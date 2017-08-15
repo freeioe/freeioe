@@ -179,6 +179,8 @@ SKYNET_PATH=%s
 SKYNET_IOT_FILE=%s
 SKYNET_IOT_PATH=%s
 
+echo > $IOT_DIR/ipt/rollback
+
 cd $IOT_DIR
 if [ -f $SKYNET_FILE ]
 then
@@ -234,6 +236,7 @@ IOT_DIR=%s
 mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
 mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
 mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
+rm -f $IOT_DIR/ipt/rollback
 
 ]]
 
