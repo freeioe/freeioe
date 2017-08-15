@@ -179,15 +179,15 @@ SKYNET_PATH=%s
 SKYNET_IOT_FILE=%s
 SKYNET_IOT_PATH+%s
 
-cd "$IOT_DIR"
-if [ -f "$SKYNET_FILE" ]
+cd $IOT_DIR
+if [ -f $SKYNET_FILE ]
 then
-	cd "$SKYNET_PATH"
-	tar xzf "$SKYNET_FILE"
+	cd $SKYNET_PATH
+	tar xzf $SKYNET_FILE
 
 	if [ $? -eq 0 ]
 	then
-		mv -f "$SKYNET_FILE" "$IOT_DIR/ipt/skynet.tar.gz.new"
+		mv -f $SKYNET_FILE $IOT_DIR/ipt/skynet.tar.gz.new
 	else
 		echo "tar got error!"
 		exit $?
@@ -195,14 +195,14 @@ then
 fi
 
 cd "$IOT_DIR"
-if [ -f "$SKYNET_IOT_FILE" ]
+if [ -f $SKYNET_IOT_FILE ]
 then
-	cd "$SKYNET_IOT_PATH"
-	tar xzf "$SKYNET_IOT_FILE"
+	cd $SKYNET_IOT_PATH
+	tar xzf $SKYNET_IOT_FILE
 
 	if [ $? -eq 0 ]
 	then
-		mv -f "$SKYNET_FILE" "$IOT_DIR/ipt/skynet_iot.tar.gz.new"
+		mv -f $SKYNET_FILE $IOT_DIR/ipt/skynet_iot.tar.gz.new
 	else
 		echo "tar got error!"
 		exit $?
@@ -217,13 +217,13 @@ IOT_DIR=%s
 SKYNET_PATH=%s
 SKYNET_IOT_PATH=%s
 
-cd "$IOT_DIR"
-cd "$SKYNET_PATH"
-tar xzf "$IOT_DIR/ipt/skynet.tar.gz"
+cd $IOT_DIR
+cd $SKYNET_PATH
+tar xzf $IOT_DIR/ipt/skynet.tar.gz
 
-cd "$IOT_DIR"
-cd "$SKYNET_IOT_PATH"
-tar xzf "$IOT_DIR/ipt/skynet_iot.tar.gz"
+cd $IOT_DIR
+cd $SKYNET_IOT_PATH
+tar xzf $IOT_DIR/ipt/skynet_iot.tar.gz
 ]]
 
 local upgrade_ack_sh_str = [[
