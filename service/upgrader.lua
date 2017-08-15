@@ -179,7 +179,7 @@ SKYNET_PATH=%s
 SKYNET_IOT_FILE=%s
 SKYNET_IOT_PATH=%s
 
-echo > $IOT_DIR/ipt/rollback
+date > $IOT_DIR/ipt/rollback
 
 cd $IOT_DIR
 if [ -f $SKYNET_FILE ]
@@ -279,6 +279,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	if not r then
 		return false, err
 	end
+	write_script(base_dir.."/ipt/upgrade", os.date())
 
 	skynet.timeout(50, function()
 		skynet.abort()
