@@ -255,7 +255,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	assert(iot_path)
 	log.warning("Core System Upgrade....")
 	log.trace(iot_path, skynet_path)
-	local ps_e = get_ps_e()
+	--local ps_e = get_ps_e()
 
 	local base_dir = get_iot_dir()
 	lfs.mkdir(base_dir.."/ipt")
