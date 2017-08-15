@@ -277,11 +277,6 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		return false, err
 	end
 
-	if os.getenv("IOT_RUN_AS_DAEMON") then
-		skynet.timeout(50, function()
-			skynet.abort()
-		end)
-	end
 	log.warning("Core System Upgration Done!")
 	return true, "Upgration is done!"
 end
