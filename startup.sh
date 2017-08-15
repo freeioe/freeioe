@@ -4,6 +4,8 @@ IOT_DIR=$1
 START_TIME_FILE=/tmp/iot_start_time.txt
 STARTUP_LOG=/tmp/iot_startup.log
 
+cd $IOT_DIR
+
 date > $START_TIME_FILE
 date +%s >> $START_TIME_FILE
 
