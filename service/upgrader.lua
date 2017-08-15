@@ -178,11 +178,7 @@ SKYNET_PATH=%s
 SKYNET_IOT_FILE=%s
 SKYNET_IOT_PATH=%s
 
-if [ -f $IOT_DIR/ipt/upgrade_need_ack ]
-then
-	date > $IOT_DIR/ipt/rollback
-	rm -f $IOT_DIR/ipt/upgrade_need_ack
-fi
+date > $IOT_DIR/ipt/rollback
 
 cd $IOT_DIR
 if [ -f $SKYNET_FILE ]
@@ -213,6 +209,20 @@ then
 		exit $?
 	fi
 fi
+
+if [ -f $IOT_DIR/ipt/upgrade_need_ack ]
+then
+	rm -f $IOT_DIR/ipt/upgrade_need_ack
+else
+	rm -f $IOT_DIR/ipt/rollback
+	mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
+	if [ -f $IOT_DIR/ipt/skynet.tar.gz.new ] 
+	then
+		mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
+	fi
+	mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
+fi
+
 ]]
 
 local rollback_sh_str = [[
