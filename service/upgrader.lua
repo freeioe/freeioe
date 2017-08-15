@@ -258,6 +258,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 	local ps_e = get_ps_e()
 
 	local base_dir = get_iot_dir()
+	lfs.mkdir(base_dir.."/ipt")
 	local str = string.format(rollback_sh_str, base_dir, "skynet", "skynet_iot")
 	local r, err = write_script(base_dir.."/ipt/rollback.sh.new", str)
 	if not then
