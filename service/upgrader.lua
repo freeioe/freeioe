@@ -351,6 +351,15 @@ function command.bind_cloud(handle, type)
 	cloud = snax.bind(handle, type)
 end
 
+local function check_rollback()
+	local fn = get_iot_dir()..'/ipt/rollback'
+	local f, err = io.open(fn, 'r')
+	if f then
+		f:close()
+		return true
+	end
+end
+
 skynet.start(function()
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.lower(cmd)]
@@ -361,5 +370,15 @@ skynet.start(function()
 		end
 	end)
 	skynet.register "UPGRADER"
+	skynet.fork(function()
+		if check_rollback() then
+			log.notice("Rollback will be applied in 60 seconds")
+			skynet.timeout(60 * 100, function()
+				if check_rollback() then
+					skynet.abort()
+				end
+			end)
+		end
+	end)
 end)
 
