@@ -282,6 +282,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 			skynet.abort()
 		end)
 	end
+	log.warning("Core System Upgration Done!")
 	return true, "Upgration is done!"
 end
 
