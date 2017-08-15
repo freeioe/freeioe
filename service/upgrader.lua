@@ -202,7 +202,7 @@ then
 
 	if [ $? -eq 0 ]
 	then
-		mv -f $SKYNET_FILE $IOT_DIR/ipt/skynet_iot.tar.gz.new
+		mv -f $SKYNET_IOT_FILE $IOT_DIR/ipt/skynet_iot.tar.gz.new
 	else
 		echo "tar got error!"
 		exit $?
