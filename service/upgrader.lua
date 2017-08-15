@@ -218,11 +218,11 @@ SKYNET_PATH=%s
 SKYNET_IOT_PATH=%s
 
 cd "$IOT_DIR"
-cd "%SKYNET_PATH"
+cd "$SKYNET_PATH"
 tar xzf "$IOT_DIR/ipt/skynet.tar.gz"
 
 cd "$IOT_DIR"
-cd "%SKYNET_IOT_PATH"
+cd "$SKYNET_IOT_PATH"
 tar xzf "$IOT_DIR/ipt/skynet_iot.tar.gz"
 ]]
 
