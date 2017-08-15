@@ -170,61 +170,118 @@ local function get_ps_e()
 	return "ps -e"
 end
 
+local upgrade_sh_str = [[
+#!/bin/sh
+
+IOT_DIR=%s
+SKYNET_FILE=%s
+SKYNET_PATH=%s
+SKYNET_IOT_FILE=%s
+SKYNET_IOT_PATH+%s
+
+cd "$IOT_DIR"
+if [ -f "$SKYNET_FILE" ]
+then
+	cd "$SKYNET_PATH"
+	tar xzf "$SKYNET_FILE"
+
+	if [ $? -eq 0 ]
+	then
+		mv -f "$SKYNET_FILE" "$IOT_DIR/ipt/skynet.tar.gz.new"
+	else
+		echo "tar got error!"
+		exit $?
+	fi
+fi
+
+cd "$IOT_DIR"
+if [ -f "$SKYNET_IOT_FILE" ]
+then
+	cd "$SKYNET_IOT_PATH"
+	tar xzf "$SKYNET_IOT_FILE"
+
+	if [ $? -eq 0 ]
+	then
+		mv -f "$SKYNET_FILE" "$IOT_DIR/ipt/skynet_iot.tar.gz.new"
+	else
+		echo "tar got error!"
+		exit $?
+	fi
+fi
+]]
+
+local rollback_sh_str = [[
+#!/bin/sh
+
+IOT_DIR=%s
+SKYNET_PATH=%s
+SKYNET_IOT_PATH=%s
+
+cd "$IOT_DIR"
+cd "%SKYNET_PATH"
+tar xzf "$IOT_DIR/ipt/skynet.tar.gz"
+
+cd "$IOT_DIR"
+cd "%SKYNET_IOT_PATH"
+tar xzf "$IOT_DIR/ipt/skynet_iot.tar.gz"
+]]
+
+local upgrade_ack_sh_str = [[
+#!/bin/sh
+
+IOT_DIR=%s
+
+mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
+mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
+mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
+
+]]
+
+local function get_iot_dir()
+	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
+end
+
+local function write_script(fn, str)
+	local f, err = io.open(fn, "w+")
+	if not f then
+		return nil, err
+	end
+	f:write(str)
+	f:close()
+	return true
+end
+
 local function start_upgrade_proc(iot_path, skynet_path)
 	assert(iot_path)
 	log.warning("Core System Upgrade....")
 	log.trace(iot_path, skynet_path)
 	local ps_e = get_ps_e()
 
-	local base_dir = os.getenv('IOT_DIR') or lfs.currentdir().."/.."
-	local f, err = io.open(base_dir.."/upgrade.sh", "w+")
-	if not f then
-		print(base_dir.."/upgrade.sh", err)
-		return nil, err
-	end
-	f:write("sleep 5\n")
-	f:write("export IOT_RUN_AS_DAEMON=1\n")
-	f:write("cd "..base_dir.."\n")
-	if skynet_path then
-		f:write("cd skynet\n")
-		f:write("tar xzf "..skynet_path.."\n")
-		f:write("cd -\n")
-	end
-	f:write("cd skynet_iot\n")
-	f:write("tar xzf "..iot_path.."\n")
-	f:write("cd -\n")
-	f:write("cd skynet\n")
-	f:write("./skynet iot/config &\n")
-	f:write("cd -\n")
-
-	f:write("sleep 50\n")
-	f:write(ps_e.." | grep skynet | grep -v grep\n")
-	f:write("if [ $? -eq 0 ]\nthen\n")
-	f:write("\techo \"skynet process exits......\"\n")
-	f:write("\tmv -f "..iot_path.." ./skynet_iot.tar.gz\n")
-	if skynet_path then
-		f:write("\tmv -f "..skynet_path.." ./skynet.tar.gz\n")
-	end
-	f:write("\techo \"upgrade is done!\"\n")
-	f:write("else\n\tcd skynet_iot\n\ttar xzf ../skynet_iot.tar.gz\n\tcd -\n")
-	if skynet_path then
-		f:write("\tcd skynet\n\ttar xzf ../skynet.tar.gz\n\tcd -\n")
-	end
-	f:write("\t./skynet iot/config &\n")
-	f:write("\tcd -\n")
-	f:write("\techo \"rollback done\"\n")
-	f:write("fi\n\n")
-	f:close()
-
-	if not os.getenv("IOT_RUN_AS_DAEMON") then
-		return
+	local base_dir = get_iot_dir()
+	local str = string.format(rollback_sh_str, base_dir, "skynet", "skynet_iot")
+	local r, err = write_script(base_dir.."/ipt/rollback.sh.new", str)
+	if not then
+		return false, err
 	end
 
-	os.execute("sh "..base_dir.."/upgrade.sh &")
+	local str = string.format(upgrade_ack_sh_str, base_dir)
+	local r, err = write_script(base_dir.."/ipt/upgrade_ack.sh", str)
+	if not then
+		return false, err
+	end
 
-	skynet.timeout(50, function()
-		skynet.abort()
-	end)
+	local str = string.format(upgrade_sh_str, base_dir, skynet_path, "skynet", iot_path, "skynet_iot")
+	local r, err = write_script(base_dir.."/ipt/upgrade.sh", str)
+	if not then
+		return false, err
+	end
+
+	if os.getenv("IOT_RUN_AS_DAEMON") then
+		skynet.timeout(50, function()
+			skynet.abort()
+		end)
+	end
+	return true, "Upgration is done!"
 end
 
 function command.upgrade_core(id, args)
@@ -236,14 +293,28 @@ function command.upgrade_core(id, args)
 	create_download('skynet_iot', version, md5, function(r, info)
 		if r then
 			if skynet then
-				download_upgrade_skynet(id, skynet, function(path) start_upgrade_proc(info, path) end)
+				download_upgrade_skynet(id, skynet, function(path) 
+					local r, err = start_upgrade_proc(info, path) 
+					install_result(id, r, err)
+				end)
 			else
-				start_upgrade_proc(path)
+				local r, err = start_upgrade_proc(path)
+				install_result(id, r, err)
 			end
 		else
 			install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end, ".tar.gz")
+end
+
+function command.upgrade_core_ack(id, args)
+	local base_dir = get_iot_dir()
+	local upgrade_ack_sh = base_dir.."/ipt/upgrade_ack.sh"
+	local r, status, code = os.execute("sh "..upgrade_ack_sh)
+	if not r then
+		install_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
+	end
+	install_result(id, true, "Upgration ACK is done")
 end
 
 function command.list()
