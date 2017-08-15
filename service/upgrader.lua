@@ -91,8 +91,7 @@ function command.install_app(id, args)
 
 	if datacenter.get("APPS", inst_name) then
 		local err = "Application already installed"
-		install_result(id, false, "Failed to install App. Error: "..err)
-		return
+		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
 	local appmgr = snax.uniqueservice("appmgr")
 	local inst_name = inst_name
@@ -106,14 +105,14 @@ function command.install_app(id, args)
 			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
-				install_result(id, true, "Application installtion is done")
+				return install_result(id, true, "Application installtion is done")
 			else
 				datacenter.set("APPS", inst_name, nil)
 				os.execute("rm -rf "..target_folder)
-				install_result(id, false, "Failed to start App. Error: "..err)
+				return install_result(id, false, "Failed to start App. Error: "..err)
 			end
 		else
-			install_result(id, false, "Failed to download App. Error: "..info)
+			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end)
 end
@@ -128,9 +127,9 @@ function command.uninstall_app(id, args)
 	if r then
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
-		install_result(id, true, "Application uninstall is done")
+		return install_result(id, true, "Application uninstall is done")
 	else
-		install_result(id, false, "Application uninstall failed, Error: "..err)
+		return install_result(id, false, "Application uninstall failed, Error: "..err)
 	end
 end
 
@@ -156,7 +155,7 @@ local function download_upgrade_skynet(id, args, cb)
 		if r then
 			cb(info)
 		else
-			install_result(id, false, "Failed to download App. Error: "..info)
+			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end, ".tar.gz")
 
@@ -179,7 +178,11 @@ SKYNET_PATH=%s
 SKYNET_IOT_FILE=%s
 SKYNET_IOT_PATH=%s
 
-date > $IOT_DIR/ipt/rollback
+if [ -f $IOT_DIR/ipt/upgrade_need_ack ]
+then
+	date > $IOT_DIR/ipt/rollback
+	rm -f $IOT_DIR/ipt/upgrade_need_ack
+fi
 
 cd $IOT_DIR
 if [ -f $SKYNET_FILE ]
@@ -295,19 +298,27 @@ function command.upgrade_core(id, args)
 	local md5 = args.md5
 	local skynet = args.skynet
 
+	if args.ack then
+		local base_dir = get_iot_dir()
+		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_need_ack")
+		if not r then
+			return install_result(id, false, "Failed to create upgrade_need_ack file!")
+		end
+	end
+
 	create_download('skynet_iot', version, md5, function(r, info)
 		if r then
 			if skynet then
 				download_upgrade_skynet(id, skynet, function(path) 
 					local r, err = start_upgrade_proc(info, path) 
-					install_result(id, r, err)
+					return install_result(id, r, err)
 				end)
 			else
 				local r, err = start_upgrade_proc(path)
-				install_result(id, r, err)
+				return install_result(id, r, err)
 			end
 		else
-			install_result(id, false, "Failed to download App. Error: "..info)
+			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end, ".tar.gz")
 end
@@ -317,9 +328,9 @@ function command.upgrade_core_ack(id, args)
 	local upgrade_ack_sh = base_dir.."/ipt/upgrade_ack.sh"
 	local r, status, code = os.execute("sh "..upgrade_ack_sh)
 	if not r then
-		install_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
+		return install_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
 	end
-	install_result(id, true, "Upgration ACK is done")
+	return install_result(id, true, "Upgration ACK is done")
 end
 
 function command.list()
