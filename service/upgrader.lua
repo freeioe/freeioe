@@ -210,11 +210,11 @@ then
 	fi
 fi
 
-if [ -f $IOT_DIR/ipt/upgrade_need_ack ]
+if [ -f $IOT_DIR/ipt/upgrade_no_ack ]
 then
-	rm -f $IOT_DIR/ipt/upgrade_need_ack
-else
 	rm -f $IOT_DIR/ipt/rollback
+	rm -f $IOT_DIR/ipt/upgrade_no_ack
+
 	mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
 	if [ -f $IOT_DIR/ipt/skynet.tar.gz.new ] 
 	then
@@ -308,11 +308,11 @@ function command.upgrade_core(id, args)
 	local md5 = args.md5
 	local skynet = args.skynet
 
-	if args.ack then
+	if args.no_ack then
 		local base_dir = get_iot_dir()
-		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_need_ack")
+		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
-			return install_result(id, false, "Failed to create upgrade_need_ack file!")
+			return install_result(id, false, "Failed to create upgrade_no_ack file!")
 		end
 	end
 
