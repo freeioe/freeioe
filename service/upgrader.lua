@@ -220,7 +220,7 @@ else
 	then
 		mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
 	fi
-	mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
+	mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
 fi
 
 ]]
