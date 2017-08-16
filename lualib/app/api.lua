@@ -133,16 +133,7 @@ function api:add_device(sn, inputs, outputs, commands)
 end
 
 function api:del_device(dev)
-	if dev._readonly then
-		return
-	end
-	local sn = dev._sn
-	local props = dev._props
-	self._devices[sn] = nil
-	dev:_cleanup()
-	dc.set('DEVICES', sn, nil)
-	dc.set('DEV_IN_APP', sn, nil)
-	self._data_chn:publish('del_device', self._app_name, sn, props)
+	dev:cleanup()
 	return true
 end
 
@@ -198,6 +189,7 @@ function dev_api:initialize(api, sn, props, readonly)
 end
 
 function dev_api:_cleanup()
+	self._readonly = true
 	self._app_name = nil
 	self._sn = nil
 	self._props = nil
@@ -207,9 +199,19 @@ function dev_api:_cleanup()
 end
 
 function dev_api:cleanup()
-	if self._api then
-		self._api:del_device(self)
+	if dev._readonly then
+		return
 	end
+
+	local sn = dev._sn
+	local props = dev._props
+	self._devices[sn] = nil
+	dc.set('DEVICES', sn, nil)
+	dc.set('DEV_IN_APP', sn, nil)
+	log.trace("DELETE DEVICE", self._app_name, sn, props)
+	self._data_chn:publish('del_device', self._app_name, sn, props)
+
+	self:_cleanup()
 end
 
 function dev_api:mod(inputs, outputs, commands)

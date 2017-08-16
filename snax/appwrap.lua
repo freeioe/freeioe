@@ -12,10 +12,12 @@ local sys_api = nil
 local on_close = function()
 	if app then
 		app:close(reason)
-		app = nil
 	end
-	sys_api:cleanup()
+	if sys_api then
+		sys_api:cleanup()
+	end
 	sys_api = nil
+	app = nil
 	app_name = "UNKNOWN"
 	app = nil
 end
