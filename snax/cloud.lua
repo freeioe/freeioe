@@ -183,7 +183,7 @@ local function load_cov_conf()
 
 	skynet.fork(function()
 		while true do
-			skynet.sleep(ttl * 3)
+			skynet.sleep(ttl)
 			cov:timer(skynet.time())
 		end
 	end)

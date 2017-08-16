@@ -92,7 +92,7 @@ end
 function cov:timer(now)
 	local opt = self._opt
 	for key, v in pairs(self._retained_map) do
-		if math.abs(now - v[2]) > (opt.ttl * 2) then
+		if math.abs(now - v[2]) > (opt.ttl * 3) then
 			self._retained_map[key] = nil
 		end
 	end

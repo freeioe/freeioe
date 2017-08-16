@@ -58,6 +58,14 @@ end
 
 function app:close(reason)
 	--print(self._name, reason)
+	if self._cancel_start_timer then
+		self._cancel_start_timer()
+		self._cancel_start_timer = nil
+	end
+	if self._cancel_uptime_timer then
+		self._cancel_uptime_timer()
+		self._cancel_uptime_timer = nil
+	end
 end
 
 local function get_versions(fn)
@@ -79,16 +87,21 @@ function app:run(tms)
 		local sv, sgv = get_versions("./version")
 		self._log.notice("Skynet Platform Version:", sv, sgv)
 
-		self._dev:set_input_prop('starttime', "value", self._start_time)
-		self._dev:set_input_prop('version', "value", v)
-		self._dev:set_input_prop('version', "git_version", gv)
-		self._dev:set_input_prop('skynet_version', "value", sv)
-		self._dev:set_input_prop('skynet_version', "git_version", sgv)
+		self._cancel_start_timer = self._sys:cancelable_timeout(1000 * 60, function()
+			self._dev:set_input_prop('starttime', "value", self._start_time)
+			self._dev:set_input_prop('version', "value", v)
+			self._dev:set_input_prop('version', "git_version", gv)
+			self._dev:set_input_prop('skynet_version', "value", sv)
+			self._dev:set_input_prop('skynet_version', "git_version", sgv)
+		end)
+		self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, function()
+			self._dev:set_input_prop('uptime', "value", self._sys:now())
+		end)
 	end
-	self._dev:set_input_prop('uptime', "value", self._sys:now())
+
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))
-	return 1000 * 60
+	return 1000 * 5
 end
 
 return app
