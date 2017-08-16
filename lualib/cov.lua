@@ -7,7 +7,9 @@ function cov:initialize(opt)
 
 	opt.float_threshold = 0.000001
 	opt.try_convert_string = true
-	--opt.ttl = opt.ttl or nil
+	if opt.ttl then
+		assert(opt.ttl > 0)
+	end
 
 	self._opt = opt
 	self._retained_map = {}
@@ -90,7 +92,7 @@ end
 function cov:timer(now)
 	local opt = self._opt
 	for key, v in pairs(self._retained_map) do
-		if math.abs(now - v[2]) > opt.ttl then
+		if math.abs(now - v[2]) > (opt.ttl * 2) then
 			self._retained_map[key] = nil
 		end
 	end

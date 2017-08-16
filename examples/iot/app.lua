@@ -72,7 +72,7 @@ local function get_versions(fn)
 end
 
 function app:run(tms)
-	if not self._start_time then
+	if true or not self._start_time then
 		self._start_time = self._sys:start_time()
 		self._dev:set_input_prop('starttime', "value", self._start_time)
 		local v, gv = get_versions("./iot/version")
