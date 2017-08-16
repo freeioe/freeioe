@@ -52,8 +52,9 @@ local function create_download(app_name, version, cb, ext)
 		if status and status == 200 then
 			local sum = helper.md5sum(path)
 			log.trace("Downloaded file md5 sum", sum)
-			if sum ~= body then
-				return cb(nil, "Check md5 sum failed, expected:\t"..body.."\t Got:\t"..sum)
+			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
+			if sum ~= md5 then
+				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
 			end
 		end
 		cb(true, path)
