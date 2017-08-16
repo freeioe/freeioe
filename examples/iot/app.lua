@@ -8,6 +8,7 @@ function app:initialize(name, conf, sys)
 	self._conf = conf
 	self._sys = sys
 	self._api = self._sys:data_api()
+	self._log = sys:logger()
 end
 
 function app:start()
@@ -39,6 +40,16 @@ function app:start()
 			desc = "System start time in UTC",
 			vt = "int",
 		},
+		{
+			name = "version",
+			desc = "System Version",
+			vt = "int",
+		},
+		{
+			name = "skynet_version",
+			desc = "Skynet Platform Version",
+			vt = "int",
+		},
 	}
 	self._dev = self._api:add_device(sys_id, inputs)
 
@@ -49,10 +60,33 @@ function app:close(reason)
 	--print(self._name, reason)
 end
 
+local function get_versions(fn)
+	local f, err = io.open(fn, "r")
+	if not f then
+		return nil, err
+	end
+	local v = tonumber(f:read("l"))
+	local gv = f:read("l")
+	f:close()
+	return v, gv
+end
+
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
 		self._dev:set_input_prop('starttime', "value", self._start_time)
+		local v, gv = get_versions("./iot/version")
+		if v then
+			self._log.notice("System Version:", v, gv)
+			self._dev:set_input_prop('version', "value", v)
+			self._dev:set_input_prop('version', "git_version", gv)
+		end
+		local v, gv = get_versions("./version")
+		if v then
+			self._log.notice("Skynet Platform Version:", v, gv)
+			self._dev:set_input_prop('version', "value", v)
+			self._dev:set_input_prop('version', "git_version", gv)
+		end
 	end
 	self._dev:set_input_prop('uptime', "value", self._sys:now())
 	local loadavg = sysinfo.loadavg()

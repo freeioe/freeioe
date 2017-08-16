@@ -181,7 +181,8 @@ function app:read_bms(dev, client, no)
 		return client:request(req, timeout)
 	end, req, 1000)
 	if not r then
-		if pdu:find('timeout') then
+		pdu = tostring(pdu)
+		if string.find(pdu, 'timeout') then
 			self._log.debug(pdu, err)
 		else
 			self._log.error(pdu, err)
