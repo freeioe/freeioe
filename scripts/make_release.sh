@@ -1,5 +1,7 @@
 # !/usr/bin/env sh
 
+SKYNET_PLAT=$1
+
 #rm __release/* -rf
 # Make the release folder
 mkdir -p __release/skynet_iot
@@ -62,7 +64,7 @@ cd - > /dev/null
 rm -rf __install
 
 # Release Skynet
-./scripts/release_skynet.sh ~/mycode/skynet
+./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
 
 # Done
 echo 'May GOD with YOU always!'

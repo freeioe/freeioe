@@ -1,6 +1,16 @@
 # !/usr/bin/env sh
 
-cd $1
+SKYNET_DIR=$1
+SKYNET_PLAT="skynet"
+
+if [ ! -n "$2" ]
+then
+	SKYNET_PLAT="skynet"
+else
+	SKYNET_PLAT=$2"_skynet"
+fi
+
+cd $SKYNET_DIR
 
 # Clean up the cramfs folder
 #sudo rm -rf __install
@@ -43,11 +53,11 @@ echo $REVISION >> __install/version
 ##
 ##################
 cd __install
-mkdir -p ../iot/__release/skynet
-tar czvf ../iot/__release/skynet/$VERSION.tar.gz * > /dev/null
-md5sum -b ../iot/__release/skynet/$VERSION.tar.gz > ../iot/__release/skynet/$VERSION.tar.gz.md5
-cp -f ../iot/__release/skynet/$VERSION.tar.gz ../iot/__release/skynet/latest.tar.gz
-cp -f ../iot/__release/skynet/$VERSION.tar.gz.md5 ../iot/__release/skynet/latest.tar.gz.md5
+mkdir -p ../iot/__release/$SKYNET_PLAT
+tar czvf ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz * > /dev/null
+md5sum -b ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz > ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5
+cp -f ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz ../iot/__release/$SKYNET_PLAT/latest.tar.gz
+cp -f ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5 ../iot/__release/$SKYNET_PLAT/latest.tar.gz.md5
 cd - > /dev/null
 
 # Clean up the rootfs files
