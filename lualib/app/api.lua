@@ -126,10 +126,9 @@ function api:add_device(sn, inputs, outputs, commands)
 	end
 
 	local props = {inputs = inputs, outputs = outputs, commands = commands}
-	dc.set('DEVICES', sn, props)
-	dc.set('DEV_IN_APP', sn, self._app_name)
-	self._data_chn:publish('add_device', self._app_name, sn, props)
 	dev = dev_api:new(self, sn, props)
+	self._devices[sn] = dev
+	self._data_chn:publish('add_device', self._app_name, sn, props)
 	return dev
 end
 
@@ -186,6 +185,11 @@ function dev_api:initialize(api, sn, props, readonly)
 	self._inputs_map = {}
 	for _, t in ipairs(props.inputs) do
 		self._inputs_map[t.name] = true
+	end
+
+	if not readonly then
+		dc.set('DEVICES', sn, props)
+		dc.set('DEV_IN_APP', sn, self._app_name)
 	end
 end
 
