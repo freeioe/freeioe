@@ -29,9 +29,10 @@ function init(...)
 	local log = require 'log'
 
 	local lname = 'skynet'
+	local max_lvl = os.getenv('IOT_LOG_LEVEL') or 'info'
 
 	LOG = log.new(
-		"trace", -- maximum log level
+		max_lvl, -- maximum log level
 
 		-- Writer
 		require 'log.writer.list'.new(               -- multi writers:
