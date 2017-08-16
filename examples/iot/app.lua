@@ -63,7 +63,7 @@ end
 local function get_versions(fn)
 	local f, err = io.open(fn, "r")
 	if not f then
-		return nil, err
+		return 0, "develop"
 	end
 	local v = tonumber(f:read("l"))
 	local gv = f:read("l")
@@ -76,17 +76,13 @@ function app:run(tms)
 		self._start_time = self._sys:start_time()
 		self._dev:set_input_prop('starttime', "value", self._start_time)
 		local v, gv = get_versions("./iot/version")
-		if v then
-			self._log.notice("System Version:", v, gv)
-			self._dev:set_input_prop('version', "value", v)
-			self._dev:set_input_prop('version', "git_version", gv)
-		end
+		self._log.notice("System Version:", v, gv)
+		self._dev:set_input_prop('version', "value", v)
+		self._dev:set_input_prop('version', "git_version", gv)
 		local v, gv = get_versions("./version")
-		if v then
-			self._log.notice("Skynet Platform Version:", v, gv)
-			self._dev:set_input_prop('skynet_version', "value", v)
-			self._dev:set_input_prop('skynet_version', "git_version", gv)
-		end
+		self._log.notice("Skynet Platform Version:", v, gv)
+		self._dev:set_input_prop('skynet_version', "value", v)
+		self._dev:set_input_prop('skynet_version', "git_version", gv)
 	end
 	self._dev:set_input_prop('uptime', "value", self._sys:now())
 	local loadavg = sysinfo.loadavg()
