@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local log = require 'utils.log'
 local app_sys = require 'app.sys'
+local cache = require "skynet.codecache"
 
 local app = nil
 local app_name = "UNKNOWN"
@@ -68,6 +69,9 @@ function response.set_conf(conf)
 end
 
 function init(name, conf, mgr_handle, mgr_type)
+	-- Disable Skynet Code Cache!!
+	cache.mode('EXIST')
+
 	app_name = name
 
 	log.debug("App "..app_name.." starting")
