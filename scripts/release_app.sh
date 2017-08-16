@@ -10,7 +10,7 @@ cd ./examples/$1
 zip -r -q ../../__release/$1/$2.zip * -x *~
 cd ../../
 cp -f __release/$1/$2.zip __release/$1/latest.zip
-md5sum __release/$1/$2.zip > __release/$1/$2.zip.md5
+md5sum -b __release/$1/$2.zip > __release/$1/$2.zip.md5
 cp -f __release/$1/$2.zip.md5 __release/$1/latest.zip.md5
 
 # copy to web server folder

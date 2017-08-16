@@ -45,7 +45,7 @@ echo $REVISION >> __install/version
 cd __install
 mkdir -p ../iot/__release/skynet
 tar czvf ../iot/__release/skynet/$VERSION.tar.gz * > /dev/null
-md5sum ../iot/__release/skynet/$VERSION.tar.gz > ../iot/__release/skynet/$VERSION.tar.gz.md5
+md5sum -b ../iot/__release/skynet/$VERSION.tar.gz > ../iot/__release/skynet/$VERSION.tar.gz.md5
 cp -f ../iot/__release/skynet/$VERSION.tar.gz ../iot/__release/skynet/latest.tar.gz
 cp -f ../iot/__release/skynet/$VERSION.tar.gz.md5 ../iot/__release/skynet/latest.tar.gz.md5
 cd - > /dev/null
