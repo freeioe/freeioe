@@ -76,6 +76,9 @@ function init(...)
 		for k,v in pairs(apps) do
 			snax.self().req.start(k, v.conf)
 		end
+		if not apps['iot'] then
+			snax.self().req.start('iot')
+		end
 	end)
 end
 

@@ -15,8 +15,6 @@ skynet.start(function()
 
 	local cloud = snax.uniqueservice("cloud")
 	local appmgr = snax.uniqueservice("appmgr")
-	--local app = appmgr.req.start("XXXX", {test="AAA"})
-	local app = appmgr.req.start("iot")
 
 	skynet.exit()
 end)
