@@ -24,7 +24,7 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
-local function create_download(app_name, version, md5, cb, ext)
+local function create_download(app_name, version, cb, ext)
 	local app_name = app_name
 	local cb = cb
 	local ext = ext or ".zip"
@@ -48,10 +48,13 @@ local function create_download(app_name, version, md5, cb, ext)
 		end
 		file:write(body)
 		file:close()
-		local sum = helper.md5sum(path)
-		log.trace("Downloaded file md5 sum", sum)
-		if md5 and sum ~= md5 then
-			return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
+		local status, header, body = httpdown.get(pkg_host, url..".md5")
+		if status and status == 200 then
+			local sum = helper.md5sum(path)
+			log.trace("Downloaded file md5 sum", sum)
+			if sum ~= body then
+				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
+			end
 		end
 		cb(true, path)
 	end
@@ -87,7 +90,6 @@ function command.install_app(id, args)
 	local version = args.version or 'latest'
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
-	local md5 = args.md5
 
 	if datacenter.get("APPS", inst_name) then
 		local err = "Application already installed"
@@ -98,7 +100,7 @@ function command.install_app(id, args)
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 
-	create_download(name, version, md5, function(r, info)
+	create_download(name, version, function(r, info)
 		if r then
 			log.debug("Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
@@ -151,7 +153,7 @@ local function download_upgrade_skynet(id, args, cb)
 	local version = args.version or 'latest'
 	local kname = get_core_name('skynet', args.platform)
 
-	create_download(kname, version, md5, function(r, info)
+	create_download(kname, version, function(r, info)
 		if r then
 			cb(info)
 		else
@@ -305,7 +307,6 @@ end
 function command.upgrade_core(id, args)
 	local is_windows = package.config:sub(1,1) == '\\'
 	local version = args.version or 'latest'
-	local md5 = args.md5
 	local skynet = args.skynet
 
 	if args.no_ack then
@@ -316,7 +317,7 @@ function command.upgrade_core(id, args)
 		end
 	end
 
-	create_download('skynet_iot', version, md5, function(r, info)
+	create_download('skynet_iot', version, function(r, info)
 		if r then
 			if skynet then
 				download_upgrade_skynet(id, skynet, function(path) 
