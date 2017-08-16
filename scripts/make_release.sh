@@ -52,7 +52,9 @@ mkdir __install/apps
 ##################
 cd __install
 tar czvf ../__release/skynet_iot/$VERSION.tar.gz * > /dev/null
+md5sum ../__realease/skynet_iot/$VERSION.tar.gz > ../release/skynet_iot/$VERSION.tar.gz.md5
 cp -f ../__release/skynet_iot/$VERSION.tar.gz ../__release/skynet_iot/latest.tar.gz
+cp -f ../__release/skynet_iot/$VERSION.tar.gz.md5 ../__release/skynet_iot/latest.tar.gz.md5
 cd - > /dev/null
 
 # Clean up the rootfs files
