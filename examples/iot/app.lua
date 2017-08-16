@@ -84,8 +84,8 @@ function app:run(tms)
 		local v, gv = get_versions("./version")
 		if v then
 			self._log.notice("Skynet Platform Version:", v, gv)
-			self._dev:set_input_prop('version', "value", v)
-			self._dev:set_input_prop('version', "git_version", gv)
+			self._dev:set_input_prop('skynet_version', "value", v)
+			self._dev:set_input_prop('skynet_version', "git_version", gv)
 		end
 	end
 	self._dev:set_input_prop('uptime', "value", self._sys:now())
