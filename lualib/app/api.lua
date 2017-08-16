@@ -12,6 +12,13 @@ function api:initialize(app_name, mgr_snax, cloud_snax)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax or snax.uniqueservice('appmgr')
 	self._cloud_snax = cloud_snax or snax.uniqueservice('cloud')
+	self._devices = {}
+end
+
+function api:cleanup()
+	for sn, dev in pairs(self._devices) do
+		self:del_device(dev)
+	end
 end
 
 function api:data_dispatch(channel, source, cmd, app, sn, ...)
@@ -112,17 +119,27 @@ function api:list_devices()
 end
 
 function api:add_device(sn, inputs, outputs, commands)
+	local dev = self._devices[sn]
+	if dev then
+		return dev
+	end
+
 	local props = {inputs = inputs, outputs = outputs, commands = commands}
 	dc.set('DEVICES', sn, props)
 	dc.set('DEV_IN_APP', sn, self._app_name)
 	self._data_chn:publish('add_device', self._app_name, sn, props)
-	return dev_api:new(self, sn, props)
+	dev = dev_api:new(self, sn, props)
+	return dev
 end
 
 function api:del_device(dev)
+	if dev._readonly then
+		return
+	end
 	local sn = dev._sn
 	local props = dev._props
-	dev:clean_up()
+	self._devices[sn] = nil
+	dev:_cleanup()
 	dc.set('DEVICES', sn, nil)
 	dc.set('DEV_IN_APP', sn, nil)
 	self._data_chn:publish('del_device', self._app_name, sn, props)
@@ -161,6 +178,7 @@ end
 
 
 function dev_api:initialize(api, sn, props, readonly)
+	self._api = api
 	self._sn = sn
 	self._props = props
 	if readonly then
@@ -179,12 +197,19 @@ function dev_api:initialize(api, sn, props, readonly)
 	end
 end
 
-function dev_api:clean_up()
+function dev_api:_cleanup()
 	self._app_name = nil
 	self._sn = nil
 	self._props = nil
 	self._inputs_map = nil
 	self._data_chn = nil
+	self._api = nil
+end
+
+function dev_api:cleanup()
+	if self._api then
+		self._api:del_device(self)
+	end
 end
 
 function dev_api:mod(inputs, outputs, commands)

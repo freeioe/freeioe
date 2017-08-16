@@ -167,4 +167,10 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._app_sn = nil
 end
 
+function sys:cleanup()
+	if self._data_api then
+		self._data_api:cleanup()
+	end
+end
+
 return sys

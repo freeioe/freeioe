@@ -14,6 +14,8 @@ local on_close = function()
 		app:close(reason)
 		app = nil
 	end
+	sys_api:cleanup()
+	sys_api = nil
 	app_name = "UNKNOWN"
 	app = nil
 end
