@@ -19,6 +19,7 @@ function api:cleanup()
 	for sn, dev in pairs(self._devices) do
 		self:del_device(dev)
 	end
+	self._devices = {}
 end
 
 function api:data_dispatch(channel, source, cmd, app, sn, ...)
