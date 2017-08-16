@@ -204,15 +204,18 @@ function dev_api:_cleanup()
 end
 
 function dev_api:cleanup()
-	if dev._readonly then
+	if self._readonly then
 		return
 	end
 
-	local sn = dev._sn
-	local props = dev._props
-	self._devices[sn] = nil
+	local sn = self._sn
+	local props = self._props
+
+	self._api._devices[sn] = nil
+
 	dc.set('DEVICES', sn, nil)
 	dc.set('DEV_IN_APP', sn, nil)
+
 	log.trace("DELETE DEVICE", self._app_name, sn, props)
 	self._data_chn:publish('del_device', self._app_name, sn, props)
 
