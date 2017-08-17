@@ -89,6 +89,7 @@ end
 local function load_cfg_cloud()
 	local cloud_enable = dc.get("CLOUD", "CFG", "ENABLE")
 	if cloud_enable and cloud_enable ~= 0 then
+		log.notice("::CFG:: Checking cloud configuration")
 		local id = dc.get("CLOUD", "ID")
 		local status, body = db_restful:get("iot_device_conf/"..id.."/timestamp")
 		if status ~= 200 then
@@ -110,7 +111,15 @@ local function load_cfg_cloud()
 			if sum ~= md5sum then
 				log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
 			end
-			-- TODO:
+			local r, err = save_cfg(db_file, str, sum)
+			if not r  then
+				log.warning("::CFG:: Saving configurtaion failed", err)
+			end
+			-- Quit skynet
+			skynet.abort()
+		end
+		if tm and tm <= db_modification then
+			log.debug("::CFG:: Local configuration is newer")
 		end
 	end
 end
