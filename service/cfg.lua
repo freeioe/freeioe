@@ -8,6 +8,7 @@ local restful = require 'restful'
 local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
+local db_restful = nil
 
 local command = {}
 
@@ -27,7 +28,7 @@ local function load_cfg(path)
 	end
 
 	db_modification = tonumber(lfs.attributes(path, 'modification'))
-	print(db_modification, os.time())
+	--print(db_modification, os.time())
 
 	local str = file:read("*a")
 	file:close()
@@ -44,6 +45,7 @@ local function load_cfg(path)
 
 	dc.set("CLOUD", db.cloud)
 	dc.set("APPS", db.apps)
+
 end
 
 local function save_cfg(path, content, content_md5sum)
@@ -66,6 +68,53 @@ local function save_cfg(path, content, content_md5sum)
 	return true
 end
 
+local function save_cfg_cloud(content, content_md5sum)
+	local cloud_enable = dc.get("CLOUD", "CFG", "ENABLE")
+
+	if cloud_enable and cloud_enable ~= 0 then
+		local id = dc.get("CLOUD", "ID")
+		local url = "iot_device_conf/"..id
+		local c = {
+			timestamp = db_modification,
+			data = content,
+			md5 = content_md5sum,
+		}
+		local status, body = db_restful:post(url, c)
+		if not status and status ~= 200 then
+			log.warning("::CFG:: Saving cloud config failed", status or -1, body)
+		end
+	end
+end
+
+local function load_cfg_cloud()
+	local cloud_enable = dc.get("CLOUD", "CFG", "ENABLE")
+	if cloud_enable and cloud_enable ~= 0 then
+		local id = dc.get("CLOUD", "ID")
+		local status, body = db_restful:get("iot_device_conf/"..id.."/timestamp")
+		if status ~= 200 then
+			log.warning("::CFG:: Get cloud config failed", status or -1, body)
+			return
+		end
+		tm = tonumber(body)
+		if tm and tm > db_modification then
+			log.warning("::CFG:: Configuration in cloud is newer")
+			local status, content = db_restful:get("iot_device_conf/"..id.."/content")
+			if status ~= 200 then
+				log.warning("::CFG:: Get cloud config failed", status or -1, body)
+			end
+			local status, md5sum = db_restful:get("iot_device_conf/"..id.."/md5")
+			if status ~= 200 then
+				log.warning("::CFG:: Get cloud config failed", status or -1, body)
+			end
+			local sum = md5.sumhexa(content)
+			if sum ~= md5sum then
+				log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
+			end
+			-- TODO:
+		end
+	end
+end
+
 function command.SAVE(opt_path)
 	local cfg = {}
 	cfg.cloud = dc.get("CLOUD")
@@ -78,6 +127,7 @@ function command.SAVE(opt_path)
 		if r then
 			md5sum = sum
 		end
+		save_cfg_cloud(str, sum)
 	end
 end
 
@@ -92,13 +142,26 @@ local function set_defaults()
 	dc.set("CLOUD", "TIMEOUT", 300)
 
 	dc.set("CLOUD", "PKG_HOST_URL", "symid.com")
-	dc.set("CLOUD", "CFG", "URL", "symid.com/device_conf")
-	dc.set("CLOUD", "CFG", "ENABLE", 0)
+
+	dc.set("CLOUD", "CFG", "HOST", "symid.com")
+	dc.set("CLOUD", "CFG", "TIMEOUT", nil)
+	dc.set("CLOUD", "CFG", "ENABLE", nil)
+end
+
+local function init_restful()
+	if not dc.get("CLOUD", "CFG") then
+		dc.set("CLOUD", "CFG", "HOST", "symid.com")
+	end
+
+	local host = dc.get("CLOUD", "CFG", "HOST")
+	local timeout = dc.get("CLOUD", "CFG", "TIMEOUT")
+	db_restful = restful:new(host, timeout)
 end
 
 skynet.start(function()
 	set_defaults()
 	load_cfg(db_file)
+	init_restful()
 
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.upper(cmd)]
@@ -110,6 +173,9 @@ skynet.start(function()
 	end)
 	skynet.register "CFG"
 
+	skynet.timeout(50, function()
+		load_cfg_cloud()
+	end)
 	skynet.fork(function()
 		while true do
 			command.SAVE()
