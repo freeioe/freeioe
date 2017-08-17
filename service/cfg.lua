@@ -37,7 +37,7 @@ local function load_cfg(path)
 	if mfile then
 		local md5s = mfile:read("*l")
 		if md5s ~= sum then
-			log.warning("::CFG:: File md5 checksum error", md5s, sum)
+			skynet.error("::CFG:: File md5 checksum error", md5s, sum)
 		end
 	end
 
@@ -81,7 +81,7 @@ local function save_cfg_cloud(content, content_md5sum)
 		}
 		local status, body = db_restful:post(url, c)
 		if not status and status ~= 200 then
-			log.warning("::CFG:: Saving cloud config failed", status or -1, body)
+			skynet.error("::CFG:: Saving cloud config failed", status or -1, body)
 		end
 	end
 end
@@ -89,37 +89,36 @@ end
 local function load_cfg_cloud()
 	local cloud_enable = dc.get("CLOUD", "CFG", "ENABLE")
 	if cloud_enable and cloud_enable ~= 0 then
-		log.notice("::CFG:: Checking cloud configuration")
 		local id = dc.get("CLOUD", "ID")
 		local status, body = db_restful:get("iot_device_conf/"..id.."/timestamp")
 		if status ~= 200 then
-			log.warning("::CFG:: Get cloud config failed", status or -1, body)
+			skynet.error("::CFG:: Get cloud config failed", status or -1, body)
 			return
 		end
 		tm = tonumber(body)
 		if tm and tm > db_modification then
-			log.warning("::CFG:: Configuration in cloud is newer")
+			skynet.error("::CFG:: Configuration in cloud is newer")
 			local status, content = db_restful:get("iot_device_conf/"..id.."/content")
 			if status ~= 200 then
-				log.warning("::CFG:: Get cloud config failed", status or -1, body)
+				skynet.error("::CFG:: Get cloud config failed", status or -1, body)
 			end
 			local status, md5sum = db_restful:get("iot_device_conf/"..id.."/md5")
 			if status ~= 200 then
-				log.warning("::CFG:: Get cloud config failed", status or -1, body)
+				skynet.error("::CFG:: Get cloud config failed", status or -1, body)
 			end
 			local sum = md5.sumhexa(content)
 			if sum ~= md5sum then
-				log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
+				skynet.error("::CFG:: MD5 Checksum error", sum, md5sum)
 			end
 			local r, err = save_cfg(db_file, str, sum)
 			if not r  then
-				log.warning("::CFG:: Saving configurtaion failed", err)
+				skynet.error("::CFG:: Saving configurtaion failed", err)
 			end
 			-- Quit skynet
 			skynet.abort()
 		end
 		if tm and tm <= db_modification then
-			log.debug("::CFG:: Local configuration is newer")
+			skynet.error("::CFG:: Local configuration is newer")
 		end
 	end
 end
