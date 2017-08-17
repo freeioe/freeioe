@@ -1,6 +1,3 @@
-local json = require 'cjson'
-local class = require 'middleclass'
-
 local _M = {}
 
 local function init_httpc(timeout)

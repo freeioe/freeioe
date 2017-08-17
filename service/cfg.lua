@@ -2,9 +2,12 @@ local skynet = require "skynet.manager"
 local dc = require "skynet.datacenter"
 local cjson = require "cjson.safe"
 local md5 = require "md5"
+local lfs = require 'lfs'
+local restful = require 'restful'
 
 local db_file = "cfg.json"
 local md5sum = ""
+local db_modification = 0
 
 local command = {}
 
@@ -22,6 +25,9 @@ local function load_cfg(path)
 	if not file then
 		return nil, err
 	end
+
+	db_modification = tonumber(lfs.attributes(path, 'modification'))
+	print(db_modification, os.time())
 
 	local str = file:read("*a")
 	file:close()
@@ -50,7 +56,7 @@ local function save_cfg(path, content, content_md5sum)
 	if not mfile then
 		return nil, err
 	end
-
+	db_modification = os.time()
 	file:write(content)
 	file:close()
 
@@ -86,6 +92,8 @@ local function set_defaults()
 	dc.set("CLOUD", "TIMEOUT", 300)
 
 	dc.set("CLOUD", "PKG_HOST_URL", "symid.com")
+	dc.set("CLOUD", "CFG", "URL", "symid.com/device_conf")
+	dc.set("CLOUD", "CFG", "ENABLE", 0)
 end
 
 skynet.start(function()
@@ -105,7 +113,7 @@ skynet.start(function()
 	skynet.fork(function()
 		while true do
 			command.SAVE()
-			skynet.sleep(50)
+			skynet.sleep(500)
 		end
 	end)
 end)
