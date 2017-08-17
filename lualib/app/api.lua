@@ -154,19 +154,18 @@ function api:_dump_comm(sn, dir, ...)
 end
 
 --[[
--- Get device configuration string by device serial number(sn)
+-- Get application configuration 
 --]]
 function api:get_conf(sn)
-	return self._cloud_snax.req.get_device_conf(sn)
+	return dc.get('APPS', self._app_name, 'conf')
 end
 
 --[[
--- Set device configuration string
+-- Set application configuration
 --]]
 function api:set_conf(sn, conf)
-	return self._cloud_snax.req.set_device_conf(sn)
+	return dc.set('APPS', self._app_name, 'conf')
 end
-
 
 function dev_api:initialize(api, sn, props, readonly)
 	self._api = api

@@ -4,40 +4,19 @@ local cjson = require "cjson.safe"
 local md5 = require "md5"
 
 local db_file = "cfg.json"
-local db = {}
+local md5sum = ""
 
 local command = {}
 
-function command.GET(key)
-	return db[key]
+function command.GET(app, ...)
+	return dc.get('APPS', app, ...)
 end
 
-function command.SET(key, value)
-	local last = db[key]
-	db[key] = value
-	return last
+function command.SET(...)
+	return dc.set('APPS', app, ...)
 end
 
-local function save_cfg(cfg, path)
-	skynet.error("::CFG:: Saving configuration...")
-	local file, err = io.open(path, "w+")
-	if not file then
-		return nil, err
-	end
-
-	file:write(cjson.encode(cfg))
-	file:close()
-end
-
-function command.SAVE(opt_path)
-	return save_cfg(db, opt_path or db_file)
-end
-
-function command.CLEAR()
-	db = {}
-end
-
-local function load_conf(path)
+local function load_cfg(path)
 	skynet.error("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
@@ -46,10 +25,58 @@ local function load_conf(path)
 
 	local str = file:read("*a")
 	file:close()
+	local sum = md5.sumhexa(str)
+	local mfile, err = io.open(path..".md5", "r")
+	if mfile then
+		local md5s = mfile:read("*l")
+		if md5s ~= sum then
+			log.warning("::CFG:: File md5 checksum error", md5s, sum)
+		end
+	end
+
 	db = cjson.decode(str) or {}
 
 	dc.set("CLOUD", db.cloud)
 	dc.set("APPS", db.apps)
+end
+
+local function save_cfg(path, content, content_md5sum)
+	skynet.error("::CFG:: Saving configuration...")
+	local file, err = io.open(path, "w+")
+	if not file then
+		return nil, err
+	end
+	local mfile, err = io.open(path..".md5", "w+")
+	if not mfile then
+		return nil, err
+	end
+
+	file:write(content)
+	file:close()
+
+	mfile:write(content_md5sum)
+	mfile:close()
+
+	return true
+end
+
+function command.SAVE(opt_path)
+	local cfg = {}
+	cfg.cloud = dc.get("CLOUD")
+	cfg.apps = dc.get("APPS")
+	local str = cjson.encode(cfg)
+	local sum = md5.sumhexa(str)
+	if sum ~= md5sum then
+		--print(sum, md5sum)
+		local r, err = save_cfg(opt_path or db_file, str, sum)
+		if r then
+			md5sum = sum
+		end
+	end
+end
+
+function command.CLEAR()
+	db = {}
 end
 
 local function set_defaults()
@@ -63,7 +90,7 @@ end
 
 skynet.start(function()
 	set_defaults()
-	load_conf(db_file)
+	load_cfg(db_file)
 
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.upper(cmd)]
@@ -76,18 +103,8 @@ skynet.start(function()
 	skynet.register "CFG"
 
 	skynet.fork(function()
-		local md5sum = nil
 		while true do
-			local cfg = {}
-			cfg.cloud = dc.get("CLOUD")
-			cfg.apps = dc.get("APPS")
-			local str = cjson.encode(cfg)
-			local sum = md5.sumhexa(str)
-			if sum ~= md5sum then
-				--print(sum, md5sum)
-				md5sum = sum
-				save_cfg(cfg, db_file)
-			end
+			command.SAVE()
 			skynet.sleep(50)
 		end
 	end)
