@@ -212,7 +212,7 @@ local function download_upgrade_skynet(id, args, cb)
 		if r then
 			cb(info)
 		else
-			return install_result(id, false, "Failed to download App. Error: "..info)
+			return install_result(id, false, "Failed to download skynet. Error: "..info)
 		end
 	end, ".tar.gz")
 
@@ -384,7 +384,7 @@ function command.upgrade_core(id, args)
 				return install_result(id, r, err)
 			end
 		else
-			return install_result(id, false, "Failed to download App. Error: "..info)
+			return install_result(id, false, "Failed to download core system. Error: "..info)
 		end
 	end, ".tar.gz")
 end
