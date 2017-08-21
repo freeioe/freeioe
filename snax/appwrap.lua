@@ -9,9 +9,26 @@ local app_name = "UNKNOWN"
 local mgr_snax = nil
 local sys_api = nil
 
+local function protect_call(app, func, ...)
+	assert(app and func)
+	local f = app[func]
+	if not f then
+		return nil, "App has no function "..func
+	end
+
+	local r, er, err = xpcall(f, debug.traceback, app, ...)
+	if not r then
+		return nil, "Calling app:"..func.." failed "..er
+	end
+	return er, err
+end
+
 local on_close = function(...)
 	if app then
-		app:close(...)
+		local r, err = protect_call(app, 'close', ...)
+		if not r then
+			log.error(err)
+		end
 	end
 	if sys_api then
 		sys_api:cleanup()
@@ -24,9 +41,15 @@ end
 
 local function work_proc()
 	local timeout = 1000
+	local err = nil
 	while app do
 		skynet.sleep(timeout / 10)
-		timeout = app:run(timeout) or timeout
+
+		timeout, err = protect_call(app, 'run', timeout)
+		if not timeout then
+			log.trace(err)
+			timeout = 1000 * 60
+		end
 	end
 end
 
@@ -39,21 +62,26 @@ end
 --]]
 function response.list_devices()
 	assert(app)
-	return app:list_devices()
+	return protect_call(app, 'list_device')
 end
 
 --- List device props map by device key which from list_devices
 function response.list_props(device)
 	assert(app)
-	return app:list_props(device)
+	return protect_call(app, 'list_props')
 end
 
 function response.start()
 	if app then
-		app:start()
+		local r, err = protect_call(app, 'start')
+		if not r then
+			return nil, err
+		end
+
 		if app.run then
 			skynet.fork(work_proc)
 		end
+
 		return true
 	else
 		return nil, "app is nil"
@@ -67,7 +95,7 @@ end
 function response.set_conf(conf)
 	sys_api:set_conf(conf)	
 	if app and app.reload then
-		return app:reload(conf)
+		return protect_call(app, 'reload', conf)
 	end
 	return nil, "application does not support change configuration when running"
 end
