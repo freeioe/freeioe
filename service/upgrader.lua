@@ -15,6 +15,20 @@ local function get_target_folder(inst_name)
 	--return os.getenv("PWD").."/iot/apps/"..inst_name
 end
 
+local function get_app_version(inst_name)
+	local dir = get_target_folder(inst_name)
+	local f, err = io.open(dir.."/version", "r")
+	if not f then
+		return nil, err
+	end
+	local v, err = f:read('l')
+	f:close()
+	if not v then
+		return err
+	end
+	return tonumber(v)
+end
+
 local function create_task(func, task_name, ...)
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
@@ -105,6 +119,9 @@ function command.install_app(id, args)
 		if r then
 			log.debug("Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
+			if not version or version == 'latest' then
+				version = get_app_version(inst_name)
+			end
 			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then

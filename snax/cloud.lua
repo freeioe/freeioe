@@ -167,6 +167,15 @@ local function connect_log_server(enable)
 	end
 end
 
+local function publish_data(key, value, timestamp, quality)
+	if mqtt_client and enable_data_upload then
+		--log.trace("Publish data", key, value, timestamp, quality)
+
+		local val = cjson.encode({ key, timestamp, value, quality}) or value
+		mqtt_client:publish(mqtt_id.."/data", val, 1, true)
+	end
+end
+
 local function load_cov_conf()
 	local enable_cov = datacenter.get("CLOUD", "COV") or true
 	local ttl = datacenter.get("CLOUD", "COV_TTL") or 60 -- 60 seconds
@@ -184,7 +193,7 @@ local function load_cov_conf()
 	skynet.fork(function()
 		while true do
 			skynet.sleep(ttl)
-			cov:timer(skynet.time())
+			cov:timer(skynet.time(), publish_data)
 		end
 	end)
 end
@@ -228,15 +237,15 @@ local Handler = {
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
-		snax.self().post.fire_devices()
+		snax.self().post.device_add(app, sn, props)
 	end,
 	on_del_device = function(app, sn)
 		log.trace('on_del_device', app, sn)
-		snax.self().post.fire_devices()
+		snax.self().post.device_del(app, sn)
 	end,
 	on_mod_device = function(app, sn, props)
 		log.trace('on_mod_device', app, sn, props)
-		snax.self().post.fire_devices()
+		snax.self().post.device_mod(app, sn, props)
 	end,
 	on_input = function(app, sn, prop, prop_type, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value, timestamp, quality)
@@ -245,14 +254,7 @@ local Handler = {
 		local timestamp = timestamp or skynet.time()
 		local quality = quality or 0
 
-		cov:handle(function(key, value, timestamp, quality)
-			if mqtt_client and enable_data_upload then
-				--log.trace("Publish data", key, value, timestamp, quality)
-
-				local val = cjson.encode({ key, timestamp, value, quality}) or value
-				mqtt_client:publish(mqtt_id.."/data", val, 1, true)
-			end
-		end, key, value, timestamp, quality)
+		cov:handle(publish_data, key, value, timestamp, quality)
 	end,
 }
 
@@ -452,6 +454,31 @@ function accept.fire_devices()
 			fire_device_timer = nil
 		end
 	end)
+end
+
+local function clean_cov_by_device_sn(sn)
+	if cov then
+		local len = string.len(sn) + 1
+		local msn = sn..'/'
+		cov:clean_with_match(function(key)
+			return key:sub(1, len) == msn
+		end)
+	end
+end
+
+function accept.device_add(app, sn, props)
+	clean_cov_by_device_sn(sn)
+	snax.self().post.fire_devices()
+end
+
+function accept.device_mod(app, sn, props)
+	clean_cov_by_device_sn(sn)
+	snax.self().post.fire_devices()
+end
+
+function accept.device_del(app, sn)
+	clean_cov_by_device_sn(sn)
+	snax.self().post.fire_devices()
 end
 
 function accept.app_install(id, args)

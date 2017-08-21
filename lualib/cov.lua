@@ -19,6 +19,14 @@ function cov:clean()
 	self._retained_map = {}
 end
 
+function cov:clean_with_match(mfunc)
+	for key, v in pairs(self._retained_map) do
+		if mfunc(key) then
+			self._retained_map[key] = nil
+		end
+	end
+end
+
 function cov:handle_number(cb, key, value, timestamp, quality)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
@@ -89,10 +97,16 @@ function cov:fire_snapshot(cb)
 	end
 end
 
-function cov:timer(now)
+function cov:timer(now, cb)
 	local opt = self._opt
 	for key, v in pairs(self._retained_map) do
-		if math.abs(now - v[2]) > (opt.ttl * 3) then
+		local g = math.abs(now - v[2])
+		if cb and g >= opt.ttl then
+			local r = cb(key, table.unpack(v))	
+			if r then
+				v[2] = now
+			end
+		else if g > (opt.ttl * 3) then
 			self._retained_map[key] = nil
 		end
 	end
