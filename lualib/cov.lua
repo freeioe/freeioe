@@ -106,8 +106,10 @@ function cov:timer(now, cb)
 			if r then
 				v[2] = now
 			end
-		else if g > (opt.ttl * 3) then
-			self._retained_map[key] = nil
+		else
+			if g > (opt.ttl * 3) then
+				self._retained_map[key] = nil
+			end
 		end
 	end
 end
