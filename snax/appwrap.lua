@@ -18,7 +18,7 @@ local function protect_call(app, func, ...)
 
 	local r, er, err = xpcall(f, debug.traceback, app, ...)
 	if not r then
-		return nil, "Calling app:"..func.." failed "..er
+		return nil, er
 	end
 	return er, err
 end
