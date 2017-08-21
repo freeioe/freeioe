@@ -10,24 +10,23 @@ local mc_map = {}
 ---
 -- Return instance id
 function response.start(name, conf)
-	local app = applist[name]
+	local app = applist[name] or {}
 
-	if app and app.inst then
+	if app.inst then
 		return app.inst
 	end
+	app.conf = conf or {}
+	applist[name] = app
 
 	local s = snax.self()
 	local inst = snax.newservice("appwrap", name, conf, s.handle, s.type)
 	local r, err = inst.req.start()
 	if not r then
-		log.error("Failed start app. Error: "..err)
-		return nil, "Failed start app. Error: "..err
+		log.error("Failed to start app. Error: "..err)
+		return nil, "Failed to start app. Error: "..err
 	end
+	app.inst = inst
 
-	applist[name] = {
-		inst = inst,
-		conf = conf,
-	}
 	return inst
 end
 

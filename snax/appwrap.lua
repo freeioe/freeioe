@@ -27,7 +27,7 @@ local on_close = function(...)
 	if app then
 		local r, err = protect_call(app, 'close', ...)
 		if not r then
-			log.error(err)
+			return nil, err
 		end
 	end
 	if sys_api then
@@ -37,6 +37,7 @@ local on_close = function(...)
 	app = nil
 	app_name = "UNKNOWN"
 	app = nil
+	return true
 end
 
 local function work_proc()
@@ -89,7 +90,7 @@ function response.start()
 end
 
 function response.stop(...)
-	on_close(...)
+	return on_close(...)
 end
 
 function response.set_conf(conf)
@@ -129,5 +130,8 @@ end
 
 function exit(...)
 	log.debug("App "..app_name.." closed.")
-	on_close(...)
+	local r, err = on_close(...)
+	if not r then
+		log.error(err)
+	end
 end
