@@ -6,6 +6,7 @@ SKYNET_PLAT=$1
 ./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
 
 echo "--------------------------------------------"
+echo "IOT System IN:" $PWD
 
 #rm __release/* -rf
 # Make the release folder
