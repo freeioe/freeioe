@@ -52,7 +52,7 @@ local function create_download(app_name, version, cb, ext)
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
 
 		local url = "/download/"..app_name.."/"..version..ext
-		log.trace('Start Download From URL:', pkg_host..url)
+		log.notice('Start Download From URL:', pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
 			return cb(nil, tostring(header))
@@ -65,7 +65,7 @@ local function create_download(app_name, version, cb, ext)
 		local status, header, body = httpdown.get(pkg_host, url..".md5")
 		if status and status == 200 then
 			local sum = helper.md5sum(path)
-			log.trace("Downloaded file md5 sum", sum)
+			log.notice("Downloaded file md5 sum", sum)
 			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
 			if sum ~= md5 then
 				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
@@ -107,7 +107,7 @@ function command.upgrade_app(id, args)
 
 	create_download(name, version, function(r, info)
 		if r then
-			log.debug("Download application finished")
+			log.notice("Download application finished", name)
 			local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
 			if not r then
 				return install_result(id, false, "Failed to stop App. Error: "..err)
@@ -151,7 +151,7 @@ function command.install_app(id, args)
 
 	create_download(name, version, function(r, info)
 		if r then
-			log.debug("Download application finished")
+			log.notice("Download application finished", name)
 			os.execute("unzip -oq "..info.." -d "..target_folder)
 
 			if not version or version == 'latest' then
