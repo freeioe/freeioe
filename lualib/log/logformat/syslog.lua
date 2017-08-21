@@ -125,7 +125,7 @@ function M.new(facility, host_name, app_name, procid, msgid)
     return 
     -- HEADER
       -- PRI VERSION TIMESTAMP
-      '<' .. slvl + facility .. '> 1 ' .. Date2SysLog(now) .. ' ' ..
+      '<' .. slvl + facility .. '>1 ' .. Date2SysLog(now) .. ' ' ..
       -- HEADER STRUCTURED-DATA MSG
       header .. ' - ' ..  msg
     

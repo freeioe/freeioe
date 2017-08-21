@@ -167,7 +167,7 @@ local function make_no_close_reset(flush_interval)
       writer = function (msg)
         f:write(msg, END_OF_LINE)
         counter = counter + 1
-        if counter > flush_interval then
+        if counter >= flush_interval then
           f:flush()
           counter = 0
         end
