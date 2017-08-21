@@ -52,7 +52,7 @@ local function create_download(app_name, version, cb, ext)
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
 
 		local url = "/download/"..app_name.."/"..version..ext
-		log.notice('Start Download From URL:', pkg_host..url)
+		log.notice('Start Download', app_name, 'From URL:', pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
 			return cb(nil, tostring(header))
@@ -62,6 +62,7 @@ local function create_download(app_name, version, cb, ext)
 		end
 		file:write(body)
 		file:close()
+
 		local status, header, body = httpdown.get(pkg_host, url..".md5")
 		if status and status == 200 then
 			local sum = helper.md5sum(path)
