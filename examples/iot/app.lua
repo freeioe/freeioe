@@ -79,9 +79,9 @@ function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
 		local v, gv = get_versions("./iot/version")
-		self._log.notice("System Version:", v, gv)
+		self._log:notice("System Version:", v, gv)
 		local sv, sgv = get_versions("./version")
-		self._log.notice("Skynet Platform Version:", sv, sgv)
+		self._log:notice("Skynet Platform Version:", sv, sgv)
 
 		self._dev:set_input_prop('starttime', "value", self._start_time)
 		self._dev:set_input_prop('version', "value", v)

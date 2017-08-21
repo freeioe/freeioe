@@ -4,17 +4,17 @@ local dc = require 'skynet.datacenter'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local api = require 'app.api'
+local logger = require 'app.logger'
 local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
 
 function sys:log(level, ...)
-	local f = assert(log[level])
-	return f(...)
+	return self._logger(level, ...)
 end
 
 function sys:logger()
-	return log
+	return self._logger
 end
 
 function sys:dump_comm(sn, dir, ...)
@@ -165,6 +165,7 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._app_name = app_name
 	self._data_api = api:new(app_name, mgr_snax)
 	self._app_sn = nil
+	self._logger = logger:new(log)
 end
 
 function sys:cleanup()

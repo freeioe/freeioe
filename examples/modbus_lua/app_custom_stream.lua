@@ -10,7 +10,7 @@ function app:initialize(name, conf, sys)
 	self._sys = sys
 	self._api = sys:data_api()
 	self._log = sys:logger()
-	self._log.debug(name.." Application initlized")
+	self._log:debug(name.." Application initlized")
 end
 
 function app:start()
@@ -89,7 +89,7 @@ function app:run(tms)
 	}
 	local raw, err = client:request(req, 1000)
 	if not raw then 
-		self._log.error("read failed: " .. err) 
+		self._log:error("read failed: " .. err) 
 		return
 	end
 	local regs = decode_registers(raw, 10)

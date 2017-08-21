@@ -13,7 +13,7 @@ function app:initialize(name, conf, sys)
 	self._sys = sys
 	self._api = sys:data_api()
 	self._log = sys:logger()
-	self._log.debug(name.." Application initlized")
+	self._log:debug(name.." Application initlized")
 end
 
 function app:start()
@@ -99,15 +99,15 @@ function app:run(tms)
 	if not r then 
 		pdu = tostring(pdu)
 		if string.find(pdu, 'timeout') then
-			self._log.debug(pdu, err)
+			self._log:debug(pdu, err)
 		else
-			self._log.error(pdu, err)
+			self._log:error(pdu, err)
 		end
 		return
 	end
 
 	if not pdu then 
-		self._log.error("read failed: " .. err) 
+		self._log:error("read failed: " .. err) 
 		return
 	end
 

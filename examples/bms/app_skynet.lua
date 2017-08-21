@@ -90,7 +90,7 @@ function app:start()
 	local devs = {}
 	for i, v in ipairs(config.devs) do
 		assert(v.port)
-		self._log.info("Creating device via port", v.port)
+		self._log:info("Creating device via port", v.port)
 		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
 		local dev = self._api:add_device(dev_sn, inputs)
 		local client = nil
@@ -183,18 +183,18 @@ function app:read_bms(dev, client, no)
 	if not r then
 		pdu = tostring(pdu)
 		if string.find(pdu, 'timeout') then
-			self._log.debug(pdu, err)
+			self._log:debug(pdu, err)
 		else
-			self._log.error(pdu, err)
+			self._log:error(pdu, err)
 		end
 		return
 	end
 
 	if not pdu then 
-		self._log.error("read failed: " .. err) 
+		self._log:error("read failed: " .. err) 
 		return
 	end
-	self._log.trace("read input registers done!")
+	self._log:trace("read input registers done!")
 
 	local d = modbus.decode
 	local len = d.uint8(pdu, 2)
