@@ -10,6 +10,12 @@ local mc_map = {}
 ---
 -- Return instance id
 function response.start(name, conf)
+	local app = applist[name]
+
+	if app and app.inst then
+		return app.inst
+	end
+
 	local s = snax.self()
 	local inst = snax.newservice("appwrap", name, conf, s.handle, s.type)
 	local r, err = inst.req.start()
@@ -30,8 +36,11 @@ function response.stop(name, reason)
 	if not app then
 		return nil, "App instance "..name.." does not exits!"
 	end
-	snax.kill(app.inst, reason)
-	applist[name] = nil
+
+	if app.inst then
+		snax.kill(app.inst, reason)
+		app.inst = nil
+	end
 	return true
 end
 
@@ -44,6 +53,7 @@ function response.set_conf(inst, conf)
 	if not app or not app.inst then
 		return nil, "There is no app instance name is "..inst
 	end
+
 	local r, err = app.inst.req.set_conf(conf)
 	if r then
 		app.conf = conf
@@ -84,7 +94,10 @@ end
 
 function exit(...)
 	for k,v in applist do
-		snax.kill(instance, "force")
+		if v.inst then
+			snax.kill(v.inst, "force")
+			v.inst = nil
+		end
 	end
 	dc.set("MC", "APP", "DATA", nil)
 	dc.set("MC", "APP", "CTRL", nil)

@@ -88,15 +88,48 @@ local function install_result(id, result, ...)
 	end
 end
 
-function command.upgrade_app(args)
-	local id = args.id
+function command.upgrade_app(id, args)
 	local inst_name = args.inst
-	local version = args.version
-	create_task(function()
-		print("XXXXXXXXXX")
-		skynet.sleep(10000)
-	end, "Upgrade App "..inst_name)
-	return true
+	local version = args.version or 'latest'
+	local app = datacenter.get("APPS", inst_name)
+	if not app then
+		return install_result(id, false, "There is no app for instance name "..inst_name)	
+	end
+
+	local name = app.name
+	if args.name then
+		assert(args.name == name)
+	end
+	local sn = args.sn or app.sn
+	local conf = args.conf or app.conf
+
+	create_download(name, version, function(r, info)
+		if r then
+			log.debug("Download application finished")
+			local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
+			if not r then
+				return install_result(id, false, "Failed to stop App. Error: "..err)
+			end
+
+			os.execute("unzip -oq "..info.." -d "..target_folder)
+
+			if not version or version == 'latest' then
+				version = get_app_version(inst_name)
+			end
+			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+
+			local r, err = appmgr.req.start(inst_name, conf)
+			if r then
+				return install_result(id, true, "Application upgradation is done!")
+			else
+				datacenter.set("APPS", inst_name, nil)
+				os.execute("rm -rf "..target_folder)
+				return install_result(id, false, "Failed to start App. Error: "..err)
+			end
+		else
+			return install_result(id, false, "Failed to download App. Error: "..info)
+		end
+	end)
 end
 
 function command.install_app(id, args)
@@ -119,10 +152,12 @@ function command.install_app(id, args)
 		if r then
 			log.debug("Download application finished")
 			os.execute("unzip -oq "..info.." -d "..target_folder)
+
 			if not version or version == 'latest' then
 				version = get_app_version(inst_name)
 			end
 			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
 				return install_result(id, true, "Application installtion is done")
