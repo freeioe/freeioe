@@ -47,7 +47,7 @@ function app:start()
 	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
 	local r, err = port:open()
 	if not r then
-		self._sys:log("error", "Failed open port, error: "..err)
+		self._sys:log("warning", "Failed open port, error: "..err)
 		return nil, err
 	end
 	port:start(function(data, err)

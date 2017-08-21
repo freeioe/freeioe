@@ -54,7 +54,7 @@ function app:run(tms)
 	--print(sec * 1000 + usec / 1000)
 	local regs, err = dev:read_registers(base_address, 10)
 	if not regs then 
-		self._sys:log("error", "read failed: " .. err) 
+		self._sys:log("warning", "read failed: " .. err) 
 		return
 	end
 

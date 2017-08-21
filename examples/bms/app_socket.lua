@@ -103,7 +103,7 @@ function app:start()
 			self._sock = sock
 			break
 		end
-		self._sys:log('error', err)
+		self._sys:log('warning', err)
 		self._sys:sleep(5000)
 	end
 
@@ -189,7 +189,7 @@ function app:read_bms(dev, client, no)
 	}
 	local pdu, err = client:request(req, 1000)
 	if not pdu then 
-		self._sys:log("error", "read failed: " .. err) 
+		self._sys:log("warning", "read failed: " .. err) 
 		return
 	end
 

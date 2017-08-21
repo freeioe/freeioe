@@ -25,7 +25,7 @@ function app:start()
 
 	local sys_id = self._sys:id()
 	local config = self._conf or {
-		channel_type = 'socket'
+		channel_type = 'serial'
 	}
 
 	local inputs = {}
@@ -101,13 +101,13 @@ function app:run(tms)
 		if string.find(pdu, 'timeout') then
 			self._log:debug(pdu, err)
 		else
-			self._log:error(pdu, err)
+			self._log:warning(pdu, err)
 		end
 		return
 	end
 
 	if not pdu then 
-		self._log:error("read failed: " .. err) 
+		self._log:warning("read failed: " .. err) 
 		return
 	end
 

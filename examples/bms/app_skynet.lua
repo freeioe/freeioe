@@ -185,13 +185,13 @@ function app:read_bms(dev, client, no)
 		if string.find(pdu, 'timeout') then
 			self._log:debug(pdu, err)
 		else
-			self._log:error(pdu, err)
+			self._log:warning(pdu, err)
 		end
 		return
 	end
 
 	if not pdu then 
-		self._log:error("read failed: " .. err) 
+		self._log:warning("read failed: " .. err) 
 		return
 	end
 	self._log:trace("read input registers done!")

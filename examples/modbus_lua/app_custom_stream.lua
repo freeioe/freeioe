@@ -89,7 +89,7 @@ function app:run(tms)
 	}
 	local raw, err = client:request(req, 1000)
 	if not raw then 
-		self._log:error("read failed: " .. err) 
+		self._log:warning("read failed: " .. err) 
 		return
 	end
 	local regs = decode_registers(raw, 10)
