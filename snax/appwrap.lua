@@ -9,9 +9,9 @@ local app_name = "UNKNOWN"
 local mgr_snax = nil
 local sys_api = nil
 
-local on_close = function()
+local on_close = function(...)
 	if app then
-		app:close(reason)
+		app:close(...)
 	end
 	if sys_api then
 		sys_api:cleanup()
@@ -60,8 +60,8 @@ function response.start()
 	end
 end
 
-function response.stop(reason)
-	on_close()
+function response.stop(...)
+	on_close(...)
 end
 
 function response.set_conf(conf)
@@ -99,7 +99,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	app = assert(m:new(app_name, conf, sys_api))
 end
 
-function exit()
+function exit(...)
 	log.debug("App "..app_name.." closed.")
-	on_close()
+	on_close(...)
 end

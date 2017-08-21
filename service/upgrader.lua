@@ -103,6 +103,7 @@ function command.upgrade_app(id, args)
 	end
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
+	local target_folder = get_target_folder(inst_name)
 
 	create_download(name, version, function(r, info)
 		if r then
@@ -145,7 +146,6 @@ function command.install_app(id, args)
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
 	local appmgr = snax.uniqueservice("appmgr")
-	local inst_name = inst_name
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 
@@ -354,8 +354,8 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		skynet.abort()
 	end)
 
-	log.warning("Core System Upgration Done!")
-	return true, "Upgration is done!"
+	log.warning("Core system upgradation Done!")
+	return true, "System upgradation is done!"
 end
 
 function command.upgrade_core(id, args)
@@ -395,7 +395,7 @@ function command.upgrade_core_ack(id, args)
 	if not r then
 		return install_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
 	end
-	return install_result(id, true, "Upgration ACK is done")
+	return install_result(id, true, "System upgradation ACK is done")
 end
 
 function command.list()
