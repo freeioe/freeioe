@@ -18,6 +18,9 @@ end
 
 function _M.get(host, url, header, query, content)
 	assert(host and url)
+	if host:sub(1, 7) ~= 'http://' then
+		host = 'http://'..host
+	end
     local query = query or {}
     local header = header or {}
 	local recvheader = {}
