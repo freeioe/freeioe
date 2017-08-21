@@ -95,6 +95,7 @@ function command.upgrade_app(id, args)
 	if not app then
 		return install_result(id, false, "There is no app for instance name "..inst_name)	
 	end
+	local appmgr = snax.uniqueservice("appmgr")
 
 	local name = app.name
 	if args.name then
