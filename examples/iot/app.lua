@@ -89,7 +89,7 @@ function app:run(tms)
 		self._dev:set_input_prop('skynet_version', "value", sv)
 		self._dev:set_input_prop('skynet_version', "git_version", sgv)
 
-		local function calc_uptime
+		local calc_uptime = nil
 		calc_uptime = function()
 			self._dev:set_input_prop('uptime', "value", self._sys:now())
 			self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
