@@ -42,14 +42,17 @@ end
 
 local function work_proc()
 	local timeout = 1000
-	local err = nil
 	while app do
 		skynet.sleep(timeout / 10)
 
-		timeout, err = protect_call(app, 'run', timeout)
-		if not timeout then
-			log.trace(err)
-			timeout = 1000 * 60
+		local t, err = protect_call(app, 'run', timeout)
+		if t then
+			timeout = t
+		else
+			if err then
+				log.trace(err)
+				timeout = 1000 * 60
+			end
 		end
 	end
 end

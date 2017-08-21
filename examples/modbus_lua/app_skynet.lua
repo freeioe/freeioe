@@ -92,7 +92,6 @@ function app:run(tms)
 		len = 10,
 	}
 	local r, pdu, err = pcall(function(req, timeout) 
-		print('call request')
 		return client:request(req, timeout)
 	end, req, 1000)
 

@@ -5,10 +5,41 @@ local logger = class("APP_MGR_LOG")
 
 function logger:initialize(log)
 	self._log = log
+	self._log_buf = {}
 end
 
 function logger:log(level, ...)
-	lvl = log.lvl2number(level)
+	--lvl = log.lvl2number(level)
+
+	local s = table.concat({...}, '\t')
+	local now = os.time()
+	local los = self._log_buf[level]
+	if los then
+		if los.s == s and (now - los.t) < 60 then
+			los.t = now
+			los.c = los.c + 1
+			print(now, los.ts)
+			if (now - los.ts) >= (60 * 10) then
+				local f = assert(self._log[level])
+				f(string.format('[%d ZIPED in %d ]', los.c, now - los.ts), s)
+				los.c = 0
+				los.ts = now
+			end
+			return
+		else
+			if logs.c > 0 then
+				local f = assert(self._log[level])
+				f(string.format('[%d ZIPED in %d ]', los.c, now - los.ts), s)
+			end
+		end
+	end
+
+	self._log_buf[level] = {
+		ts = now,
+		t = now,
+		s = s,
+		c = 0,
+	}
 	local f = assert(self._log[level])
 	return f(...)
 end

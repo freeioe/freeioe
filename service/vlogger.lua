@@ -4,8 +4,9 @@ local log = require 'log'
 local LOG = nil
 
 local function create_log()
+	local max_lvl = os.getenv('IOT_LOG_LEVEL') or 'info'
 	LOG = log.new(
-		"trace", -- maximum log level
+		max_lvl, -- maximum log level
 
 		-- Writer
 		require 'log.writer.list'.new(               -- multi writers:
