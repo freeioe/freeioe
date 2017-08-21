@@ -191,7 +191,7 @@ local function load_cov_conf()
 	cov = cov_m:new(opt)
 
 	skynet.fork(function()
-		local timer_gap = (ttl * 100) / 10
+		local timer_gap = (ttl * 100) / 2
 		while true do
 			skynet.sleep(timer_gap)
 			if enable_data_upload then
