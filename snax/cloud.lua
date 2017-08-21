@@ -172,7 +172,7 @@ local function publish_data(key, value, timestamp, quality)
 		--log.trace("Publish data", key, value, timestamp, quality)
 
 		local val = cjson.encode({ key, timestamp, value, quality}) or value
-		mqtt_client:publish(mqtt_id.."/data", val, 1, true)
+		return mqtt_client:publish(mqtt_id.."/data", val, 1, true)
 	end
 end
 
@@ -191,9 +191,12 @@ local function load_cov_conf()
 	cov = cov_m:new(opt)
 
 	skynet.fork(function()
+		local timer_gap = (ttl * 100) / 10
 		while true do
-			skynet.sleep(ttl)
-			cov:timer(skynet.time(), publish_data)
+			skynet.sleep(timer_gap)
+			if enable_data_upload then
+				cov:timer(skynet.time(), publish_data)
+			end
 		end
 	end)
 end
