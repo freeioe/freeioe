@@ -2,6 +2,11 @@
 
 SKYNET_PLAT=$1
 
+# Release Skynet
+./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
+
+echo "--------------------------------------------"
+
 #rm __release/* -rf
 # Make the release folder
 mkdir -p __release/skynet_iot
@@ -55,6 +60,9 @@ mkdir __install/apps
 cd __install
 tar czvf ../__release/skynet_iot/$VERSION.tar.gz * > /dev/null
 md5sum -b ../__release/skynet_iot/$VERSION.tar.gz > ../__release/skynet_iot/$VERSION.tar.gz.md5
+du ../__release/skynet_iot/$VERSION.tar.gz -sh
+cat ../__release/skynet_iot/$VERSION.tar.gz.md5
+## Copy to latest
 cp -f ../__release/skynet_iot/$VERSION.tar.gz ../__release/skynet_iot/latest.tar.gz
 cp -f ../__release/skynet_iot/$VERSION.tar.gz.md5 ../__release/skynet_iot/latest.tar.gz.md5
 cd - > /dev/null
@@ -62,9 +70,6 @@ cd - > /dev/null
 # Clean up the rootfs files
 #sudo rm -rf __install
 rm -rf __install
-
-# Release Skynet
-./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
 
 # Done
 echo 'May GOD with YOU always!'

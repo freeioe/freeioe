@@ -10,6 +10,9 @@ else
 	SKYNET_PLAT=$2"_skynet"
 fi
 
+echo "--------------------------------------------"
+echo "Skynet IN:" $SKYNET_DIR " PLAT:" $SKYNET_PLAT
+
 cd $SKYNET_DIR
 
 # Clean up the cramfs folder
@@ -28,9 +31,7 @@ cp LICENSE __install/
 cp skynet __install/
 cd __install/
 ln -s ../skynet_iot ./iot
-cd -
-
-# copy lwf files
+cd - > /dev/null
 
 ### Get the version by count the commits
 VERSION=`git log --oneline | wc -l | tr -d ' '`
@@ -49,6 +50,11 @@ echo $REVISION >> __install/version
 # Compile lua files
 # ./scripts/compile_lua.sh 
 
+#################################
+# Count the file sizes
+################################
+du __install -sh
+
 ###################
 ##
 ##################
@@ -56,6 +62,9 @@ cd __install
 mkdir -p ../iot/__release/$SKYNET_PLAT
 tar czvf ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz * > /dev/null
 md5sum -b ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz > ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5
+du ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz -sh
+cat ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5
+## Copy to latest
 cp -f ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz ../iot/__release/$SKYNET_PLAT/latest.tar.gz
 cp -f ../iot/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5 ../iot/__release/$SKYNET_PLAT/latest.tar.gz.md5
 cd - > /dev/null
