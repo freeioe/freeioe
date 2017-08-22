@@ -18,7 +18,6 @@ function logger:log(level, ...)
 		if los.s == s and (now - los.t) < 60 then
 			los.t = now
 			los.c = los.c + 1
-			print(now, los.ts)
 			if (now - los.ts) >= (60 * 10) then
 				local f = assert(self._log[level])
 				f(string.format('[%d ZIPED in %d ]', los.c, now - los.ts), s)
@@ -27,7 +26,7 @@ function logger:log(level, ...)
 			end
 			return
 		else
-			if logs.c > 0 then
+			if los.c > 0 then
 				local f = assert(self._log[level])
 				f(string.format('[%d ZIPED in %d ]', los.c, now - los.ts), s)
 			end
