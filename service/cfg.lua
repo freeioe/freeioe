@@ -4,6 +4,7 @@ local cjson = require "cjson.safe"
 local md5 = require "md5"
 local lfs = require 'lfs'
 local restful = require 'restful'
+local log = require 'utils.log'
 
 local db_file = "cfg.json"
 local md5sum = ""
@@ -21,7 +22,7 @@ function command.SET(...)
 end
 
 local function load_cfg(path)
-	skynet.error("::CFG:: Loading configuration...")
+	log.info("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
 		return nil, err
@@ -37,7 +38,7 @@ local function load_cfg(path)
 	if mfile then
 		local md5s = mfile:read("*l")
 		if md5s ~= sum then
-			skynet.error("::CFG:: File md5 checksum error", md5s, sum)
+			log.warning("::CFG:: File md5 checksum error", md5s, sum)
 		end
 	end
 
@@ -49,7 +50,7 @@ local function load_cfg(path)
 end
 
 local function save_cfg(path, content, content_md5sum)
-	skynet.error("::CFG:: Saving configuration...")
+	log.info("::CFG:: Saving configuration...")
 	local file, err = io.open(path, "w+")
 	if not file then
 		return nil, err
@@ -81,7 +82,7 @@ local function save_cfg_cloud(content, content_md5sum)
 		}
 		local status, body = db_restful:post(url, c)
 		if not status and status ~= 200 then
-			skynet.error("::CFG:: Saving cloud config failed", status or -1, body)
+			log.warning("::CFG:: Saving cloud config failed", status or -1, body)
 		end
 	end
 end
@@ -92,33 +93,33 @@ local function load_cfg_cloud()
 		local id = dc.get("CLOUD", "ID")
 		local status, body = db_restful:get("iot_device_conf/"..id.."/timestamp")
 		if status ~= 200 then
-			skynet.error("::CFG:: Get cloud config failed", status or -1, body)
+			log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			return
 		end
 		tm = tonumber(body)
 		if tm and tm > db_modification then
-			skynet.error("::CFG:: Configuration in cloud is newer")
+			log.notice("::CFG:: Configuration in cloud is newer")
 			local status, content = db_restful:get("iot_device_conf/"..id.."/content")
 			if status ~= 200 then
-				skynet.error("::CFG:: Get cloud config failed", status or -1, body)
+				log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			end
 			local status, md5sum = db_restful:get("iot_device_conf/"..id.."/md5")
 			if status ~= 200 then
-				skynet.error("::CFG:: Get cloud config failed", status or -1, body)
+				log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			end
 			local sum = md5.sumhexa(content)
 			if sum ~= md5sum then
-				skynet.error("::CFG:: MD5 Checksum error", sum, md5sum)
+				log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
 			end
 			local r, err = save_cfg(db_file, str, sum)
 			if not r  then
-				skynet.error("::CFG:: Saving configurtaion failed", err)
+				log.warning("::CFG:: Saving configurtaion failed", err)
 			end
 			-- Quit skynet
 			skynet.abort()
 		end
 		if tm and tm <= db_modification then
-			skynet.error("::CFG:: Local configuration is newer")
+			log.info("::CFG:: Local configuration is newer")
 		end
 	end
 end
