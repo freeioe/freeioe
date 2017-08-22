@@ -4,7 +4,7 @@ local snax = require "skynet.snax"
 local is_windows = package.config:sub(1,1) == '\\'
 
 skynet.start(function()
-	skynet.error("Skynet/IOT Start")
+	skynet.error("IOT@Skynet Starting")
 	if not is_windows and not os.getenv("IOT_RUN_AS_DAEMON") then
 		local console = skynet.newservice("console")
 	end

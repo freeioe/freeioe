@@ -312,11 +312,16 @@ local function connect_proc(clean_session, username, password)
 	else
 		close_connection = false
 		local r, err
+		local ts = 1
 		while not r do
 			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 			if not r then
 				log.error("Connect to broker failed!", err)
-				skynet.sleep(500)
+				skynet.sleep(ts * 500)
+				ts = ts * 2
+				if ts >= 64 then
+					ts = 1
+				end
 			end
 		end
 
