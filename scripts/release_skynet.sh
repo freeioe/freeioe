@@ -31,6 +31,7 @@ cp LICENSE __install/
 cp skynet __install/
 cd __install/
 ln -s ../skynet_iot ./iot
+ln -s /var/log ./logs
 cd - > /dev/null
 
 ### Get the version by count the commits
