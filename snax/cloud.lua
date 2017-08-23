@@ -522,7 +522,7 @@ function accept.sys_upgrade(id, args)
 end
 
 function accept.sys_upgrade_ack(id, args)
-	skynet.call("UPGRADER", "lua", "upgrade_ack", id, args)
+	skynet.call("UPGRADER", "lua", "upgrade_core_ack", id, args)
 end
 
 function accept.output_to_app(id, info)
