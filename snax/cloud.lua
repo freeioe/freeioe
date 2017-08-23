@@ -320,7 +320,8 @@ local function connect_proc(clean_session, username, password)
 				skynet.sleep(ts * 500)
 				ts = ts * 2
 				if ts >= 64 then
-					ts = 1
+					skynet.timeout(500, function() connect_proc() end)
+					return
 				end
 			end
 		end
