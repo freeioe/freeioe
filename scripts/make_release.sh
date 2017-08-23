@@ -50,6 +50,7 @@ du __install -sh
 # Release iot
 ./scripts/release_app.sh iot $VERSION $REVISION
 ./scripts/release_app.sh bms $VERSION $REVISION
+./scripts/release_app.sh modbus_lua $VERSION $REVISION
 
 # For pre-installed applications
 mkdir __install/apps

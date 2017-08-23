@@ -20,11 +20,14 @@ function response.start(name, conf)
 
 	local s = snax.self()
 	local inst = snax.newservice("appwrap", name, conf, s.handle, s.type)
+
 	local r, err = inst.req.start()
 	if not r then
 		log.error("Failed to start app. Error: "..err)
+		snax.kill(inst, "Start failed!")
 		return nil, "Failed to start app. Error: "..err
 	end
+
 	app.inst = inst
 
 	return inst
@@ -40,6 +43,7 @@ function response.stop(name, reason)
 		snax.kill(app.inst, reason)
 		app.inst = nil
 	end
+
 	return true
 end
 

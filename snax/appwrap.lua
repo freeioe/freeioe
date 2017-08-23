@@ -110,16 +110,24 @@ function init(name, conf, mgr_handle, mgr_type)
 
 	app_name = name
 
-	log.debug("App "..app_name.." starting")
+	log.info("App "..app_name.." starting")
 	package.path = package.path..";./iot/apps/"..name.."/?.lua;./iot/apps/"..name.."/?.luac"
 	package.cpath = package.cpath..";./iot/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
-	local f, err = loadfile("./iot/apps/"..name.."/app.lua")
+	local f, err = io.open("./iot/apps/"..name.."/app.lua", "r")
 	if not f then
+		log.warning("Application does not exits!, Try to install it")	
+		skynet.call("UPGRADER", "lua", "install_missing_app", name)
+		return nil, "App does not exits!"
+	end
+	f:close()
+
+	local lf, err = loadfile("./iot/apps/"..name.."/app.lua")
+	if not lf then
 		log.error("Loading app failed "..err)
 		return nil, err
 	end
-	local r, m = xpcall(f, debug.traceback)
+	local r, m = xpcall(lf, debug.traceback)
 	if not r then
 		log.error("App loading failed "..m)
 		return nil, m
@@ -132,7 +140,7 @@ function init(name, conf, mgr_handle, mgr_type)
 end
 
 function exit(...)
-	log.debug("App "..app_name.." closed.")
+	log.info("App "..app_name.." closed.")
 	local r, err = on_close(...)
 	if not r then
 		log.error(err)

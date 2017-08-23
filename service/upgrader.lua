@@ -142,7 +142,7 @@ function command.install_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
-	if datacenter.get("APPS", inst_name) then
+	if datacenter.get("APPS", inst_name) and not args.force then
 		local err = "Application already installed"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -171,6 +171,21 @@ function command.install_app(id, args)
 		else
 			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
+	end)
+end
+
+function command.install_missing_app(inst_name)
+	skynet.timeout(100, function()
+		local appmgr = snax.uniqueservice("appmgr")
+		local info = datacenter.get("APPS", inst_name)
+		return command.install_app(nil, {
+			inst = inst_name,
+			name = info.name,
+			version = info.version,
+			sn = info.sn,
+			conf = info.conf,
+			force = true
+		})
 	end)
 end
 
