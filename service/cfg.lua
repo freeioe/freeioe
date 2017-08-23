@@ -21,6 +21,14 @@ function command.SET(...)
 	return dc.set('APPS', app, ...)
 end
 
+local function get_cfg_str()
+	local cfg = {}
+	cfg.cloud = dc.get("CLOUD")
+	cfg.apps = dc.get("APPS")
+	local str = cjson.encode(cfg)
+	return str, md5.sumhexa(str)	
+end
+
 local function load_cfg(path)
 	log.info("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
@@ -47,6 +55,8 @@ local function load_cfg(path)
 	dc.set("CLOUD", db.cloud)
 	dc.set("APPS", db.apps)
 
+	local _, csum = get_cfg_str()
+	md5sum = csum or sum
 end
 
 local function save_cfg(path, content, content_md5sum)
@@ -125,13 +135,8 @@ local function load_cfg_cloud()
 end
 
 function command.SAVE(opt_path)
-	local cfg = {}
-	cfg.cloud = dc.get("CLOUD")
-	cfg.apps = dc.get("APPS")
-	local str = cjson.encode(cfg)
-	local sum = md5.sumhexa(str)
+	local str, sum = get_cfg_str()
 	if sum ~= md5sum then
-		--print(sum, md5sum)
 		local r, err = save_cfg(opt_path or db_file, str, sum)
 		if r then
 			md5sum = sum
