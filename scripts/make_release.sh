@@ -8,6 +8,18 @@ SKYNET_PLAT=$1
 echo "--------------------------------------------"
 echo "IOT System IN:" $PWD
 
+### Get the version by count the commits
+VERSION=`git log --oneline | wc -l | tr -d ' '`
+
+### Generate the revision by last commit
+set -- $(git log -1 --format="%ct %h")
+R_SECS="$(($1 % 86400))"
+R_YDAY="$(date --utc --date="@$1" "+%y.%j")"
+REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
+
+echo 'Version:'$VERSION
+echo 'Revision:'$REVISION
+
 #rm __release/* -rf
 # Make the release folder
 mkdir -p __release/skynet_iot
@@ -22,29 +34,14 @@ git archive HEAD | tar -x -C __install
 rm -rf __install/examples
 rm -rf __install/scripts
 
-# copy lwf files
-
-### Get the version by count the commits
-VERSION=`git log --oneline | wc -l | tr -d ' '`
-
-### Generate the revision by last commit
-set -- $(git log -1 --format="%ct %h")
-R_SECS="$(($1 % 86400))"
-R_YDAY="$(date --utc --date="@$1" "+%y.%j")"
-REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
-
-echo 'Version:'$VERSION
-echo 'Revision:'$REVISION
+# Echo version
 echo $VERSION > __install/version
 echo $REVISION >> __install/version
 
+# copy lwf files
+
 # Compile lua files
 # ./scripts/compile_lua.sh 
-
-#################################
-# Count the file sizes
-################################
-du __install -sh
 
 # Release example (modbus)
 # Release iot
@@ -55,6 +52,11 @@ du __install -sh
 # For pre-installed applications
 mkdir __install/apps
 ./scripts/pre_inst.sh iot iot $VERSION
+
+#################################
+# Count the file sizes
+################################
+du __install -sh
 
 ###################
 ##
