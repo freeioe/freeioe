@@ -74,15 +74,22 @@ end
 
 function init(...)
 	log.info("AppMgr service starting...")
+
 	local chn = mc.new()
 	dc.set("MC", "APP", "DATA", chn.channel)
 	mc_map['DATA'] = chn
+
 	local chn = mc.new()
 	dc.set("MC", "APP", "CTRL", chn.channel)
 	mc_map['CTRL'] = chn
+
 	local chn = mc.new()
 	dc.set("MC", "APP", "COMM", chn.channel)
 	mc_map['COMM'] = chn
+
+	local chn = mc.new()
+	dc.set("MC", "APP", "STAT", chn.channel)
+	mc_map['STAT'] = chn
 
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
@@ -105,6 +112,7 @@ function exit(...)
 	dc.set("MC", "APP", "DATA", nil)
 	dc.set("MC", "APP", "CTRL", nil)
 	dc.set("MC", "APP", "COMM", nil)
+	dc.set("MC", "APP", "STAT", nil)
 	for k,v in mc_map do
 		v:delete()
 	end

@@ -56,6 +56,15 @@ function api:comm_dispatch(channel, source, app, sn, ...)
 	end
 end
 
+function api:stat_dispatch(channel, source, app, sn, ...)
+	local f = self._handler.on_stat
+	if f then
+		return f(app, sn, ...)
+	else
+		log.trace('No handler for on_stat')
+	end
+end
+
 function api:set_handler(handler, watch_data)
 	self._handler = handler
 	local mgr = self._mgr_snax
@@ -108,6 +117,23 @@ function api:set_handler(handler, watch_data)
 		if self._comm_chn then
 			self._comm_chn:unsubscribe()
 			self._comm_chn = nil
+		end
+	end
+
+	if handler then
+		self._stat_chn = mc.new({
+			channel = mgr.req.get_channel('stat'),
+			dispatch = function(channel, source, ...)
+				self._stat_dispatch(self, channel, ...)
+			end
+		})
+		if handler.on_stat then
+			self._stat_chn:subscribe()
+		end
+	else
+		if self._stat_chn then
+			self._stat_chn:unsubscribe()
+			self._stat_chn = nil
 		end
 	end
 end
