@@ -3,6 +3,7 @@ local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
+local stat_api = require 'app.stat'
 
 local device = class("APP_MGR_DEV_API")
 
@@ -119,8 +120,8 @@ function device:dump_comm(dir, ...)
 	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
 end
 
-function device:stat()
-	return stat_api:new(self._api, self._sn, self._readonly)
+function device:stat(name)
+	return stat_api:new(self._api, self._sn, name, self._readonly)
 end
 
 return device

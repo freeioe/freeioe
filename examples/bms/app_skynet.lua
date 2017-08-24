@@ -93,6 +93,7 @@ function app:start()
 		self._log:info("Creating device via port", v.port)
 		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
 		local dev = self._api:add_device(dev_sn, inputs)
+		local stat = dev:stat(v.port)
 		local client = nil
 
 		if config.channel_type == 'socket' then
@@ -103,6 +104,11 @@ function app:start()
 
 		client:set_io_cb(function(io, msg)
 			dev:dump_comm(io, msg)
+			if io == 'IN' then
+				stat:inc('bytes_in', string.len(msg))
+			else
+				stat:inc('bytes_out', string.len(msg))
+			end
 		end)
 		devs[#devs + 1] = {
 			dev = dev,
@@ -170,7 +176,7 @@ local regs = {
 	{ "BNo", "uint16", 2 },
 }
 
-function app:read_bms(dev, client, no)
+function app:read_bms(dev, client, stat, no)
 	local base_address = 0x00
 	local req = {
 		func = 0x03,
@@ -178,6 +184,7 @@ function app:read_bms(dev, client, no)
 		len = 38,
 	}
 	local r, pdu, err = pcall(function(req, timeout) 
+		stat:inc('packets_out', 1)
 		return client:request(req, timeout)
 	end, req, 1000)
 	if not r then
@@ -195,6 +202,7 @@ function app:read_bms(dev, client, no)
 		return
 	end
 	self._log:trace("read input registers done!")
+	stat:inc('packets_in', 1)
 
 	local d = modbus.decode
 	local len = d.uint8(pdu, 2)
@@ -227,7 +235,7 @@ end
 
 function app:run(tms)
 	for i, d in ipairs(self._devs) do
-		self:read_bms(d.dev, d.client, i)
+		self:read_bms(d.dev, d.client, d.stat, i)
 	end
 	return 1000
 end

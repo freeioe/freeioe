@@ -38,6 +38,7 @@ function app:start()
 
 	local dev_sn = sys_id..".modbus_"..self._name
 	local dev = self._api:add_device(dev_sn, inputs)
+	local stat = dev:stat('port')
 	local client = nil
 
 	if config.channel_type == 'socket' then
@@ -58,8 +59,15 @@ function app:start()
 	end
 	client:set_io_cb(function(io, msg)
 		dev:dump_comm(io, msg)
+		if io == 'IN' then
+			stat:inc('bytes_in', string.len(msg))
+		else
+			stat:inc('bytes_out', string.len(msg))
+		end
 	end)
 	self._client1 = client
+	self._dev1 = dev
+	self._stat1 = stat
 
 	return true
 end
@@ -92,6 +100,7 @@ function app:run(tms)
 		len = 10,
 	}
 	local r, pdu, err = pcall(function(req, timeout) 
+		self._stat1:inc('packets_out', 1)
 		return client:request(req, timeout)
 	end, req, 1000)
 
@@ -110,6 +119,7 @@ function app:run(tms)
 		return
 	end
 
+	self._stat1:inc('packets_in', 1)
 	local regs = decode_registers(raw, 10)
 	local now = self._sys:time()
 
