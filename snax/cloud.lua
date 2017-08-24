@@ -238,6 +238,10 @@ local Handler = {
 			end
 		end, app, sn, dir, ts, content)
 	end,
+	on_stat = function(app, sn, stat, prop, value, timestamp)
+		print(app, sn, stat, prop, value, timestamp)
+		-- TODO:
+	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
 		snax.self().post.device_add(app, sn, props)
@@ -250,10 +254,10 @@ local Handler = {
 		log.trace('on_mod_device', app, sn, props)
 		snax.self().post.device_mod(app, sn, props)
 	end,
-	on_input = function(app, sn, prop, prop_type, value, timestamp, quality)
-		--log.trace('on_set_device_prop', app, sn, prop, prop_type, value, timestamp, quality)
-		--local key = table.concat({app, sn, prop, prop_type}, '/')
-		local key = table.concat({sn, prop, prop_type}, '/')
+	on_input = function(app, sn, input, prop, value, timestamp, quality)
+		--log.trace('on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
+		--local key = table.concat({app, sn, intput, prop}, '/')
+		local key = table.concat({sn, input, prop}, '/')
 		local timestamp = timestamp or skynet.time()
 		local quality = quality or 0
 

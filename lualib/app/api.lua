@@ -124,7 +124,7 @@ function api:set_handler(handler, watch_data)
 		self._stat_chn = mc.new({
 			channel = mgr.req.get_channel('stat'),
 			dispatch = function(channel, source, ...)
-				self._stat_dispatch(self, channel, ...)
+				self.stat_dispatch(self, channel, ...)
 			end
 		})
 		if handler.on_stat then

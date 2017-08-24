@@ -6,7 +6,7 @@ local dc = require 'skynet.datacenter'
 
 local stat = class("APP_MGR_DEV_API")
 
-local standard_props = {'packets_in', 'packets_out', 'bytes_in', 'bytes_out'}
+local standard_props = {'status', 'packets_in', 'packets_out', 'packets_error', 'bytes_in', 'bytes_out', 'bytes_error'}
 
 function stat:initialize(api, sn, readonly)
 	self._api = api
@@ -34,10 +34,7 @@ function stat:cleanup()
 	if self._readonly then
 		return
 	end
-
 	local sn = self._sn
-
-	self._stat_chn:publish('del_stat', self._app_name, sn)
 
 	self:_cleanup()
 end

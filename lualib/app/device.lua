@@ -119,4 +119,8 @@ function device:dump_comm(dir, ...)
 	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
 end
 
+function device:stat()
+	return stat_api:new(self._api, self._sn, self._readonly)
+end
+
 return device
