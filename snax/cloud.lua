@@ -320,11 +320,13 @@ local function connect_proc(clean_session, username, password)
 		while not r do
 			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 			if not r then
-				log.error("Connect to broker failed!", err)
+				log.error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
 				skynet.sleep(ts * 500)
 				ts = ts * 2
 				if ts >= 64 then
 					skynet.timeout(100, function() connect_proc() end)
+					-- We meet bug that if client reconnect to broker with lots of failures, it's socket will be broken. 
+					-- So we will re-create the client
 					return
 				end
 			end
