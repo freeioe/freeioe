@@ -176,6 +176,26 @@ local regs = {
 	{ "BNo", "uint16", 2 },
 }
 
+function app:invalid_bms(dev, stat, no, quality)
+	local index = 1
+	local now = self._sys:time()
+	for _, reg in ipairs(regs) do
+		if reg[4] then
+			dev:set_input_prop(reg[1], "value", 0, now, quality)
+		else
+			if reg[1] == "BNo" then
+				dev:set_input_prop(reg[1], "value", no, now, quality)
+			else
+				dev:set_input_prop(reg[1], "value", 0, now, quality)
+			end
+		end
+	end
+
+	if enable_fake_test then
+		dev:set_input_prop("TestU", "value", TestU[no], now, 0)
+	end
+end
+
 function app:read_bms(dev, client, stat, no)
 	local base_address = 0x00
 	local req = {
@@ -194,12 +214,12 @@ function app:read_bms(dev, client, stat, no)
 		else
 			self._log:warning(pdu, err)
 		end
-		return
+		return invalid_bms(dev, stat, no, 1)
 	end
 
 	if not pdu then 
 		self._log:warning("read failed: " .. err) 
-		return
+		return invalid_bms(dev, stat, no, 1)
 	end
 	self._log:trace("read input registers done!")
 	stat:inc('packets_in', 1)
@@ -219,17 +239,15 @@ function app:read_bms(dev, client, stat, no)
 			val = val * reg[4]
 			dev:set_input_prop(reg[1], "value", val, now, 0)
 		else
-			if enable_fake_test then
-				if reg[1] == "BNo" then
-					dev:set_input_prop(reg[1], "value", no, now, 0)
-					dev:set_input_prop("TestU", "value", TestU[no], now, 0)
-				else
-					dev:set_input_prop(reg[1], "value", math.tointeger(val), now, 0)
-				end
+			if reg[1] == "BNo" then
+				dev:set_input_prop(reg[1], "value", no, now, 0)
 			else
 				dev:set_input_prop(reg[1], "value", math.tointeger(val), now, 0)
 			end
 		end
+	end
+	if enable_fake_test then
+		dev:set_input_prop("TestU", "value", TestU[no], now, 0)
 	end
 end
 

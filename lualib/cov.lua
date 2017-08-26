@@ -101,8 +101,9 @@ function cov:timer(now, cb)
 	local opt = self._opt
 	for key, v in pairs(self._retained_map) do
 		local tv = v[2]
+		local quality = v[4]
 		local g = math.abs(now - tv)
-		if cb and g >= opt.ttl then
+		if cb and quality == 0 and g >= opt.ttl then
 			v[2] = now
 			local r = cb(key, table.unpack(v))	
 			if not r then
