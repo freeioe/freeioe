@@ -112,6 +112,7 @@ function app:start()
 		end)
 		devs[#devs + 1] = {
 			dev = dev,
+			stat = stat,
 			client = client
 		}
 	end
