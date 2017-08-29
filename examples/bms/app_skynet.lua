@@ -70,6 +70,7 @@ function app:start()
 
 	local sys_id = self._sys:id()
 	local config = self._conf or {
+		--channel_type = "socket",
 		devs = {
 			{
 				port = "/dev/ttymxc1",
@@ -77,7 +78,6 @@ function app:start()
 			}
 			--[[
 			{
-				channel_type = "socket",
 				host = "127.0.0.1",
 				port = 1502,
 				nodelay = true,
@@ -97,6 +97,7 @@ function app:start()
 		local client = nil
 
 		if config.channel_type == 'socket' then
+			v.nodelay = v.nodelay or true
 			client = sm_client(socketchannel, v, modbus.apdu_tcp, i)
 		else
 			client = sm_client(serialchannel, v, modbus.apdu_rtu, i)
@@ -215,12 +216,12 @@ function app:read_bms(dev, client, stat, no)
 		else
 			self._log:warning(pdu, err)
 		end
-		return invalid_bms(dev, stat, no, 1)
+		return self:invalid_bms(dev, stat, no, 1)
 	end
 
 	if not pdu then 
 		self._log:warning("read failed: " .. err) 
-		return invalid_bms(dev, stat, no, 1)
+		return self:invalid_bms(dev, stat, no, 1)
 	end
 	self._log:trace("read input registers done!")
 	stat:inc('packets_in', 1)
