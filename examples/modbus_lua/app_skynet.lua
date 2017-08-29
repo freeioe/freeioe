@@ -25,7 +25,7 @@ function app:start()
 
 	local sys_id = self._sys:id()
 	local config = self._conf or {
-		channel_type = 'serial'
+		channel_type = 'socket'
 	}
 
 	local inputs = {}
@@ -44,18 +44,18 @@ function app:start()
 	if config.channel_type == 'socket' then
 		opt = {
 			host = "127.0.0.1",
-			port = 1502,
+			port = 1503,
 			nodelay = true,
 		}
 		print('socket')
-		client = sm_client(socketchannel, opt, modbus.apdu_tcp, i)
+		client = sm_client(socketchannel, opt, modbus.apdu_tcp, 1)
 	else
 		opt = {
 			port = "/dev/ttymxc1",
 			baudrate = 115200
 		}
 		print('serial')
-		client = sm_client(serialchannel, opt, modbus.apdu_rtu, i)
+		client = sm_client(serialchannel, opt, modbus.apdu_rtu, 1)
 	end
 	client:set_io_cb(function(io, msg)
 		dev:dump_comm(io, msg)
@@ -119,8 +119,9 @@ function app:run(tms)
 		return
 	end
 
+	self._log:trace("read input registers done!")
 	self._stat1:inc('packets_in', 1)
-	local regs = decode_registers(raw, 10)
+	local regs = decode_registers(pdu, 10)
 	local now = self._sys:time()
 
 	for r,v in ipairs(regs) do

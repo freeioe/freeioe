@@ -43,8 +43,17 @@ function logger:log(level, ...)
 	return f(...)
 end
 
+function logger:debug_log(level, ...)
+	--lvl = log.lvl2number(level)
+	local f = assert(self._log[level])
+	return f(...)
+end
+
 local function make_func(logger, name)
 	logger[name] = function(self, ...)
+		if os.getenv('IOT_LOG_LEVEL') == 'trace' then
+			return self:debug_log(name, ...)
+		end
 		return self:log(name, ...)
 	end
 end
