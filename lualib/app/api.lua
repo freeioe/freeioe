@@ -57,7 +57,6 @@ function api:comm_dispatch(channel, source, app, sn, ...)
 end
 
 function api:stat_dispatch(channel, source, app, sn, ...)
-	--[[
 	--log.trace('Stat Dispatch', channel, source, ...)
 	local f = self._handler.on_stat
 	if f then
@@ -65,7 +64,6 @@ function api:stat_dispatch(channel, source, app, sn, ...)
 	else
 		log.trace('No handler for on_stat')
 	end
-	]]--
 end
 
 function api:set_handler(handler, watch_data)

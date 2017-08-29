@@ -24,6 +24,7 @@ local close_connection = false
 
 --- Cloud options
 local enable_data_upload = nil
+local enable_stat_upload = nil
 local enable_comm_upload = nil
 local max_enable_comm_upload = 60 * 10
 local enable_log_upload = nil
@@ -96,6 +97,9 @@ local msg_handler = {
 
 		if action == 'enable/data' then
 			snax.self().post.enable_data(tonumber(args.data) == 1)
+		end
+		if action == 'enable/stat' then
+			snax.self().post.enable_stat(tonumber(args.data) == 1)
 		end
 		if action == 'enable/log' then
 			snax.self().post.enable_log(tonumber(args.data))
@@ -172,7 +176,7 @@ local function publish_data(key, value, timestamp, quality)
 		--log.trace("Publish data", key, value, timestamp, quality)
 
 		local val = cjson.encode({ key, timestamp, value, quality}) or value
-		return mqtt_client:publish(mqtt_id.."/data", val, 1, true)
+		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 	end
 end
 
@@ -210,6 +214,7 @@ local function load_conf()
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
 	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
 
@@ -240,7 +245,13 @@ local Handler = {
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
 		--print(app, sn, stat, prop, value, timestamp)
-		-- TODO:
+		if mqtt_client and enable_stat_upload then
+			local key = mqtt_id.."/stat"
+			local msg = {
+				sn.."/"..stat.."/"..prop, timestamp, value
+			}
+			return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+		end
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
@@ -406,6 +417,11 @@ function accept.enable_data(enable)
 	end
 end
 
+function accept.enable_stat(enable)
+	enable_stat_upload = enable
+	datacenter.set("CLOUD", "STAT_UPLOAD", enable)
+end
+
 function accept.enable_log(sec)
 	local sec = tonumber(sec)
 	if sec and sec > 0 and sec < max_enable_log_upload then
@@ -447,7 +463,7 @@ function accept.fire_data_snapshot()
 	cov:fire_snapshot(function(key, value, timestamp, quality)
 		if mqtt_client then
 			local val = cjson.encode({ key, timestamp or now, value, quality or 0 })
-			mqtt_client:publish(mqtt_id.."/data", val, 1, true)
+			mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 		end
 	end)
 end
