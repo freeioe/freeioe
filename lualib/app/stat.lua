@@ -29,7 +29,11 @@ function stat:initialize(api, sn, name, readonly)
 	end
 	self._stat_chn = api._stat_chn
 	self._readonly = readonly
-	self._stat_list = {}
+	self._stat_map = {}
+	for _,v in ipairs(standard_props) do
+		self._stat_map[v] = true
+		dc.set('STAT', self._sn, self._name, v, 0)
+	end
 end
 
 function stat:_cleanup()
@@ -61,11 +65,11 @@ end
 function stat:inc(prop, value)
 	assert(not self._readonly, "This is not created device statistics")
 	assert(prop and value)
-	if not standard_props[prop] then
+	if not self._stat_map[prop] then
 		return nil, "Statistics property is not valid. "..prop
 	end
 
-	value = value + self:get(prop) or 0
+	value = value + self:get(prop)
 
 	dc.set('STAT', self._sn, self._name, prop, value)
 	self._stat_chn:publish(self._app_name, self._sn, self._name, prop, value, skynet.time())
@@ -75,7 +79,7 @@ end
 function stat:set(prop, value)
 	assert(not self._readonly, "This is not created device statistics")
 	assert(prop and value)
-	if not standard_props[prop] then
+	if not self._stat_map[prop] then
 		return nil, "Statistics property is not valid. "..prop
 	end
 

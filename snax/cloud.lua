@@ -239,7 +239,7 @@ local Handler = {
 		end, app, sn, dir, ts, content)
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
-		print(app, sn, stat, prop, value, timestamp)
+		--print(app, sn, stat, prop, value, timestamp)
 		-- TODO:
 	end,
 	on_add_device = function(app, sn, props)

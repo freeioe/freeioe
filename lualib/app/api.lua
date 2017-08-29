@@ -57,12 +57,15 @@ function api:comm_dispatch(channel, source, app, sn, ...)
 end
 
 function api:stat_dispatch(channel, source, app, sn, ...)
+	--[[
+	--log.trace('Stat Dispatch', channel, source, ...)
 	local f = self._handler.on_stat
 	if f then
 		return f(app, sn, ...)
 	else
 		log.trace('No handler for on_stat')
 	end
+	]]--
 end
 
 function api:set_handler(handler, watch_data)
@@ -73,7 +76,7 @@ function api:set_handler(handler, watch_data)
 		self._data_chn = mc.new ({
 			channel = mgr.req.get_channel('data'),
 			dispatch = function(channel, source, ...)
-				self.data_dispatch(self, channel, source, ...)
+				self:data_dispatch(channel, source, ...)
 			end
 		})
 		if watch_data then
@@ -90,7 +93,7 @@ function api:set_handler(handler, watch_data)
 		self._ctrl_chn = mc.new ({
 			channel = mgr.req.get_channel('ctrl'),
 			dispatch = function(channel, source, ...)
-				self.ctrl_dispatch(self, channel, source, ...)
+				self:ctrl_dispatch(channel, source, ...)
 			end
 		})
 		if handler.on_ctrl or handler.on_output or handler.on_command then
@@ -107,7 +110,7 @@ function api:set_handler(handler, watch_data)
 		self._comm_chn = mc.new ({
 			channel = mgr.req.get_channel('comm'),
 			dispatch = function(channel, source, ...)
-				self.comm_dispatch(self, channel, source, ...)
+				self:comm_dispatch(channel, source, ...)
 			end
 		})
 		if handler.on_comm then
@@ -124,7 +127,7 @@ function api:set_handler(handler, watch_data)
 		self._stat_chn = mc.new({
 			channel = mgr.req.get_channel('stat'),
 			dispatch = function(channel, source, ...)
-				self.stat_dispatch(self, channel, ...)
+				self:stat_dispatch(channel, source, ...)
 			end
 		})
 		if handler.on_stat then
