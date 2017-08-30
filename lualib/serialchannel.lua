@@ -470,8 +470,8 @@ local function wrapper_serial_function(f)
 end
 
 local function rs232_read(port, len, timeout)
-	local timeout = timeout or 3000
-	return port:read(len, timeout, 1)
+	local timeout = timeout or 300
+	return port:read(len, timeout * 10, 1)
 
 	--[[
 	local timeout = (timeout or 3 * 1000) / 10
