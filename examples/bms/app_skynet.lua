@@ -55,6 +55,7 @@ local inputs = {
 	{ name = "CMax", desc = "额定容量Ah"},
 	{ name = "CLeft", desc = "剩余容量"},
 	{ name = "BNo", desc = "电池组号", vt="int"},
+	{ name = "status", desc = "设备状态", vt="int"},
 }
 
 if enable_fake_test then
@@ -192,6 +193,7 @@ function app:invalid_bms(dev, stat, no, quality)
 			end
 		end
 	end
+	dev:set_input_prop('status', 'value', 1, now, quality)
 
 	if enable_fake_test then
 		dev:set_input_prop("TestU", "value", TestU[no], now, 0)
@@ -248,6 +250,7 @@ function app:read_bms(dev, client, stat, no)
 			end
 		end
 	end
+	dev:set_input_prop('status', 'value', 0, now, 0)
 	if enable_fake_test then
 		dev:set_input_prop("TestU", "value", TestU[no], now, 0)
 	end
