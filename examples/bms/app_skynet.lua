@@ -93,7 +93,7 @@ function app:start()
 		self._log:info("Creating device via port", v.port)
 		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
 		local dev = self._api:add_device(dev_sn, inputs)
-		local stat = dev:stat(v.port)
+		local stat = dev:stat("device")
 		local client = nil
 
 		if config.channel_type == 'socket' then
