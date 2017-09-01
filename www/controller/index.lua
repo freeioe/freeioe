@@ -1,6 +1,5 @@
 return {
-	get = function(self, ...)
-		print(self, ...)
-		render('view.html', ...)
+	get = function(self)
+		render('view.html', self.context)
 	end
 }
