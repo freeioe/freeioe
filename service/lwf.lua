@@ -11,6 +11,7 @@ local mode = ...
 if mode == "agent" then
 
 local cache = require 'skynet.codecache'
+local log = require 'utils.log'
 
 local lwf_skynet = require 'lwf.skynet.init'
 local lwf_root = SERVICE_PATH.."/../www"
@@ -31,6 +32,7 @@ skynet.start(function()
 
 		-- limit request body size to 8192 (you can pass nil to unlimit)
 		local code, url, method, header, body, httpver = httpd.read_request(sockethelper.readfunc(id), 8192)
+		log.trace('Web access', httpver, method, url, code)
 		if code then
 			if code ~= 200 then
 				response(id, code)

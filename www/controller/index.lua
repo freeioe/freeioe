@@ -1,5 +1,7 @@
 return {
 	get = function(self)
-		render('view.html', self.context)
+		--ngx.header['aaaa']= 'eee'
+		--self.route:json(ngx.req.get_headers())
+		lwf.render('view.html', self.context)
 	end
 }
