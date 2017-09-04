@@ -50,7 +50,7 @@ local function work_proc()
 			timeout = t
 		else
 			if err then
-				log.trace(err)
+				log.warning(err)
 				timeout = 1000 * 60
 			end
 		end

@@ -18,6 +18,9 @@ local mqtt_keepalive = 300
 local mqtt_timeout = 1 -- 1 seconds
 local mqtt_client = nil
 
+--- Next reconnect timeout
+local mqtt_reconnect_timeout = 100
+
 --- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
 local close_connection = false
@@ -283,7 +286,18 @@ function response.ping()
 	return "PONG"
 end
 
-local function connect_proc(clean_session, username, password)
+local connect_proc = nil
+local function start_reconnect()
+	mqtt_client = nil
+	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
+	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
+	if mqtt_reconnect_timeout > 10 * 60 * 100 then
+		mqtt_reconnect_timeout = 100
+	end
+
+end
+
+connect_proc = function(clean_session, username, password)
 	local clean_session = clean_session or true
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	client:version_set(mosq.PROTOCOL_V311)
@@ -303,16 +317,16 @@ local function connect_proc(clean_session, username, password)
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
+			mqtt_reconnect_timeout = 100
 		else
-			mqtt_client = nil
-			skynet.timeout(100, function() connect_proc() end)
+			log.warning("ON_CONNECT", success, rc, msg) 
+			start_reconnect()
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("ON_DISCONNECT", success, rc, msg) 
 		if not enable_async and mqtt_client then
-			mqtt_client = nil
-			skynet.timeout(100, function() connect_proc() end)
+			start_reconnect()
 		end
 	end
 
