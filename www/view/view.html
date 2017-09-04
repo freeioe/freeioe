@@ -3,8 +3,8 @@
 		aaaaa
 	</title>
 	<body>
-		{% for _, v in ipairs(context) do %}
-		{*html.li(v)*}
+		{% for k, v in pairs(context) do %}
+		{*html.li(k)*} {{v}}
 		{% end %}
 	</body>
 </html>
