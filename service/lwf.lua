@@ -13,10 +13,6 @@ if mode == "agent" then
 local cache = require 'skynet.codecache'
 local log = require 'utils.log'
 
-local lwf_skynet = require 'lwf.skynet.init'
-local lwf_root = SERVICE_PATH.."/../www"
-local lwf = require('lwf').new(lwf_root, lwf_skynet)
-
 local function response(id, ...)
 	local ok, err = httpd.write_response(sockethelper.writefunc(id), ...)
 	if not ok then
@@ -27,6 +23,11 @@ end
 
 skynet.start(function()
 	cache.mode('EXIST')
+
+	local lwf_skynet = require 'lwf.skynet.init'
+	local lwf_root = SERVICE_PATH.."/../www"
+	local lwf = require('lwf').new(lwf_root, lwf_skynet)
+
 	skynet.dispatch("lua", function (_,_,id)
 		socket.start(id)
 
