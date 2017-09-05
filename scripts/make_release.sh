@@ -39,6 +39,12 @@ echo $VERSION > __install/version
 echo $REVISION >> __install/version
 
 # copy lwf files
+rm -f __install/lualib/lwf.lua
+rm -f __install/lualib/lwf
+rm -f __install/lualib/resty
+cp lualib/lwf.lua __install/lualib/lwf.lua
+cp -rH lualib/lwf __install/lualib/lwf
+cp -rH lualib/resty __install/lualib/resty
 
 # Compile lua files
 # ./scripts/compile_lua.sh 
@@ -73,7 +79,7 @@ cd - > /dev/null
 
 # Clean up the rootfs files
 #sudo rm -rf __install
-rm -rf __install
+#rm -rf __install
 
 # Done
 echo 'May GOD with YOU always!'

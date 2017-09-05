@@ -13,14 +13,16 @@ end
 
 function app:start()
 	self._api:set_handler({
-		on_output = function(...)
-			print('on_output', ...)
+		on_output = function(app, sn, output, prop, value)
+			print('on_output', app, sn, output, prop, value)
+			return true, "done"
 		end,
-		on_command = function(...)
-			print('on_command', ...)
+		on_command = function(app, sn, command, param)
+			print('on_command', app, sn, command, param)
+			return true, "eee"
 		end,
-		on_ctrl = function(...)
-			print('on_ctrl', ...)
+		on_ctrl = function(app, command, param, ...)
+			print('on_ctrl', app, command, param, ...)
 		end,
 	})
 

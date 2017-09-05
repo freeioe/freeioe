@@ -562,8 +562,11 @@ function accept.sys_upgrade_ack(id, args)
 end
 
 function accept.output_to_app(id, info)
-	local id = info.id
 	local device = info.device
+	if not device then
+		log.warning("device is missing in data")
+		return
+	end
 	local dev = api:get_device(device)
 	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
 	if r then
