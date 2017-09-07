@@ -225,7 +225,7 @@ function app:read_bms(dev, client, stat, no)
 		self._log:warning("read failed: " .. err) 
 		return self:invalid_bms(dev, stat, no, 1)
 	end
-	self._log:trace("read input registers done!")
+	--self._log:trace("read input registers done!")
 	stat:inc('packets_in', 1)
 
 	local d = modbus.decode

@@ -25,8 +25,10 @@ skynet.start(function()
 	cache.mode('EXIST')
 
 	local lwf_skynet = require 'lwf.skynet.init'
+	local lwf_skynet_assets = require 'lwf.skynet.assets'
 	local lwf_root = SERVICE_PATH.."/../www"
-	local lwf = require('lwf').new(lwf_root, lwf_skynet)
+	--local lwf_root = "/home/cch/mycode/lwf/example"
+	local lwf = require('lwf').new(lwf_root, lwf_skynet, lwf_skynet_assets)
 
 	skynet.dispatch("lua", function (_,_,id)
 		socket.start(id)
