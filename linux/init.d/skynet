@@ -31,7 +31,7 @@ fi
 
 STOP_SCHEDULE="${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}"
 
-test -x $DAEMON || exit 0
+test -x $DAEMON || $DAEMON "is missing"; exit 0
 
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
