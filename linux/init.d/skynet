@@ -21,9 +21,8 @@ SKYNET_IOT_DIR=$SKYNET_DIR/iot
 SKYNET_BIN=$SKYNET_DIR/skynet
 STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
 
-ARCH=`arch`
-DAEMON=$SKYNET_IOT_DIR/linux/$ARCH/process-monitor
-DAEMON_OPTS="-M 2 -D \"$SKYNET_DIR\" -S \"sh $STARTUP_SH $BASE_DIR\" $SKYNET_BIN iot/config"
+DAEMON=$SKYNET_DIR/skynet
+DAEMON_OPTS="iot/config"
 
 
 if [ -r /etc/default/skynet ]; then
@@ -46,9 +45,10 @@ start_skynet() {
 	#   0 if daemon has been started
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
-	start-stop-daemon --start --quiet --pidfile $PID --exec $DAEMON --test > /dev/null \
+	sh $STARTUP_SH $BASE_DIR
+	start-stop-daemon --start --quiet --make-pidfile --pidfile $PID --background --exec $DAEMON --test > /dev/null \
 		|| return 1
-	start-stop-daemon --start --quiet --pidfile $PID --exec $DAEMON -- \
+	start-stop-daemon --start --quiet --make-pidfile --pidfile $PID --background --exec $DAEMON -- \
 		$DAEMON_OPTS 2>/dev/null \
 		|| return 2
 }

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+NAME="Skynet/IOT"
+DESC="IOT based on skynet"
+
+BASE_DIR=/mnt
+SKYNET_DIR=$BASE_DIR/skynet
+SKYNET_IOT_DIR=$SKYNET_DIR/iot
+
+SKYNET_BIN=$SKYNET_DIR/skynet
+STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
+
+ARCH=`arch`
+PID=/var/run/skynet.pid
+DAEMON=$SKYNET_IOT_DIR/linux/$ARCH/process-monitor
+
+if [ -r /etc/default/skynet ]; then
+        . /etc/default/skynet
+fi
+
+DAEMON_OPTS="-d -p $PID -M 2 -D \"$SKYNET_DIR\" -S \"sh $STARTUP_SH $BASE_DIR\" $SKYNET_BIN iot/config"
+# echo "OPTS:" $DAEMON_OPTS
+
+test -x $DAEMON || echo $DAEMON "is missing"; exit 0
+
+echo "Starting..." $DESC
+$DAEMON $DAEMON_OPTS > /dev/null
