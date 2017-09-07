@@ -31,6 +31,12 @@ fi
 
 STOP_SCHEDULE="${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}"
 
+skynet_missing() {
+	echo $DAEMON "is missing"
+	exit 0
+}
+
+test -x $DAEMON || skynet_missing
 
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
@@ -45,8 +51,6 @@ start_skynet() {
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
 	sh $STARTUP_SH $BASE_DIR || return 1
-
-	test -x $DAEMON || return 1
 
 	start-stop-daemon --start --quiet --make-pidfile --pidfile $PID --background --chdir $SKYNET_DIR --exec $DAEMON -- \
 		$DAEMON_OPTS 2>/dev/null \
