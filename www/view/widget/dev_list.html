@@ -1,0 +1,15 @@
+<h3 class="ui dividing header">{{_("Devices List")}} </h3>
+<table class="ui celled table">
+	<thead>
+		<tr>
+			<th>{{_("SN")}}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for k, v in pairs(devices) do %}
+		<tr>
+			<td>{{k}} </td>
+		</tr>
+		{% end %}
+	</tbody>
+</table>

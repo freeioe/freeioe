@@ -1,0 +1,21 @@
+<h3 class="ui dividing header">{{_("Application List")}} </h3>
+<table class="ui celled table">
+	<thead>
+		<tr>
+			<th>{{_("Name")}}</th>
+			<th>{{_("Application")}}</th>
+			<th>{{_("Version")}}</th>
+			<th>{{_("SN")}}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for k, v in pairs(apps) do %}
+		<tr>
+			<td>{{k}} </td>
+			<td>{{v.name}} </td>
+			<td>{{v.version}} </td>
+			<td>{{v.sn}} </td>
+		</tr>
+		{% end %}
+	</tbody>
+</table>

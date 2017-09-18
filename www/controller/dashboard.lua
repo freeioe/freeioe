@@ -1,5 +1,5 @@
 return {
 	get = function(self)
-		lwf.render('index.html')
+		lwf.render('dashboard.html')
 	end
 }

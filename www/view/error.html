@@ -3,7 +3,20 @@
 		<title> {{code}} </title>
 	</head>
 	<body>
-		{{code}} page 
+
+		{{_('Error Page 111')}}	
+		{{ _("%d page 112", code) }}
+		{{_("%d page 113", code)}}
+		{* _("%d page 114", code) *}
+		{*_("%d page 115", code)*}
+		{*_('Error Page 116')*}	
+		{% local a = _("%d page 117", code) %}
+		{{a}}
+		{% a = 'bar.html' %}
+		{[a, { message = _("%d page 118", code) }]}
+
+		{(bar.html, { message = _("%d page 119", code) })}
+		{# This is comments #}
 	</body>
 </html>
 

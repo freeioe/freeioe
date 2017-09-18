@@ -1,0 +1,119 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "%d page 112"
+msgstr "%d 页面 112"
+
+msgid "%d page 113"
+msgstr "%d 页面 113"
+
+msgid "%d page 114"
+msgstr "%d 页面 114"
+
+msgid "%d page 115"
+msgstr "%d 页面 115"
+
+msgid "%d page 117"
+msgstr "%d 页面 117"
+
+msgid "%d page 118"
+msgstr "%d 页面 118"
+
+msgid "%d page 119"
+msgstr "%d 页面 119"
+
+msgid "All Mails"
+msgstr ""
+
+msgid "All Messages"
+msgstr ""
+
+msgid "Application"
+msgstr ""
+
+msgid "CLA"
+msgstr ""
+
+msgid "Card"
+msgstr ""
+
+msgid "Chart"
+msgstr ""
+
+msgid "Contribute"
+msgstr ""
+
+msgid "Create Applicatoin"
+msgstr ""
+
+msgid "Dashboard"
+msgstr ""
+
+msgid "Development Reference"
+msgstr ""
+
+msgid "Device"
+msgstr ""
+
+msgid "Device Template"
+msgstr ""
+
+msgid "Document"
+msgstr ""
+
+msgid "Documents"
+msgstr ""
+
+msgid "Error Page 111"
+msgstr "错误页面 111"
+
+msgid "Error Page 116"
+msgstr "错误页面 116"
+
+msgid "Form"
+msgstr ""
+
+msgid "Help"
+msgstr ""
+
+msgid "Help Make KooIoT Better"
+msgstr ""
+
+msgid "Issue Tracker"
+msgstr ""
+
+msgid "KooIoT Network"
+msgstr ""
+
+msgid "KooIoT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Logout"
+msgstr ""
+
+msgid "Mails"
+msgstr ""
+
+msgid "Messages"
+msgstr ""
+
+msgid "Profile"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Task"
+msgstr ""
+
+msgid "Test View Page"
+msgstr "测试浏览页面"
+
+msgid "Translation Hub"
+msgstr ""
+
+msgid "User Documents"
+msgstr ""
