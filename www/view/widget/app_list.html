@@ -6,6 +6,7 @@
 			<th>{{_("Application")}}</th>
 			<th>{{_("Version")}}</th>
 			<th>{{_("SN")}}</th>
+			<th>{{_("Action")}}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -15,6 +16,7 @@
 			<td>{{v.name}} </td>
 			<td>{{v.version}} </td>
 			<td>{{v.sn}} </td>
+			<td><div class="ui teal button" onclick="upgrade_app('{{k}}', '{{v.name}}');">Upgrade</div></td>
 		</tr>
 		{% end %}
 	</tbody>

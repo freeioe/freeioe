@@ -7,3 +7,18 @@
 
 {(widget/app_list.html, {apps=apps})}
 {-main-}
+
+{-script-}
+<script>
+function upgrade_app(inst, app) {
+	$.post("/sys/upgrade_app", {from_web:true, inst:inst, app:app, version:'latest'}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
+	});
+}
+</script>
+{-script-}
