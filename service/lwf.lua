@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local socket = require "skynet.socket"
+local co_m = require "skynet.coroutine"
 local httpd = require "http.httpd"
 local sockethelper = require "http.sockethelper"
 local urllib = require "http.url"
@@ -28,7 +29,7 @@ skynet.start(function()
 	local lwf_skynet_assets = require 'lwf.skynet.assets'
 	local lwf_root = SERVICE_PATH.."/../www"
 	--local lwf_root = "/home/cch/mycode/lwf/example"
-	local lwf = require('lwf').new(lwf_root, lwf_skynet, lwf_skynet_assets)
+	local lwf = require('lwf').new(lwf_root, lwf_skynet, lwf_skynet_assets, co_m)
 
 	skynet.dispatch("lua", function (_,_,id)
 		socket.start(id)

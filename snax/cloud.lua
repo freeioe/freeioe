@@ -399,7 +399,10 @@ function response.list_cfg_keys()
 		"DATA_UPLOAD",
 		"LOG_UPLOAD",
 		"COMM_UPLOAD",
+		"STAT_UPLOAD",
 		"COV",
+		"COV_TTL",
+		"PKG_HOST_URL",
 	}
 end
 
