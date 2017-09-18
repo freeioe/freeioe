@@ -20,22 +20,13 @@
 	</div>
 	<div class="ui blue huge statistic">
 		<div class="value">
-			{{version.iot.git_ver}}
-		</div>
-		<div class="label">
-			Git Version
-		</div>
-	</div>
-
-	<div class="ui blue huge statistic">
-		<div class="value">
 			{{version.skynet.ver}}
 		</div>
 		<div class="label">
 			Skynet Version
 		</div>
 	</div>
-	<div class="ui blue huge statistic">
+	<div class="ui blue tiny statistic">
 		<div class="value">
 			{{version.skynet.git_ver}}
 		</div>
@@ -43,7 +34,14 @@
 			Skynet Git Version
 		</div>
 	</div>
-
+	<div class="ui blue tiny statistic">
+		<div class="value">
+			{{version.iot.git_ver}}
+		</div>
+		<div class="label">
+			Git Version
+		</div>
+	</div>
 	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade</div>
 </div>
 
