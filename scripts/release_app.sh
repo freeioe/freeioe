@@ -21,6 +21,7 @@ cat __release/$1/$2.zip.md5
 ## Copy to latest
 cp -f __release/$1/$2.zip __release/$1/latest.zip
 cp -f __release/$1/$2.zip.md5 __release/$1/latest.zip.md5
+echo $2 > __release/$1/latest.version
 
 # copy to web server folder
 #mkdir -p /var/www/master/$1

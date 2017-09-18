@@ -75,7 +75,7 @@ cat ../__release/skynet_iot/$VERSION.tar.gz.md5
 ## Copy to latest
 cp -f ../__release/skynet_iot/$VERSION.tar.gz ../__release/skynet_iot/latest.tar.gz
 cp -f ../__release/skynet_iot/$VERSION.tar.gz.md5 ../__release/skynet_iot/latest.tar.gz.md5
-echo $VERSION > ../_release/skynet_iot/latest.version
+echo $VERSION > ../__release/skynet_iot/latest.version
 cd - > /dev/null
 
 # Clean up the rootfs files
