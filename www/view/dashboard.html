@@ -3,5 +3,76 @@
 {-main_header-}
 
 {-main-}
+
 <h1 class="header"> DashBoard Page </h1>
+
+<h3 class="ui top attached header">
+  Installed Version
+</h3>
+<div class="ui attached basic segment">
+	<div class="ui blue huge statistic">
+		<div class="value">
+			{{version.iot.ver}}
+		</div>
+		<div class="label">
+			Version
+		</div>
+	</div>
+	<div class="ui blue huge statistic">
+		<div class="value">
+			{{version.iot.git_ver}}
+		</div>
+		<div class="label">
+			Git Version
+		</div>
+	</div>
+
+	<div class="ui blue huge statistic">
+		<div class="value">
+			{{version.skynet.ver}}
+		</div>
+		<div class="label">
+			Skynet Version
+		</div>
+	</div>
+	<div class="ui blue huge statistic">
+		<div class="value">
+			{{version.skynet.git_ver}}
+		</div>
+		<div class="label">
+			Skynet Git Version
+		</div>
+	</div>
+
+	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade</div>
+</div>
+
+
+<div class="ui icon message">
+	<i class="inbox icon"></i>
+	<div class="content">
+		<div class="header">
+			<div id="message_ui">
+				{{ message }}
+			</div>
+		</div>
+	</div>
+</div>
+
+
 {-main-}
+
+{-script-}
+<script>
+function upgrade_sys() {
+	$.post("/sys/upgrade", {from_web:true, version:'latest'}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
+	});
+}
+</script>
+{-script-}

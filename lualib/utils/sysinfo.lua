@@ -160,4 +160,25 @@ _M.list_serial = function()
 	return list
 end
 
+local function get_versions(fn)
+	local f, err = io.open(fn, "r")
+	if not f then
+		return 0, "develop"
+	end
+	local v = tonumber(f:read("l"))
+	local gv = f:read("l")
+	f:close()
+	return v, gv
+end
+
+_M.version = function()
+	local v, gv = get_versions("./iot/version")
+	return v, gv
+end
+
+_M.skynet_version = function()
+	local v, gv = get_versions("./version")
+	return v, gv
+end
+
 return _M

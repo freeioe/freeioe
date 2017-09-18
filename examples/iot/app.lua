@@ -66,23 +66,12 @@ function app:close(reason)
 	end
 end
 
-local function get_versions(fn)
-	local f, err = io.open(fn, "r")
-	if not f then
-		return 0, "develop"
-	end
-	local v = tonumber(f:read("l"))
-	local gv = f:read("l")
-	f:close()
-	return v, gv
-end
-
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
-		local v, gv = get_versions("./iot/version")
+		local v, gv = sysinfo.version()
 		self._log:notice("System Version:", v, gv)
-		local sv, sgv = get_versions("./version")
+		local sv, sgv = sysinfo.skynet_version()
 		self._log:notice("Skynet Platform Version:", sv, sgv)
 
 		self._dev:set_input_prop('starttime', "value", self._start_time)
