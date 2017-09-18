@@ -13,6 +13,7 @@ return {
 		end
 	end,
 	post = function(self)
+		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 	end
 }

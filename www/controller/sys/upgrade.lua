@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 
 return {
 	post = function(self)
+		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 		local version = post.version
 		local id = "from_web"

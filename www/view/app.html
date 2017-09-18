@@ -6,6 +6,19 @@
 <h1 class="header"> Application List Page </h1>
 
 {(widget/app_list.html, {apps=apps})}
+
+<div class="ui icon message">
+	<i class="inbox icon"></i>
+	<div class="content">
+		<div class="header">
+			<div id="message_ui">
+				{{ message }}
+			</div>
+		</div>
+	</div>
+</div>
+
+
 {-main-}
 
 {-script-}
