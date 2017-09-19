@@ -7,11 +7,10 @@
 <h1 class="header"> DashBoard Page </h1>
 
 <h3 class="ui top attached header">
-  Installed Version
+	Information
 </h3>
-
 <div class="ui attached basic segment">
-	<div class="ui blue huge statistic">
+	<div class="ui blue statistic">
 		<div class="value">
 			{{version.iot.ver}}
 		</div>
@@ -19,7 +18,7 @@
 			Version
 		</div>
 	</div>
-	<div class="ui blue huge statistic">
+	<div class="ui blue statistic">
 		<div class="value">
 			{{version.skynet.ver}}
 		</div>
@@ -27,24 +26,71 @@
 			Skynet Version
 		</div>
 	</div>
-	<!--div class="ui computer only grid"--!>
-	<div class="ui blue tiny statistic">
+	<div class="ui blue statistic">
 		<div class="value">
-			{{version.skynet.git_ver}}
+			{{mem_info.total}}
 		</div>
 		<div class="label">
-			Skynet Git Version
+			Total Memory
 		</div>
 	</div>
-	<div class="ui blue tiny statistic">
+	<div class="ui blue statistic">
 		<div class="value">
-			{{version.iot.git_ver}}
+			{{mem_info.used}}
 		</div>
 		<div class="label">
-			Git Version
+			Used Memory
+		</div>
+	</div>
+	<div class="ui blue statistic">
+		<div class="value">
+			{{mem_info.free}}
+		</div>
+		<div class="label">
+			Free Memory
 		</div>
 	</div>
 	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
+</div>
+
+<h3 class="ui top attached header">
+	More Information
+</h3>
+<div class="ui attached basic segment">
+	<div class="ui computer only grid">
+		<div class="ui blue tiny statistic">
+			<div class="value">
+				{{version.skynet.git_ver}}
+			</div>
+			<div class="label">
+				Skynet Git Version
+			</div>
+		</div>
+		<div class="ui blue tiny statistic">
+			<div class="value">
+				{{version.iot.git_ver}}
+			</div>
+			<div class="label">
+				Git Version
+			</div>
+		</div>
+		<div class="ui blue tiny statistic">
+			<div class="value">
+				{{cpu_model}}
+			</div>
+			<div class="label">
+				CPU Model	
+			</div>
+		</div>
+		<div class="ui blue tiny statistic">
+			<div class="value">
+				{{uname}}
+			</div>
+			<div class="label">
+				uname
+			</div>
+		</div>
+	</div>
 </div>
 
 <div class="ui icon message">

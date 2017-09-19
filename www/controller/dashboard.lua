@@ -18,7 +18,19 @@ return {
 				git_ver = git_sver,
 			},
 		}
+		local cpu_model = sysinfo.cpu_model()
+		local meminfo =  sysinfo.meminfo()
+		local uname = sysinfo.uname("-a")
 
-		lwf.render('dashboard.html', {version = version})
+		lwf.render('dashboard.html', {
+			version = version, 
+			cpu_model = cpu_model,
+			mem_info= {
+				total = math.floor(meminfo.total / 1000)..'M',
+				used = math.floor(meminfo.used / 1000)..'M',
+				free = math.floor(meminfo.free / 1000)..'M',
+			}, 
+			uname = uname,
+		})
 	end
 }
