@@ -404,6 +404,7 @@ function command.upgrade_core(id, args)
 	end, ".tar.gz")
 end
 
+local rollback_time = nil
 function command.upgrade_core_ack(id, args)
 	local base_dir = get_iot_dir()
 	local upgrade_ack_sh = base_dir.."/ipt/upgrade_ack.sh"
@@ -411,7 +412,12 @@ function command.upgrade_core_ack(id, args)
 	if not r then
 		return install_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
 	end
+	rollback_time = nil
 	return install_result(id, true, "System upgradation ACK is done")
+end
+
+function command.rollback_time()
+	return rollback_time and rollback_time - skynet.time() or nil
 end
 
 function command.list()
@@ -444,6 +450,7 @@ skynet.start(function()
 	skynet.fork(function()
 		if check_rollback() then
 			log.notice("Rollback will be applied in 60 seconds")
+			rollback_time = skynet.time() + 60
 			skynet.timeout(60 * 100, function()
 				if check_rollback() then
 					skynet.abort()

@@ -1,3 +1,4 @@
+local skynet = require 'skynet'
 local sysinfo = require 'utils.sysinfo'
 
 return {
@@ -21,6 +22,7 @@ return {
 		local cpu_model = sysinfo.cpu_model()
 		local meminfo =  sysinfo.meminfo()
 		local uname = sysinfo.uname("-a")
+		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time") or "nil"
 
 		lwf.render('dashboard.html', {
 			version = version, 
@@ -31,6 +33,7 @@ return {
 				free = math.floor(meminfo.free / 1024)..'M',
 			}, 
 			uname = uname,
+			rollback_time = rollback_time,
 		})
 	end
 }

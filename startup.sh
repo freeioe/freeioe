@@ -31,7 +31,7 @@ then
 	echo "RollBack Script detected! Roll back iot system!" >> $STARTUP_LOG
 	sh $IOT_DIR/ipt/rollback.sh
 	if [ $? -eq 0 ]
-		mv -f $IOT_DIR/ipt/rollback
+		rm -f $IOT_DIR/ipt/rollback
 	then
 		echo "Failed to run rollback script" >> $STARTUP_LOG
 		exit $?
