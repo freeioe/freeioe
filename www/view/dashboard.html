@@ -131,7 +131,7 @@ function refresh_page() {
 	window.location.reload();
 }
 function upgrade_sys() {
-	no_ack = $('#upgrade_ack').is(':checked');
+	no_ack = $('#upgrade_ack').is(':checked') == 'true';
 	$.post("/sys/upgrade", {from_web:true, version:'latest', no_ack:no_ack}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
