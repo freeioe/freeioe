@@ -58,15 +58,16 @@
 			Rollback Time
 		</div>
 	</div>
-	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
-	<div class="ui right floated basic segment">
-	<div class="ui checkbox">
-		<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
-		<label>Skip Ack?</label>
-	</div>
-	</div>
 	{% if rollback_time ~= 'nil' then %}
 	<div class="ui right floated teal button" onclick="upgrade_ack();">Upgrade ACK</div>
+	{% else %}
+	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
+	<div class="ui right floated basic segment">
+		<div class="ui checkbox">
+			<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
+			<label>Skip Ack?</label>
+		</div>
+	</div>
 	{% end %}
 </div>
 
