@@ -5,7 +5,7 @@ local dc = require 'skynet.datacenter'
 return {
 	get = function(self)
 		if lwf.auth.user == 'Guest' then
-			lwf.redirect('/user/login')
+			self:redirect('/user/login')
 		else
 			--local cloud = snax.uniqueservice('cloud')
 			local cfg = dc.get('CLOUD')

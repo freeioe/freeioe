@@ -4,7 +4,7 @@ local cjson = require 'cjson.safe'
 return {
 	get = function(self)
 		if lwf.auth.user == 'Guest' then
-			lwf.redirect('/user/login')
+			self:redirect('/user/login')
 		else
 			local devices = dc.get('DEVICES')
 			--print(cjson.encode(devices))
