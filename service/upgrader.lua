@@ -381,6 +381,7 @@ function command.upgrade_core(id, args)
 
 	if args.no_ack then
 		local base_dir = get_iot_dir()
+		lfs.mkdir(base_dir.."/ipt")
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
 			return install_result(id, false, "Failed to create upgrade_no_ack file!")

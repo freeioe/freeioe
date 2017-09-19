@@ -6,8 +6,9 @@ return {
 		local post = ngx.req.get_post_args()
 		local version = post.version
 		local id = "from_web"
+		local no_ack = post.no_ack and post.no_ack == 'true' or false
 		local args = {
-			no_ack = post.no_ack,
+			no_ack = no_ack,
 			skynet = {
 				platform = "openwrt",
 			},
