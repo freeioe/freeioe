@@ -59,6 +59,9 @@
 		</div>
 	</div>
 	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
+	{% if rollback_time ~= 'nil' then %}
+	<div class="ui right floated teal button" onclick="upgrade_ack();">Upgrade ACK</div>
+	{% end %}
 </div>
 
 <h3 class="ui top attached header">
@@ -129,6 +132,17 @@ function upgrade_sys() {
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
+	});
+}
+function upgrade_ack() {
+	$.post("/sys/upgrade_ack", {from_web:true}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 3000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>Failed to send system upgrade ack request </i>');
 	});
 }
 </script>

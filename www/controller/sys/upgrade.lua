@@ -7,7 +7,7 @@ return {
 		local version = post.version
 		local id = "from_web"
 		local args = {
-			no_ack = 1,
+			no_ack = post.no_ack,
 			skynet = {
 				platform = "openwrt",
 			},
