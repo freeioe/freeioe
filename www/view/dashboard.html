@@ -62,11 +62,15 @@
 
 {-script-}
 <script>
+function refresh_page() {
+	window.location.reload();
+}
 function upgrade_sys() {
 	$.post("/sys/upgrade", {from_web:true, version:'latest'}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
+		setTimeout('refresh_page()', 3000);
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
