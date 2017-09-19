@@ -42,7 +42,7 @@ $(document).ready(function() {
         {
           type   : 'empty',
           prompt : 'Please enter a username'
-        }
+        },
         {
           type   : 'length[4]',
           prompt : 'Your username must be at least 4 characters'
