@@ -70,7 +70,7 @@ function upgrade_sys() {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 3000);
+		setTimeout('refresh_page()', 10000);
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
