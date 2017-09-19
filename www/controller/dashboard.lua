@@ -26,9 +26,9 @@ return {
 			version = version, 
 			cpu_model = cpu_model,
 			mem_info= {
-				total = math.floor(meminfo.total / 1000)..'M',
-				used = math.floor(meminfo.used / 1000)..'M',
-				free = math.floor(meminfo.free / 1000)..'M',
+				total = math.floor(meminfo.total / 1024)..'M',
+				used = math.floor(meminfo.used / 1024)..'M',
+				free = math.floor(meminfo.free / 1024)..'M',
 			}, 
 			uname = uname,
 		})
