@@ -50,6 +50,7 @@
 			Free Memory
 		</div>
 	</div>
+	{% if rollback_time then %}
 	<div class="ui blue statistic">
 		<div class="value">
 			{{rollback_time}}
@@ -58,7 +59,6 @@
 			Rollback Time
 		</div>
 	</div>
-	{% if rollback_time ~= 'nil' then %}
 	<div class="ui right floated teal button" onclick="upgrade_ack();">Upgrade ACK</div>
 	{% else %}
 	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>

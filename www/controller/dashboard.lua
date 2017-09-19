@@ -22,7 +22,7 @@ return {
 		local cpu_model = sysinfo.cpu_model()
 		local meminfo =  sysinfo.meminfo()
 		local uname = sysinfo.uname("-a")
-		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time") or "nil"
+		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
 
 		lwf.render('dashboard.html', {
 			version = version, 
