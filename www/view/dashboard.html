@@ -71,43 +71,37 @@
 	{% end %}
 </div>
 
-<h3 class="ui top attached header">
-	More Information
-</h3>
-<div class="ui attached basic segment">
+<div class="ui basic segment">
 	<div class="ui computer only grid">
-		<div class="ui blue tiny statistic">
-			<div class="value">
-				{{version.skynet.git_ver}}
-			</div>
-			<div class="label">
-				Skynet Git Version
-			</div>
-		</div>
-		<div class="ui blue tiny statistic">
-			<div class="value">
-				{{version.iot.git_ver}}
-			</div>
-			<div class="label">
-				Git Version
-			</div>
-		</div>
-		<div class="ui blue tiny statistic">
-			<div class="value">
-				{{cpu_model}}
-			</div>
-			<div class="label">
-				CPU Model	
-			</div>
-		</div>
-		<div class="ui blue tiny statistic">
-			<div class="value">
-				{{uname}}
-			</div>
-			<div class="label">
-				uname
-			</div>
-		</div>
+		<table class="ui striped table">
+			<thead>
+				<tr>
+					<th colspan="2"><h3 class="ui header">More Information</h3></th>
+				</tr>
+				<tr>
+					<th>{{_("Name")}}</th>
+					<th>{{_("Value")}}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>{{_("Git Version")}} </td>
+					<td>{{version.iot.git_ver}}</td>
+				</tr>
+				<tr>
+					<td>{{_("Skynet Git Version")}} </td>
+					<td>{{version.skynet.git_ver}}</td>
+				</tr>
+				<tr>
+					<td>{{_("CPU Model")}} </td>
+					<td>{{cpu_model}}</td>
+				</tr>
+				<tr>
+					<td>{{_("UNAME")}} </td>
+					<td>{{uname}}</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 </div>
 
