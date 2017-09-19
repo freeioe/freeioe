@@ -3,7 +3,6 @@
 {-main_header-}
 
 {-main-}
-
 <h1 class="header"> IOT System DashBoard</h1>
 
 <h3 class="ui top attached header">
@@ -63,6 +62,9 @@
 	{% else %}
 	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
 	<div class="ui right floated basic segment">
+		<div id="mydimmer" class="ui disabled dimmer">
+			<div class="ui massive text loader" id="myloader">Loading</div>
+		</div>
 		<div class="ui checkbox">
 			<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
 			<label>Skip Ack?</label>
@@ -123,6 +125,12 @@
 <script>
 function refresh_page() {
 	window.location.reload();
+}
+function loader_test() {
+	//var loader = $('#myloader');
+	var loader = $('#mydimmer');
+	loader.removeClass('disabled');
+	loader.addClass('active');
 }
 function upgrade_sys() {
 	no_ack = $('#upgrade_ack').is(':checked');
