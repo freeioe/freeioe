@@ -58,24 +58,31 @@
 			Rollback Time
 		</div>
 	</div>
-	<div class="ui right floated teal button" onclick="upgrade_ack();">Upgrade ACK</div>
-	{% else %}
-	<div class="ui right floated yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
-	<div class="ui right floated basic segment">
-		<div id="mydimmer" class="ui disabled dimmer">
-			<div class="ui massive text loader" id="myloader">Loading</div>
-		</div>
-		<div class="ui checkbox">
-			<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
-			<label>Skip Ack?</label>
-		</div>
+	{% end %}
+</div>
+
+<h3 class="ui top attached header">
+	System Upgrade	
+</h3>
+<div class="ui attached basic segment">
+	<div id="mydimmer" class="ui disabled dimmer">
+		<div class="ui massive text loader" id="myloader">Loading</div>
 	</div>
+
+	{% if rollback_time then %}
+	<div class="ui teal button" onclick="upgrade_ack();">Upgrade ACK</div>
+	{% else %}
+	<div class="ui checkbox">
+		<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
+		<label>Skip Ack?</label>
+	</div>
+	<div class="ui yellow button" onclick="upgrade_sys();">Upgrade to Latest</div>
 	{% end %}
 </div>
 
 <div class="ui basic segment">
 	<div class="ui computer only grid">
-		<table class="ui striped table">
+		<table class="ui striped basic table">
 			<thead>
 				<tr>
 					<th colspan="2"><h3 class="ui header">More Information</h3></th>
