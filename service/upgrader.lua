@@ -418,7 +418,7 @@ function command.upgrade_core_ack(id, args)
 end
 
 function command.rollback_time()
-	return rollback_time and rollback_time - skynet.time() or nil
+	return rollback_time and math.floor(rollback_time - skynet.time()) or nil
 end
 
 function command.list()
