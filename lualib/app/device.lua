@@ -87,7 +87,8 @@ function device:mod(inputs, outputs, commands)
 end
 
 function device:get_input_prop(input, prop)
-	return dc.get('INPUT', self._sn, input, prop)
+	local t = dc.get('INPUT', self._sn, input, prop)
+	return t.value, t.timestamp, t.quality
 end
 
 function device:set_input_prop(input, prop, value, timestamp, quality)
@@ -96,19 +97,23 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
+	local timestamp = timestamp or skynet.time()
+	local quality = quality or 0
 
-	dc.set('INPUT', self._sn, input, prop, value)
-	self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp or skynet.time(), quality or 0)
+	dc.set('INPUT', self._sn, input, prop, {value=value, timestamp=timestamp, quality=quality})
+	self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
 	return true
 end
 
 function device:get_output_prop(output, prop)
-	return dc.get('OUTPUT', self._sn, output, prop)
+	local t = dc.get('OUTPUT', self._sn, output, prop)
+	return t.value, t.timestamp
 end
 
 function device:set_output_prop(output, prop, value)
-	dc.set('OUTPUT', self._sn, output, prop, value)
-	self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, skynet.time())
+	local timestamp = skynet.time()
+	dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
+	self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp)
 	return true
 end
 
