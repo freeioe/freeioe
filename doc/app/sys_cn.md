@@ -1,5 +1,4 @@
-
-#应用开发接口(SYS部分)
+# 应用开发接口(SYS部分) #
 
 * sys:log(level, ...)
 记录应用日志。 level是字符串类型，可用值:trace, debug, info, notice, warning, error, fatal.

@@ -1,4 +1,4 @@
-#应用开发接口（DEVICE部分）
+# 应用开发接口（DEVICE部分） #
 
 * device:cleanup()
 设备清理接口。

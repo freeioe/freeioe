@@ -1,4 +1,4 @@
-# 应用开发接口（LOGGER部分）
+# 应用开发接口（LOGGER部分） #
 本logger接口是应用定制，并增加压缩重复日志项功能。
 
 * logger:log(level, ...)
