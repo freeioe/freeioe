@@ -24,7 +24,7 @@
 {-script-}
 <script>
 function refresh_page() {
-	window.location.reload();
+	window.location.replace("/app");
 }
 function upgrade_app(inst, app) {
 	$.post("/sys/upgrade_app", {from_web:true, inst:inst, app:app, version:'latest'}, function(data) {
