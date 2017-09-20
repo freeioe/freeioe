@@ -3,7 +3,7 @@
 {-main_header-}
 
 {-main-}
-<h1 class="header"> Installed Application List </h1>
+<h1 class="header"> {{_("Installed Application List")}} </h1>
 
 {(widget/app_list.html, {apps=apps})}
 
@@ -34,7 +34,7 @@ function upgrade_app(inst, app) {
 		setTimeout('refresh_page()', 10000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
+		$('#message_ui').html('<i>{{_("Failed to send system upgrade request")}}</i>');
 	});
 }
 </script>

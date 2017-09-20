@@ -12,7 +12,7 @@
 	<div class="six wide column">
 		<div class="ui segments" align="center">
 			<div class="ui padded segment">
-				<span class="ui header">Welcome in KooIoT Cloud</span>
+				<span class="ui header">{{_("Welcome in IOT")}}</span>
 			</div>
 			<div class="ui segment">
 				<form class="ui login form" action="/user/login" method="POST">
@@ -34,11 +34,11 @@
 					<div class="field">
 						<div class="ui checkbox">
 							<input type="checkbox" tabindex="0" class="hidden">
-							<label>Remember Me</label>
+							<label>{{_("Remember Me")}}</label>
 						</div>
 					</div>
 					<button class="ui big fluid blue icon button" type="submit">
-						{{_('SignIn')}} <i class="sign in icon"></i>
+						{{_('Sign In')}} <i class="sign in icon"></i>
 					</button>
 					<div class="ui error message"></div>
 				</form>

@@ -67,6 +67,9 @@ msgstr "开发参考手册"
 msgid "Device"
 msgstr "设备"
 
+msgid "Device List"
+msgstr "设备列表"
+
 msgid "Device Template"
 msgstr "设备模板"
 
@@ -85,8 +88,17 @@ msgstr "错误页面 111"
 msgid "Error Page 116"
 msgstr "错误页面 116"
 
+msgid "Failed to send system upgrade ack request"
+msgstr "发送系统升级确认信息失败!"
+
+msgid "Failed to send system upgrade request"
+msgstr "发送系统升级请求失败"
+
 msgid "Form"
 msgstr "表单"
+
+msgid "Free Memory"
+msgstr "剩余内存"
 
 msgid "Git Version"
 msgstr "代码版本"
@@ -112,8 +124,17 @@ msgstr "IOT网络"
 msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
 msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GibHub账户"
 
+msgid "Installed Application List"
+msgstr "安装应用列表"
+
 msgid "Issue Tracker"
 msgstr "问题跟踪"
+
+msgid "Learn more"
+msgstr "了解更多"
+
+msgid "Loading"
+msgstr "加载中..."
 
 msgid "Log Upload"
 msgstr "日志上送"
@@ -133,6 +154,9 @@ msgstr "邮件"
 msgid "Messages"
 msgstr "消息"
 
+msgid "More Information"
+msgstr "更多信息"
+
 msgid "Name"
 msgstr "名称"
 
@@ -148,20 +172,35 @@ msgstr "端口"
 msgid "Profile"
 msgstr "资料"
 
+msgid "Remember Me"
+msgstr "记住我"
+
+msgid "Rollback Time"
+msgstr "回退时间"
+
 msgid "SN"
 msgstr "序列号"
 
 msgid "Settings"
 msgstr "配置"
 
+msgid "Settings"
+msgstr "配置信息"
+
+msgid "Sign In"
+msgstr "登入"
+
 msgid "Sign Up"
 msgstr "注册"
 
-msgid "SignIn"
-msgstr "登入"
+msgid "Skip Ack?"
+msgstr "无需更新确认？"
 
 msgid "Skynet Git Version"
 msgstr "Skynet代码版本"
+
+msgid "Skynet Version"
+msgstr "Skynet版本"
 
 msgid "Stat Upload"
 msgstr "分析数据上送"
@@ -169,11 +208,17 @@ msgstr "分析数据上送"
 msgid "System"
 msgstr "系统"
 
+msgid "System Upgrade"
+msgstr "系统更新"
+
 msgid "Test View Page"
 msgstr "测试浏览页面"
 
 msgid "Tiemout"
 msgstr "超时"
+
+msgid "Total Memory"
+msgstr "全部内存"
 
 msgid "Translation Hub"
 msgstr "翻译中心"
@@ -181,8 +226,17 @@ msgstr "翻译中心"
 msgid "UNAME"
 msgstr ""
 
+msgid "Upgrade ACK"
+msgstr "升级确认"
+
+msgid "Upgrade To"
+msgstr "升级到"
+
 msgid "Upload Settings"
 msgstr "上送配置"
+
+msgid "Used Memory"
+msgstr "已用内存"
 
 msgid "User Documents"
 msgstr "用户文档"
@@ -195,3 +249,9 @@ msgstr "版本"
 
 msgid "Welcome %s"
 msgstr "欢迎 %s"
+
+msgid "Welcome in IOT"
+msgstr "欢迎"
+
+#~ msgid "SignIn"
+#~ msgstr "登入"

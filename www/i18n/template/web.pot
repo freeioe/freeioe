@@ -90,6 +90,10 @@ msgid "Device"
 msgstr ""
 
 
+msgid "Device List"
+msgstr ""
+
+
 msgid "Device Template"
 msgstr ""
 
@@ -114,7 +118,19 @@ msgid "Error Page 116"
 msgstr ""
 
 
+msgid "Failed to send system upgrade ack request"
+msgstr ""
+
+
+msgid "Failed to send system upgrade request"
+msgstr ""
+
+
 msgid "Form"
+msgstr ""
+
+
+msgid "Free Memory"
 msgstr ""
 
 
@@ -150,7 +166,19 @@ msgid "IOT is an open source platform for internet of things stuff. Please follo
 msgstr ""
 
 
+msgid "Installed Application List"
+msgstr ""
+
+
 msgid "Issue Tracker"
+msgstr ""
+
+
+msgid "Learn more"
+msgstr ""
+
+
+msgid "Loading"
 msgstr ""
 
 
@@ -178,6 +206,10 @@ msgid "Messages"
 msgstr ""
 
 
+msgid "More Information"
+msgstr ""
+
+
 msgid "Name"
 msgstr ""
 
@@ -198,6 +230,14 @@ msgid "Profile"
 msgstr ""
 
 
+msgid "Remember Me"
+msgstr ""
+
+
+msgid "Rollback Time"
+msgstr ""
+
+
 msgid "SN"
 msgstr ""
 
@@ -206,15 +246,27 @@ msgid "Settings"
 msgstr ""
 
 
+msgid "Settings Page"
+msgstr ""
+
+
+msgid "Sign In"
+msgstr ""
+
+
 msgid "Sign Up"
 msgstr ""
 
 
-msgid "SignIn"
+msgid "Skip Ack?"
 msgstr ""
 
 
 msgid "Skynet Git Version"
+msgstr ""
+
+
+msgid "Skynet Version"
 msgstr ""
 
 
@@ -226,11 +278,19 @@ msgid "System"
 msgstr ""
 
 
+msgid "System Upgrade"
+msgstr ""
+
+
 msgid "Test View Page"
 msgstr ""
 
 
 msgid "Tiemout"
+msgstr ""
+
+
+msgid "Total Memory"
 msgstr ""
 
 
@@ -242,7 +302,19 @@ msgid "UNAME"
 msgstr ""
 
 
+msgid "Upgrade ACK"
+msgstr ""
+
+
+msgid "Upgrade To"
+msgstr ""
+
+
 msgid "Upload Settings"
+msgstr ""
+
+
+msgid "Used Memory"
 msgstr ""
 
 
@@ -259,6 +331,10 @@ msgstr ""
 
 
 msgid "Welcome %s"
+msgstr ""
+
+
+msgid "Welcome in IOT"
 msgstr ""
 
 

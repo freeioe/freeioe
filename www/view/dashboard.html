@@ -14,7 +14,7 @@
 			{{version.iot.ver}}
 		</div>
 		<div class="label">
-			Version
+			{{_("Version")}}
 		</div>
 	</div>
 	<div class="ui blue statistic">
@@ -22,7 +22,7 @@
 			{{version.skynet.ver}}
 		</div>
 		<div class="label">
-			Skynet Version
+			{{_("Skynet Version")}}
 		</div>
 	</div>
 	<div class="ui blue statistic">
@@ -30,7 +30,7 @@
 			{{mem_info.total}}
 		</div>
 		<div class="label">
-			Total Memory
+			{{_("Total Memory")}}
 		</div>
 	</div>
 	<div class="ui blue statistic">
@@ -38,7 +38,7 @@
 			{{mem_info.used}}
 		</div>
 		<div class="label">
-			Used Memory
+			{{_("Used Memory")}}
 		</div>
 	</div>
 	<div class="ui blue statistic">
@@ -46,7 +46,7 @@
 			{{mem_info.free}}
 		</div>
 		<div class="label">
-			Free Memory
+			{{_("Free Memory")}}
 		</div>
 	</div>
 	{% if rollback_time then %}
@@ -55,30 +55,30 @@
 			{{rollback_time}}
 		</div>
 		<div class="label">
-			Rollback Time
+			{{_("Rollback Time")}}
 		</div>
 	</div>
 	{% end %}
 </div>
 
 <h3 class="ui top attached header">
-	System Upgrade	
+	{{_("System Upgrade")}}
 </h3>
 <div class="ui attached basic segment">
 	<div id="mydimmer" class="ui disabled dimmer">
-		<div class="ui massive text loader" id="myloader">Loading</div>
+		<div class="ui massive text loader" id="myloader">{{_("Loading")}}</div>
 	</div>
 
 	{% if rollback_time then %}
-	<div class="ui teal button" onclick="upgrade_ack();">Upgrade ACK</div>
+	<div class="ui teal button" onclick="upgrade_ack();">{{_("Upgrade ACK")}}</div>
 	{% else %}
 	<div class="ui checkbox">
 		<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
-		<label>Skip Ack?</label>
+		<label>{{_("Skip Ack?")}}</label>
 	</div>
 	<div class="ui labeled button" tabindex="0" onclick="upgrade_sys();">
 		<div class="ui yellow button">
-			<i class="info circle icon"></i> Upgrade To
+			<i class="info circle icon"></i> {{_("Upgrade To")}}
 		</div>
 		<a class="ui basic yellow left pointing label">
 			Latest
@@ -92,7 +92,7 @@
 		<table class="ui striped basic table">
 			<thead>
 				<tr>
-					<th colspan="2"><h3 class="ui header">More Information</h3></th>
+					<th colspan="2"><h3 class="ui header">{{_("More Information")}}</h3></th>
 				</tr>
 				<tr>
 					<th>{{_("Name")}}</th>
@@ -156,7 +156,7 @@ function upgrade_sys() {
 		setTimeout('refresh_page()', 10000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>Failed to send system upgrade request </i>');
+		$('#message_ui').html('<i>{{_("Failed to send system upgrade request")} </i>');
 	});
 }
 function upgrade_ack() {
@@ -167,7 +167,7 @@ function upgrade_ack() {
 		setTimeout('refresh_page()', 3000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>Failed to send system upgrade ack request </i>');
+		$('#message_ui').html('<i>{{_("Failed to send system upgrade ack request")} </i>');
 	});
 }
 </script>
