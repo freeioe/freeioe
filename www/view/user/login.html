@@ -55,16 +55,15 @@
 </div>
 {% else %}
 <div class="ui centered stackable grid">
-	<div class="ui segments" align="center">
+	<div class="ui basic segments" align="center">
 		<div class="ui basic padded segment">
-			<div class="ui blue message">{{_("Welcome %s", lwf.auth.user) }}</div>
+			<h1 class="ui blue header">{{_("Welcome %s", lwf.auth.user) }}</h1>
 		</div>
 		<div class="ui basic padded segment">
-			<a class="ui big button" href="/user/home"><i class="home icon"></i> {{_("Home")}} </a>
-			<a class="ui big button" href="/dashboard"><i class="dashboard icon"></i> {{_("Dashboard")}} </a>
-			<a class="ui big button" href="/app"><i class="cubes icon"></i> {{_("Application")}} </a>
-			<a class="ui big button" href="/device"><i class="list layout icon"></i> {{_("Device")}} </a>
-			<a class="ui big button" href="/chart"><i class="sign out icon"></i> {{_("Chart")}} </a>
+			<a class="ui big basic button" href="/user/home"><i class="home icon"></i> {{_("Home")}} </a>
+			<a class="ui big basic button" href="/dashboard"><i class="dashboard icon"></i> {{_("Dashboard")}} </a>
+			<a class="ui big basic button" href="/app"><i class="cubes icon"></i> {{_("Application")}} </a>
+			<a class="ui big basic button" href="/device"><i class="list layout icon"></i> {{_("Device")}} </a>
 		</div>
 	</div>
 </div>
