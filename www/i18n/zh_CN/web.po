@@ -22,47 +22,62 @@ msgstr "%d 页面 118"
 msgid "%d page 119"
 msgstr "%d 页面 119"
 
+msgid "Action"
+msgstr "动作"
+
 msgid "All Mails"
-msgstr ""
+msgstr "所有邮件"
 
 msgid "All Messages"
-msgstr ""
+msgstr "所有消息"
 
 msgid "Application"
-msgstr ""
+msgstr "应用"
+
+msgid "Application List"
+msgstr "应用列表"
 
 msgid "CLA"
 msgstr ""
 
-msgid "Card"
-msgstr ""
+msgid "CPU Model"
+msgstr "CPU型号"
 
-msgid "Chart"
-msgstr ""
+msgid "Cloud"
+msgstr "云"
+
+msgid "Comm Upload"
+msgstr "报文上送"
 
 msgid "Contribute"
-msgstr ""
+msgstr "共享"
 
 msgid "Create Applicatoin"
-msgstr ""
+msgstr "创建应用"
 
 msgid "Dashboard"
-msgstr ""
+msgstr "仪表盘"
+
+msgid "Data Upload"
+msgstr "数据上送"
 
 msgid "Development Reference"
-msgstr ""
+msgstr "开发参考手册"
 
 msgid "Device"
-msgstr ""
+msgstr "设备"
 
 msgid "Device Template"
-msgstr ""
+msgstr "设备模板"
+
+msgid "Devices List"
+msgstr "设备列表"
 
 msgid "Document"
-msgstr ""
+msgstr "文档"
 
 msgid "Documents"
-msgstr ""
+msgstr "文档"
 
 msgid "Error Page 111"
 msgstr "错误页面 111"
@@ -71,49 +86,112 @@ msgid "Error Page 116"
 msgstr "错误页面 116"
 
 msgid "Form"
-msgstr ""
+msgstr "表单"
+
+msgid "Git Version"
+msgstr "代码版本"
 
 msgid "Help"
-msgstr ""
+msgstr "帮助"
 
-msgid "Help Make KooIoT Better"
-msgstr ""
+msgid "Help Make IOT Better"
+msgstr "帮助改进IOT"
+
+msgid "Home"
+msgstr "主页"
+
+msgid "Host"
+msgstr "主机"
+
+msgid "ID"
+msgstr "序列号"
+
+msgid "IOT Network"
+msgstr "IOT网络"
+
+msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
+msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GibHub账户"
 
 msgid "Issue Tracker"
-msgstr ""
+msgstr "问题跟踪"
 
-msgid "KooIoT Network"
-msgstr ""
-
-msgid "KooIoT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
-msgstr ""
+msgid "Log Upload"
+msgstr "日志上送"
 
 msgid "Login"
-msgstr ""
+msgstr "登入"
 
 msgid "Logout"
+msgstr "登出"
+
+msgid "MQTT"
 msgstr ""
 
 msgid "Mails"
-msgstr ""
+msgstr "邮件"
 
 msgid "Messages"
-msgstr ""
+msgstr "消息"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "PKG"
+msgstr "软件包"
+
+msgid "PKG Host URL"
+msgstr "软件包服务器地址"
+
+msgid "Port"
+msgstr "端口"
 
 msgid "Profile"
-msgstr ""
+msgstr "资料"
+
+msgid "SN"
+msgstr "序列号"
 
 msgid "Settings"
-msgstr ""
+msgstr "配置"
 
-msgid "Task"
-msgstr ""
+msgid "Sign Up"
+msgstr "注册"
+
+msgid "SignIn"
+msgstr "登入"
+
+msgid "Skynet Git Version"
+msgstr "Skynet代码版本"
+
+msgid "Stat Upload"
+msgstr "分析数据上送"
+
+msgid "System"
+msgstr "系统"
 
 msgid "Test View Page"
 msgstr "测试浏览页面"
 
+msgid "Tiemout"
+msgstr "超时"
+
 msgid "Translation Hub"
+msgstr "翻译中心"
+
+msgid "UNAME"
 msgstr ""
 
+msgid "Upload Settings"
+msgstr "上送配置"
+
 msgid "User Documents"
-msgstr ""
+msgstr "用户文档"
+
+msgid "Value"
+msgstr "值"
+
+msgid "Version"
+msgstr "版本"
+
+msgid "Welcome %s"
+msgstr "欢迎 %s"
