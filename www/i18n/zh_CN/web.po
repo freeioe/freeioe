@@ -94,8 +94,8 @@ msgstr "发送系统升级确认信息失败!"
 msgid "Failed to send system upgrade request"
 msgstr "发送系统升级请求失败"
 
-msgid "Form"
-msgstr "表单"
+msgid "Forum"
+msgstr "社区"
 
 msgid "Free Memory"
 msgstr "剩余内存"
@@ -121,8 +121,14 @@ msgstr "序列号"
 msgid "IOT Network"
 msgstr "IOT网络"
 
+msgid "IOT System DashBoard"
+msgstr "IOT系统仪表盘"
+
 msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
 msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GibHub账户"
+
+msgid "Information"
+msgstr "信息"
 
 msgid "Installed Application List"
 msgstr "安装应用列表"
@@ -184,7 +190,7 @@ msgstr "序列号"
 msgid "Settings"
 msgstr "配置"
 
-msgid "Settings"
+msgid "Settings Information"
 msgstr "配置信息"
 
 msgid "Sign In"

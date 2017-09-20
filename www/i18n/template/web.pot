@@ -126,7 +126,7 @@ msgid "Failed to send system upgrade request"
 msgstr ""
 
 
-msgid "Form"
+msgid "Forum"
 msgstr ""
 
 
@@ -162,7 +162,15 @@ msgid "IOT Network"
 msgstr ""
 
 
+msgid "IOT System DashBoard"
+msgstr ""
+
+
 msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
+msgstr ""
+
+
+msgid "Information"
 msgstr ""
 
 
@@ -246,7 +254,7 @@ msgid "Settings"
 msgstr ""
 
 
-msgid "Settings Page"
+msgid "Settings Information"
 msgstr ""
 
 
