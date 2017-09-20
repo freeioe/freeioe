@@ -7,7 +7,9 @@
 * api:set_handler(handler, watch_data)
 
 设定处理函数。
+
 handler：接口对象
+
 watch_data: 是否关注其他应用创建的设备数据消息
 ```
 local api = sys:data_api()
@@ -30,9 +32,13 @@ api:set_handler({
 * api:add_device(sn, inputs, outputs, commands)
 
 创建采集设备对象。返回设备对象。
+
 sn：设备序列号
+
 inputs：设备输入项
+
 outputs：设备输出项
+
 commands：设备控制项
 
 * api:del_device(dev)

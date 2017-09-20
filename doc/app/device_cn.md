@@ -11,16 +11,23 @@
 * device:get_input_prop(input, prop)
 
 获取设备输入项的当前值。
+
 input: 输入项
+
 prop: 输入项属性
 
 * device:set_input_prop(input, prop, value, timestamp, quality)
 
 写入设备输入项属性值。
+
 input: 输入项
+
 prop: 输入项属性。其中value是用于采集数据值。
+
 value: 数据
+
 timestamp: 时间戳。 默认为当前时间
+
 quality: 质量戳。默认为0
 ```
 dev:set_input_prop("Temperature", "value", 10)
