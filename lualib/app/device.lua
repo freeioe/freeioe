@@ -25,6 +25,7 @@ function device:initialize(api, sn, props, readonly)
 	for _, t in ipairs(props.inputs) do
 		self._inputs_map[t.name] = true
 	end
+	self._stats = {}
 
 	if not readonly then
 		dc.set('DEVICES', sn, props)
@@ -48,6 +49,10 @@ function device:cleanup()
 	if self._readonly then
 		return
 	end
+	for _, s in ipairs(self._stats) do
+		s:cleanup()
+	end
+	self._stats = {}
 
 	local sn = self._sn
 	local props = self._props
@@ -121,7 +126,9 @@ function device:dump_comm(dir, ...)
 end
 
 function device:stat(name)
-	return stat_api:new(self._api, self._sn, name, self._readonly)
+	local stat = stat_api:new(self._api, self._sn, name, self._readonly)
+	self._stats[#self._stats + 1] = stat
+	return stat
 end
 
 return device

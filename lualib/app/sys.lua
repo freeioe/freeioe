@@ -126,10 +126,11 @@ end
 
 function sys:get_conf(default_config)
 	app = dc.get("APPS", self._app_name)
-	if app then
-		return app.conf or default_config
+	local conf = {}
+	if app and app.conf then
+		conf = app.conf 
 	end
-	return default_config
+	return setmetatable(conf, {__index = default_config})
 end
 
 function sys:set_conf(config)
