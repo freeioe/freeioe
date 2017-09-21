@@ -12,6 +12,11 @@ date +%s >> $START_TIME_FILE
 echo "Starting...." > $STARTUP_LOG
 date +"Start Time: %c" >> $STARTUP_LOG
 
+if [ -f $IOT_DIR/ipt/startup.sh ]
+then
+	sh $IOT_DIR/ipt/startup.sh
+fi
+
 if [ -f $IOT_DIR/ipt/upgrade ]
 then
 	echo "Upgrade Script detected! Upgrade iot system!" >> $STARTUP_LOG
