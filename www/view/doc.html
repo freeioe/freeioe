@@ -11,14 +11,57 @@
 	<i class="circular users icon"></i>
 	{{_("Document")}} - {{doc}}
 </h2>
-<div id="doc_body">
+
+<div class="ui grid">
+	<div class="two wide column">
+		<div class="ui pointing vertical menu">
+			<a class="item">
+				<h3 class="ui header">{{_("Document")}}</h3>
+			</a>
+			<div class="item">
+				<b>Application API</b>
+				<div class="menu">
+					{% for _, v in ipairs(docs) do %}
+					{%	if v.filename == doc then %}
+					<a class="active item" href="?filename={{v.filename}}">
+						{{v.title}}
+					</a>
+					{% else %}
+					<a class="item" href="?filename={{v.filename}}">
+						{{v.title}}
+					</a>
+					{% end %}
+					{% end %}
+				</div>
+			</div>
+			<!--
+			<div class="ui dropdown item">
+				Dropdown <i class="dropdown icon"></i>
+				<div class="menu">
+					<div class="item">Choice 1</div>
+					<div class="item">Choice 2</div>
+					<div class="item">Choice 3</div>
+				</div>
+			</div>
+			--!>
+		</div>
+	</div>
+	<div class="fourteen wide stretched column">
+		<div class="ui basic segment" id="doc_body">
+			Loading....
+		</div>
+	</div>
 </div>
 {-main-}
+
+{-body_script-}
+<script type="text/javascript" src="/assets/js/menu.js"></script>
+{-body_script-}
 
 {-script-}
 <script>
 $(document).ready(function() {
-	$.get("/help_doc", { filename: "{*doc*}" }, function(result){
+	$.get("/doc/query", { filename: "{*doc*}" }, function(result){
 		var converter = new showdown.Converter();
 		var html      = converter.makeHtml(result);
 		$('#doc_body').html(html);

@@ -3,7 +3,6 @@ return {
 	get = function(self)
 		local get = ngx.req.get_uri_args()
 		local fn = get.filename
-		print(fn)
 		local f, err = io.open(ngx.var.document_root.."/../assets/doc/"..fn, "r")
 		if not f then
 			return ""

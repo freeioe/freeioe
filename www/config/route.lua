@@ -16,6 +16,3 @@ route('#/zh/(.+)', function(self, url)
 end)
 ]]--
 
-route('#/doc/(.+)', function(self, doc)
-	lwf.render("doc.html", {doc=doc})
-end)
