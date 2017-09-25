@@ -251,6 +251,8 @@ SKYNET_IOT_FILE=%s
 SKYNET_IOT_PATH=%s
 
 date > $IOT_DIR/ipt/rollback
+cp -f $IOT_DIR/cfg.json $IOT_DIR/ipt/cfg.json.bak
+cp -f $IOT_DIR/cfg.json.md5 $IOT_DIR/ipt/cfg.json.md5.bak
 
 cd $IOT_DIR
 if [ -f $SKYNET_FILE ]
@@ -311,6 +313,12 @@ tar xzf $IOT_DIR/ipt/skynet.tar.gz
 cd $IOT_DIR
 cd $SKYNET_IOT_PATH
 tar xzf $IOT_DIR/ipt/skynet_iot.tar.gz
+
+if [ -f $IOT_DIR/ipt/cfg.json.bak ]
+then
+	cp -f $IOT_DIR/ipt/cfg.json.bak $IOT_DIR/cfg.json
+	cp -f $IOT_DIR/ipt/cfg.json.md5.bak $IOT_DIR/cfg.json.md5
+fi
 ]]
 
 local upgrade_ack_sh_str = [[
