@@ -133,15 +133,19 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, m
 	end
 
-	mgr_snax = snax.bind(mgr_handle, mgr_type)
-	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
-
-	if m.API_VER < sys_api.API_MIN_VER then
+	if m.API_VER and m.API_VER < app_sys.API_MIN_VER then
 		local s = string.format("API Version required is too old. Required: %d. Current %d-%d",
 								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
 		log.error(s)
 		return nil, s
+	else
+		if not m.API_VER then
+			log.warning("API Version is not specified, please use it only for development")
+		end
 	end
+
+	mgr_snax = snax.bind(mgr_handle, mgr_type)
+	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 
 	app = assert(m:new(app_name, conf, sys_api))
 end
