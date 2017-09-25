@@ -429,6 +429,20 @@ function command.bind_cloud(handle, type)
 	cloud = snax.bind(handle, type)
 end
 
+function command.system_reboot(id, args)
+	local delay = args.delay or 5
+	skynet.timeout(delay * 100, function()
+		os.execute("reboot")
+	end)
+end
+
+function command.system_quit(id, args)
+	local delay = args.delay or 5
+	skynet.timeout(delay * 100, function()
+		skynet.abort()
+	end)
+end
+
 local function check_rollback()
 	local fn = get_iot_dir()..'/ipt/rollback'
 	local f, err = io.open(fn, 'r')

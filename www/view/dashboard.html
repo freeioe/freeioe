@@ -62,7 +62,7 @@
 </div>
 
 <h3 class="ui top attached header">
-	{{_("System Upgrade")}}
+	{{_("System Control")}}
 </h3>
 <div class="ui attached basic segment">
 	<div id="mydimmer" class="ui disabled dimmer">
@@ -85,6 +85,8 @@
 		</a>
 	</div>
 	{% end %}
+	<div class="ui red button" onclick="sys_reboot();">{{_("Reboot")}}</div>
+	<div class="ui warning button" onclick="sys_quit();">{{_("Quit")}}</div>
 </div>
 
 <div class="ui basic segment">
@@ -168,6 +170,28 @@ function upgrade_ack() {
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to send system upgrade ack request")} </i>');
+	});
+}
+function sys_reboot() {
+	$.post("/sys/reboot", {from_web:true}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 20000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send system reboot request")} </i>');
+	});
+}
+function sys_quit() {
+	$.post("/sys/quit", {from_web:true}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 3000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send system quit request")} </i>');
 	});
 }
 </script>
