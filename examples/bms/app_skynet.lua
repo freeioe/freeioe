@@ -5,6 +5,7 @@ local socketchannel = require 'socketchannel'
 local serialchannel = require 'serialchannel'
 
 local app = class("SSKL_BMS_App")
+app.API_VER = 1
 
 local enable_fake_test = true
 

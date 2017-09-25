@@ -8,6 +8,8 @@ local logger = require 'app.logger'
 local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
+sys.API_VER = 1
+sys.API_MIN_VER = 1
 
 function sys:log(level, ...)
 	return self._logger(level, ...)
