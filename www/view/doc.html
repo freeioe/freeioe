@@ -1,4 +1,9 @@
 {% layout="base.html" %}
+
+{-title-}
+	{{_("Document")}} - {{doc}}
+{-title-}
+
 {-base_header-}
 <script type="text/javascript" src="/assets/showdown/showdown.min.js"></script>
 {-base_header-}
@@ -7,10 +12,6 @@
 {-main_header-}
 
 {-main-}
-<h2 class="ui center aligned icon header">
-	<i class="circular users icon"></i>
-	{{_("Document")}} - {{doc}}
-</h2>
 
 <div class="ui grid">
 	<div class="two wide column">

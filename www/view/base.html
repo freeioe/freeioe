@@ -11,7 +11,13 @@
 		<link rel="icon" href="/assets/favicon.ico" mce_href="/assets/favicon.ico" type="image/x-icon">
 		<link rel="image_src" type="image/jpeg" href="/assets/img/logo.png">
 
-		<title>IOT Platform | {{lwf.auth.user}} </title>
+		<title>
+			{% if blocks.title then %}
+			{* blocks.title *} | {{lwf.auth.user}}
+			{% else %}
+			IOT Platform | {{lwf.auth.user}}
+			{% end %}
+		</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
