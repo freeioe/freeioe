@@ -64,6 +64,14 @@ function response.set_conf(inst, conf)
 	return r, err
 end
 
+function response.get_conf(inst)
+	local app = applist[inst]
+	if not app or not app.inst then
+		return nil, "There is no app instance name is "..inst
+	end
+	return app.conf or {}
+end
+
 function response.get_channel(name)
 	local c = mc_map[string.upper(name)]
 	if c then

@@ -529,22 +529,44 @@ function accept.device_del(app, sn)
 	snax.self().post.fire_devices()
 end
 
+-- Delay application list post
+local fire_app_timer = nil
+function accept.fire_apps(timeout)
+	if fire_app_timer then
+		return
+	end
+	fire_app_timer = function()
+		snax.self().post.app_list()
+	end
+	-- Timeout 10 seconds
+	skynet.timeout(timeout or 1000, function()
+		if fire_app_timer then
+			fire_app_timer()
+			fire_app_timer = nil
+		end
+	end)
+end
+
 function accept.app_install(id, args)
 	skynet.call("UPGRADER", "lua", "install_app", id, args)
+	snax.self().post.fire_apps()
 end
 
 function accept.app_uninstall(id, args)
 	skynet.call("UPGRADER", "lua", "uninstall_app", id, args)
+	snax.self().post.fire_apps(100)
 end
 
 function accept.app_upgrade(id, args)
 	skynet.call("UPGRADER", "lua", "upgrade_app", id, args)
+	snax.self().post.fire_apps()
 end
 
 function accept.app_conf(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.set_conf(args.inst, args.conf)
 	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.fire_apps(100)
 end
 
 function accept.app_list()
@@ -622,5 +644,6 @@ end
 
 function exit(...)
 	fire_device_timer = nil
+	fire_app_timer = nil
 	mosq.cleanup()
 end
