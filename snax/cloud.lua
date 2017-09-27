@@ -486,7 +486,8 @@ function accept.fire_data_snapshot()
 end
 
 local fire_device_timer = nil
-function accept.fire_devices()
+function accept.fire_devices(timeout)
+	local timeout = timeout or 10
 	if fire_device_timer then
 		return
 	end
@@ -496,7 +497,7 @@ function accept.fire_devices()
 			mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
 		end
 	end
-	skynet.timeout(10, function()
+	skynet.timeout(timeout, function()
 		if fire_device_timer then
 			fire_device_timer()
 			fire_device_timer = nil
@@ -526,7 +527,7 @@ end
 
 function accept.device_del(app, sn)
 	clean_cov_by_device_sn(sn)
-	snax.self().post.fire_devices()
+	snax.self().post.fire_devices(100)
 end
 
 -- Delay application list post
