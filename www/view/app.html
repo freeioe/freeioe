@@ -34,7 +34,18 @@ function upgrade_app(inst, app) {
 		setTimeout('refresh_page()', 10000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send system upgrade request")}}</i>');
+		$('#message_ui').html('<i>{{_("Failed to send upgrade request")}}</i>');
+	});
+}
+function uninstall_app(inst) {
+	$.post("/sys/uninstall_app", {from_web:true, inst:inst}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 10000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send uninstall request")}}</i>');
 	});
 }
 </script>
