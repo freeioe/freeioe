@@ -85,8 +85,8 @@
 		</a>
 	</div>
 	{% end %}
-	<div class="ui purple button" onclick="sys_quit();">{{_("Quit")}}</div>
-	<div class="ui red button" onclick="sys_reboot();">{{_("Reboot")}}</div>
+	<div class="ui purple button" onclick="sys_quit();">{{_("Restart")}}</div>
+	<div class="ui red button" onclick="sys_reboot();">{{_("Device Reboot")}}</div>
 </div>
 
 <div class="ui basic segment">
@@ -180,7 +180,7 @@ function sys_reboot() {
 		setTimeout('refresh_page()', 20000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send system reboot request")} </i>');
+		$('#message_ui').html('<i>{{_("Failed to send device reboot request")} </i>');
 	});
 }
 function sys_quit() {
@@ -191,7 +191,7 @@ function sys_quit() {
 		setTimeout('refresh_page()', 3000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send system quit request")} </i>');
+		$('#message_ui').html('<i>{{_("Failed to send system restart request")} </i>');
 	});
 }
 </script>

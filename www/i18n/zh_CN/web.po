@@ -70,6 +70,9 @@ msgstr "设备"
 msgid "Device List"
 msgstr "设备列表"
 
+msgid "Device Reboot"
+msgstr "设备重启"
+
 msgid "Device Template"
 msgstr "设备模板"
 
@@ -79,6 +82,9 @@ msgstr "设备列表"
 msgid "Document"
 msgstr "文档"
 
+msgid "Document Index"
+msgstr "文档索引"
+
 msgid "Documents"
 msgstr "文档"
 
@@ -87,6 +93,12 @@ msgstr "错误页面 111"
 
 msgid "Error Page 116"
 msgstr "错误页面 116"
+
+msgid "Failed to send device reboot request"
+msgstr "发送设备重启请求失败"
+
+msgid "Failed to send system restart request"
+msgstr "发送系统重启请求失败"
 
 msgid "Failed to send system upgrade ack request"
 msgstr "发送系统升级确认信息失败!"
@@ -181,6 +193,9 @@ msgstr "资料"
 msgid "Remember Me"
 msgstr "记住我"
 
+msgid "Restart"
+msgstr "重启"
+
 msgid "Rollback Time"
 msgstr "回退时间"
 
@@ -214,8 +229,8 @@ msgstr "分析数据上送"
 msgid "System"
 msgstr "系统"
 
-msgid "System Upgrade"
-msgstr "系统更新"
+msgid "System Control"
+msgstr "系统控制"
 
 msgid "Test View Page"
 msgstr "测试浏览页面"
@@ -258,6 +273,3 @@ msgstr "欢迎 %s"
 
 msgid "Welcome in IOT"
 msgstr "欢迎"
-
-#~ msgid "SignIn"
-#~ msgstr "登入"

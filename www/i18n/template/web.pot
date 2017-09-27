@@ -94,6 +94,10 @@ msgid "Device List"
 msgstr ""
 
 
+msgid "Device Reboot"
+msgstr ""
+
+
 msgid "Device Template"
 msgstr ""
 
@@ -106,6 +110,10 @@ msgid "Document"
 msgstr ""
 
 
+msgid "Document Index"
+msgstr ""
+
+
 msgid "Documents"
 msgstr ""
 
@@ -115,6 +123,14 @@ msgstr ""
 
 
 msgid "Error Page 116"
+msgstr ""
+
+
+msgid "Failed to send device reboot request"
+msgstr ""
+
+
+msgid "Failed to send system restart request"
 msgstr ""
 
 
@@ -242,6 +258,10 @@ msgid "Remember Me"
 msgstr ""
 
 
+msgid "Restart"
+msgstr ""
+
+
 msgid "Rollback Time"
 msgstr ""
 
@@ -286,7 +306,7 @@ msgid "System"
 msgstr ""
 
 
-msgid "System Upgrade"
+msgid "System Control"
 msgstr ""
 
 
