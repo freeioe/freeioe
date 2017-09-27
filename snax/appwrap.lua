@@ -97,11 +97,17 @@ function response.stop(...)
 end
 
 function response.set_conf(conf)
+	if not app then
+		return nil, "app is nil"
+	end
 	sys_api:set_conf(conf)	
-	if app and app.reload then
+	if app.reload then
 		return protect_call(app, 'reload', conf)
 	end
-	return nil, "application does not support change configuration when running"
+	skynet.timeout(100, function()
+		mgr_snax.post.restart(app_name, "Confiruation change restart")
+	end)
+	return true
 end
 
 function init(name, conf, mgr_handle, mgr_type)

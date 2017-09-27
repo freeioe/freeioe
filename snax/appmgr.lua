@@ -15,7 +15,7 @@ function response.start(name, conf)
 	if app.inst then
 		return app.inst
 	end
-	app.conf = conf or {}
+	app.conf = conf or app.conf or {}
 	applist[name] = app
 
 	local s = snax.self()
@@ -57,10 +57,8 @@ function response.set_conf(inst, conf)
 		return nil, "There is no app instance name is "..inst
 	end
 
+	app.conf = conf
 	local r, err = app.inst.req.set_conf(conf)
-	if r then
-		app.conf = conf
-	end
 	return r, err
 end
 
@@ -78,6 +76,12 @@ function response.get_channel(name)
 		return c.channel
 	end
 	return nil, "No multicast channel for "..name
+end
+
+-- Used by application for restart its self
+function accept.restart(name, reason)
+	snax.self().req.stop(name, reason)
+	snax.self().req.start(name)
 end
 
 function init(...)
