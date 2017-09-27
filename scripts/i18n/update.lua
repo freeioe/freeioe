@@ -35,8 +35,8 @@ local f = io.popen(cmd)
 for c in f:lines() do
 	if c ~= '.' and c ~= '..' then
 		local basename = c:match('.+/([^/]+)%.po$')
-		local pot = source..'/templates/'..basename..'.pot'
-		local ff = io.open(pot)
+		local pot = source..'/template/'..basename..'.pot'
+		local ff, err = io.open(pot)
 		if ff then
 			print(string.format("Updating %-40s", c))
 			local r, code, status = os.execute('msgmerge -U -N --no-wrap '..c..' '..pot);
@@ -45,6 +45,8 @@ for c in f:lines() do
 			else
 				fixup_header_order(c)
 			end
+		else
+			print('Error open pot file', err)
 		end
 	end
 end
