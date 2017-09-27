@@ -10,6 +10,6 @@ return {
 			delay = 5,
 		}
 		skynet.call("UPGRADER", "lua", "system_reboot", id, args)
-		ngx.print('System will be reboot after five seconds!')
+		ngx.print(_('Device will be reboot after five seconds!'))
 	end,
 }

@@ -9,6 +9,6 @@ return {
 			from_web = true
 		}
 		skynet.call("UPGRADER", "lua", "upgrade_core_ack", id, args)
-		ngx.print('System upgrade ack is done!')
+		ngx.print(_('System upgrade ack is done!'))
 	end,
 }

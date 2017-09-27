@@ -30,6 +30,10 @@ msgid "%d page 119"
 msgstr ""
 
 
+msgid "API"
+msgstr ""
+
+
 msgid "Action"
 msgstr ""
 
@@ -74,6 +78,14 @@ msgid "Create Applicatoin"
 msgstr ""
 
 
+msgid "Cycle Buffer"
+msgstr ""
+
+
+msgid "DEVICE"
+msgstr ""
+
+
 msgid "Dashboard"
 msgstr ""
 
@@ -102,6 +114,10 @@ msgid "Device Template"
 msgstr ""
 
 
+msgid "Device will be reboot after five seconds!"
+msgstr ""
+
+
 msgid "Devices List"
 msgstr ""
 
@@ -123,6 +139,10 @@ msgstr ""
 
 
 msgid "Error Page 116"
+msgstr ""
+
+
+msgid "FT CSV Parser"
 msgstr ""
 
 
@@ -174,6 +194,10 @@ msgid "ID"
 msgstr ""
 
 
+msgid "INI Parser"
+msgstr ""
+
+
 msgid "IOT Network"
 msgstr ""
 
@@ -195,6 +219,10 @@ msgstr ""
 
 
 msgid "Issue Tracker"
+msgstr ""
+
+
+msgid "LOGGER"
 msgstr ""
 
 
@@ -270,6 +298,18 @@ msgid "SN"
 msgstr ""
 
 
+msgid "STAT"
+msgstr ""
+
+
+msgid "SYS"
+msgstr ""
+
+
+msgid "SerialChannel"
+msgstr ""
+
+
 msgid "Settings"
 msgstr ""
 
@@ -298,6 +338,10 @@ msgid "Skynet Version"
 msgstr ""
 
 
+msgid "SocketChannel"
+msgstr ""
+
+
 msgid "Stat Upload"
 msgstr ""
 
@@ -307,6 +351,18 @@ msgstr ""
 
 
 msgid "System Control"
+msgstr ""
+
+
+msgid "System upgrade ack is done!"
+msgstr ""
+
+
+msgid "System upgrade is done!"
+msgstr ""
+
+
+msgid "System will be restart after five seconds!"
 msgstr ""
 
 
@@ -327,6 +383,10 @@ msgstr ""
 
 
 msgid "UNAME"
+msgstr ""
+
+
+msgid "UUID Module"
 msgstr ""
 
 

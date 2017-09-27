@@ -22,6 +22,9 @@ msgstr "%d 页面 118"
 msgid "%d page 119"
 msgstr "%d 页面 119"
 
+msgid "API"
+msgstr "接口"
+
 msgid "Action"
 msgstr "动作"
 
@@ -55,6 +58,12 @@ msgstr "共享"
 msgid "Create Applicatoin"
 msgstr "创建应用"
 
+msgid "Cycle Buffer"
+msgstr "循环缓存"
+
+msgid "DEVICE"
+msgstr "设备"
+
 msgid "Dashboard"
 msgstr "仪表盘"
 
@@ -76,6 +85,9 @@ msgstr "设备重启"
 msgid "Device Template"
 msgstr "设备模板"
 
+msgid "Device will be reboot after five seconds!"
+msgstr "设备将在5秒钟后重启"
+
 msgid "Devices List"
 msgstr "设备列表"
 
@@ -93,6 +105,9 @@ msgstr "错误页面 111"
 
 msgid "Error Page 116"
 msgstr "错误页面 116"
+
+msgid "FT CSV Parser"
+msgstr "FT CSV解析器"
 
 msgid "Failed to send device reboot request"
 msgstr "发送设备重启请求失败"
@@ -130,6 +145,9 @@ msgstr "主机"
 msgid "ID"
 msgstr "序列号"
 
+msgid "INI Parser"
+msgstr "INI解析器"
+
 msgid "IOT Network"
 msgstr "IOT网络"
 
@@ -147,6 +165,9 @@ msgstr "安装应用列表"
 
 msgid "Issue Tracker"
 msgstr "问题跟踪"
+
+msgid "LOGGER"
+msgstr "日志"
 
 msgid "Learn more"
 msgstr "了解更多"
@@ -202,6 +223,15 @@ msgstr "回退时间"
 msgid "SN"
 msgstr "序列号"
 
+msgid "STAT"
+msgstr "分析数据"
+
+msgid "SYS"
+msgstr "系统接口"
+
+msgid "SerialChannel"
+msgstr "串口通道"
+
 msgid "Settings"
 msgstr "配置"
 
@@ -223,6 +253,9 @@ msgstr "Skynet代码版本"
 msgid "Skynet Version"
 msgstr "Skynet版本"
 
+msgid "SocketChannel"
+msgstr "网络接口"
+
 msgid "Stat Upload"
 msgstr "分析数据上送"
 
@@ -231,6 +264,15 @@ msgstr "系统"
 
 msgid "System Control"
 msgstr "系统控制"
+
+msgid "System upgrade ack is done!"
+msgstr "系统升级确认已完成!"
+
+msgid "System upgrade is done!"
+msgstr "系统升级完成!"
+
+msgid "System will be restart after five seconds!"
+msgstr "系统将在5秒钟后重启"
 
 msgid "Test View Page"
 msgstr "测试浏览页面"
@@ -246,6 +288,9 @@ msgstr "翻译中心"
 
 msgid "UNAME"
 msgstr ""
+
+msgid "UUID Module"
+msgstr "UUID模块"
 
 msgid "Upgrade ACK"
 msgstr "升级确认"

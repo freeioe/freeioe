@@ -4,23 +4,23 @@ return {
 		local filename = get.filename
 		local docs = {
 			{
-				title = "API",
+				title = _("API"),
 				filename = "app/api_cn.md",
 			},
 			{
-				title = "SYS",
+				title = _("SYS"),
 				filename = "app/sys_cn.md",
 			},
 			{
-				title = "DEVICE",
+				title = _("DEVICE"),
 				filename = "app/device_cn.md",
 			},
 			{
-				title = "STAT",
+				title = _("STAT"),
 				filename = "app/stat_cn.md",
 			},
 			{
-				title = "LOGGER",
+				title = _("LOGGER"),
 				filename = "app/logger_cn.md",
 			},
 		}

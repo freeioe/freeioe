@@ -4,27 +4,27 @@ return {
 		local filename = get.filename
 		local docs = {
 			{
-				title = "SerialChannel",
+				title = _("SerialChannel"),
 				filename = "iot/serialchannel_cn.md",
 			},
 			{
-				title = "SocketChannel",
+				title = _("SocketChannel"),
 				filename = "iot/socketchannel_cn.md",
 			},
 			{
-				title = "FT CSV Parser",
+				title = _("FT CSV Parser"),
 				filename = "iot/ftcsv_cn.md",
 			},
 			{
-				title = "INI Parser",
+				title = _("INI Parser"),
 				filename = "iot/inifile_cn.md",
 			},
 			{
-				title = "Cycle Buffer",
+				title = _("Cycle Buffer"),
 				filename = "iot/cyclebuffer_cn.md",
 			},
 			{
-				title = "UUID Module",
+				title = _("UUID Module"),
 				filename = "iot/uuid_cn.md",
 			},
 		}
