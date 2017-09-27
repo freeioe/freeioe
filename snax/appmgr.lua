@@ -47,6 +47,16 @@ function response.stop(name, reason)
 	return true
 end
 
+-- Used by application for restart its self
+function response.restart(name, reason)
+	local name = name
+	local reason = reason or "Restart"
+	skynet.timeout(10, function()
+		snax.self().req.stop(name, reason)
+		snax.self().req.start(name)
+	end)
+end
+
 function response.list()
 	return applist
 end
@@ -76,12 +86,6 @@ function response.get_channel(name)
 		return c.channel
 	end
 	return nil, "No multicast channel for "..name
-end
-
--- Used by application for restart its self
-function accept.restart(name, reason)
-	snax.self().req.stop(name, reason)
-	snax.self().req.start(name)
 end
 
 function init(...)

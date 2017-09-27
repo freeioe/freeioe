@@ -26,7 +26,7 @@ end
 local on_close = function(...)
 	if app then
 		local r, err = protect_call(app, 'close', ...)
-		if not r then
+		if not r and err then
 			return nil, err
 		end
 	end
@@ -104,10 +104,7 @@ function response.set_conf(conf)
 	if app.reload then
 		return protect_call(app, 'reload', conf)
 	end
-	skynet.timeout(100, function()
-		mgr_snax.post.restart(app_name, "Confiruation change restart")
-	end)
-	return true
+	return mgr_snax.req.restart(app_name, "Confiruation change restart")
 end
 
 function init(name, conf, mgr_handle, mgr_type)
