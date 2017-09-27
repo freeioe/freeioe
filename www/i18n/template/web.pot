@@ -34,6 +34,10 @@ msgid "API"
 msgstr ""
 
 
+msgid "API Reference"
+msgstr ""
+
+
 msgid "Action"
 msgstr ""
 
@@ -167,6 +171,14 @@ msgstr ""
 
 
 msgid "Failed to send system upgrade request"
+msgstr ""
+
+
+msgid "Failed to send uninstall request"
+msgstr ""
+
+
+msgid "Failed to send upgrade request"
 msgstr ""
 
 
@@ -411,6 +423,10 @@ msgstr ""
 
 
 msgid "UUID Module"
+msgstr ""
+
+
+msgid "Uninstall"
 msgstr ""
 
 

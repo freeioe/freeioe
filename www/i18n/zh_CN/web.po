@@ -25,6 +25,9 @@ msgstr "%d 页面 119"
 msgid "API"
 msgstr "接口"
 
+msgid "API Reference"
+msgstr "API参考"
+
 msgid "Action"
 msgstr "动作"
 
@@ -126,6 +129,12 @@ msgstr "发送系统升级确认信息失败!"
 
 msgid "Failed to send system upgrade request"
 msgstr "发送系统升级请求失败"
+
+msgid "Failed to send uninstall request"
+msgstr "发送卸载请求失败"
+
+msgid "Failed to send upgrade request"
+msgstr "发送升级请求失败"
 
 msgid "Forum"
 msgstr "社区"
@@ -309,6 +318,9 @@ msgstr ""
 
 msgid "UUID Module"
 msgstr "UUID模块"
+
+msgid "Uninstall"
+msgstr "卸载"
 
 msgid "Upgrade ACK"
 msgstr "升级确认"
