@@ -25,6 +25,6 @@ return {
 			},
 		}
 
-		lwf.render("doc.html", {doc=filename, docs=docs})
+		lwf.render("doc.html", {doc=filename, docs=docs, docs_title=_("Application API")})
 	end
 }

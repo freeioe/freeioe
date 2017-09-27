@@ -50,6 +50,14 @@ msgid "Application"
 msgstr ""
 
 
+msgid "Application API"
+msgstr ""
+
+
+msgid "Application Document"
+msgstr ""
+
+
 msgid "Application List"
 msgstr ""
 
@@ -170,6 +178,10 @@ msgid "Free Memory"
 msgstr ""
 
 
+msgid "Getting Started"
+msgstr ""
+
+
 msgid "Git Version"
 msgstr ""
 
@@ -202,6 +214,10 @@ msgid "IOT Network"
 msgstr ""
 
 
+msgid "IOT System API"
+msgstr ""
+
+
 msgid "IOT System DashBoard"
 msgstr ""
 
@@ -215,6 +231,10 @@ msgstr ""
 
 
 msgid "Installed Application List"
+msgstr ""
+
+
+msgid "Introduction"
 msgstr ""
 
 
@@ -287,6 +307,10 @@ msgstr ""
 
 
 msgid "Restart"
+msgstr ""
+
+
+msgid "Review"
 msgstr ""
 
 

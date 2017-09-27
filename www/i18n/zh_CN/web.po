@@ -37,6 +37,12 @@ msgstr "所有消息"
 msgid "Application"
 msgstr "应用"
 
+msgid "Application API"
+msgstr "应用接口"
+
+msgid "Application Document"
+msgstr "应用文档"
+
 msgid "Application List"
 msgstr "应用列表"
 
@@ -127,6 +133,9 @@ msgstr "社区"
 msgid "Free Memory"
 msgstr "剩余内存"
 
+msgid "Getting Started"
+msgstr "如何入门"
+
 msgid "Git Version"
 msgstr "代码版本"
 
@@ -151,6 +160,9 @@ msgstr "INI解析器"
 msgid "IOT Network"
 msgstr "IOT网络"
 
+msgid "IOT System API"
+msgstr "IOT系统接口"
+
 msgid "IOT System DashBoard"
 msgstr "IOT系统仪表盘"
 
@@ -162,6 +174,9 @@ msgstr "信息"
 
 msgid "Installed Application List"
 msgstr "安装应用列表"
+
+msgid "Introduction"
+msgstr "介绍"
 
 msgid "Issue Tracker"
 msgstr "问题跟踪"
@@ -216,6 +231,9 @@ msgstr "记住我"
 
 msgid "Restart"
 msgstr "重启"
+
+msgid "Review"
+msgstr "评价"
 
 msgid "Rollback Time"
 msgstr "回退时间"
