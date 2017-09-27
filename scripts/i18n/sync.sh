@@ -3,7 +3,7 @@
 mkdir -p www/i18n/template
 
 ./scripts/i18n/scan.lua "www" > "www/i18n/template/web.pot"
-./scripts/i18n/update.lua "/www/i18n"
+./scripts/i18n/update.lua "www/i18n"
 
 for f in `ls apps`; do
 	echo "Process -> $f"
