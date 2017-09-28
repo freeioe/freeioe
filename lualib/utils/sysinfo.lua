@@ -150,7 +150,7 @@ _M.list_serial = function()
 	end
 
 	local list = {}
-	for line in f:lines() do 
+	for line in f:lines() do  4
 		local name = line:match('^(/dev/tty.+)$')
 		list[#list + 1] = name
 	end
@@ -179,6 +179,20 @@ end
 _M.skynet_version = function()
 	local v, gv = get_versions("./version")
 	return v, gv
+end
+
+local plat_names = {}
+plat_names['armv5tejl'] = 'mx0'
+plat_names['armv7l'] = 'openwrt'
+palt_names['x86_64'] = 'amd64'
+
+_M.skynet_platform = function()
+	local uname = _M.uname('-m')
+	local plat = plat_names[uname]
+	if plat == 'amd64' then
+		return nil
+	end
+	return plat or os.getenv("IOT_PLATFORM")
 end
 
 return _M

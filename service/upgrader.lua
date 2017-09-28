@@ -3,6 +3,7 @@ local snax = require 'skynet.snax'
 local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local helper = require 'utils.helper'
+local sysinfo = require 'utils.sysinfo' 
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
 
@@ -211,7 +212,7 @@ end
 
 local function get_core_name(name, platform)
 	local name = name
-	local platform = platform or os.getenv("IOT_PLATFORM")
+	local platform = platform or sysinfo.skynet_platform()
 	if platform then
 		name = platform.."_"..name
 	end

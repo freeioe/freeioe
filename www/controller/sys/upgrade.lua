@@ -9,9 +9,7 @@ return {
 		local no_ack = post.no_ack and post.no_ack == 'true' or false
 		local args = {
 			no_ack = no_ack,
-			skynet = {
-				platform = "openwrt",
-			},
+			skynet = {},
 		}
 		skynet.call("UPGRADER", "lua", "upgrade_core", id, args)
 		ngx.print(_('System upgrade is done!'))
