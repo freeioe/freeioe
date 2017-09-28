@@ -18,7 +18,7 @@ if [ -f /etc/default/skynet ]; then
         . /etc/default/skynet
 fi
 
-DAEMON_OPTS="-p $PID -M 2 -D $SKYNET_DIR"
+DAEMON_OPTS="-d -p $PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
 if [ -x $DAEMON ]; then
