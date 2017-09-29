@@ -182,6 +182,13 @@ local function publish_data(key, value, timestamp, quality)
 		local val = cjson.encode({ key, timestamp, value, quality}) or value
 		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 	end
+	if not enable_data_upload then
+		local sn = string.match(key, '^([^/]+)/')
+		if sn == mqtt_id then
+			local val = cjson.encode({ key, timestamp, value, quality}) or value
+			return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+		end
+	end
 end
 
 local function load_cov_conf()
@@ -209,6 +216,7 @@ local function load_cov_conf()
 	end)
 end
 
+--
 --[[
 -- loading configruation from datacenter
 --]]
@@ -319,9 +327,6 @@ connect_proc = function(clean_session, username, password)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
 			mqtt_reconnect_timeout = 100
-			skynet.timeout(1, function()
-				snax.self().post.fire_data_snapshot()
-			end)
 		else
 			log.warning("ON_CONNECT", success, rc, msg) 
 			start_reconnect()
