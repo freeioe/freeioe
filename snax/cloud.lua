@@ -11,11 +11,10 @@ local uuid = require 'uuid'
 local md5 = require 'md5'
 
 --- Connection options
-local mqtt_id = "UNKNOWN.CLLIENT.ID"
-local mqtt_host = "cloud.symgrid.cn"
-local mqtt_port = 1883
-local mqtt_keepalive = 300
-local mqtt_timeout = 1 -- 1 seconds
+local mqtt_id = nil --"UNKNOWN_ID"
+local mqtt_host = nil --"cloud.symid.com"
+local mqtt_port = nil --1883
+local mqtt_keepalive = nil --300
 local mqtt_client = nil
 
 --- Next reconnect timeout
@@ -26,7 +25,7 @@ local enable_async = false
 local close_connection = false
 
 --- Cloud options
-local enable_data_upload = nil
+local enable_data_upload = nil -- true
 local enable_stat_upload = nil
 local enable_comm_upload = nil
 local max_enable_comm_upload = 60 * 10
@@ -118,11 +117,7 @@ local msg_handler = {
 		end
 		if action == 'conf' then
 			local conf = args.data
-			datacenter.set("CLOUD", "ID", conf.id)
-			datacenter.set("CLOUD", "HOST", conf.host)
-			datacenter.set("CLOUD", "PORT", conf.port)
-			datacenter.set("CLOUD", "TIMEOUT", conf.timeout)
-			snax.self().post.reconnect()
+			snax.self().post.set_conf(conf)
 		end
 		if action == 'upgrade' then
 			snax.self().post.sys_upgrade(args.id, args.data)
@@ -186,8 +181,6 @@ local function publish_data(key, value, timestamp, quality)
 
 		local val = cjson.encode({ key, timestamp, value, quality}) or value
 		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-	else
-		log.warning("MQTT Client is nil when publish data")
 	end
 end
 
@@ -223,7 +216,7 @@ local function load_conf()
 	mqtt_id = datacenter.get("CLOUD", "ID") or os.getenv("IOT_SN") or mqtt_id
 	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
 	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
-	mqtt_timeout = datacenter.get("CLOUD", "TIMEOUT") or mqtt_timeout
+	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE") or mqtt_keepalive
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
@@ -429,6 +422,16 @@ function response.get_id()
 	return mqtt_id
 end
 
+function response.set_conf(conf)
+	datacenter.set("CLOUD", conf)
+	snax.self().post.reconnect()
+	return true
+end
+
+function response.get_conf()
+	return datacenter.get("CLOUD")
+end
+
 function accept.enable_cov(enable)
 	datacenter.set("CLOUD", "COV", enable)
 	load_cov_conf()
@@ -492,8 +495,6 @@ function accept.fire_data_snapshot()
 		if mqtt_client then
 			local val = cjson.encode({ key, timestamp or now, value, quality or 0 })
 			mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-		else
-			log.warning("MQTT Client is nil when fire data snapshot")
 		end
 	end)
 end
@@ -655,7 +656,7 @@ function init()
 	mosq.init()
 
 	load_conf()
-	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_timeout)
+	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	comm_buffer = cyclebuffer:new(32, "COMM")
 	log_buffer = cyclebuffer:new(128, "LOG")

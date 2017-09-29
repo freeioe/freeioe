@@ -29,10 +29,22 @@ local function get_cfg_str()
 	return str, md5.sumhexa(str)	
 end
 
+local function load_cfg_defaults()
+	dc.set("CLOUD", {
+		ID = os.getenv("IOT_SN") or "UNKNOWN_ID",
+		HOST = "cloud.symid.com",
+		PORT = 1883,
+		KEEPALIVE = 300,
+		DATA_UPLOAD = true,
+		PKG_HOST_URL = "pkg.symid.com",
+	})
+end
+
 local function load_cfg(path)
 	log.info("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
+		load_cfg_defaults()
 		return nil, err
 	end
 
@@ -80,10 +92,8 @@ local function save_cfg(path, content, content_md5sum)
 end
 
 local function save_cfg_cloud(content, content_md5sum)
-	local cloud_enable = dc.get("CLOUD", "CFG", "ENABLE")
-
-	if cloud_enable and cloud_enable ~= 0 then
-		local id = dc.get("CLOUD", "ID")
+	local id = dc.get("CLOUD", "ID")
+	if id and db_restful then
 		local url = "iot_device_conf/"..id
 		local c = {
 			timestamp = db_modification,
@@ -98,9 +108,8 @@ local function save_cfg_cloud(content, content_md5sum)
 end
 
 local function load_cfg_cloud()
-	local cloud_enable = dc.get("CLOUD", "CFG", "ENABLE")
-	if cloud_enable and cloud_enable ~= 0 then
-		local id = dc.get("CLOUD", "ID")
+	local id = dc.get("CLOUD", "ID")
+	if id and db_restful then
 		local status, body = db_restful:get("iot_device_conf/"..id.."/timestamp")
 		if status ~= 200 then
 			log.warning("::CFG:: Get cloud config failed", status or -1, body)
@@ -149,31 +158,14 @@ function command.CLEAR()
 	db = {}
 end
 
-local function set_defaults()
-	dc.set("CLOUD", "ID", os.getenv("SYS_ID") or "IDIDIDIDID")
-	dc.set("CLOUD", "HOST", "symid.com")
-	dc.set("CLOUD", "PORT", 1883)
-	dc.set("CLOUD", "TIMEOUT", 300)
-
-	dc.set("CLOUD", "PKG_HOST_URL", "symid.com")
-
-	dc.set("CLOUD", "CFG", "HOST", "symid.com")
-	dc.set("CLOUD", "CFG", "TIMEOUT", nil)
-	dc.set("CLOUD", "CFG", "ENABLE", nil)
-end
-
 local function init_restful()
-	if not dc.get("CLOUD", "CFG") then
-		dc.set("CLOUD", "CFG", "HOST", "symid.com")
+	local cfg = dc.get("CLOUD", "CFG")
+	if cfg and cfg.ENABLE then
+		db_restful = restful:new(cfg.HOST, cfg.TIMEOUT)
 	end
-
-	local host = dc.get("CLOUD", "CFG", "HOST")
-	local timeout = dc.get("CLOUD", "CFG", "TIMEOUT")
-	db_restful = restful:new(host, timeout)
 end
 
 skynet.start(function()
-	set_defaults()
 	load_cfg(db_file)
 	init_restful()
 
