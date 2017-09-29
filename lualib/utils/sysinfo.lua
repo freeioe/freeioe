@@ -189,9 +189,6 @@ palt_names['x86_64'] = 'amd64'
 _M.skynet_platform = function()
 	local uname = _M.uname('-m')
 	local plat = plat_names[uname]
-	if plat == 'amd64' then
-		return nil
-	end
 	return plat or os.getenv("IOT_PLATFORM")
 end
 
