@@ -26,6 +26,8 @@ _M.uname = function(arg)
 
 	local s = f:read('*a')
 	f:close()
+	
+	s = string.gsub(s, "\n", "")
 
 	return s
 end

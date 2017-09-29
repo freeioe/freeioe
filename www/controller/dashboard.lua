@@ -23,6 +23,7 @@ return {
 		local meminfo =  sysinfo.meminfo()
 		local uname = sysinfo.uname("-a")
 		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
+		local plat = sysinfo.skynet_platform()
 
 		lwf.render('dashboard.html', {
 			version = version, 
@@ -34,6 +35,7 @@ return {
 			}, 
 			uname = uname,
 			rollback_time = rollback_time,
+			platform = plat,
 		})
 	end
 }
