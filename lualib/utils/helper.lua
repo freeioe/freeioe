@@ -35,7 +35,7 @@ end
 
 _M.md5sum_lua = function(file_path)
 	local md5 = require 'hashings.md5'()
-	local f, err = io.open(file_path)
+	local f, err = io.open(file_path, "r")
 	if not f then
 		return nil, err
 	end
