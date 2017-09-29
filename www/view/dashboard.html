@@ -9,7 +9,7 @@
 	{{_("Information")}}
 </h3>
 <div class="ui attached basic segment">
-	<div class="ui teal statistic">
+	<div class="ui black statistic">
 		<div class="value">
 			{{platform}}
 		</div>
@@ -17,7 +17,7 @@
 			{{_("Platform")}}
 		</div>
 	</div>
-	<div class="ui blue statistic">
+	<div class="ui teal statistic">
 		<div class="value">
 			{{version.iot.ver}}
 		</div>
@@ -25,7 +25,7 @@
 			{{_("Version")}}
 		</div>
 	</div>
-	<div class="ui blue statistic">
+	<div class="ui teal statistic">
 		<div class="value">
 			{{version.skynet.ver}}
 		</div>
@@ -41,7 +41,7 @@
 			{{_("Total Memory")}}
 		</div>
 	</div>
-	<div class="ui blue statistic">
+	<div class="ui orange statistic">
 		<div class="value">
 			{{mem_info.used}}
 		</div>
@@ -49,7 +49,7 @@
 			{{_("Used Memory")}}
 		</div>
 	</div>
-	<div class="ui blue statistic">
+	<div class="ui green statistic">
 		<div class="value">
 			{{mem_info.free}}
 		</div>
@@ -58,7 +58,7 @@
 		</div>
 	</div>
 	{% if rollback_time then %}
-	<div class="ui blue statistic">
+	<div class="ui orange statistic">
 		<div class="value">
 			{{rollback_time}}
 		</div>
