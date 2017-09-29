@@ -66,7 +66,10 @@ local function create_download(app_name, version, cb, ext)
 
 		local status, header, body = httpdown.get(pkg_host, url..".md5")
 		if status and status == 200 then
-			local sum = helper.md5sum(path)
+			local sum, err = helper.md5sum(path)
+			if not sum then
+				return cb(nil, "Cannot caculate md5, error:\t"..err)
+			end
 			log.notice("Downloaded file md5 sum", sum)
 			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
 			if sum ~= md5 then
