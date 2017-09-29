@@ -27,7 +27,7 @@ function refresh_page() {
 	window.location.replace("/app");
 }
 function upgrade_app(inst, app) {
-	$.post("/sys/upgrade_app", {from_web:true, inst:inst, app:app, version:'latest'}, function(data) {
+	$.post("/app/upgrade", {from_web:true, inst:inst, app:app, version:'latest'}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
@@ -38,15 +38,40 @@ function upgrade_app(inst, app) {
 	});
 }
 function uninstall_app(inst) {
-	$.post("/sys/uninstall_app", {from_web:true, inst:inst}, function(data) {
+	$.post("/app/uninstall", {from_web:true, inst:inst}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 10000);
+		setTimeout('refresh_page()', 3000);
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to send uninstall request")}}</i>');
 	});
 }
+
+function start_app(inst) {
+	$.post("/app/start", {from_web:true, inst:inst}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 3000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send start request")}}</i>');
+	});
+}
+
+function stop_app(inst) {
+	$.post("/app/stop", {from_web:true, inst:inst, reason:'Stop from web'}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 3000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send stop request")}}</i>');
+	});
+}
+
 </script>
 {-script-}

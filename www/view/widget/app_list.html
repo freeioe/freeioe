@@ -18,14 +18,22 @@
 			<td>{{v.sn}} </td>
 			<td>
 				<div class="ui labeled button" tabindex="0" onclick="upgrade_app('{{k}}', '{{v.name}}');">
-					<div class="ui teal button">
+					<div class="ui orange button">
 						<i class="info circle icon"></i> {{_("Upgrade To")}}
 					</div>
-					<a class="ui basic teal left pointing label">
+					<a class="ui basic orange left pointing label">
 						Latest
 					</a>
 				</div>
-				<div class="ui purple button" tabindex="0" onclick="uninstall_app('{{k}}');">{{_("Uninstall")}}</div>
+				<div class="ui green button" tabindex="0" onclick="start_app('{{k}}');">
+					<i class="play icon"></i>{{_("Start")}}
+				</div>
+				<div class="ui gray button" tabindex="0" onclick="stop_app('{{k}}');">
+					<i class="play stop icon"></i>{{_("Stop")}}
+				</div>
+				<div class="ui brown button" tabindex="0" onclick="uninstall_app('{{k}}');">
+					<i class="trash icon"></i>{{_("Uninstall")}}
+				</div>
 			</td>
 		</tr>
 		{% end %}

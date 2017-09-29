@@ -92,6 +92,12 @@ local msg_handler = {
 		if action == 'conf' then
 			snax.self().post.app_conf(args.id, args.data)
 		end
+		if action == 'start' then
+			snax.self().post.app_start(args.id, args.data)
+		end
+		if action == 'stop' then
+			snax.self().post.app_stop(args.id, args.data)
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
@@ -561,6 +567,22 @@ end
 function accept.app_upgrade(id, args)
 	skynet.call("UPGRADER", "lua", "upgrade_app", id, args)
 	snax.self().post.fire_apps()
+end
+
+function accept.app_start(id, args)
+	local inst = args.inst
+	local conf = args.conf
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.start(inst, conf)
+	snax.self().post.action_result('app', id, r and true or false, err or "Done")
+end
+
+function accept.app_stop(id, args)
+	local inst = args.inst
+	local reason = args.reason
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.stop(inst, reason)
+	snax.self().post.action_result('app', id, r, err or "Done")
 end
 
 function accept.app_conf(id, args)
