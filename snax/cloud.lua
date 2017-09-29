@@ -324,7 +324,9 @@ connect_proc = function(clean_session, username, password)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
 			mqtt_reconnect_timeout = 100
-			snax.self().post.fire_data_snapshot()
+			skynet.timeout(1, function()
+				snax.self().post.fire_data_snapshot()
+			end)
 		else
 			log.warning("ON_CONNECT", success, rc, msg) 
 			start_reconnect()
