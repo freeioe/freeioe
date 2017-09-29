@@ -186,6 +186,8 @@ local function publish_data(key, value, timestamp, quality)
 
 		local val = cjson.encode({ key, timestamp, value, quality}) or value
 		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+	else
+		log.warning("MQTT Client is nil when publish data")
 	end
 end
 
@@ -490,6 +492,8 @@ function accept.fire_data_snapshot()
 		if mqtt_client then
 			local val = cjson.encode({ key, timestamp or now, value, quality or 0 })
 			mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+		else
+			log.warning("MQTT Client is nil when fire data snapshot")
 		end
 	end)
 end
