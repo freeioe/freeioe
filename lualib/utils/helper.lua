@@ -34,15 +34,20 @@ function _M.encode_query_string (t, sep)
 end
 
 _M.md5sum_lua = function(file_path)
-	local md5 = require 'md5'
+	local md5 = require 'hashings.md5'()
 	local f, err = io.open(file_path)
 	if not f then
 		return nil, err
 	end
-	local s = f:read('*a')
-	local sum = md5.sumhexa(s)
+	while true do
+		local s = f:read(4096)
+		if not s then
+			break
+		end
+		md5:update(s)
+	end
 	f:close()
-	return sum
+	return md5:hexdigest()
 end
 
 _M.md5sum = function(file_path)
