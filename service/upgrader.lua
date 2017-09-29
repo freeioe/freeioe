@@ -481,6 +481,8 @@ skynet.start(function()
 			rollback_time = skynet.time() + 60
 			skynet.timeout(60 * 100, function()
 				if check_rollback() then
+					log.error("System will be rollback now!")
+					skynet.sleep(100)
 					skynet.abort()
 				end
 			end)
