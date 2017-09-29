@@ -84,6 +84,10 @@
 		<input name="upgrade_ack" id="upgrade_ack" type="checkbox">
 		<label>{{_("Skip Ack?")}}</label>
 	</div>
+	<div class="ui checked checkbox">
+		<input name="with_skynet" id="with_skynet" type="checkbox" checked="true">
+		<label>{{_("With Skynet?")}}</label>
+	</div>
 	<div class="ui labeled button" tabindex="0" onclick="upgrade_sys();">
 		<div class="ui yellow button">
 			<i class="info circle icon"></i> {{_("Upgrade To")}}
@@ -159,7 +163,8 @@ function loader_test() {
 }
 function upgrade_sys() {
 	no_ack = $('#upgrade_ack').is(':checked');
-	$.post("/sys/upgrade", {from_web:true, version:'latest', no_ack:no_ack}, function(data) {
+	with_skynet = $('#with_skynet').is(':checked');
+	$.post("/sys/upgrade", {from_web:true, version:'latest', no_ack:no_ack, skynet:with_skynet}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {

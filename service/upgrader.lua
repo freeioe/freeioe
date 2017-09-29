@@ -409,7 +409,7 @@ function command.upgrade_core(id, args)
 					return install_result(id, r, err)
 				end)
 			else
-				local r, err = start_upgrade_proc(path)
+				local r, err = start_upgrade_proc(info)
 				return install_result(id, r, err)
 			end
 		else
