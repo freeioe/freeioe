@@ -50,14 +50,22 @@ _M.md5sum_lua = function(file_path)
 	return md5:hexdigest()
 end
 
-_M.md5sum = function(file_path)
-	local f = io.popen('md5sum '..file_path)
+_M.md5sum_sys = function(file_path)
+	local f, err = io.popen('md5sum '..file_path)
 	if not f then
-		return _M.md5sum_lua(file_path)
+		return nil, err
 	end
 	local s = f:read('*a')
 	f:close()
 	return s:match('^(%w+)[^%w]+(%g+)')
+end
+
+_M.md5sum = function(file_path)
+	local sum, err = _M.md5sum_sys(file_path)
+	if not sum then
+		return _M.md5sum_lua(file_path)
+	end
+	return sum, err
 end
 
 return _M
