@@ -25,12 +25,15 @@
 						Latest
 					</a>
 				</div>
+				{% if not v.running then %}
 				<div class="ui green button" tabindex="0" onclick="start_app('{{k}}');">
 					<i class="play icon"></i>{{_("Start")}}
 				</div>
+				{% else %}
 				<div class="ui gray button" tabindex="0" onclick="stop_app('{{k}}');">
 					<i class="play stop icon"></i>{{_("Stop")}}
 				</div>
+				{% end %}
 				<div class="ui brown button" tabindex="0" onclick="uninstall_app('{{k}}');">
 					<i class="trash icon"></i>{{_("Uninstall")}}
 				</div>
