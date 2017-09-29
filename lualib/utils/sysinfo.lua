@@ -190,7 +190,7 @@ local plat_names = {
 _M.skynet_platform = function()
 	local uname = _M.uname('-m')
 	local plat = plat_names[uname]
-	return plat or os.getenv("IOT_PLATFORM")
+	return assert(plat or os.getenv("IOT_PLATFORM"))
 end
 
 return _M

@@ -393,6 +393,7 @@ function command.upgrade_core(id, args)
 		lfs.mkdir(base_dir.."/ipt")
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
+			log.error("Create upgrade_no_ack failed", status, code)
 			return install_result(id, false, "Failed to create upgrade_no_ack file!")
 		end
 	end
