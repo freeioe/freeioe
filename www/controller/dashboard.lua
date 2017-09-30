@@ -1,6 +1,18 @@
 local skynet = require 'skynet'
 local sysinfo = require 'utils.sysinfo'
 
+local function pretty_memory(size)
+	local size = tonumber(size)
+	if size > 1024 then
+		if size > 1024 * 1024 then
+			return math.floor(size / (1024 * 1024))..'G'
+		else
+			return math.floor(size / 1024)..'M'
+		end
+	end
+	return size
+end
+
 return {
 	get = function(self)
 		if lwf.auth.user == 'Guest' then
@@ -29,9 +41,9 @@ return {
 			version = version, 
 			cpu_model = cpu_model,
 			mem_info= {
-				total = math.floor(meminfo.total / 1024)..'M',
-				used = math.floor(meminfo.used / 1024)..'M',
-				free = math.floor(meminfo.free / 1024)..'M',
+				total = pretty_memory(meminfo.total),
+				used = pretty_memory(meminfo.used),
+				free = pretty_memory(meminfo.free),
 			}, 
 			uname = uname,
 			rollback_time = rollback_time,
