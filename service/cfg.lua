@@ -29,22 +29,30 @@ local function get_cfg_str()
 	return str, md5.sumhexa(str)	
 end
 
-local function load_cfg_defaults()
-	dc.set("CLOUD", {
+local function cfg_defaults()
+	return {
 		ID = os.getenv("IOT_SN") or "UNKNOWN_ID",
 		HOST = "cloud.symid.com",
 		PORT = 1883,
 		KEEPALIVE = 300,
 		DATA_UPLOAD = true,
 		PKG_HOST_URL = "pkg.symid.com",
-	})
+	}
+end
+
+local function set_cfg_defaults(data)
+	local defaults = cfg_defaults()
+	for k,v in pairs(defaults) do
+		data[k] = data[k] or v
+	end
+	return data
 end
 
 local function load_cfg(path)
 	log.info("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
-		load_cfg_defaults()
+		dc.set("CLOUD", cfg_defaults())
 		return nil, err
 	end
 
@@ -64,6 +72,7 @@ local function load_cfg(path)
 
 	db = cjson.decode(str) or {}
 
+	db.cloud = set_cfg_defaults(db.cloud)
 	dc.set("CLOUD", db.cloud)
 	dc.set("APPS", db.apps)
 

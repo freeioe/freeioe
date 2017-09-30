@@ -47,8 +47,8 @@ function enable_option(option, enable) {
 		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
 	});
 };
-function mqtt_host(host) {
-	$.post("/cloud", {from_web:true, action:'mqtt_host', host:host}, function(data) {
+function mqtt_option(option, value) {
+	$.post("/cloud", {from_web:true, action:'mqtt', option:option, value:value}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
@@ -94,6 +94,18 @@ $(document).ready(function(){
 		} else {
 			enable_option('log', 0);
 		}
+	});
+	$("#mqtt_host_btn").click(function() {
+		var value = $('#mqtt_host').val();
+		mqtt_option('host', value);
+	});
+	$("#mqtt_port_btn").click(function() {
+		var value = $('#mqtt_port').val();
+		mqtt_option('port', value);
+	});
+	$("#mqtt_keepalive_btn").click(function() {
+		var value = $('#mqtt_keepalive').val();
+		mqtt_option('keepalive', value);
 	});
 });
 </script>

@@ -23,9 +23,34 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td>{{cfg.HOST}} </td>
-			<td>{{cfg.PORT}} </td>
-			<td>{{cfg.TIMEOUT}} </td>
+			<td>
+				<div class="ui action input">
+					<input id="mqtt_host" value="{{cfg.HOST}}" type="text">
+					<button id="mqtt_host_btn" class="ui teal right labeled icon button">
+						<i class="check icon"></i>
+						Change
+					</button>
+				</div>
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="mqtt_port" value="{{cfg.PORT}}" type="number">
+					<button id="mqtt_port_btn" class="ui teal right labeled icon button">
+						<i class="check icon"></i>
+						Change
+					</button>
+				</div>
+			</td>
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="mqtt_keepalive" value="{{cfg.KEEPALIVE}}" type="number">
+					<button id="mqtt_keepalive_btn" class="ui teal right labeled icon button">
+						<i class="check icon"></i>
+						Change
+					</button>
+				</div>
+			</td>
 		</tr>
 	</tbody>
 </table>

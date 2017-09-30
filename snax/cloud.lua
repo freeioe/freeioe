@@ -221,10 +221,10 @@ end
 -- loading configruation from datacenter
 --]]
 local function load_conf()
-	mqtt_id = datacenter.get("CLOUD", "ID") or os.getenv("IOT_SN") or mqtt_id
-	mqtt_host = datacenter.get("CLOUD", "HOST") or mqtt_host
-	mqtt_port = datacenter.get("CLOUD", "PORT") or mqtt_port
-	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE") or mqtt_keepalive
+	mqtt_id = datacenter.get("CLOUD", "ID")
+	mqtt_host = datacenter.get("CLOUD", "HOST")
+	mqtt_port = datacenter.get("CLOUD", "PORT")
+	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")

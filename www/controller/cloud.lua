@@ -37,12 +37,11 @@ return {
 			end
 			ngx.print(info)
 		end
-		if action == 'mqtt_host' then
-			local host = post.host
-			if not host or host == '' then
-				host = nil
-			end
-			dc.set('CLOUD', 'HOST', host)
+		if action == 'mqtt' then
+			local option = post.option
+			local value = post.value
+			print(option, value)
+			dc.set('CLOUD', string.upper(option), value)
 			ngx.print(_('Cloud host is changed, you need restart system to apply changes!'))
 		end
 	end
