@@ -6,4 +6,67 @@
 <h1 class="header"> Cloud Settings Page </h1>
 
 {(widget/cloud.html, {cfg=cfg})}
+
+<h3 class="ui top attached header">
+	{{_("Control")}}
+</h3>
+<div class="ui attached basic segment">
+	<div id="mydimmer" class="ui disabled dimmer">
+		<div class="ui massive text loader" id="myloader">{{_("Loading")}}</div>
+	</div>
+
+	<div class="ui purple button" onclick="sys_quit();">{{_("Restart")}}</div>
+</div>
+
+
+<div class="ui icon message">
+	<i class="inbox icon"></i>
+	<div class="content">
+		<div class="header">
+			<div id="message_ui">
+				{{ message }}
+			</div>
+		</div>
+	</div>
+</div>
 {-main-}
+
+{-script-}
+<script>
+function refresh_page() {
+	window.location.replace("/cloud");
+}
+function enable_option(option, enable) {
+	$.post("/cloud", {from_web:true, action:'enable', option:option, enable:enable}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 2000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
+	});
+}
+function mqtt_host(host) {
+	$.post("/cloud", {from_web:true, action:'mqtt_host', host:host}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 2000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
+	});
+}
+function sys_quit() {
+	$.post("/sys/quit", {from_web:true}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 3000);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send system restart request")} </i>');
+	});
+}
+{-script-}
