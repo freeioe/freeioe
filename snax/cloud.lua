@@ -511,9 +511,12 @@ function accept.fire_devices(timeout)
 		return
 	end
 	fire_device_timer = function()
+		local value = cjson.encode(datacenter.get('DEVICES'))
 		if mqtt_client then
-			local value = cjson.encode(datacenter.get('DEVICES'))
 			mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
+		else
+			-- If mqtt connection is offline, retry after five seconds.
+			snax.self().post.fire_devices(500)
 		end
 	end
 	skynet.timeout(timeout, function()

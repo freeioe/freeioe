@@ -42,10 +42,59 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td>{{cfg.DATA_UPLOAD}} </td>
-			<td>{{cfg.STAT_UPLOAD}} </td>
-			<td>{{cfg.COMM_UPLOAD}} </td>
-			<td>{{cfg.LOG_UPLOAD}} </td>
+			<td>
+				{% if cfg.DATA_UPLOAD then %}
+				<div class="ui fitted toggle checked checkbox">
+					<input id="data_upload" type="checkbox" checked="true">
+					<label></label>
+				</div>
+				{% else %}
+				<div class="ui fitted toggle checkbox">
+					<input id="data_upload" type="checkbox">
+					<label></label>
+				</div>
+				{% end %}
+			</td>
+			<td>
+				{% if cfg.STAT_UPLOAD then %}
+				<div class="ui fitted toggle checked checkbox">
+					<input id="stat_upload" type="checkbox" checked="true">
+					<label></label>
+				</div>
+				{% else %}
+				<div class="ui fitted toggle checkbox">
+					<input id="stat_upload" type="checkbox">
+					<label></label>
+				</div>
+				{% end %}
+			</td>
+			<td>
+				{% if cfg.COMM_UPLOAD and cfg.COMM_UPLOAD > nowtime then %}
+				<div class="ui toggle checked checkbox">
+					<input id="comm_upload" type="checkbox" checked="true">
+					<label>{{cfg.COMM_UPLOAD - nowtime}} seconds</label>
+				</div>
+				{% else %}
+				<div class="ui toggle checkbox">
+					<input id="comm_upload" type="checkbox">
+					<label>60 seconds</label>
+				</div>
+				{% end %}
+			</td>
+			<td>
+				{% if cfg.LOG_UPLOAD and cfg.LOG_UPLOAD > nowtime then %}
+				<div class="ui toggle checked checkbox">
+					<input id="log_upload" type="checkbox" checked="true">
+					<label>{{cfg.LOG_UPLOAD - nowtime}} seconds</label>
+				</div>
+				{% else %}
+				<div class="ui toggle checkbox">
+					<input id="log_upload" type="checkbox">
+					<label>60 seconds</label>
+				</div>
+				{% end %}
+
+			</td>
 		</tr>
 	</tbody>
 </table>

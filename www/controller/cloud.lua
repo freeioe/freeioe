@@ -9,7 +9,7 @@ return {
 		else
 			--local cloud = snax.uniqueservice('cloud')
 			local cfg = dc.get('CLOUD')
-			lwf.render('cloud.html', {cfg=cfg})
+			lwf.render('cloud.html', {cfg=cfg, nowtime=skynet.time()})
 		end
 	end,
 	post = function(self)
@@ -21,13 +21,17 @@ return {
 			local info = _("Action is accepted")
 			local cloud = snax.uniqueservice('cloud')
 			if option == 'data' then
+				--print(option, post.enable=='true')
 				cloud.post.enable_data(post.enable == 'true')
 			elseif option == 'stat' then
+				--print(option, post.enable=='true')
 				cloud.post.enable_stat(post.enable == 'true')
 			elseif option == 'log' then
-				cloud.post.enable_log(tonumber(post.enable) or 60)
+				--print(option, tonumber(post.enable) or 0)
+				cloud.post.enable_log(tonumber(post.enable) or 0)
 			elseif option == 'comm' then
-				cloud.post.enable_comm(tonumber(post.enable) or 60)
+				--print(option, tonumber(post.enable) or 0)
+				cloud.post.enable_comm(tonumber(post.enable) or 0)
 			else
 				info = string.format(_("Action %s is not allowed"), option)
 			end
