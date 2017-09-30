@@ -8,7 +8,7 @@ return {
 		else
 			local devices = dc.get('DEVICES')
 			--print(cjson.encode(devices))
-			lwf.render('device.html', {devices=devices})
+			lwf.render('device.html', {devices=devices, cjson=cjson})
 		end
 	end
 }

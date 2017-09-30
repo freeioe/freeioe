@@ -3,12 +3,18 @@
 	<thead>
 		<tr>
 			<th>{{_("SN")}}</th>
+			<th>{{_("INPUTS")}}</th>
+			<th>{{_("OUTPUTS")}}</th>
+			<th>{{_("COMMANDS")}}</th>
 		</tr>
 	</thead>
 	<tbody>
 		{% for k, v in pairs(devices) do %}
 		<tr>
 			<td>{{k}} </td>
+			<td>{{cjson.encode(v.inputs)}} </td>
+			<td>{{cjson.encode(v.outputs)}} </td>
+			<td>{{cjson.encode(v.commands)}} </td>
 		</tr>
 		{% end %}
 	</tbody>
