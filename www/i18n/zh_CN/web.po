@@ -73,6 +73,9 @@ msgstr "修改"
 msgid "Cloud"
 msgstr "云"
 
+msgid "Cloud Settings"
+msgstr "云平台配置"
+
 msgid "Cloud option is changed, you need restart system to apply changes!"
 msgstr "云平台设定已修改，重启后才能使之生效!"
 

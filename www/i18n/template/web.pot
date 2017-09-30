@@ -98,6 +98,10 @@ msgid "Cloud"
 msgstr ""
 
 
+msgid "Cloud Settings"
+msgstr ""
+
+
 msgid "Cloud option is changed, you need restart system to apply changes!"
 msgstr ""
 
