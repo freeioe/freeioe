@@ -66,6 +66,14 @@ msgid "Application List"
 msgstr ""
 
 
+msgid "Application started!"
+msgstr ""
+
+
+msgid "Application stoped!"
+msgstr ""
+
+
 msgid "CLA"
 msgstr ""
 
@@ -159,6 +167,14 @@ msgstr ""
 
 
 msgid "Failed to send device reboot request"
+msgstr ""
+
+
+msgid "Failed to send start request"
+msgstr ""
+
+
+msgid "Failed to send stop request"
 msgstr ""
 
 
@@ -306,6 +322,10 @@ msgid "PKG Host URL"
 msgstr ""
 
 
+msgid "Platform"
+msgstr ""
+
+
 msgid "Port"
 msgstr ""
 
@@ -378,7 +398,15 @@ msgid "SocketChannel"
 msgstr ""
 
 
+msgid "Start"
+msgstr ""
+
+
 msgid "Stat Upload"
+msgstr ""
+
+
+msgid "Stop"
 msgstr ""
 
 
@@ -463,6 +491,10 @@ msgstr ""
 
 
 msgid "Welcome in IOT"
+msgstr ""
+
+
+msgid "With Skynet?"
 msgstr ""
 
 

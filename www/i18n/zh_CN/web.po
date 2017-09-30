@@ -49,6 +49,12 @@ msgstr "应用文档"
 msgid "Application List"
 msgstr "应用列表"
 
+msgid "Application started!"
+msgstr "应用已启动!"
+
+msgid "Application stoped!"
+msgstr "应用已停止!"
+
 msgid "CLA"
 msgstr ""
 
@@ -120,6 +126,12 @@ msgstr "FT CSV解析器"
 
 msgid "Failed to send device reboot request"
 msgstr "发送设备重启请求失败"
+
+msgid "Failed to send start request"
+msgstr "发送启动命令失败"
+
+msgid "Failed to send stop request"
+msgstr "发送停止命令失败"
 
 msgid "Failed to send system restart request"
 msgstr "发送系统重启请求失败"
@@ -229,6 +241,9 @@ msgstr "软件包"
 msgid "PKG Host URL"
 msgstr "软件包服务器地址"
 
+msgid "Platform"
+msgstr "硬件平台"
+
 msgid "Port"
 msgstr "端口"
 
@@ -283,8 +298,14 @@ msgstr "Skynet版本"
 msgid "SocketChannel"
 msgstr "网络接口"
 
+msgid "Start"
+msgstr "开启"
+
 msgid "Stat Upload"
 msgstr "分析数据上送"
+
+msgid "Stop"
+msgstr "停止"
 
 msgid "System"
 msgstr "系统"
@@ -348,3 +369,6 @@ msgstr "欢迎 %s"
 
 msgid "Welcome in IOT"
 msgstr "欢迎"
+
+msgid "With Skynet?"
+msgstr "升级Skynet?"
