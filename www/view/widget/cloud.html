@@ -7,7 +7,15 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td>{{cfg.ID}} </td>
+			<td>
+				<div class="ui action input">
+					<input id="iot_id" value="{{cfg.ID}}" type="text">
+					<button id="iot_id_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
 		</tr>
 	</tbody>
 </table>
@@ -26,18 +34,18 @@
 			<td>
 				<div class="ui action input">
 					<input id="mqtt_host" value="{{cfg.HOST}}" type="text">
-					<button id="mqtt_host_btn" class="ui teal right labeled icon button">
+					<button id="mqtt_host_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
-						Change
+						{{_("Change")}}
 					</button>
 				</div>
 			</td>
 			<td>
 				<div class="ui action input">
 					<input id="mqtt_port" value="{{cfg.PORT}}" type="number">
-					<button id="mqtt_port_btn" class="ui teal right labeled icon button">
+					<button id="mqtt_port_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
-						Change
+						{{_("Change")}}
 					</button>
 				</div>
 			</td>
@@ -45,9 +53,9 @@
 			<td>
 				<div class="ui action input">
 					<input id="mqtt_keepalive" value="{{cfg.KEEPALIVE}}" type="number">
-					<button id="mqtt_keepalive_btn" class="ui teal right labeled icon button">
+					<button id="mqtt_keepalive_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
-						Change
+						{{_("Change")}}
 					</button>
 				</div>
 			</td>
@@ -97,12 +105,12 @@
 				{% if cfg.COMM_UPLOAD and cfg.COMM_UPLOAD > nowtime then %}
 				<div class="ui toggle checked checkbox">
 					<input id="comm_upload" type="checkbox" checked="true">
-					<label>{{cfg.COMM_UPLOAD - nowtime}} seconds</label>
+					<label>{{cfg.COMM_UPLOAD - nowtime}} {{_("seconds")}}</label>
 				</div>
 				{% else %}
 				<div class="ui toggle checkbox">
 					<input id="comm_upload" type="checkbox">
-					<label>60 seconds</label>
+					<label>60 {{_("seconds")}}</label>
 				</div>
 				{% end %}
 			</td>
@@ -110,12 +118,12 @@
 				{% if cfg.LOG_UPLOAD and cfg.LOG_UPLOAD > nowtime then %}
 				<div class="ui toggle checked checkbox">
 					<input id="log_upload" type="checkbox" checked="true">
-					<label>{{cfg.LOG_UPLOAD - nowtime}} seconds</label>
+					<label>{{cfg.LOG_UPLOAD - nowtime}} {{_("seconds")}}</label>
 				</div>
 				{% else %}
 				<div class="ui toggle checkbox">
 					<input id="log_upload" type="checkbox">
-					<label>60 seconds</label>
+					<label>60 {{_("seconds")}}</label>
 				</div>
 				{% end %}
 
@@ -133,7 +141,15 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td>{{cfg.PKG_HOST_URL}} </td>
+			<td>
+				<div class="ui action input">
+					<input id="pkg_host_url" value="{{cfg.PKG_HOST_URL}}" type="text">
+					<button id="pkg_host_url_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
 		</tr>
 	</tbody>
 </table>

@@ -42,7 +42,7 @@ return {
 			local value = post.value
 			print(option, value)
 			dc.set('CLOUD', string.upper(option), value)
-			ngx.print(_('Cloud host is changed, you need restart system to apply changes!'))
+			ngx.print(_('Cloud option is changed, you need restart system to apply changes!'))
 		end
 	end
 }

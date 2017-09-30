@@ -42,6 +42,14 @@ msgid "Action"
 msgstr ""
 
 
+msgid "Action %s is not allowed"
+msgstr ""
+
+
+msgid "Action is accepted"
+msgstr ""
+
+
 msgid "All Mails"
 msgstr ""
 
@@ -82,7 +90,15 @@ msgid "CPU Model"
 msgstr ""
 
 
+msgid "Change"
+msgstr ""
+
+
 msgid "Cloud"
+msgstr ""
+
+
+msgid "Cloud option is changed, you need restart system to apply changes!"
 msgstr ""
 
 
@@ -91,6 +107,10 @@ msgstr ""
 
 
 msgid "Contribute"
+msgstr ""
+
+
+msgid "Control"
 msgstr ""
 
 
@@ -167,6 +187,10 @@ msgstr ""
 
 
 msgid "Failed to send device reboot request"
+msgstr ""
+
+
+msgid "Failed to send request"
 msgstr ""
 
 
@@ -495,6 +519,10 @@ msgstr ""
 
 
 msgid "With Skynet?"
+msgstr ""
+
+
+msgid "seconds"
 msgstr ""
 
 

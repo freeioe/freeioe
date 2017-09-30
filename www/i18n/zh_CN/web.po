@@ -31,6 +31,12 @@ msgstr "API参考"
 msgid "Action"
 msgstr "动作"
 
+msgid "Action %s is not allowed"
+msgstr "不合法的操作 %s"
+
+msgid "Action is accepted"
+msgstr "修改已应用"
+
 msgid "All Mails"
 msgstr "所有邮件"
 
@@ -61,14 +67,23 @@ msgstr ""
 msgid "CPU Model"
 msgstr "CPU型号"
 
+msgid "Change"
+msgstr "修改"
+
 msgid "Cloud"
 msgstr "云"
+
+msgid "Cloud option is changed, you need restart system to apply changes!"
+msgstr "云平台设定已修改，重启后才能使之生效!"
 
 msgid "Comm Upload"
 msgstr "报文上送"
 
 msgid "Contribute"
 msgstr "共享"
+
+msgid "Control"
+msgstr "控制项"
 
 msgid "Create Applicatoin"
 msgstr "创建应用"
@@ -126,6 +141,9 @@ msgstr "FT CSV解析器"
 
 msgid "Failed to send device reboot request"
 msgstr "发送设备重启请求失败"
+
+msgid "Failed to send request"
+msgstr "发送请求失败"
 
 msgid "Failed to send start request"
 msgstr "发送启动命令失败"
@@ -372,3 +390,6 @@ msgstr "欢迎"
 
 msgid "With Skynet?"
 msgstr "升级Skynet?"
+
+msgid "seconds"
+msgstr "秒"
