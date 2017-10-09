@@ -72,7 +72,7 @@
 						</div>
 					</div>
 					<div class="ui divider"></div>
-					<a href="/user/mail" class="ui right floated tiny button">{{_('All Mails')}}</a>
+					<a href="/sys/log" class="ui right floated tiny button">{{_('All Logs')}}</a>
 				</div>
 				<a class="icon item pointer" data-toggle="popup" data-content="#notif" data-position="bottom right">
 					<i class="bell icon"></i>
@@ -89,7 +89,7 @@
 						</div>
 					</div>
 					<div class="ui divider"></div>
-					<a href="/user/msg" class="ui right floated tiny button">{{_('All Messages')}}</a>
+					<a href="/sys/comm" class="ui right floated tiny button">{{_('All Messages')}}</a>
 				</div>
 				<a class="icon item pointer" data-toggle="popup" data-content="#user" data-position="bottom right">
 					<img src="{{avatar_path}}" class="ui avatar image" alt="">
@@ -97,9 +97,8 @@
 				<div id="user" class="ui popup">
 					<div class="ui secondary vertical menu">
 						<a href="/user/profile" class="item">{{_('Profile')}} <i class="user icon"></i></a>
-						<a href="/user/setting" class="item">{{_('Settings')}} <i class="settings icon"></i></a>
-						<a href="/user/mail" class="item">{{_('Mails')}} <i class="mail icon"></i><div class="ui inverted label">2</div></a>
-						<a href="/user/msg" class="item">{{_('Messages')}} <i class="bell icon"></i><div class="ui inverted label">25</div></a>
+						<a href="/sys/log" class="item">{{_('Logs')}} <i class="mail icon"></i><div class="ui inverted label">2</div></a>
+						<a href="/sys/comm" class="item">{{_('Messages')}} <i class="bell icon"></i><div class="ui inverted label">25</div></a>
 						<div class="ui divider"></div>
 						<a href="/user/logout" class="item">{{_('Logout')}} <i class="sign out icon"></i></a>
 					</div>
