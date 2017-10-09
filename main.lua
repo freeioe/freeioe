@@ -15,6 +15,7 @@ skynet.start(function()
 
 	local cloud = snax.uniqueservice("cloud")
 	local appmgr = snax.uniqueservice("appmgr")
+	local commlog = snax.uniqueservice("commlog")
 
 	skynet.exit()
 end)
