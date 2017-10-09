@@ -1,0 +1,80 @@
+{% layout="base.html" %}
+{-main_header-}
+{-main_header-}
+
+{-main-}
+<h1 class="header"> {{_("User Profile")}} </h1>
+
+<h3 class="ui dividing header">{{_("Password")}} </h3>
+<table class="ui celled basic table">
+	<tbody>
+		<tr>
+			<td>
+				<a class="ui label">
+					{% local avatar_path = '/assets/upload/avatar/'..lwf.auth.user..'.jpg' %}
+					<img class="ui right spaced avatar image" src="{{avatar_path}}">
+					{{user}}
+				</a>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div class="ui labeled input">
+					<div class="ui label">
+						{{_("Password")}}:
+					</div>
+					<input id="user_passwd" type="password">
+				</div>
+				<div class="ui labeled input">
+					<div class="ui label">
+						{{_("Re-Type")}}:
+					</div>
+					<input id="user_passwd_retype" type="password">
+				</div>
+				<button id="user_id_btn" class="ui yellow right labeled icon button">
+					<i class="check icon"></i>
+					{{_("Change")}}
+				</button>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<div class="ui icon message">
+	<i class="inbox icon"></i>
+	<div class="content">
+		<div class="header">
+			<div id="message_ui">
+				{{ message }}
+			</div>
+		</div>
+	</div>
+</div>
+{-main-}
+
+{-script-}
+<script>
+function refresh_page() {
+	window.location.replace("/user/profile");
+};
+function profile_update(action, passwd, repass) {
+	$.post("/user/profile", {from_web:true, action:action, passwd:passwd, repass:repass}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 500);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
+	});
+};
+
+$(document).ready(function(){
+	$("#user_id_btn").click(function() {
+		var passwd = $('#user_passwd').val();
+		var repass = $('#user_passwd_retype').val();
+		profile_update('password', passwd, repass);
+	});
+});
+</script>
+{-script-}
