@@ -6,6 +6,7 @@ local app_api = require 'app.api'
 
 local api = nil
 local buf_list = {}
+local max_buf_size = 256
 
 --[[
 -- Api Handler
@@ -22,7 +23,7 @@ local Handler = {
 			ts = ts,
 			data = hex
 		}
-		if #list > 64 then
+		if #list > 256 then
 			table.remove(list, 1)
 		end
 		buf_list[app] = list
