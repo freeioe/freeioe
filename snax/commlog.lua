@@ -23,7 +23,7 @@ local Handler = {
 			data = hex
 		}
 		if #list > 64 then
-			table.remove(buf_list, 1)
+			table.remove(list, 1)
 		end
 		buf_list[app] = list
 	end,
