@@ -42,7 +42,7 @@ function response.get(app)
 end
 
 function init()
-	log.debug("COMM DATA LOGGER FOR WEB")
+	log.notice("COMM data buffer service started!")
 
 	skynet.fork(function()
 		api = app_api:new('__COMM_DATA_LOGGER')

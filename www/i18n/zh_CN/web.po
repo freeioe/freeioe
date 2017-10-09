@@ -64,6 +64,9 @@ msgstr "应用已停止!"
 msgid "CLA"
 msgstr ""
 
+msgid "COMMANDS"
+msgstr "指令集"
+
 msgid "CPU Model"
 msgstr "CPU型号"
 
@@ -199,6 +202,9 @@ msgstr "序列号"
 msgid "INI Parser"
 msgstr "INI解析器"
 
+msgid "INPUTS"
+msgstr "输入项"
+
 msgid "IOT Network"
 msgstr "IOT网络"
 
@@ -255,6 +261,9 @@ msgstr "更多信息"
 
 msgid "Name"
 msgstr "名称"
+
+msgid "OUTPUTS"
+msgstr "输出项"
 
 msgid "PKG"
 msgstr "软件包"
@@ -315,6 +324,9 @@ msgstr "Skynet代码版本"
 
 msgid "Skynet Version"
 msgstr "Skynet版本"
+
+msgid "Skynet Wiki"
+msgstr ""
 
 msgid "SocketChannel"
 msgstr "网络接口"
