@@ -5,23 +5,23 @@ return {
 		local docs = {
 			{
 				title = _("API"),
-				filename = "app/api_cn.md",
+				filename = "app/api.md",
 			},
 			{
 				title = _("SYS"),
-				filename = "app/sys_cn.md",
+				filename = "app/sys.md",
 			},
 			{
 				title = _("DEVICE"),
-				filename = "app/device_cn.md",
+				filename = "app/device.md",
 			},
 			{
 				title = _("STAT"),
-				filename = "app/stat_cn.md",
+				filename = "app/stat.md",
 			},
 			{
 				title = _("LOGGER"),
-				filename = "app/logger_cn.md",
+				filename = "app/logger.md",
 			},
 		}
 

@@ -5,27 +5,27 @@ return {
 		local docs = {
 			{
 				title = _("SerialChannel"),
-				filename = "iot/serialchannel_cn.md",
+				filename = "iot/serialchannel.md",
 			},
 			{
 				title = _("SocketChannel"),
-				filename = "iot/socketchannel_cn.md",
+				filename = "iot/socketchannel.md",
 			},
 			{
 				title = _("FT CSV Parser"),
-				filename = "iot/ftcsv_cn.md",
+				filename = "iot/ftcsv.md",
 			},
 			{
 				title = _("INI Parser"),
-				filename = "iot/inifile_cn.md",
+				filename = "iot/inifile.md",
 			},
 			{
 				title = _("Cycle Buffer"),
-				filename = "iot/cyclebuffer_cn.md",
+				filename = "iot/cyclebuffer.md",
 			},
 			{
 				title = _("UUID Module"),
-				filename = "iot/uuid_cn.md",
+				filename = "iot/uuid.md",
 			},
 		}
 
