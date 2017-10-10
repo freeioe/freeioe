@@ -1,5 +1,9 @@
 return {
 	get = function(self)
+		if lwf.auth.user == 'Guest' then
+			self:redirect('/user/login')
+			return
+		end
 		lwf.render('user/profile.html', {user=lwf.auth.user})
 	end,
 	post = function(self)
