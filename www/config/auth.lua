@@ -1,4 +1,4 @@
 return {
 	realm = 'localhost',
-	auth = 'simple',
+	auth = 'skynet',
 }
