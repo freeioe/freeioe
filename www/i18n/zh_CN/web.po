@@ -37,8 +37,8 @@ msgstr "不合法的操作 %s"
 msgid "Action is accepted"
 msgstr "修改已应用"
 
-msgid "All Mails"
-msgstr "所有邮件"
+msgid "All Logs"
+msgstr "所有日志"
 
 msgid "All Messages"
 msgstr "所有消息"
@@ -247,11 +247,11 @@ msgstr "登入"
 msgid "Logout"
 msgstr "登出"
 
+msgid "Logs"
+msgstr "日志"
+
 msgid "MQTT"
 msgstr ""
-
-msgid "Mails"
-msgstr "邮件"
 
 msgid "Messages"
 msgstr "消息"
@@ -271,6 +271,15 @@ msgstr "软件包"
 msgid "PKG Host URL"
 msgstr "软件包服务器地址"
 
+msgid "Password"
+msgstr "密码"
+
+msgid "Password Retyped Incorrect!"
+msgstr "两次密码不一致"
+
+msgid "Password updated!!"
+msgstr "密码已修改"
+
 msgid "Platform"
 msgstr "硬件平台"
 
@@ -279,6 +288,9 @@ msgstr "端口"
 
 msgid "Profile"
 msgstr "资料"
+
+msgid "Re-Type"
+msgstr "重新输入"
 
 msgid "Remember Me"
 msgstr "记住我"
@@ -306,9 +318,6 @@ msgstr "串口通道"
 
 msgid "Settings"
 msgstr "配置"
-
-msgid "Settings Information"
-msgstr "配置信息"
 
 msgid "Sign In"
 msgstr "登入"
@@ -391,6 +400,9 @@ msgstr "已用内存"
 msgid "User Documents"
 msgstr "用户文档"
 
+msgid "User Profile"
+msgstr "用户资料"
+
 msgid "Value"
 msgstr "值"
 
@@ -408,3 +420,4 @@ msgstr "升级Skynet?"
 
 msgid "seconds"
 msgstr "秒"
+

@@ -50,7 +50,7 @@ msgid "Action is accepted"
 msgstr ""
 
 
-msgid "All Mails"
+msgid "All Logs"
 msgstr ""
 
 
@@ -330,11 +330,11 @@ msgid "Logout"
 msgstr ""
 
 
-msgid "MQTT"
+msgid "Logs"
 msgstr ""
 
 
-msgid "Mails"
+msgid "MQTT"
 msgstr ""
 
 
@@ -362,6 +362,18 @@ msgid "PKG Host URL"
 msgstr ""
 
 
+msgid "Password"
+msgstr ""
+
+
+msgid "Password Retyped Incorrect!"
+msgstr ""
+
+
+msgid "Password updated!!"
+msgstr ""
+
+
 msgid "Platform"
 msgstr ""
 
@@ -371,6 +383,10 @@ msgstr ""
 
 
 msgid "Profile"
+msgstr ""
+
+
+msgid "Re-Type"
 msgstr ""
 
 
@@ -407,10 +423,6 @@ msgstr ""
 
 
 msgid "Settings"
-msgstr ""
-
-
-msgid "Settings Information"
 msgstr ""
 
 
@@ -519,6 +531,10 @@ msgstr ""
 
 
 msgid "User Documents"
+msgstr ""
+
+
+msgid "User Profile"
 msgstr ""
 
 
