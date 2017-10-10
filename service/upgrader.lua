@@ -353,6 +353,7 @@ end
 
 local function start_upgrade_proc(iot_path, skynet_path)
 	assert(iot_path)
+	local skynet_path = skynet_path or '/IamNotExits.unknown'
 	log.warning("Core System Upgrade....")
 	log.trace(iot_path, skynet_path)
 	--local ps_e = get_ps_e()
