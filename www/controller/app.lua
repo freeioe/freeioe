@@ -13,7 +13,8 @@ return {
 			for k, v in pairs(apps) do
 				v.running = applist[k].inst
 			end
-			lwf.render('app.html', {apps=apps})
+			local pkg_host_url = dc.get('PKG_HOST_URL')
+			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url})
 		end
 	end
 }

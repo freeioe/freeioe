@@ -5,6 +5,7 @@ local log = require 'utils.log'
 local helper = require 'utils.helper'
 local sysinfo = require 'utils.sysinfo' 
 local lfs = require 'lfs'
+local cjson = require 'cjson'
 local datacenter = require 'skynet.datacenter'
 
 local tasks = {}
@@ -40,7 +41,7 @@ local function create_task(func, task_name, ...)
 end
 
 local function create_download(app_name, version, cb, ext)
-	local app_name = app_name
+	local app_name = app_name:gsub('%.', '/')
 	local cb = cb
 	local ext = ext or ".zip"
 	local down = function()
@@ -211,6 +212,30 @@ end
 
 function command.list_app()
 	return datacenter.get("APPS")
+end
+
+function command.pkg_check_update(app, version, beta)
+	local version = tonumber(version)
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local url = '/pkg/check_update?app='..app
+	if beta then
+		url = url.."&beta=1"
+	end
+	local status, header, body = httpdown.get(pkg_host, url)
+	local ret = {}
+	if status == 200 then
+		print(body)
+		local msg = cjson.decode(body)
+		local ver = tonumber(msg.message or 0)
+		if ver > version then
+			ret.version = ver
+		else
+			ret.message = "No newer version"
+		end
+	else
+		ret.message = body
+	end
+	return ret
 end
 
 local function get_core_name(name, platform)
