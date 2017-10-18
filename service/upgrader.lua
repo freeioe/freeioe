@@ -31,6 +31,10 @@ local function get_app_version(inst_name)
 	return tonumber(v)
 end
 
+local function get_iot_dir()
+	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
+end
+
 local function create_task(func, task_name, ...)
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
@@ -217,14 +221,14 @@ end
 function command.pkg_check_update(app, version, beta)
 	local version = tonumber(version)
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local url = '/pkg/check_update?app='..app
+	local url = '/pkg/check_update'
+	local query = { app = app }
 	if beta then
-		url = url.."&beta=1"
+		query.beta = 1
 	end
-	local status, header, body = httpdown.get(pkg_host, url)
+	local status, header, body = httpdown.get(pkg_host, url, {}, query)
 	local ret = {}
 	if status == 200 then
-		print(body)
 		local msg = cjson.decode(body)
 		local ver = tonumber(msg.message or 0)
 		if ver > version then
@@ -236,6 +240,27 @@ function command.pkg_check_update(app, version, beta)
 		ret.message = body
 	end
 	return ret
+end
+
+function command.pkg_enable_beta()
+	local fn = get_iot_dir()..'/ipt/using_beta'
+	local f, err = io.open(fn, 'r')
+	if f then
+		f:close()
+		return true
+	end
+
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local sys_id = datacenter.get("CLOUD", "ID")
+	local url = '/pkg/enable_beta'
+	local status, header, body = httpdown.get(pkg_host, url, {}, {sn=sys_id})
+	local ret = {}
+	if status == 200 then
+		local msg = cjson.decode(body)
+		local val = tonumber(msg.message or 0)
+		return val > 0
+	end
+	return false
 end
 
 local function get_core_name(name, platform)
@@ -361,10 +386,6 @@ mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
 rm -f $IOT_DIR/ipt/rollback
 
 ]]
-
-local function get_iot_dir()
-	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
-end
 
 local function write_script(fn, str)
 	local f, err = io.open(fn, "w+")

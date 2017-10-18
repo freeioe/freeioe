@@ -63,10 +63,18 @@
 </div>
 
 <div class="ui longer using_beta modal scrolling transition hidden">
-	<div class="header">Warning</div>
+	<div class="ui header">{{_("Warning")}}</div>
 	<div class="scrolling content">
-		<div class="ui header">Beta Usage Warning</div>
-		<p>Using beta application/system may injure your hardware. And using beta will break your hardware guarantee. </p>
+		<h2 class="ui center aligned icon header">
+			<i class="yellow warning sign icon"></i>
+			{{_("Beta Usage Warning")}}
+		</h2>
+		<div class="ui center aligned header"></div>
+		{*_([[
+		<p>Using beta application/system may injure your hardware. </p>
+		<p>And enable using beta will lose your hardware guarantee. </p>
+		<p>You need to enable using beta from cloud first! </p>
+		]])*}
 	</div>
 	<div class="actions">
 		<div class="ui ok orange button">I Agree!</div>

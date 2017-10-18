@@ -1,3 +1,4 @@
+local skynet = require 'skynet'
 local dc = require 'skynet.datacenter'
 
 return {
@@ -17,11 +18,10 @@ return {
 		if action == 'pkg' then
 			local option = post.option
 			local value = post.value
-			if value == 'true' then
-				value = true
-			end
-			if value == 'false' then
-				value = false
+			if value == 'true' then value = true end
+			if value == 'false' then value = false end
+			if value and option == 'using_beta' then
+				value = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
 			end
 			dc.set('CLOUD', string.upper(option), value)
 			ngx.print(_('PKG option is changed!'))
