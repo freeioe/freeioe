@@ -17,15 +17,10 @@ function _M.pkg_check_update(pkg_host, app, version, beta)
 	if status == 200 then
 		local msg, err = cjson.decode(body)
 		local ver = tonumber( (msg and msg.message) or 0)
-		if ver > version then
-			ret.version = ver
-		else
-			ret.message = "No newer version"
-		end
+		return math.floor(ver)
 	else
-		ret.message = body
+		return nil, body
 	end
-	return ret
 end
 
 function _M.pkg_enable_beta(pkg_host, sys_id)
@@ -35,11 +30,10 @@ function _M.pkg_enable_beta(pkg_host, sys_id)
 	if status == 200 then
 		local msg = cjson.decode(body)
 		local val = tonumber(msg.message or 0)
-		ret.beta = val > 0
+		return val
 	else
-		ret.message = body
+		return nil, body
 	end
-	return ret
 end
 
 return _M

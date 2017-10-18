@@ -221,8 +221,12 @@ end
 
 function command.pkg_check_update(app, version, beta)
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-
-	return pkg_api.pkg_check_update(pkg_host, app, version, beta)
+	local ver = pkg_api.pkg_check_update(pkg_host, app, version)
+	if beta then
+		local bver = pkg_api.pkg_check_update(pkg_host, app, version, beta)
+		return ver, bver
+	end
+	return ver
 end
 
 function command.pkg_enable_beta()
