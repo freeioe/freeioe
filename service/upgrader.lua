@@ -7,6 +7,7 @@ local sysinfo = require 'utils.sysinfo'
 local lfs = require 'lfs'
 local cjson = require 'cjson.safe'
 local datacenter = require 'skynet.datacenter'
+local pkg_api = require 'pkg_api'
 
 local tasks = {}
 local command = {}
@@ -219,27 +220,9 @@ function command.list_app()
 end
 
 function command.pkg_check_update(app, version, beta)
-	local version = tonumber(version)
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local url = '/pkg/check_update'
-	local query = { app = app }
-	if beta then
-		query.beta = 1
-	end
-	local status, header, body = httpdown.get(pkg_host, url, {}, query)
-	local ret = {}
-	if status == 200 then
-		local msg, err = cjson.decode(body)
-		local ver = tonumber( (msg and msg.message) or 0)
-		if ver > version then
-			ret.version = ver
-		else
-			ret.message = "No newer version"
-		end
-	else
-		ret.message = body
-	end
-	return ret
+
+	return pkg_api.pkg_check_update(pkg_host, app, version, beta)
 end
 
 function command.pkg_enable_beta()
@@ -252,16 +235,8 @@ function command.pkg_enable_beta()
 
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
 	local sys_id = datacenter.get("CLOUD", "ID")
-	local url = '/pkg/enable_beta'
-	local status, header, body = httpdown.get(pkg_host, url, {Accpet="application/json"}, {sn=sys_id})
-	local ret = {}
-	if status == 200 then
-		local msg = cjson.decode(body)
-		local val = tonumber(msg.message or 0)
-		return true, val > 0
-	else
-		return nil, body
-	end
+
+	return pkg_api.pkg_enable_beta(pkg_host, sys_id)
 end
 
 local function get_core_name(name, platform)

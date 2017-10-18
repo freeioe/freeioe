@@ -21,12 +21,12 @@ return {
 			if value == 'true' then value = true end
 			if value == 'false' then value = false end
 			if value and option == 'using_beta' then
-				local r, val = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
-				if not r then
-					ngx.print(string.format(_('Cannot enable beta. Error: %s'), err))
+				local r = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
+				if r.message then
+					ngx.print(string.format(_('Cannot enable beta. Error: %s'), r.message))
 					return
 				end
-				value = val
+				value = r.beta
 			end
 			dc.set('CLOUD', string.upper(option), value)
 			ngx.print(_('PKG option is changed!'))
