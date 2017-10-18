@@ -34,13 +34,13 @@
 			</td>
 			<td>
 				{% if using_beta then %}
-				<div class="ui toggle checked checkbox">
-					<input id="using_beta" type="checkbox" checked="true">
+				<div class="ui toggle checked checkbox" id="using_beta">
+					<input class="hidden" type="checkbox" checked="true">
 					<label></label>
 				</div>
 				{% else %}
-				<div class="ui toggle checkbox">
-					<input id="using_beta" type="checkbox">
+				<div class="ui toggle checkbox" id="using_beta">
+					<input class="hidden" type="checkbox">
 					<label></label>
 				</div>
 				{% end %}
@@ -61,12 +61,28 @@
 		</div>
 	</div>
 </div>
+
+<div class="ui longer using_beta modal scrolling transition hidden">
+	<div class="header">Warning</div>
+	<div class="scrolling content">
+		<div class="ui header">Beta Usage Warning</div>
+		<p>Using beta application/system may injure your hardware. And using beta will break your hardware guarantee. </p>
+	</div>
+	<div class="actions">
+		<div class="ui ok orange button">I Agree!</div>
+		<div class="ui cancel button">Cancel</div>
+	</div>
+</div>
 {-main-}
 
 {-script-}
 <script>
 function refresh_page() {
 	window.location.replace("/settings");
+};
+function uncheck_using_beta() {
+	var beta = $('#using_beta');
+	beta.checkbox('uncheck');
 };
 function settings_option(option, value) {
 	$.post("/settings", {from_web:true, action:'pkg', option:option, value:value}, function(data) {
@@ -84,14 +100,32 @@ $(document).ready(function(){
 		var value = $('#pkg_host_url').val();
 		settings_option('pkg_host_url', value);
 	});
-	$("#using_beta").change(function() {
-		var enable = $('#using_beta').is(':checked');
-		if(enable) {
-			settings_option('using_beta', true);
-		} else {
-			settings_option('using_beta', false);
-		}
-	});
+	var using_beta = {{ using_beta and "true" or "false" }};
+	$('#using_beta')
+		.checkbox({
+			// check all children
+			onChecked: function() {
+				$('.ui.longer.using_beta.modal')
+					.modal({
+						closable  : false,
+						onDeny    : function(){
+							setTimeout('uncheck_using_beta()', 500);
+						},
+						onApprove : function() {
+							settings_option('using_beta', true);
+						}
+					})
+					.modal('show')
+				;
+			},
+			// uncheck all children
+			onUnchecked: function() {
+				if (using_beta) {
+					settings_option('using_beta', false);
+				}
+			}
+		})
+	;
 });
 </script>
 {-script-}
