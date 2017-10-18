@@ -16,6 +16,9 @@ function _M.pkg_check_update(pkg_host, app, version, beta)
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
+		if not msg.message then
+			return nil, "No version found!"
+		end
 		local ver = tonumber( (msg and msg.message) or 0)
 		return math.floor(ver)
 	else
