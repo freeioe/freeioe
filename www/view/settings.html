@@ -1,0 +1,97 @@
+{% layout="base.html" %}
+{-main_header-}
+{-main_header-}
+
+{-main-}
+<h1 class="header"> {{_("System Settings")}} </h1>
+
+<h3 class="ui dividing header">{{_("PKG")}} </h3>
+<table class="ui celled basic table">
+	<thead>
+		<tr>
+			<th>{{_("Setting")}}</th>
+			<th>{{_("Value")}}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>
+				{{_("PKG Host URL")}}
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="pkg_host_url" value="{{pkg_host}}" type="text">
+					<button id="pkg_host_url_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				{{_("Using Beta")}}
+			</td>
+			<td>
+				{% if using_beta then %}
+				<div class="ui toggle checked checkbox">
+					<input id="using_beta" type="checkbox" checked="true">
+					<label></label>
+				</div>
+				{% else %}
+				<div class="ui toggle checkbox">
+					<input id="using_beta" type="checkbox">
+					<label></label>
+				</div>
+				{% end %}
+
+
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<div class="ui icon message">
+	<i class="inbox icon"></i>
+	<div class="content">
+		<div class="header">
+			<div id="message_ui">
+				{{ message }}
+			</div>
+		</div>
+	</div>
+</div>
+{-main-}
+
+{-script-}
+<script>
+function refresh_page() {
+	window.location.replace("/settings");
+};
+function settings_option(option, value) {
+	$.post("/settings", {from_web:true, action:'pkg', option:option, value:value}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 500);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
+	});
+};
+$(document).ready(function(){
+	$("#pkg_host_url_btn").click(function() {
+		var value = $('#pkg_host_url').val();
+		settings_option('pkg_host_url', value);
+	});
+	$("#using_beta").change(function() {
+		var enable = $('#using_beta').is(':checked');
+		if(enable) {
+			settings_option('using_beta', true);
+		} else {
+			settings_option('using_beta', false);
+		}
+	});
+});
+</script>
+{-script-}
