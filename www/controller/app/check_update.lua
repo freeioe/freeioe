@@ -9,6 +9,10 @@ return {
 		assert(app and app.name==get.app)
 		local beta = dc.get('CLOUD', 'USING_BETA')
 		local ver, bver = skynet.call("UPGRADER", "lua", "pkg_check_update", app.name, app.version, beta)
-		lwf.json(self, {version=ver, beta="beta_"..bver})
+		local ret = {version = ver}
+		if bver then
+			ret.beta = "beta_"..bver
+		end
+		lwf.json(self, ret)
 	end,
 }
