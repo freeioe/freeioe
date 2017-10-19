@@ -11,7 +11,7 @@ return {
 		local ver, bver = skynet.call("UPGRADER", "lua", "pkg_check_update", app.name, app.version, beta)
 		local ret = {version = ver}
 		if bver then
-			ret.beta = "beta_"..bver
+			ret.beta = bver
 		end
 		lwf.json(self, ret)
 	end,

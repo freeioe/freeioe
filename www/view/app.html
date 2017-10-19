@@ -24,8 +24,8 @@
 function refresh_page() {
 	window.location.replace("/app");
 }
-function upgrade_app(inst, app) {
-	$.post("/app/upgrade", {from_web:true, inst:inst, app:app, version:'latest'}, function(data) {
+function upgrade_app(inst, app, version, beta) {
+	$.post("/app/upgrade", {from_web:true, inst:inst, app:app, version:version, beta:beta}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
@@ -75,7 +75,7 @@ function check_app_update(inst, app) {
 	$.get("/app/check_update", {from_web:true, inst:inst, app:app}, function(data) {
 		if (data && data.version) {
 			var html = [
-				'<div class="ui labeled button" id="{{k}}_upgrade" tabindex="0" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.version+'\');">',
+				'<div class="ui labeled button" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.version+'\', false);">',
 				'<div class="ui orange button">',
 				'<i class="info circle icon"></i> {{_("Upgrade To")}}',
 				'</div>',
@@ -88,12 +88,12 @@ function check_app_update(inst, app) {
 		};
 		if (data && data.beta) {
 			var html = [
-				'<div class="ui labeled button" id="{{k}}_upgrade" tabindex="0" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.beta+'\');">',
+				'<div class="ui labeled button" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.beta+'\', true);">',
 				'<div class="ui orange button">',
 				'<i class="info circle icon"></i> {{_("Upgrade To")}}',
 				'</div>',
 				'<a class="ui basic orange left pointing label">',
-				data.beta,
+				{{_("Beta")}} data.beta,
 				'</a>',
 				'</div>',
 			].join("\r\n");
