@@ -229,6 +229,11 @@ function command.pkg_check_update(app, version, beta)
 	return ver
 end
 
+function command.pkg_check_version(app, version)
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	return pkg_api.pkg_check_version(pkg_host, app, version)
+end
+
 function command.pkg_enable_beta()
 	local fn = get_iot_dir()..'/ipt/using_beta'
 	local f, err = io.open(fn, 'r')
