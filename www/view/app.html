@@ -71,9 +71,9 @@ function stop_app(inst) {
 	});
 }
 
-function check_app_update(inst, app) {
+function check_app_update(inst, app, version) {
 	$.get("/app/check_update", {from_web:true, inst:inst, app:app}, function(data) {
-		if (data && data.version) {
+		if (data && data.version && data.version > version) {
 			var html = [
 				'<div class="ui labeled button" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.version+'\');">',
 				'<div class="ui orange button">',
@@ -86,7 +86,7 @@ function check_app_update(inst, app) {
 			].join("\r\n");
 			$('#'+inst+'_actions').prepend(html);
 		};
-		if (data && data.beta) {
+		if (data && data.beta && data.beta > version) {
 			var html = [
 				'<div class="ui labeled button" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.beta+'\');">',
 				'<div class="ui yellow button">',
@@ -128,8 +128,8 @@ function check_app_version(inst, app, version) {
 
 function all_app_check() {
 	{% for k, v in pairs(apps) do %}
-	check_app_version('{{k}}', '{{v.name}}', '{{v.version}}');
-	check_app_update('{{k}}', '{{v.name}}');
+	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
+	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
 }
 
