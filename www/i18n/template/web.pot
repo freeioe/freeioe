@@ -82,6 +82,14 @@ msgid "Application stoped!"
 msgstr ""
 
 
+msgid "Beta"
+msgstr ""
+
+
+msgid "Beta Usage Warning"
+msgstr ""
+
+
 msgid "CLA"
 msgstr ""
 
@@ -94,7 +102,19 @@ msgid "CPU Model"
 msgstr ""
 
 
+msgid "Cannot enable beta. Error: %s"
+msgstr ""
+
+
 msgid "Change"
+msgstr ""
+
+
+msgid "Check Beta"
+msgstr ""
+
+
+msgid "Check Updates"
 msgstr ""
 
 
@@ -194,6 +214,10 @@ msgid "FT CSV Parser"
 msgstr ""
 
 
+msgid "Failed to check system updates"
+msgstr ""
+
+
 msgid "Failed to send device reboot request"
 msgstr ""
 
@@ -231,10 +255,6 @@ msgstr ""
 
 
 msgid "Forum"
-msgstr ""
-
-
-msgid "Free Memory"
 msgstr ""
 
 
@@ -362,6 +382,10 @@ msgid "PKG Host URL"
 msgstr ""
 
 
+msgid "PKG option is changed!"
+msgstr ""
+
+
 msgid "Password"
 msgstr ""
 
@@ -422,6 +446,10 @@ msgid "SerialChannel"
 msgstr ""
 
 
+msgid "Setting"
+msgstr ""
+
+
 msgid "Settings"
 msgstr ""
 
@@ -474,11 +502,15 @@ msgid "System Control"
 msgstr ""
 
 
+msgid "System Settings"
+msgstr ""
+
+
 msgid "System upgrade ack is done!"
 msgstr ""
 
 
-msgid "System upgrade is done!"
+msgid "System upgrade is done! System will be offline for a few seconds!"
 msgstr ""
 
 
@@ -487,6 +519,10 @@ msgstr ""
 
 
 msgid "Test View Page"
+msgstr ""
+
+
+msgid "There is no system updates"
 msgstr ""
 
 
@@ -526,10 +562,6 @@ msgid "Upload Settings"
 msgstr ""
 
 
-msgid "Used Memory"
-msgstr ""
-
-
 msgid "User Documents"
 msgstr ""
 
@@ -538,11 +570,19 @@ msgid "User Profile"
 msgstr ""
 
 
+msgid "Using Beta"
+msgstr ""
+
+
 msgid "Value"
 msgstr ""
 
 
 msgid "Version"
+msgstr ""
+
+
+msgid "Warning"
 msgstr ""
 
 

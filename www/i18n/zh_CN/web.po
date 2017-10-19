@@ -61,6 +61,12 @@ msgstr "应用已启动!"
 msgid "Application stoped!"
 msgstr "应用已停止!"
 
+msgid "Beta"
+msgstr ""
+
+msgid "Beta Usage Warning"
+msgstr "Beta版本使用警告"
+
 msgid "CLA"
 msgstr ""
 
@@ -70,8 +76,17 @@ msgstr "指令集"
 msgid "CPU Model"
 msgstr "CPU型号"
 
+msgid "Cannot enable beta. Error: %s"
+msgstr "不能开启使用Beta版本。错误："
+
 msgid "Change"
 msgstr "修改"
+
+msgid "Check Beta"
+msgstr "检查Beta版本"
+
+msgid "Check Updates"
+msgstr "检查更新"
 
 msgid "Cloud"
 msgstr "云"
@@ -145,6 +160,9 @@ msgstr "错误页面 116"
 msgid "FT CSV Parser"
 msgstr "FT CSV解析器"
 
+msgid "Failed to check system updates"
+msgstr "发送检查系统更新请求失败"
+
 msgid "Failed to send device reboot request"
 msgstr "发送设备重启请求失败"
 
@@ -174,9 +192,6 @@ msgstr "发送升级请求失败"
 
 msgid "Forum"
 msgstr "社区"
-
-msgid "Free Memory"
-msgstr "剩余内存"
 
 msgid "Getting Started"
 msgstr "如何入门"
@@ -271,6 +286,9 @@ msgstr "软件包"
 msgid "PKG Host URL"
 msgstr "软件包服务器地址"
 
+msgid "PKG option is changed!"
+msgstr "软件包配置项修改成功"
+
 msgid "Password"
 msgstr "密码"
 
@@ -316,6 +334,9 @@ msgstr "系统接口"
 msgid "SerialChannel"
 msgstr "串口通道"
 
+msgid "Setting"
+msgstr "配置"
+
 msgid "Settings"
 msgstr "配置"
 
@@ -355,17 +376,23 @@ msgstr "系统"
 msgid "System Control"
 msgstr "系统控制"
 
+msgid "System Settings"
+msgstr "系统配置"
+
 msgid "System upgrade ack is done!"
 msgstr "系统升级确认已完成!"
 
-msgid "System upgrade is done!"
-msgstr "系统升级完成!"
+msgid "System upgrade is done! System will be offline for a few seconds!"
+msgstr "系统更新成功！系统需要离线一些时间!"
 
 msgid "System will be restart after five seconds!"
 msgstr "系统将在5秒钟后重启"
 
 msgid "Test View Page"
 msgstr "测试浏览页面"
+
+msgid "There is no system updates"
+msgstr "没有系统更新"
 
 msgid "Tiemout"
 msgstr "超时"
@@ -394,20 +421,23 @@ msgstr "升级到"
 msgid "Upload Settings"
 msgstr "上送配置"
 
-msgid "Used Memory"
-msgstr "已用内存"
-
 msgid "User Documents"
 msgstr "用户文档"
 
 msgid "User Profile"
 msgstr "用户资料"
 
+msgid "Using Beta"
+msgstr "使用Beta版本"
+
 msgid "Value"
 msgstr "值"
 
 msgid "Version"
 msgstr "版本"
+
+msgid "Warning"
+msgstr "警告"
 
 msgid "Welcome %s"
 msgstr "欢迎 %s"
@@ -421,3 +451,11 @@ msgstr "升级Skynet?"
 msgid "seconds"
 msgstr "秒"
 
+#~ msgid "Free Memory"
+#~ msgstr "剩余内存"
+
+#~ msgid "System upgrade is done!"
+#~ msgstr "系统升级完成!"
+
+#~ msgid "Used Memory"
+#~ msgstr "已用内存"
