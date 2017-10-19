@@ -7,8 +7,7 @@ return {
 		local inst = get.inst
 		local app = dc.get('APPS', inst)
 		assert(app and app.name==get.app)
-		local beta = dc.get('CLOUD', 'USING_BETA')
-		local ver, bver = skynet.call("UPGRADER", "lua", "pkg_check_update", app.name, app.version, beta)
+		local ver, bver = skynet.call("UPGRADER", "lua", "pkg_check_update", app.name)
 		local ret = {version = ver}
 		if bver then
 			ret.beta = bver

@@ -219,8 +219,9 @@ function command.list_app()
 	return datacenter.get("APPS")
 end
 
-function command.pkg_check_update(app, version, beta)
+function command.pkg_check_update(app, beta)
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
 	local ver = pkg_api.pkg_check_update(pkg_host, app)
 	if beta then
 		local bver = pkg_api.pkg_check_update(pkg_host, app, beta)
@@ -245,7 +246,11 @@ function command.pkg_enable_beta()
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
 	local sys_id = datacenter.get("CLOUD", "ID")
 
-	return pkg_api.pkg_enable_beta(pkg_host, sys_id)
+	local r, err = pkg_api.pkg_enable_beta(pkg_host, sys_id)
+	if r then
+		lfs.touch(fn)
+	end
+	return r, err
 end
 
 local function get_core_name(name, platform)

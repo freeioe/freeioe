@@ -1,4 +1,5 @@
 local skynet = require 'skynet'
+local dc = require 'skynet.datacenter'
 local sysinfo = require 'utils.sysinfo'
 
 local function pretty_memory(size)
@@ -36,6 +37,7 @@ return {
 		local uname = sysinfo.uname("-a")
 		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
 		local plat = sysinfo.skynet_platform()
+		local using_beta = dc.get('CLOUD', 'USING_BETA')
 
 		lwf.render('dashboard.html', {
 			version = version, 
@@ -48,6 +50,7 @@ return {
 			uname = uname,
 			rollback_time = rollback_time,
 			platform = plat,
+			using_beta = using_beta,
 		})
 	end
 }
