@@ -21,6 +21,6 @@ return {
 		end
 
 		skynet.call("UPGRADER", "lua", "upgrade_core", id, args)
-		ngx.print(_('System upgrade is done!'))
+		ngx.print(_('System upgrade is done! System will be offline for a few seconds!'))
 	end,
 }
