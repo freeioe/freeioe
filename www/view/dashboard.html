@@ -209,6 +209,7 @@ function sys_quit() {
 function check_for_update() {
 	$('#check_with_beta').addClass('disabled');
 	$('.ui.upgrade.segment').attr('hidden', true);
+	$('#message_ui').html('');
 	var beta = $('#check_with_beta').is(':checked');
 	var version = {{version.iot.ver}};
 	var skynet_version = {{version.skynet.ver}};
