@@ -76,7 +76,7 @@
 	<div class="ui red button" onclick="sys_reboot();">{{_("Device Reboot")}}</div>
 </div>
 
-<div class="ui upgrade attached segment" hidden="true">
+<div class="ui upgrade attached basic segment" hidden="true">
 	<h3 class="ui header">
 		{{_("System Control")}}
 	</h3>
@@ -208,6 +208,7 @@ function sys_quit() {
 }
 function check_for_update() {
 	$('#check_with_beta').addClass('disabled');
+	$('.ui.upgrade.segment').attr('hidden', true);
 	var beta = $('#check_with_beta').is(':checked');
 	var version = {{version.iot.ver}};
 	var skynet_version = {{version.skynet.ver}};

@@ -248,7 +248,7 @@ function command.pkg_enable_beta()
 
 	local r, err = pkg_api.pkg_enable_beta(pkg_host, sys_id)
 	if r then
-		lfs.touch(fn)
+		os.execute('date > '..fn)
 	end
 	return r, err
 end
