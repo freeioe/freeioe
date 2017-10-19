@@ -217,6 +217,8 @@ function check_for_update() {
 			$('.ui.upgrade.segment').attr('hidden', false);
 			$('#iot_version_label').html(data.version);
 			upgrade_version = data.version;
+		} else {
+			$('#message_ui').html('<i>{{_("There is no system updates")}} </i>');
 		}
 		if (data && data.skynet && data.skynet > skynet_version) {
 			$('.ui.upgrade.skynet.checkbox').checkbox('check');
@@ -231,6 +233,7 @@ function check_for_update() {
 		$('#check_for_update_btn').removeClass('disabled');
 	})
 	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to check system updates")}} </i>');
 	});
 }
 </script>
