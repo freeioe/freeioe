@@ -266,6 +266,7 @@ function check_for_update() {
 			$('#iot_version_label').html(upgrade_version);
 		}
 		if (data && data.skynet) {
+{% if not force_upgrade then %}
 			if (data.skynet.version > skynet_version) {
 				$('.ui.upgrade.skynet.checkbox').checkbox('check');
 				$('.ui.upgrade.skynet.checkbox').removeClass('disabled');
@@ -273,6 +274,7 @@ function check_for_update() {
 				$('.ui.upgrade.skynet.checkbox').checkbox('uncheck');
 				$('.ui.upgrade.skynet.checkbox').addClass('disabled');
 			}
+{% end %}
 			upgrade_skynet_version = data.skynet.version;
 			if (data.skynet.beta) {
 				upgrade_skynet_version = "beta." + upgrade_skynet_version
