@@ -22,8 +22,7 @@ function _M.pkg_check_update(pkg_host, app, beta)
 		if not msg.message then
 			return nil, "No version found!"
 		end
-		local ver = tonumber( (msg and msg.message) or 0)
-		return math.floor(ver)
+		return msg.message.version, msg.message.beta == 1
 	else
 		return nil, body
 	end

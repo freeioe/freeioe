@@ -45,6 +45,16 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
+local function parse_version_string(version)
+	local beta = false
+	local version = version or 'latest'
+	if version.sub(1, 5) == 'beta.' then
+		version = version.sub(6)
+		beta = true
+	end
+	return version, beta
+end
+
 local function create_download(app_name, version, cb, ext)
 	local app_name = app_name:gsub('%.', '/')
 	local cb = cb
@@ -101,7 +111,7 @@ end
 
 function command.upgrade_app(id, args)
 	local inst_name = args.inst
-	local version = args.version or 'latest'
+	local version, beta = parse_version_string(args.version)
 	local app = datacenter.get("APPS", inst_name)
 	if not app then
 		return install_result(id, false, "There is no app for instance name "..inst_name)	
@@ -148,7 +158,7 @@ end
 function command.install_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
-	local version = args.version or 'latest'
+	local version, beta = parse_version_string(args.version)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
@@ -222,12 +232,7 @@ end
 function command.pkg_check_update(app, beta)
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
 	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
-	local ver = pkg_api.pkg_check_update(pkg_host, app)
-	if beta then
-		local bver = pkg_api.pkg_check_update(pkg_host, app, beta)
-		return ver, bver
-	end
-	return ver
+	return pkg_api.pkg_check_update(pkg_host, app, beta)
 end
 
 function command.pkg_check_version(app, version)
@@ -264,7 +269,7 @@ end
 
 local function download_upgrade_skynet(id, args, cb)
 	local is_windows = package.config:sub(1,1) == '\\'
-	local version = args.version or 'latest'
+	local version, beta = parse_version_string(args.version)
 	local kname = get_core_name('skynet', args.platform)
 
 	create_download(kname, version, function(r, info)
@@ -425,7 +430,7 @@ end
 
 function command.upgrade_core(id, args)
 	local is_windows = package.config:sub(1,1) == '\\'
-	local version = args.version or 'latest'
+	local version, beta = parse_version_string(args.version)
 	local skynet = args.skynet
 
 	if args.no_ack then

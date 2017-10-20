@@ -244,17 +244,23 @@ function check_for_update() {
 	var version = {{version.iot.ver}};
 	var skynet_version = {{version.skynet.ver}};
 	$.get("/sys/check_update", {from_web:true, beta:beta}, function(data) {
-		if (data && data.version && data.version > version) {
+		if (data && data.iot && data.iot.version > version) {
 			$('.ui.upgrade.segment').attr('hidden', false);
-			$('#iot_version_label').html(data.version);
-			upgrade_version = data.version;
+			upgrade_version = data.iot.version;
+			if (data.iot.beta) {
+				upgrade_version = "beta." + upgrade_version
+			}
+			$('#iot_version_label').html(upgrade_version);
 		} else {
 			$('#message_ui').html('<i>{{_("There is no system updates")}} </i>');
 		}
-		if (data && data.skynet && data.skynet > skynet_version) {
+		if (data && data.skynet && data.skynet.version > skynet_version) {
 			$('.ui.upgrade.skynet.checkbox').checkbox('check');
-			$('.ui.upgrade.skynet.checkbox.label').append(data.skynet);
-			upgrade_skynet_version = data.skynet;
+			upgrade_skynet_version = data.skynet.version;
+			if (data.skynet.beta) {
+				upgrade_skynet_version = "beta." + upgrade_skynet_version
+			}
+			$('.ui.upgrade.skynet.checkbox.label').append(upgrade_skynet_version);
 		} else {
 			$('.ui.upgrade.skynet.checkbox').checkbox('uncheck');
 			$('.ui.upgrade.skynet.checkbox').addClass('disabled');
