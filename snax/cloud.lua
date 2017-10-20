@@ -115,6 +115,9 @@ local msg_handler = {
 		if action == 'enable/comm' then
 			snax.self().post.enable_comm(tonumber(args.data))
 		end
+		if action == 'enable/beta' then
+			datacenter.set('CLOUD', 'USING_BETA')
+		end
 		if action == 'conf' then
 			local conf = args.data
 			snax.self().post.set_conf(conf)
@@ -358,6 +361,7 @@ connect_proc = function(clean_session, username, password)
 				skynet.sleep(ts * 500)
 				ts = ts * 2
 				if ts >= 64 then
+					client:destroy()
 					skynet.timeout(100, function() connect_proc() end)
 					-- We meet bug that if client reconnect to broker with lots of failures, it's socket will be broken. 
 					-- So we will re-create the client
