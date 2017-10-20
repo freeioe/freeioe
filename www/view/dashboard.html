@@ -77,16 +77,16 @@
 </div>
 
 <div class="ui upgrade attached basic segment" hidden="true">
-	<h3 class="ui header">
-		{{_("System Control")}}
-	</h3>
+	<h4 class="ui header">
+		{{_("System Upgrade")}}
+	</h4>
 	<div class="ui upgrade checkbox">
 		<input id="upgrade_ack" type="checkbox">
 		<label>{{_("Skip Ack?")}}</label>
 	</div>
 	<div class="ui upgrade skynet checked checkbox">
 		<input id="with_skynet" type="checkbox" checked="true">
-		<label>{{_("With Skynet?")}}</label>
+		<label id="skynet_version_label">{{_("With Skynet?")}}</label>
 	</div>
 	<div class="ui upgrade labeled button" onclick="upgrade_sys();">
 		<div class="ui yellow button">
@@ -256,11 +256,12 @@ function check_for_update() {
 		}
 		if (data && data.skynet && data.skynet.version > skynet_version) {
 			$('.ui.upgrade.skynet.checkbox').checkbox('check');
+			$('.ui.upgrade.skynet.checkbox').removeClass('disabled');
 			upgrade_skynet_version = data.skynet.version;
 			if (data.skynet.beta) {
 				upgrade_skynet_version = "beta." + upgrade_skynet_version
 			}
-			$('.ui.upgrade.skynet.checkbox.label').append(upgrade_skynet_version);
+			$('#skynet_version_label').html('With Skynet ' + upgrade_skynet_version);
 		} else {
 			$('.ui.upgrade.skynet.checkbox').checkbox('uncheck');
 			$('.ui.upgrade.skynet.checkbox').addClass('disabled');
