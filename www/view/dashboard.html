@@ -242,7 +242,9 @@ function enable_update_btn() {
 }
 function check_for_update() {
 	$('#check_for_update_btn').addClass('disabled');
+{% if not force_upgrade then %}
 	$('.ui.upgrade.segment').attr('hidden', true);
+{% end %}
 	$('#message_ui').html('');
 
 	check_iot_version();
