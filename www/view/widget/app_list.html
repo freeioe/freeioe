@@ -4,8 +4,8 @@
 		<tr>
 			<th>{{_("Name")}}</th>
 			<th>{{_("Application")}}</th>
-			<th>{{_("Version")}}</th>
 			<th>{{_("SN")}}</th>
+			<th>{{_("Version")}}</th>
 			<th>{{_("Action")}}</th>
 		</tr>
 	</thead>
@@ -14,9 +14,10 @@
 		<tr>
 			<td>{{k}} </td>
 			<td>{{v.name}} </td>
-			<td id="{{k}}_version"> {{v.version}} </td>
 			<td>{{v.sn}} </td>
-			<td id="{{k}}_actions">
+			<td id="{{k}}_version_col"> {{v.version}} </td>
+			<td id="{{k}}_actions_col">
+				<i id="{{k}}_upgrade_col"></i>
 				{% if not v.running then %}
 				<div class="ui green button" onclick="start_app('{{k}}');">
 					<i class="play icon"></i>{{_("Start")}}

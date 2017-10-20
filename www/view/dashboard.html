@@ -233,8 +233,11 @@ function check_iot_version() {
 		$('#message_ui').html('<i>{{_("Failed to check system version")}} </i>');
 	});
 }
+function enable_update_btn() {
+	$('#check_for_update_btn').removeClass('disabled');
+}
 function check_for_update() {
-	$('#check_with_beta').addClass('disabled');
+	$('#check_for_update_btn').addClass('disabled');
 	$('.ui.upgrade.segment').attr('hidden', true);
 	$('#message_ui').html('');
 
@@ -268,7 +271,7 @@ function check_for_update() {
 		}
 	})
 	.done(function() {
-		$('#check_for_update_btn').removeClass('disabled');
+		setTimeout('enable_update_btn();', 3000);
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to check system updates")}} </i>');

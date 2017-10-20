@@ -92,7 +92,7 @@ function check_app_update(inst, app, version) {
 				'</a>',
 				'</div>',
 			].join("\r\n");
-			$('#'+inst+'_actions').prepend(html);
+			$('#'+inst+'_upgrade_col').html(html);
 		};
 	})
 	.done(function() {
@@ -105,13 +105,13 @@ function check_app_version(inst, app, version) {
 	$.get("/app/check_version", {from_web:true, inst:inst, app:app, version:version}, function(data) {
 		if (data && data.type) {
 			if (data.type == "release") {
-				$('#'+inst+'_version').addClass("positive");
+				$('#'+inst+'_version_col').addClass("positive");
 			} else if (data.type == "beta") {
-				$('#'+inst+'_version').addClass("warning");
-				$('#'+inst+'_version').prepend('<i class="warning sign icon"></i>');
+				$('#'+inst+'_version_col').addClass("warning");
+				$('#'+inst+'_version_col').prepend('<i class="warning sign icon"></i>');
 			} else {
-				$('#'+inst+'_version').addClass("error");
-				$('#'+inst+'_version').prepend('<i class="attention icon"></i>');
+				$('#'+inst+'_version_col').addClass("error");
+				$('#'+inst+'_version_col').prepend('<i class="attention icon"></i>');
 			}
 		};
 	})
@@ -120,13 +120,16 @@ function check_app_version(inst, app, version) {
 	.fail(function() {
 	});
 }
-
+function enable_update_btn() {
+	$('#check_for_update_btn').removeClass('disabled');
+}
 function check_for_update() {
 	$('#check_for_update_btn').addClass('disabled');
 	{% for k, v in pairs(apps) do %}
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
+	setTimeout('enable_update_btn()', 5000);
 }
 
 $(document).ready(function(){
