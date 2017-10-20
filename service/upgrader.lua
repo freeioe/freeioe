@@ -48,8 +48,8 @@ end
 local function parse_version_string(version)
 	local beta = false
 	local version = version or 'latest'
-	if version.sub(1, 5) == 'beta.' then
-		version = version.sub(6)
+	if string.sub(version, 1, 5) == 'beta.' then
+		version = string.sub(version, 6)
 		beta = true
 	end
 	return version, beta
