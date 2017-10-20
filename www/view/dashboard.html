@@ -250,14 +250,14 @@ function check_for_update() {
 		if (data && data.iot) {
 			if (data.iot.version > version) {
 				$('.ui.upgrade.segment').attr('hidden', false);
+			} else {
+				$('#message_ui').html('<i>{{_("There is no new system updates")}} </i>');
 			}
 			upgrade_version = data.iot.version;
 			if (data.iot.beta) {
 				upgrade_version = "beta." + upgrade_version
 			}
 			$('#iot_version_label').html(upgrade_version);
-		} else {
-			$('#message_ui').html('<i>{{_("There is no system updates")}} </i>');
 		}
 		if (data && data.skynet) {
 			if (data.skynet.version > skynet_version) {
