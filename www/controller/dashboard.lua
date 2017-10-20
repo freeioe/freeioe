@@ -20,6 +20,7 @@ return {
 			self:redirect('/user/login')
 			return
 		end
+		local get = ngx.req.get_uri_args()
 		local ver, git_ver = sysinfo.version()
 		local sver, git_sver = sysinfo.skynet_version()
 		local version = {
@@ -51,6 +52,7 @@ return {
 			rollback_time = rollback_time,
 			platform = plat,
 			using_beta = using_beta,
+			force_upgrade = get.force_upgrade,
 		})
 	end
 }

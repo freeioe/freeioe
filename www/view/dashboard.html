@@ -76,7 +76,11 @@
 	<div class="ui red button" onclick="sys_reboot();">{{_("Device Reboot")}}</div>
 </div>
 
+{% if force_upgrade then %}
+<div class="ui upgrade attached basic segment">
+{% else %}
 <div class="ui upgrade attached basic segment" hidden="true">
+{% end %}
 	<h4 class="ui header">
 		{{_("System Upgrade")}}
 	</h4>
