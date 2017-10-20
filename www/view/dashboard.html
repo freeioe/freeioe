@@ -214,20 +214,20 @@ function check_iot_version() {
 	$.get("/sys/check_version", {from_web:true, version:{{version.iot.ver}}, skynet_version:{{version.skynet.ver}} }, function(data) {
 		if (data && data.iot) {
 			if (data.iot == "release") {
-				$('#iot_version').html('{{version.iot.ver}} <i class="green check icon"></i>');
+				$('#iot_version').html('{{version.iot.ver}} <i class="mini green check icon"></i>');
 			} else if (data.iot == "beta") {
-				$('#iot_version').html('{{version.iot.ver}} <i class="yellow warning sign icon"></i>');
+				$('#iot_version').html('{{version.iot.ver}} <i class="mini yellow warning sign icon"></i>');
 			} else {
-				$('#iot_version').html('{{version.iot.ver}} <i class="red close icon"></i>');
+				$('#iot_version').html('{{version.iot.ver}} <i class="mini red close icon"></i>');
 			}
 		};
 		if (data && data.skynet) {
 			if (data.skynet == "release") {
-				$('#skynet_version').html('{{version.skynet.ver}} <i class="green check icon"></i>');
+				$('#skynet_version').html('{{version.skynet.ver}} <i class="mini green check icon"></i>');
 			} else if (data.skynet == "beta") {
-				$('#skynet_version').html('{{version.skynet.ver}} <i class="yellow warning sign icon"></i>');
+				$('#skynet_version').html('{{version.skynet.ver}} <i class="mini yellow warning sign icon"></i>');
 			} else {
-				$('#skynet_version').html('{{version.skynet.ver}} <i class="red close icon"></i>');
+				$('#skynet_version').html('{{version.skynet.ver}} <i class="mini red close icon"></i>');
 			}
 		};
 	})
