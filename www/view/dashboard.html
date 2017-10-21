@@ -283,10 +283,12 @@ function check_for_update() {
 		}
 	})
 	.done(function() {
+		$('#message_ui').html('<i>{{_("Checking system update finished")}} </i>');
 		setTimeout('enable_update_btn();', 3000);
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to check system updates")}} </i>');
+		setTimeout('enable_update_btn();', 5000);
 	});
 }
 </script>
