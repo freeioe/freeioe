@@ -106,13 +106,13 @@ function check_app_version(inst, app, version) {
 		if (data && data.type) {
 			if (data.type == "release") {
 				$('#'+inst+'_version_col').addClass("positive");
-				$('#'+inst+'_version_col').html(version);
+				$('#'+inst+'_version_col').html(version + '<i class="check icon"></i>');
 			} else if (data.type == "beta") {
 				$('#'+inst+'_version_col').addClass("warning");
-				$('#'+inst+'_version_col').html('<i class="warning sign icon"></i>' + version);
+				$('#'+inst+'_version_col').html(version + '<i class="warning sign icon"></i>');
 			} else {
 				$('#'+inst+'_version_col').addClass("error");
-				$('#'+inst+'_version_col').html('<i class="attention icon"></i>' + version);
+				$('#'+inst+'_version_col').html(version + '<i class="attention icon"></i>');
 			}
 		};
 	})
