@@ -3,10 +3,10 @@ local serial = require 'serialdriver'
 
 local app = class("XXXX_App")
 
-function app:initialize(name, conf, sys)
+function app:initialize(name, sys, conf)
 	self._name = name
-	self._conf = conf
 	self._sys = sys
+	self._conf = conf
 	self._api = self._sys:data_api()
 	sys:log("debug", "XXXX Application initlized")
 	--print("folder", sys:app_dir())

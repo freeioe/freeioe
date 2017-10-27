@@ -9,10 +9,10 @@ app.API_VER = 1
 
 local enable_fake_test = true
 
-function app:initialize(name, conf, sys)
+function app:initialize(name, sys, conf)
 	self._name = name
-	self._conf = conf
 	self._sys = sys
+	self._conf = conf
 	self._api = sys:data_api()
 	self._log = sys:logger()
 end

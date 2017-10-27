@@ -16,6 +16,7 @@ local mqtt_host = nil --"cloud.symid.com"
 local mqtt_port = nil --1883
 local mqtt_keepalive = nil --300
 local mqtt_client = nil
+local mqtt_client_last = nil
 
 --- Next reconnect timeout
 local mqtt_reconnect_timeout = 100
@@ -325,6 +326,7 @@ connect_proc = function(clean_session, username, password)
 			log.notice("ON_CONNECT", success, rc, msg) 
 			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			mqtt_client = client
+			mqtt_client_last = skynet.time()
 			for _, v in ipairs(wildtopics) do
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
@@ -439,6 +441,10 @@ end
 
 function response.get_conf()
 	return datacenter.get("CLOUD")
+end
+
+function response.get_status()
+	return mqtt_client ~= nil, mqtt_client_last
 end
 
 function accept.enable_cov(enable)

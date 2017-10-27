@@ -150,7 +150,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	mgr_snax = snax.bind(mgr_handle, mgr_type)
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 
-	app = assert(m:new(app_name, conf, sys_api))
+	app = assert(m:new(app_name, sys_api, conf))
 end
 
 function exit(...)

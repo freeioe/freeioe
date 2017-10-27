@@ -51,6 +51,25 @@
 		</div>
 	</div>
 	{% end %}
+	{% if cloud_status then %}
+	<div class="ui green statistic">
+		<div class="value">
+			{{cloud_last}}
+		</div>
+		<div class="label">
+			Online
+		</div>
+	</div>
+	{% else %}
+	<div class="ui red statistic">
+		<div class="value">
+			{{cloud_last}}
+		</div>
+		<div class="label">
+			Offline
+		</div>
+	</div>
+	{% end %}
 </div>
 
 <h3 class="ui top attached header">

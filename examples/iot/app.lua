@@ -3,10 +3,10 @@ local sysinfo = require 'utils.sysinfo'
 
 local app = class("IOT_SYS_APP_CLASS")
 
-function app:initialize(name, conf, sys)
+function app:initialize(name, sys, conf)
 	self._name = name
-	self._conf = conf
 	self._sys = sys
+	self._conf = conf
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
 end
