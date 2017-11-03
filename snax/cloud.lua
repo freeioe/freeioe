@@ -671,6 +671,7 @@ function accept.action_result(action, id, result, message)
 end
 
 function init()
+	mqtt_client_last = skynet.time()
 	mosq.init()
 
 	load_conf()
