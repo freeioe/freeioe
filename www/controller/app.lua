@@ -3,6 +3,7 @@ local snax = require 'skynet.snax'
 
 return {
 	get = function(self)
+		local get = ngx.req.get_uri_args()
 		if lwf.auth.user == 'Guest' then
 			self:redirect('/user/login')
 			return
@@ -15,7 +16,7 @@ return {
 				v.version = math.floor(v.version)
 			end
 			local pkg_host_url = dc.get('PKG_HOST_URL')
-			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url})
+			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade})
 		end
 	end
 }

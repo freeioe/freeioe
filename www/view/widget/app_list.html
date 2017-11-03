@@ -17,7 +17,19 @@
 			<td>{{v.sn}} </td>
 			<td id="{{k}}_version_col"> {{v.version}} </td>
 			<td id="{{k}}_actions_col">
-				<i id="{{k}}_upgrade_col"></i>
+				<i id="{{k}}_upgrade_col">
+					{% if force_upgrade then %}
+					<div class="ui labeled button" onclick="upgrade_app('{{k}}', '{{v.name}}', 'latest');">
+						<div class="ui orange button">
+							<i class="info circle icon"></i> {{_("Upgrade To")}}
+						</div>
+						<a class="ui basic orange left pointing label">
+							latest
+						</a>
+					</div>
+					{% end %}
+				</i>
+
 				{% if not v.running then %}
 				<div class="ui green button" onclick="start_app('{{k}}');">
 					<i class="play icon"></i>{{_("Start")}}

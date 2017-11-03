@@ -5,7 +5,7 @@
 {-main-}
 <h1 class="header"> {{_("Installed Application List")}} </h1>
 
-{(widget/app_list.html, {apps=apps})}
+{(widget/app_list.html, {apps=apps, force_upgrade=force_upgrade})}
 
 <div class="ui basic segment">
 	<div id="check_for_update_btn" class="ui teal button" onclick="check_for_update();">{{_("Check Updates")}}</div>
