@@ -107,6 +107,36 @@ function response.set_conf(conf)
 	return mgr_snax.req.restart(app_name, "Confiruation change restart")
 end
 
+function response.app_req(msg, ...)
+	if not app then
+		return nil, "app is nil"
+	end
+	if app.response then
+		return protect_call(app, 'response', msg, ...)
+	else
+		local msg = 'on_req_'..msg
+		if app[msg] then
+			return protect_call(app, msg, ...)
+		end
+	end
+	return nil, "no handler for request message "..msg
+end
+
+function accept.app_post(msg, ...)
+	if not app then
+		return nil, "app is nil"
+	end
+	if app.accept then
+		return protect_call(app, 'accept', msg, ...)
+	else
+		local msg = 'on_post_'..msg
+		if app[msg] then
+			return protect_call(app, msg, ...)
+		end
+	end
+	return nil, "no handler for post message "..msg
+end
+
 function init(name, conf, mgr_handle, mgr_type)
 	-- Disable Skynet Code Cache!!
 	cache.mode('EXIST')
