@@ -15,6 +15,26 @@ local function pretty_memory(size)
 	return size
 end
 
+local function pretty_time(time)
+	local time = tonumber(time)
+	local tsec = time % 60
+	local tmin = math.floor((time % 3600) / 60) or 0
+	local thour = math.floor((time % (3600 * 24)) / 3600) or 0
+	local tday = math.floor(time / (3600 * 24)) or 0
+	local t = nil
+	if t or tday ~= 0 then
+		t = tday.." "
+	end
+	if t or thour ~= 0 then
+		t = (t or "")..thour..":"
+	end
+	if t or tmin ~= 0 then
+		t = (t or "")..tmin..":"
+	end
+	t = (t or "")..tsec
+	return t
+end
+
 return {
 	get = function(self)
 		if lwf.auth.user == 'Guest' then
@@ -43,7 +63,7 @@ return {
 		
 		local cloud = snax.uniqueservice('cloud')
 		local cloud_status, cloud_last = cloud.req.get_status()
-		cloud_last = math.floor(skynet.time() - cloud_last)
+		cloud_last = pretty_time(math.floor(skynet.time() - cloud_last))
 
 		lwf.render('dashboard.html', {
 			version = version, 

@@ -162,6 +162,18 @@ function sys:id()
 	return dc.wait("CLOUD", "ID")
 end
 
+-- Fire request to app self, which will call your app.response or on_req_<msg> if on_post does not exists
+function sys:req(msg, ...)
+	assert(self._wrap_snax)
+	return self._wrap_snax.req.app_req(msg, ...)
+end
+
+-- Post message to app self, which will call your app.accept or on_post_<msg> if on_post does not exists
+function sys:post(msg, ...)
+	assert(self._wrap_snax)
+	return self._wrap_snax.post.app_post(msg, ...)
+end
+
 function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
 	self._wrap_snax = wrap_snax
