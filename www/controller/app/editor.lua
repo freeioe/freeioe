@@ -15,6 +15,14 @@ local function get_app_path(app, ...)
 	return path_join("./iot/apps", app, ...)
 end
 
+local function basename(path)
+	return string.math('^.+/([^/]+)$')
+end
+
+local function dirname(path)
+	return string.math('^(.+)/[^/]+$')
+end
+
 local function list_nodes(app, sub)
 	local nodes = {}
 	local directory = get_app_path(app, sub)
@@ -72,6 +80,7 @@ local get_ops = {
 	create_node = function(app, node, opt)
 		file_type = opt['type']
 		name = opt.text
+		local id = path_join(node, name)
 		if file_type == 'file' then
 			local path = get_app_path(app, node, name)
 			if lfs.attributes(path) then
@@ -80,14 +89,14 @@ local get_ops = {
 			local f = assert(io.open(path, 'w+'))
 			f:close()
 			return {
-				id = path_join(node, name),
+				id = id,
 				icon = "file file-"..get_file_ext(name)
 			}
 		else
 			local path = get_app_path(app, node, name)
 			lfs.mkdir(path)
 			return {
-				id = path_join(node, name)
+				id = id
 			}
 		end
 	end,
@@ -97,17 +106,28 @@ local get_ops = {
 		end
 		new_name = opt.text
 		local path = get_app_path(app, node)
-		local new_path = get_app_path(app, new_name)
+		local new_node = path_join(dirname(node), new_name)
+		local new_path = get_app_path(app, new_node)
 		assert(os.rename(path, new_path))
-		return {
-			status = 'OK'
-		}
+		local mode = lfs.attributes(new_path, 'mode')
+		if mode == 'file' then
+			return {
+				id = new_node,
+				icon = 'file file-'..get_file_ext(new_node)
+			}
+		else
+			return {
+				id = new_node
+			}
+		end
 	end,
 	move_node = function(app, node, opt)
 		local dst = opt.parent ~= '/' and opt.parent or ''
 		local dst_path = get_app_path(app, dst)..'/'
 		os.execute('cp -r '..get_app_path(app, node)..' '..dst_path)
-		return { status = 'OK' }
+		return { 
+			id = dst_path..basename(node)
+		}
 	end,
 	delete_node = function(app, node, opt)
 		if node == '/' then
@@ -144,6 +164,11 @@ local get_ops = {
 
 local post_ops = {
 	set_content = function(app, node, opt)
+		local content = opt.text
+		local path = get_app_path(app, node)
+		local f = assert(io.open(path, 'w'))
+		f:write(content)
+		f:close()
 	end,
 }
 
@@ -174,13 +199,15 @@ return {
 
 		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
-		assert(post.inst)
-		local appmgr = snax.uniqueservice('appmgr')
-		local r, err = appmgr.req.start(post.inst)
-		if r then
-			ngx.print(_('Application started!'))
+		local app = post.app
+		local operation = post.operation
+		local node_id = post.id
+		local f = post_ops[operation]
+		local content, err = f(app, node_id, post)
+		if content then
+			return lwf.json(self, content)
 		else
-			ngx.print(err)
+			return self:exit(500, err)
 		end
 	end,
 }
