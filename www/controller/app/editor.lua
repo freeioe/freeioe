@@ -16,11 +16,11 @@ local function get_app_path(app, ...)
 end
 
 local function basename(path)
-	return string.math('^.+/([^/]+)$')
+	return string.match(path, '^.-/([^/]+)$') or path
 end
 
 local function dirname(path)
-	return string.math('^(.+)/[^/]+$')
+	return string.match(path, '^(.+)/[^/]+$') or ''
 end
 
 local function list_nodes(app, sub)
@@ -124,9 +124,9 @@ local get_ops = {
 	move_node = function(app, node, opt)
 		local dst = opt.parent ~= '/' and opt.parent or ''
 		local dst_path = get_app_path(app, dst)..'/'
-		os.execute('cp -r '..get_app_path(app, node)..' '..dst_path)
+		os.execute('mv '..get_app_path(app, node)..' '..dst_path)
 		return { 
-			id = dst_path..basename(node)
+			id = path_join(dst, basename(node))
 		}
 	end,
 	delete_node = function(app, node, opt)
@@ -169,6 +169,7 @@ local post_ops = {
 		local f = assert(io.open(path, 'w'))
 		f:write(content)
 		f:close()
+		return { status = 'OK' }
 	end,
 }
 
