@@ -1,5 +1,6 @@
 local class = require 'middleclass'
 local log = require 'log'
+local formatter = require 'log.formatter.concat'.new()
 
 local logger = class("APP_MGR_LOG")
 
@@ -11,7 +12,7 @@ end
 function logger:log(level, ...)
 	--lvl = log.lvl2number(level)
 
-	local s = table.concat({...}, '\t')
+	local s = formatter(...)
 	local now = os.time()
 	local los = self._log_buf[level]
 	if los then
