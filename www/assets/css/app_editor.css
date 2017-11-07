@@ -1,0 +1,103 @@
+#editor_container {
+    min-width:320px;
+    margin:0px auto 0 auto;
+    background:white;
+    border-radius:0px;
+    padding:0px;
+    overflow:hidden;
+}
+#jstree_tree {
+    float:left;
+    min-width:319px;
+    border-right:1px solid silver;
+    overflow:auto;
+    padding:0px 0;
+}
+#editor_data {
+    margin-left:320px;
+}
+#editor_data #editor_code {
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    border:0;
+    display:block;
+    line-height:18px;
+    resize:none;
+}
+#jstree_tree .folder {
+    background:url('/assets/jstree/file_sprite.png') right bottom no-repeat;
+}
+#jstree_tree .file {
+    background:url('/assets/jstree/file_sprite.png') 0 0 no-repeat;
+}
+#jstree_tree .file-pdf {
+    background-position: -32px 0
+}
+#jstree_tree .file-as {
+    background-position: -36px 0
+}
+#jstree_tree .file-c {
+    background-position: -72px -0px
+}
+#jstree_tree .file-iso {
+    background-position: -108px -0px
+}
+#jstree_tree .file-htm, #jstree_tree .file-html, #jstree_tree .file-xml, #jstree_tree .file-xsl {
+    background-position: -126px -0px
+}
+#jstree_tree .file-cf {
+    background-position: -162px -0px
+}
+#jstree_tree .file-cpp {
+    background-position: -216px -0px
+}
+#jstree_tree .file-cs {
+    background-position: -236px -0px
+}
+#jstree_tree .file-sql {
+    background-position: -272px -0px
+}
+#jstree_tree .file-xls, #jstree_tree .file-xlsx {
+    background-position: -362px -0px
+}
+#jstree_tree .file-h {
+    background-position: -488px -0px
+}
+#jstree_tree .file-crt, #jstree_tree .file-pem, #jstree_tree .file-cer {
+    background-position: -452px -18px
+}
+#jstree_tree .file-php {
+    background-position: -108px -18px
+}
+#jstree_tree .file-jpg, #jstree_tree .file-jpeg, #jstree_tree .file-png, #jstree_tree .file-gif, #jstree_tree .file-bmp {
+    background-position: -126px -18px
+}
+#jstree_tree .file-ppt, #jstree_tree .file-pptx {
+    background-position: -144px -18px
+}
+#jstree_tree .file-rb {
+    background-position: -180px -18px
+}
+#jstree_tree .file-text, #jstree_tree .file-txt, #jstree_tree .file-md, #jstree_tree .file-log, #jstree_tree .file-htaccess {
+    background-position: -254px -18px
+}
+#jstree_tree .file-doc, #jstree_tree .file-docx {
+    background-position: -362px -18px
+}
+#jstree_tree .file-zip, #jstree_tree .file-gz, #jstree_tree .file-tar, #jstree_tree .file-rar {
+    background-position: -416px -18px
+}
+#jstree_tree .file-js {
+    background-position: -434px -18px
+}
+#jstree_tree .file-css {
+    background-position: -144px -0px
+}
+#jstree_tree .file-fla {
+    background-position: -398px -0px
+}
+#jstree_tree .file-lua, #jstree_tree .file-py {
+    background-position: -434px -18px
+}

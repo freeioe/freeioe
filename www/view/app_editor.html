@@ -1,0 +1,141 @@
+{% layout="base.html" %}
+
+{-title-}
+{{_("Online Editor ")}} {{inst}}
+{-title-}
+
+{-base_header-}
+<link rel="stylesheet" type="text/css" href="/assets/jstree/themes/default/style.min.css">
+<link rel="stylesheet" type="text/css" href="/assets/css/app_editor.css">
+{-base_header-}
+
+{-main_header-}
+{-main_header-}
+
+{-main-}
+<div class="ui basic segments">
+	<div class="ui stackable two column grid">
+  		<div class="column" id="jstree_tree_menu">
+			<div class="ui small secondary menu toolbar">
+				<a class="popup icon item start" data-content="Start/Stop Application"><i class="stop icon"></i></a>
+				<a class="disabled popup icon item upload" data-content="Upload Changes"><i class="upload icon"></i></a>
+				<a class="popup icon item folder" data-content="Create Folder"><i class="folder icon"></i></a>
+				<a class="popup icon item file" data-content="Create File"><i class="file icon"></i></a>
+				<a class="popup icon item rename" data-content="Rename"><i class="write icon"></i></a>
+				<a class="popup icon item delete" data-content="Delete"><i class="trash outline icon"></i></a>
+		  	</div>
+		</div>
+  		<div class="column" id="editor_menu">
+			<div class="ui small secondary menu toolbar">
+				<a class="popup icon item save" data-content="Save File"><i class="save icon"></i></a>
+				<a class="popup icon item download" data-content="Fetch File"><i class="download icon"></i></a>
+				<a class="popup icon item undo" data-content="Undo"><i class="undo icon"></i></a>
+				<a class="popup icon item redo" data-content="Redo"><i class="repeat icon"></i></a>
+				<a class="popup icon item zoom" data-content="Font Zoom"><i class="zoom icon"></i></a>
+				<a class="popup icon item zoom_out" data-content="Font Zoom Out"><i class="zoom out icon"></i></a>
+				<a class="popup icon item align_justify" data-content="Align Justify"><i class="align justify icon"></i></a>
+
+				<!--
+				<a class="popup icon item indent" data-content="Indent"><i class="indent icon"></i></a>
+				<a class="popup icon item outdent" data-content="Outdent"><i class="outdent icon"></i></a>
+				-->
+				<div class="right menu">
+					<a class="disabled icon item title"><b>{{_("File Editor")}}</b></a>
+				</div>
+		  	</div>
+		</div>
+	</div>
+	<div id="editor_container">
+		<div id="jstree_tree"></div>
+		<div id="editor_data">
+			<div class="content code" style="display:none;">
+				<div id="editor_code">-- hello.lua
+-- the first program in every language
+
+io.write("Hello world, from ",_VERSION,"!\n")</div>
+			</div>
+			<div class="content folder" style="display:none;"></div>
+			<div class="content image" style="display:none; position:relative;">
+				<img src="" alt="" style="display:block; position:absolute; left:50%; top:50%; padding:0; max-height:90%; max-width:90%;" />
+			</div>
+			<div class="content default" style="text-align:center;">{{_("Select a file from the tree.")}}</div>
+		</div>
+	</div>
+</div>
+
+<div class="ui new_tag modal">
+	<div class="header">
+		{{_("Tag a new version")}}
+	</div>
+	<div class="content">
+		<form class="ui new_tag form" action="/api/method/app_center.appmgr.editor_release" method="post" accept-charset="utf-8">
+			<input value="{{inst}}" readonly="true" name="app" type="hidden">
+			<div class="field">
+				<label>{{_("Version")}}</label>
+				<input name="version" type="text" tabindex="0"/>
+			</div>
+			<div class="field">
+				<label>{{_("Comment")}}</label>
+				<textarea name="comment"></textarea>
+			</div>
+			<div class="inline field">
+				<div class="ui checkbox">
+					<input name="terms" tabindex="0" class="hidden" type="checkbox">
+					<label>I agree to the terms and conditions</label>
+				</div>
+			</div>
+			<div class="ui primary submit button">{{_("Create")}}</div>
+			<div class="ui cancel button">{{_("Cancel")}}</div>
+			<div class="ui success message"></div>
+			<div class="ui error message"></div>
+		</form>
+	</div>
+</div>
+
+<div class="ui mini revert_app modal">
+	<div class="header">
+		{{_("Revert editor workspace to")}}
+	</div>
+	<div class="content">
+		<form class="ui revert_app form" action="/api/method/app_center.appmgr.editor_revert" method="post" accept-charset="utf-8">
+			<input value="{{inst}}" readonly="true" name="app" type="hidden">
+			<div class="field">
+				<label>{{_("Version")}}</label>
+				<input name="version" type="text" tabindex="0"/>
+			</div>
+			<div class="ui primary submit button">{{_("Revert")}}</div>
+			<div class="ui cancel button">{{_("Cancel")}}</div>
+			<div class="ui success message"></div>
+			<div class="ui error message"></div>
+		</form>
+	</div>
+</div>
+
+<div class="ui mini revert_file modal">
+	<div class="header">
+		{{_("Fetch file from server")}}
+	</div>
+	<div class="content">
+		{{_("<p>This will delete all local changes! Are you sure?</p>")}}
+	</div>
+	<div class="actions">
+		<div class="ui negative button">
+			{{_("No")}}
+		</div>
+		<div class="ui positive right labeled icon button">
+			{{_("Yes")}}
+			<i class="checkmark icon"></i>
+		</div>
+	</div>
+</div>
+{-main-}
+
+{-script-}
+<script type="text/javascript" src="/assets/jstree/jstree.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/assets/ace/ace.js" charset="utf-8"></script>
+<script type="text/javascript" src="/assets/js/app_editor.js" charset="utf-8"></script>
+{-script-}
+
+{-footer-}
+{-footer-}
+

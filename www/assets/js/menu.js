@@ -4,10 +4,13 @@ $(document).ready(function() {
 
   // selector cache
   var
-    $dropdownItem = $('.main.container .menu .dropdown .item'),
-    $popupItem    = $('.main.container .popup.example .browse.item'),
-    $menuItem     = $('.main.container .menu a.item, .menu .link.item').not($dropdownItem),
-    $dropdown     = $('.main.container .menu .ui.dropdown'),
+    $dropdownItem = $('.ui.menu .dropdown .item'),
+    $popupItem    = $('.ui.menu .email.item'),
+    $toolbarMenuPopup    = $('.ui.secondary.menu.toolbar .popup.item'),
+    $menuItem     = $('.ui.menu a.item, .menu .link.item').not($dropdownItem).not($toolbarMenuPopup),
+    $dropdown     = $('.ui.menu .ui.dropdown'),
+    $menuPopup    = $('.ui.menu .popup.item').not($toolbarMenuPopup),
+    $languageDropdown    = $('.language.dropdown'),
     // alias
     handler = {
 
@@ -21,8 +24,16 @@ $(document).ready(function() {
               .removeClass('active')
           ;
         }
-      }
-
+      },
+      toolbar_activate: function() {
+      	var menu_obj = $(this);
+        menu_obj.popup('hide');
+        menu_obj.addClass('clicked');
+        setTimeout(function() { menu_obj.removeClass('clicked'); }, 1000);
+      },
+      toolbar_onshow: function(popup) {
+      	return !$(popup).hasClass('clicked');
+	  }
     }
   ;
 
@@ -38,26 +49,13 @@ $(document).ready(function() {
       apiSettings: {
         action: 'categorySearch'
       }
-    })
-  ;
-
-  $('.school.example .browse.item')
-    .popup({
-      popup     : '.admission.popup',
-      hoverable : true,
-      position  : 'bottom left',
-      delay     : {
-        show: 300,
-        hide: 800
-      }
-    })
-  ;
+    });
 
   $popupItem
     .popup({
       inline   : true,
-      hoverable: true,
-      popup    : '.fluid.popup',
+      hoverable: false,
+      popup    : '.ui.fluid.popup',
       position : 'bottom left',
       delay: {
         show: 300,
@@ -70,5 +68,31 @@ $(document).ready(function() {
     .on('click', handler.activate)
   ;
 
+  $toolbarMenuPopup
+    .add($languageDropdown)
+    .popup({
+      position  : 'bottom left',
+      inline  : true,
+      delay: {
+        show: 1000,
+        hide: 0
+      },
+      onShow: handler.toolbar_onshow,
+    })
+  ;
+  $toolbarMenuPopup
+    .on('click', handler.toolbar_activate)
+  ;
+
+  $menuPopup
+    .add($languageDropdown)
+    .popup({
+      position  : 'bottom center',
+      delay: {
+        show: 100,
+        hide: 50
+      }
+    })
+  ;
 });
 

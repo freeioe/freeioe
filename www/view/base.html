@@ -158,6 +158,9 @@
 								{* blocks.main *}
 							</div>
 						</div>
+						{% if blocks.footer then %}
+						{* blocks.footer *}
+						{% else %}
 						<div class="ui divider"></div>
 						<div align="center">
 							<div class="ui stackable divided relaxed grid">
@@ -186,6 +189,7 @@
 								</div>
 							</div>
 						</div>
+						{% end %}
 					</div>
 				</div>
 			</div>
@@ -195,6 +199,8 @@
 		<script type="text/javascript" src="/assets/library/less.min.js"></script>
 
 		<script type="text/javascript" src="/assets/js/main.js"></script>
+		<script type="text/javascript" src="/assets/js/menu.js"></script>
+		<script type="text/javascript" src="/assets/js/popup.js"></script>
 		<script type="text/javascript" src="/assets/js/validate-form.js"></script>
 		<script type="text/javascript" src="/assets/js/message.js"></script>
 		<script type="text/javascript" src="/assets/js/table.js"></script>
