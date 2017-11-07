@@ -5,7 +5,7 @@
 {-main-}
 <h1 class="header"> {{_("Installed Application List")}} </h1>
 
-{(widget/app_list.html, {apps=apps, force_upgrade=force_upgrade})}
+{(widget/app_list.html, {apps=apps, force_upgrade=force_upgrade, using_beta=using_beta})}
 
 <div class="ui basic segment">
 	<div id="check_for_update_btn" class="ui teal button" onclick="check_for_update();">{{_("Check Updates")}}</div>
@@ -83,7 +83,7 @@ function check_app_update(inst, app, version) {
 				vstr = "beta." + vstr;
 			};
 			var html = [
-				'<div class="ui labeled button" onclick="upgrade_app(\''+inst+'\', \''+app+'\', \''+data.version+'\');">',
+				'<div class="ui labeled button upgrade" data-inst="'+inst+'" data-app="'+app+'" data-version="'+data.version+'">',
 				'<div class="ui orange button">',
 				'<i class="info circle icon"></i> {{_("Upgrade To")}}',
 				'</div>',
@@ -132,6 +132,23 @@ function check_for_update() {
 
 $(document).ready(function(){
 	//setTimeout('check_for_updates()', 1000);
+	$('.ui.button.upgrade').click(function() {
+		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
+	});
+	$('.ui.button.start').click(function() {
+		$(this).hide();
+		start_app($(this).data('inst'));
+	});
+	$('.ui.button.stop').click(function() {
+		$(this).hide();
+		stop_app($(this).data('inst'));
+	});
+	$('.ui.button.uninstall').click(function() {
+		uninstall_app($(this).data('inst'));
+	});
+	$('.ui.button.editor').click(function() {
+		window.href.location = "/app_editor?app=" + $(this).data('inst');
+	});
 });
 </script>
 {-script-}

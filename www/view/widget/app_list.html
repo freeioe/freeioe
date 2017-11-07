@@ -19,7 +19,7 @@
 			<td id="{{k}}_actions_col">
 				<i id="{{k}}_upgrade_col">
 					{% if force_upgrade then %}
-					<div class="ui labeled button" onclick="upgrade_app('{{k}}', '{{v.name}}', 'latest');">
+					<div class="ui labeled button button upgrade" data-inst="{{k}}", data-app="{{v.name}}" data-version="latest">
 						<div class="ui orange button">
 							<i class="info circle icon"></i> {{_("Upgrade To")}}
 						</div>
@@ -31,17 +31,22 @@
 				</i>
 
 				{% if not v.running then %}
-				<div class="ui green button" onclick="start_app('{{k}}');">
+				<div class="ui green button start" data-inst="{{k}}">
 					<i class="play icon"></i>{{_("Start")}}
 				</div>
 				{% else %}
-				<div class="ui gray button" onclick="stop_app('{{k}}');">
+				<div class="ui gray button stop" data-inst="{{k}}">
 					<i class="play stop icon"></i>{{_("Stop")}}
 				</div>
 				{% end %}
-				<div class="ui brown button" onclick="uninstall_app('{{k}}');">
+				<div class="ui brown button uninstall" data-inst="{{k}}">
 					<i class="trash icon"></i>{{_("Uninstall")}}
 				</div>
+				{% if using_beta then %}
+				<div class="ui green button editor" data-inst="{{k}}">
+					<i class="edit icon"></i>{{_("Online Editor")}}
+				</div>
+				{% end %}
 			</td>
 		</tr>
 		{% end %}

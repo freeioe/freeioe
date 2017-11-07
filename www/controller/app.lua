@@ -16,7 +16,8 @@ return {
 				v.version = math.floor(v.version)
 			end
 			local pkg_host_url = dc.get('PKG_HOST_URL')
-			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade})
+			local using_beta = dc.get('CLOUD', 'USING_BETA')
+			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta})
 		end
 	end
 }
