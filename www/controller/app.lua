@@ -8,11 +8,11 @@ return {
 			self:redirect('/user/login')
 			return
 		else
-			local apps = dc.get('APPS')
+			local apps = dc.get('APPS') or {}
 			local appmgr = snax.uniqueservice('appmgr')
 			local applist = appmgr.req.list()
 			for k, v in pairs(apps) do
-				v.running = applist[k].inst
+				v.running = applist[k] and applist[k].inst or nil
 				v.version = math.floor(v.version)
 			end
 			local pkg_host_url = dc.get('PKG_HOST_URL')
