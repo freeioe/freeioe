@@ -66,28 +66,69 @@ local get_ops = {
 			}
 			return {root}
 		else
-			list_nodes(app, node)
+			return list_nodes(app, node)
 		end
 	end,
 	create_node = function(app, node, opt)
 		file_type = opt['type']
 		name = opt.text
-		-- TODO:
+		if file_type == 'file' then
+			local path = get_app_path(app, node, name)
+			if lfs.attributes(path) then
+				return nil, "File already exits"
+			end
+			local f = assert(io.open(path, 'w+'))
+			f:close()
+			return {
+				id = path_join(node, name),
+				icon = "file file-"..get_file_ext(name)
+			}
+		else
+			local path = get_app_path(app, node, name)
+			lfs.mkdir(path)
+			return {
+				id = path_join(node, name)
+			}
+		end
 	end,
 	rename_node = function(app, node, opt)
+		if node == '/' then
+			return nil, "cannot rename root"
+		end
 		new_name = opt.text
+		local path = get_app_path(app, node)
+		local new_path = get_app_path(app, new_name)
+		assert(os.rename(path, new_path))
+		return {
+			status = 'OK'
+		}
 	end,
 	move_node = function(app, node, opt)
-		dst = opt.parent ~= '/' and opt.parent or ''
+		local dst = opt.parent ~= '/' and opt.parent or ''
+		local dst_path = get_app_path(app, dst)..'/'
+		os.execute('cp -r '..get_app_path(app, node)..' '..dst_path)
+		return { status = 'OK' }
 	end,
 	delete_node = function(app, node, opt)
-		dst = opt.parent
-		if dst ~= '/' then
-			-- TODO:
+		if node == '/' then
+			return nil, "cannot delete root"
+		end
+		local path = get_app_path(app, node)
+		local mode = lfs.attributes(path, 'mode')
+		if mode == 'file' then
+			assert(os.remove(path))
+			return { status = 'OK' }
+		end
+		if mode == 'directory' then
+			assert(lfs.rmdir(path))
+			return { status = 'OK' }
 		end
 	end,
 	copy_node = function(app, node, opt)
-		dst = opt.parent ~= '/' and opt.parent or ''
+		local dst = opt.parent ~= '/' and opt.parent or ''
+		local dst_path = get_app_path(app, dst)..'/'
+		os.execute('cp -r '..get_app_path(app, node)..' '..dst_path)
+		return { status = 'OK' }
 	end,
 	get_content = function(app, node, opt)
 		local path = get_app_path(app, node)
@@ -118,8 +159,12 @@ return {
 		local operation = get.operation
 		local node_id = get.id ~= '/' and get.id or ''
 		local f = get_ops[operation]
-		local content = f(app, node_id, get) or ''
-		return lwf.json(self, content)
+		local content, err = f(app, node_id, get)
+		if content then
+			return lwf.json(self, content)
+		else
+			return self:exit(500, err)
+		end
 	end,
 	post = function(self)
 		if lwf.auth.user == 'Guest' then
