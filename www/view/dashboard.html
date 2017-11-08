@@ -278,15 +278,15 @@ function check_for_update(btn) {
 			$('.ui.sys_upgrade.form input[name="version"]').val(upgrade_version);
 		}
 		if (data && data.skynet) {
-{% if not force_upgrade then %}
 			if (data.skynet.version > skynet_version) {
 				cf.find('.skynet.checkbox').checkbox('check');
 				cf.find('.skynet.checkbox').removeClass('disabled');
 			} else {
 				cf.find('.skynet.checkbox').checkbox('uncheck');
+{% if not force_upgrade then %}
 				cf.find('.skynet.checkbox').addClass('disabled');
-			}
 {% end %}
+			}
 			upgrade_skynet_version = data.skynet.version;
 			if (data.skynet.beta) {
 				upgrade_skynet_version = "beta." + upgrade_skynet_version
