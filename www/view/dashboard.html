@@ -85,8 +85,8 @@
 		<div class="ui teal icon button upgrade_ack">{{_("Upgrade ACK")}}</div>
 		{% else %}
 		{% if using_beta then %}
-		<div class="ui checkbox check_beta">
-			<input type="checkbox">
+		<div class="ui toggle checked checkbox check_beta">
+			<input class="hidden" type="checkbox" checked="true">
 			<label>{{_("Check Beta")}}</label>
 		</div>
 		{% end %}
@@ -112,12 +112,12 @@
 		<input type="hidden" name="from_web" value="1">
 		<input type="hidden" name="version" value="latest">
 		<input type="hidden" name="skynet_version" value="latest">
-		<div class="ui checkbox">
-			<input type="checkbox" name="skip_ack">
-			<label>{{_("Skip Ack?")}}</label>
+		<div class="ui toggle checkbox">
+			<input class="hidden" type="checkbox" name="skip_ack">
+			<label>{{_("With Skynet?")}}</label>
 		</div>
-		<div class="ui skynet checked checkbox">
-			<input type="checkbox" checked="true" name="with_skynet">
+		<div class="ui skynet toggle checked checkbox">
+			<input class="hidden" type="checkbox" checked="true" name="with_skynet">
 			<label>{{_("With Skynet?")}}</label>
 		</div>
 		<div class="ui primary labeled submit button">
@@ -254,7 +254,7 @@ function check_for_update(btn) {
 
 	check_iot_version();
 
-	var beta = cf.find('.check_beta').is(':checked');
+	var beta = cf.find('.check_beta').checkbox('is checked');
 	var version = {{version.iot.ver}};
 	var skynet_version = {{version.skynet.ver}};
 	$.get("/sys/check_update", {from_web:true, beta:beta}, function(data) {
