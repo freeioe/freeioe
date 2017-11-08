@@ -120,7 +120,7 @@
 			<input type="checkbox" checked="true">
 			<label>{{_("With Skynet?")}}</label>
 		</div>
-		<div class="ui primary labeled button">
+		<div class="ui primary labeled submit button">
 			<div class="ui yellow button">
 				<i class="info circle icon"></i> {{_("Upgrade To")}}
 			</div>
@@ -197,13 +197,13 @@ function loader_test() {
 function sys_control(action, timeout) {
 	var cf = $('.ui.control.form');
 	$.post("/sys/control", {from_web:true, action:action}, function(data) {
-		log_ok_message(cf, '<i>' + data + '</i>');
+		print_ok_message(cf, '<i>' + data + '</i>');
 	})
 	.done(function() {
 		setTimeout(refresh_page, timeout);
 	})
 	.fail(function() {
-		log_ok_message(cf, '<i>{{_("Failed to send request ")}}' + action + ' </i>');
+		print_ok_message(cf, '<i>{{_("Failed to send request ")}}' + action + ' </i>');
 	});
 
 };
@@ -234,7 +234,7 @@ function check_iot_version() {
 	})
 	.fail(function() {
 		var cf = $('.ui.control.form');
-		log_err_message(cf, '<i>{{_("Failed to check system version")}} </i>');
+		print_err_message(cf, '<i>{{_("Failed to check system version")}} </i>');
 	});
 };
 function enable_update_btn() {
