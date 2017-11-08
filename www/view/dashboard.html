@@ -43,7 +43,7 @@
 	</div>
 	{% if rollback_time then %}
 	<div class="ui orange statistic">
-		<div class="value">
+		<div class="rollback_time value">
 			{{rollback_time}}
 		</div>
 		<div class="label">
@@ -53,7 +53,7 @@
 	{% end %}
 	{% if cloud_status then %}
 	<div class="ui green statistic">
-		<div class="value">
+		<div class="uptime value">
 			{{cloud_last}}
 		</div>
 		<div class="label">
@@ -62,7 +62,7 @@
 	</div>
 	{% else %}
 	<div class="ui red statistic">
-		<div class="value">
+		<div class="uptime value">
 			{{cloud_last}}
 		</div>
 		<div class="label">
@@ -326,6 +326,37 @@ $(document).ready(function(){
 	$('.ui.control.form .button.reboot').click(function() {
 		sys_control('reboot', 20000);
 	});
+
+	countdown.setLabels(
+		'|s|m|h|d|w|m|y|decade|century|millennium',
+		'|s|m|h|d|w|m|y|decades|centuries|millennia',
+		' and ',
+		', ',
+		'',
+		function(n){ return n.toString(); });
+
+	{% if rollback_time then %}
+	var rollback_time = {{rollback_time}} * 1000;
+	window.setTimeout(function() {
+		refresh_page();
+	}, rollback_time);
+	var rb_end = new Date();
+	var rb_timerId =
+		countdown(
+			rb_end.getTime() + rollback_time,
+			function(ts) {
+				$('.rollback_time.value').html(ts.toHTML());
+			},
+			countdown.DAYS|countdown.HOURS|countdown.MINUTES|countdown.SECONDS);
+	{% end %}
+
+	var timerId =
+		countdown(
+			{{cloud_last}} * 1000,
+			function(ts) {
+				$('.uptime.value').html(ts.toHTML());
+			},
+			countdown.DAYS|countdown.HOURS|countdown.MINUTES|countdown.SECONDS);
 });
 </script>
 {-script-}

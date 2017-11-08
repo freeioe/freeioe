@@ -63,7 +63,8 @@ return {
 		
 		local cloud = snax.uniqueservice('cloud')
 		local cloud_status, cloud_last = cloud.req.get_status()
-		cloud_last = pretty_time(math.floor(skynet.time() - cloud_last))
+		--cloud_last = pretty_time(math.floor(skynet.time() - cloud_last))
+		cloud_last = math.floor(cloud_last)
 
 		lwf.render('dashboard.html', {
 			version = version, 
