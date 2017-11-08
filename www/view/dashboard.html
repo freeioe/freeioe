@@ -293,19 +293,20 @@ function check_for_update(btn) {
 	});
 };
 $(document).ready(function(){
-	$('.ui.sys_upgrade.form').ajaxForm({
+	var sf = $('.ui.sys_upgrade.form');
+	sf.ajaxForm({
 		beforeSend: function () {
-			$(this).removeClass('success').removeClass('error');
+			sf.removeClass('success').removeClass('error');
 		},
 		success: function (response) {
-			$(this).find('.ui.success.message').html(response);
-			$(this).addClass('success');
+			sf.find('.ui.success.message').html(response);
+			sf.addClass('success');
 			setTimeout(refresh_page, 10000);
 		},
 		error: function(xhr) {
 			console.log('Exception:' + xhr.responseText);
-			$(this).find('.ui.error.message').html(xhr.responseText);
-			$(this).addClass('error');
+			sf.find('.ui.error.message').html(xhr.responseText);
+			sf.addClass('error');
 		}
 	});
 	$('.ui.button.check_update').click(function() {
