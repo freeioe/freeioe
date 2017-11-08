@@ -66,6 +66,7 @@ return {
 		--cloud_last = pretty_time(math.floor(skynet.time() - cloud_last))
 		cloud_last = math.floor(cloud_last)
 		local uptime = string.match(sysinfo.exec('cat /proc/uptime') or "", "%d+")
+		local uptime_str = sysinfo.exec('uptime -s')
 
 		lwf.render('dashboard.html', {
 			version = version, 
@@ -83,6 +84,7 @@ return {
 			cloud_status = cloud_status,
 			cloud_last = cloud_last,
 			uptime = uptime,
+			uptime_str = uptime_str,
 		})
 	end
 }
