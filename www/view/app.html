@@ -58,8 +58,6 @@ function start_app(inst) {
 	.done(function() {
 		//setTimeout('refresh_page()', 3000);
 		var filter = '#'+ inst + '_actions_col ';
-		var btn = $(filter + '.ui.button.start');
-		var btn2 = $(filter + '.ui.button.stop');
 		$(filter + '.ui.button.start').hide();
 		$(filter + '.ui.button.stop').show();
 	})
@@ -75,8 +73,6 @@ function stop_app(inst) {
 	.done(function() {
 		//setTimeout('refresh_page()', 3000);
 		var filter = '#'+ inst + '_actions_col ';
-		var btn = $(filter + '.ui.button.start');
-		var btn2 = $(filter + '.ui.button.stop');
 		$(filter + '.ui.button.stop').hide();
 		$(filter + '.ui.button.start').show();
 	})

@@ -1,4 +1,4 @@
-<div class="ui container">
+<div class="ui debuger container">
 	<div class="ui small secondary menu toolbar">
 		<a class="popup icon item start" data-content="Start application"><i class="play icon"></i></a>
 		<a class="popup icon item stop" data-content="Stop application"><i class="stop icon"></i></a>
@@ -17,20 +17,53 @@
 </div>
 
 <script>
+
+function reset_message() {
+	$('.ui.debuger_main.form').removeClass('success').removeClass('error');
+};
+function print_err_message(msg) {
+	reset_message();
+	console.log('Exception:' + msg);
+	$('.ui.debuger_main.form .ui.error.message').html(msg);
+	$('.ui.debuger_main.form').addClass('error');
+};
+function print_ok_message(msg) {
+	reset_message();
+	console.log('OK:' + msg);
+	$('.ui.debuger_main.form .ui.success.message').html(msg);
+	$('.ui.debuger_main.form').addClass('success');
+};
+
+function start_app(inst) {
+	$.post("/app/start", {from_web:true, inst:inst}, function(data) {
+		print_ok_message('<i>' + data + '</i>');
+	})
+	.done(function() {
+	})
+	.fail(function() {
+		print_err_message('<i>{{_("Failed to send start request")}}</i>');
+	});
+}
+
+function stop_app(inst) {
+	$.post("/app/stop", {from_web:true, inst:inst, reason:'Stop from web'}, function(data) {
+		print_ok_message('<i>' + data + '</i>');
+	})
+	.done(function() {
+	})
+	.fail(function() {
+		print_err_message('<i>{{_("Failed to send stop request")}}</i>');
+	});
+}
+
+
 $(document).ready(function(){
-	$('.ui.segment.debuger .ui.form').ajaxForm({
-		beforeSend: function () {
-			$('.ui.debuger_main.form').removeClass('success').removeClass('error');
-		},
-		success: function (response) {
-			$('.ui.debuger_main.form .ui.success.message').html(response);
-			$('.ui.debuger_main.form').addClass('success');
-		},
-		error: function(xhr) {
-			console.log('Exception:' + xhr.responseText);
-			$('.ui.debuger_main.form .ui.error.message').html(xhr.responseText);
-			$('.ui.debuger_main.form').addClass('error');
-		}
+	var inst = "{{app.inst}}";
+	$('.ui.debuger.container .item.start').click(function() {
+		start_app(inst);
+	});
+	$('.ui.debuger.container .item.stop').click(function() {
+		stop_app(inst);
 	});
 });
 </script>
