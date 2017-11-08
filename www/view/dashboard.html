@@ -54,7 +54,7 @@
 	{% if cloud_status then %}
 	<div class="ui green statistic">
 		<div class="uptime value">
-			{{cloud_last}}
+			0
 		</div>
 		<div class="label">
 			Online
@@ -350,9 +350,10 @@ $(document).ready(function(){
 			countdown.DAYS|countdown.HOURS|countdown.MINUTES|countdown.SECONDS);
 	{% end %}
 
+	var cloud_last = {{cloud_last}} * 1000;
 	var timerId =
 		countdown(
-			{{cloud_last}} * 1000,
+			cloud_last,
 			function(ts) {
 				$('.uptime.value').html(ts.toHTML());
 			},
