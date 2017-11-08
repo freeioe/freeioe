@@ -53,18 +53,18 @@
 	{% end %}
 	{% if cloud_status then %}
 	<div class="ui green statistic">
-		<div class="uptime value">
+		<div class="cloud_uptime value">
 		</div>
 		<div class="label">
-			Online
+			{{_("Online")}}
 		</div>
 	</div>
 	{% else %}
 	<div class="ui red statistic">
-		<div class="uptime value">
+		<div class="cloud_uptime value">
 		</div>
 		<div class="label">
-			Offline
+			{{_("Offline")}}
 		</div>
 	</div>
 	{% end %}
@@ -160,6 +160,10 @@
 				<tr>
 					<td>{{_("UNAME")}} </td>
 					<td>{{uname}}</td>
+				</tr>
+				<tr>
+					<td>{{_("UPTIME")}} </td>
+					<td class="uptime value"></td>
 				</tr>
 			</tbody>
 		</table>
@@ -325,37 +329,53 @@ $(document).ready(function(){
 		sys_control('reboot', 20000);
 	});
 
-	countdown.setLabels(
-		'|s|m|h|d|w|m|y|decade|century|millennium',
-		'|s|m|h|d|w|m|y|decades|centuries|millennia',
-		':',
-		' ',
-		'',
-		function(n){ return n.toString(); });
+	var set_short_format = function() {
+		countdown.setLabels(
+			'|s|m|h|d|w|m|y|de|ce|mi',
+			'|s|m|h|d|w|m|y|de|ce|mi',
+			':',
+			' ',
+			'',
+			function(n){ return n.toString(); });
+	}
+
+	var now_time = new Date();
 
 	{% if rollback_time then %}
 	var rollback_time = {{rollback_time}} * 1000;
 	window.setTimeout(function() {
 		refresh_page();
 	}, rollback_time);
-	var rb_end = new Date();
 	var rb_timerId =
 		countdown(
-			rb_end.getTime() + rollback_time,
+			now_time.getTime() + rollback_time,
 			function(ts) {
+				set_short_format();
 				$('.rollback_time.value').html(ts.toHTML());
 			},
 			countdown.DAYS|countdown.HOURS|countdown.MINUTES|countdown.SECONDS);
 	{% end %}
 
 	var cloud_last = {{cloud_last}} * 1000;
-	var timerId =
+	var cl_timerId =
 		countdown(
 			cloud_last,
 			function(ts) {
-				$('.uptime.value').html(ts.toHTML());
+				set_short_format();
+				$('.cloud_uptime.value').html(ts.toHTML());
 			},
 			countdown.DAYS|countdown.HOURS|countdown.MINUTES|countdown.SECONDS);
+
+	var uptime = {{uptime}} * 1000;
+	var up_timerId =
+		countdown(
+			now_time.getTime() - uptime,
+			function(ts) {
+				countdown.resetLabels();
+				$('.uptime.value').html(ts.toHTML("strong"));
+			},
+			countdown.DAYS|countdown.HOURS|countdown.MINUTES|countdown.SECONDS);
+
 });
 </script>
 {-script-}

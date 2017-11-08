@@ -8,7 +8,7 @@ local _M = {}
 --- Get output of shell command
 --
 _M.exec = function(cmd)
-	local f = io.open(cmd)
+	local f, err = io.popen(cmd)
 	if not f then
 		return nil, err
 	end
@@ -20,7 +20,7 @@ end
 --- Get the cpu model
 -- @treturn string CPU Model 
 _M.cpu_model = function()
-	local s = _M.exec('cat /proc/cpuinfo')
+	local s, err = _M.exec('cat /proc/cpuinfo')
 	--return s:match("Hardware%s+:%s+([^%c]+)")
 	return s:match("model%s+name%s*:%s*([^%c]+)") or s:match("system%s+type%s*:%s*([^%c]+)") or 'Unknown'
 end
