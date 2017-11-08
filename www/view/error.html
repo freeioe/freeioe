@@ -1,22 +1,60 @@
-<html>
-	<head>
-		<title> {{code}} </title>
-	</head>
-	<body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Standard Meta -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+	<link rel="icon" href="/assets/favicon.ico" mce_href="/assets/favicon.ico" type="image/x-icon" />
+	<link rel="shortcut icon" href="/assets/favicon.ico" type="image/x-icon" />
+	<link rel="image_src" type="image/jpeg" href="/assets/img/logo.png">
+    <!-- Site Properities -->
+	<title>{{code}} | Error Page</title>
+    <meta name="description" content="IOT System Admin" />
+	<link rel="stylesheet" type="text/css" href="/assets/semantic/semantic.min.css" />
+	<style type="text/css">
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+}
+html,
+body {
+    min-height: 100%;
+    height: 100%;
+    background: #f1f4f5;
+}
+html.ios {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+.error404 {
+	background: url(/assets/img/404.png) no-repeat top center #6a8733 !important;
+	background-size: cover;
+	width: 100%;
+	min-height: 100%;
+	overflow: hidden;
+}
+	</style>
+</head>
+<body class="error404">
+    <div class="ui error404 container" style="padding-top:5%">
+        <div class="ui grid center aligned">
+            <div class="row">
+                <div class="sixteen wide tablet ten wide computer column">
 
-		{{_('Error Page 111')}}	
-		{{ _("%d page 112", code) }}
-		{{_("%d page 113", code)}}
-		{* _("%d page 114", code) *}
-		{*_("%d page 115", code)*}
-		{*_('Error Page 116')*}	
-		{% local a = _("%d page 117", code) %}
-		{{a}}
-		{% a = 'bar.html' %}
-		{[a, { message = _("%d page 118", code) }]}
-
-		{(bar.html, { message = _("%d page 119", code) })}
-		{# This is comments #}
-	</body>
+                    <div class="ui container center aligned errorcontainer">
+                        <h1 class="ui header inverted">
+							{{_("Oooops! Sorry The Page Not Found :(")}}
+                        </h1>
+                        <a class="ui button" href="/">
+							{{_("Return the Homepage")}}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
-
