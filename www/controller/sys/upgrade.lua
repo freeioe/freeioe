@@ -7,13 +7,12 @@ return {
 		local version = post.version
 		local id = "from_web"
 
-		local skip_ack = post.skip_ack and post.skip_ack == 'true' or false
 		local args = {
-			no_ack = skip_ack,
+			no_ack = post.skip_ack,
 			version = version,
 		}
 
-		local with_skynet = post.with_skynet and post.with_skynet == 'true' or false
+		local with_skynet = post.with_skynet
 		if with_skynet then
 			args.skynet = {
 				version = post.skynet_version
