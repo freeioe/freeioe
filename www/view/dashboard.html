@@ -279,12 +279,12 @@ function check_for_update(btn) {
 		}
 		if (data && data.skynet) {
 			if (data.skynet.version > skynet_version) {
-				cf.find('.skynet.checkbox').checkbox('check');
-				cf.find('.skynet.checkbox').removeClass('disabled');
+				$('.ui.sys_upgrade.form .skynet.checkbox').checkbox('check');
+				$('.ui.sys_upgrade.form .skynet.checkbox').removeClass('disabled');
 			} else {
-				cf.find('.skynet.checkbox').checkbox('uncheck');
+				$('.ui.sys_upgrade.form .skynet.checkbox').checkbox('uncheck');
 {% if not force_upgrade then %}
-				cf.find('.skynet.checkbox').addClass('disabled');
+				$('.ui.sys_upgrade.form .skynet.checkbox').addClass('disabled');
 {% end %}
 			}
 			upgrade_skynet_version = data.skynet.version;
