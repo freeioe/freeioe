@@ -31,20 +31,26 @@
 				</i>
 
 				{% if not v.running then %}
-				<div class="ui green button start" data-inst="{{k}}">
-					<i class="play icon"></i>{{_("Start")}}
+				<div class="ui green icon button start" data-content="{{_('Start Application')}}" 1data-inst="{{k}}">
+					<i class="play icon"></i>
+				</div>
+				<div class="ui red icon button stop" data-content="{{_('Stop Application')}}" data-inst="{{k}}" style="display: none;">
+					<i class="stop icon"></i>
 				</div>
 				{% else %}
-				<div class="ui gray button stop" data-inst="{{k}}">
-					<i class="play stop icon"></i>{{_("Stop")}}
+				<div class="ui green icon button start" data-content="{{_('Start Application')}}" data-inst="{{k}}" style="display: none;">
+					<i class="play icon"></i>
+				</div>
+				<div class="ui red icon button stop" data-content="{{_('Stop Application')}}" data-inst="{{k}}">
+					<i class="stop icon"></i>
 				</div>
 				{% end %}
-				<div class="ui brown button uninstall" data-inst="{{k}}">
-					<i class="trash icon"></i>{{_("Uninstall")}}
+				<div class="ui brown icon button uninstall" data-content="{{_('Uninstall Application')}}" data-inst="{{k}}">
+					<i class="trash icon"></i>
 				</div>
 				{% if using_beta then %}
-				<div class="ui green button editor" data-inst="{{k}}">
-					<i class="edit icon"></i>{{_("Online Editor")}}
+				<div class="ui olive icon button editor" data-content="{{_('Online Editor')}}" data-inst="{{k}}">
+					<i class="edit icon"></i>
 				</div>
 				{% end %}
 			</td>

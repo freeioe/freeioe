@@ -8,7 +8,7 @@
 {(widget/app_list.html, {apps=apps, force_upgrade=force_upgrade, using_beta=using_beta})}
 
 <div class="ui basic segment">
-	<div id="check_for_update_btn" class="ui teal button" onclick="check_for_update();">{{_("Check Updates")}}</div>
+	<div class="ui teal button check_update" data-content="Query application updates">{{_("Check Updates")}}</div>
 </div>
 
 <div class="ui icon message">
@@ -56,7 +56,12 @@ function start_app(inst) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 3000);
+		//setTimeout('refresh_page()', 3000);
+		var filter = '#'+ inst + '_actions_col ';
+		var btn = $(filter + '.ui.button.start');
+		var btn2 = $(filter + '.ui.button.stop');
+		$(filter + '.ui.button.start').hide();
+		$(filter + '.ui.button.stop').show();
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to send start request")}}</i>');
@@ -68,7 +73,12 @@ function stop_app(inst) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 3000);
+		//setTimeout('refresh_page()', 3000);
+		var filter = '#'+ inst + '_actions_col ';
+		var btn = $(filter + '.ui.button.start');
+		var btn2 = $(filter + '.ui.button.stop');
+		$(filter + '.ui.button.stop').hide();
+		$(filter + '.ui.button.start').show();
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to send stop request")}}</i>');
@@ -118,16 +128,11 @@ function check_app_version(inst, app, version) {
 	.fail(function() {
 	});
 }
-function enable_update_btn() {
-	$('#check_for_update_btn').removeClass('disabled');
-}
 function check_for_update() {
-	$('#check_for_update_btn').addClass('disabled');
 	{% for k, v in pairs(apps) do %}
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
-	setTimeout('enable_update_btn()', 5000);
 }
 
 $(document).ready(function(){
@@ -136,11 +141,9 @@ $(document).ready(function(){
 		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
 	});
 	$('.ui.button.start').click(function() {
-		$(this).hide();
 		start_app($(this).data('inst'));
 	});
 	$('.ui.button.stop').click(function() {
-		$(this).hide();
 		stop_app($(this).data('inst'));
 	});
 	$('.ui.button.uninstall').click(function() {
@@ -148,6 +151,14 @@ $(document).ready(function(){
 	});
 	$('.ui.button.editor').click(function() {
 		window.location.href = "/app_editor?app=" + $(this).data('inst');
+	});
+	$('.ui.segment .ui.button.check_update').click(function() {
+		var btn = $(this);
+		btn.addClass('disabled');
+		check_for_update();
+		setTimeout(function() {
+			btn.removeClass('disabled');
+		}, 5000);
 	});
 });
 </script>

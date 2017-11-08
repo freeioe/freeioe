@@ -17,7 +17,8 @@
 	<div class="ui stackable two column grid">
   		<div class="column" id="jstree_tree_menu">
 			<div class="ui small secondary menu toolbar">
-				<a class="popup icon item start" data-content="Start/Stop Application"><i class="stop icon"></i></a>
+				<a class="popup icon item start" data-content="Start Application"><i class="play icon"></i></a>
+				<a class="popup icon item stop" data-content="Stop Application"><i class="stop icon"></i></a>
 				<a class="disabled popup icon item upload" data-content="Upload Changes"><i class="upload icon"></i></a>
 				<a class="popup icon item folder" data-content="Create Folder"><i class="folder icon"></i></a>
 				<a class="popup icon item file" data-content="Create File"><i class="file icon"></i></a>
@@ -134,6 +135,16 @@ io.write("Hello world, from ",_VERSION,"!\n")</div>
 <script type="text/javascript" src="/assets/jstree/jstree.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="/assets/ace/ace.js" charset="utf-8"></script>
 <script type="text/javascript" src="/assets/js/app_editor.js" charset="utf-8"></script>
+
+<script>
+$(document).ready(function(){
+	{% if app.running then %}
+	$('.popup.item.start').hide();
+	{% else %}
+	$('.popup.item.stop').hide();
+	{% end %}
+});
+</script>
 {-script-}
 
 {-footer-}
