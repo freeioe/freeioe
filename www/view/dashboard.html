@@ -269,7 +269,7 @@ function check_for_update(btn) {
 				upgrade_version = "beta." + upgrade_version
 			}
 			$('.ui.sys_upgrade.form .primary.button .label').html(upgrade_version);
-			$('.ui.sys_upgrade.form input[name="version"]'.val(upgrade_version);
+			$('.ui.sys_upgrade.form input[name="version"]').val(upgrade_version);
 		}
 		if (data && data.skynet) {
 {% if not force_upgrade then %}
@@ -286,7 +286,7 @@ function check_for_update(btn) {
 				upgrade_skynet_version = "beta." + upgrade_skynet_version
 			}
 			$('.ui.sys_upgrade.form .skynet.checkbox label').html('With Skynet ' + upgrade_skynet_version);
-			$('.ui.sys_upgrade.form input[name="skynet_version"]'.val(upgrade_skynet_version);
+			$('.ui.sys_upgrade.form input[name="skynet_version"]').val(upgrade_skynet_version);
 		}
 	})
 	.done(function() {
