@@ -375,35 +375,8 @@ $(document).ready(function() {
 		ref.delete_node(sel);
 	};
 
-
-
-	$('.ui.new_tag.form').form({
-		fields: {
-			version : 'integer',
-			comment : ['minLength[10]', 'empty'],
-			terms : 'checked'
-		}
-	});
-	$('.ui.new_tag.form').ajaxForm({
-		resetForm: true,
-		beforeSend: function () {
-			$('.ui.new_tag.form').removeClass('success').removeClass('error');
-		},
-		success: function (response) {
-			$('.ui.new_tag.form .ui.success.message').html(response.message);
-			$('.ui.new_tag.form').addClass('success');
-			setTimeout(function () {
-				$('.ui.tag_app.modal').modal('hide');
-			}, 1000);
-		},
-		error: function(xhr) {
-			console.log('Release Application Exception:' + xhr.responseText);
-			$('.ui.new_tag.form .ui.error.message').html(xhr.responseJSON.exc);
-			$('.ui.new_tag.form').addClass('error');
-		}
-	});
-	$('.ui.new_tag.form .cancel.button').click(function(){
-		$('.ui.new_tag.modal').modal('hide');
+	$('.ui.debuger_main.form .cancel.button').click(function(){
+		$('.ui.debug_app.modal').modal('hide');
 	});
 
 	var upload_application_file = function(name, content) {
@@ -431,8 +404,8 @@ $(document).ready(function() {
 				alert("Upload Failed!");
 			});
 	};
-	var tag_application = function() {
-		$('.ui.new_tag.modal')
+	var debug_application = function() {
+		$('.ui.debug_app.modal')
 			.modal({
 				closable  : false
 			})
@@ -449,7 +422,7 @@ $(document).ready(function() {
 		}
 	};
 
-	$('#jstree_tree_menu .item.tag').click(tag_application);
+	$('#jstree_tree_menu .item.debug').click(debug_application);
 	$('#jstree_tree_menu .item.upload').click(upload_application);
 	$('#jstree_tree_menu .item.file').click(jstree_create_file);
 	$('#jstree_tree_menu .item.folder').click(jstree_create_folder);
