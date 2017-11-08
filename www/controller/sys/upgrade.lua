@@ -13,8 +13,8 @@ return {
 			version = version,
 		}
 
-		local up_skynet = post.skynet and post.skynet == 'true' or false
-		if up_skynet then
+		local with_skynet = post.with_skynet and post.with_skynet == 'true' or false
+		if with_skynet then
 			args.skynet = {
 				version = post.skynet_version
 			}
