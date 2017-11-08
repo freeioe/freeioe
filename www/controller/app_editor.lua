@@ -7,6 +7,11 @@ return {
 			self:redirect('/user/login')
 			return
 		else
+			local using_beta = dc.get('CLOUD', 'USING_BETA')
+			if not using_beta then
+				self:redirect('/app')
+				return
+			end
 			local get = ngx.req.get_uri_args()
 			local inst = get.app
 			local app = dc.get('APPS', inst) or {}
