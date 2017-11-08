@@ -7,9 +7,9 @@ return {
 		local version = post.version
 		local id = "from_web"
 
-		local no_ack = post.no_ack and post.no_ack == 'true' or false
+		local skip_ack = post.skip_ack and post.skip_ack == 'true' or false
 		local args = {
-			no_ack = no_ack,
+			no_ack = skip_ack,
 			version = version,
 		}
 

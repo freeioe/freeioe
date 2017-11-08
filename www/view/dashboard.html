@@ -10,7 +10,7 @@
 </h3>
 <div class="ui attached basic segment">
 	<div class="ui teal statistic">
-		<div id="iot_version" class="value">
+		<div class="version value">
 			{{version.iot.ver}}
 		</div>
 		<div class="label">
@@ -18,7 +18,7 @@
 		</div>
 	</div>
 	<div class="ui teal statistic">
-		<div id="skynet_version" class="value">
+		<div class="skynet_version value">
 			{{version.skynet.ver}}
 		</div>
 		<div class="label">
@@ -80,19 +80,24 @@
 		<div class="ui massive text loader" id="myloader">{{_("Loading")}}</div>
 	</div>
 
-	{% if rollback_time then %}
-	<div class="ui teal button" onclick="upgrade_ack();">{{_("Upgrade ACK")}}</div>
-	{% else %}
-	{% if using_beta then %}
-	<div class="ui upgrade checkbox">
-		<input id="check_with_beta" type="checkbox">
-		<label>{{_("Check Beta")}}</label>
-	</div>
-	{% end %}
-	<div id="check_for_update_btn" class="ui teal button" onclick="check_for_update();">{{_("Check Updates")}}</div>
-	{% end %}
-	<div class="ui purple button" onclick="sys_quit();">{{_("Restart")}}</div>
-	<div class="ui red button" onclick="sys_reboot();">{{_("Device Reboot")}}</div>
+	<form class="ui control form">
+		{% if rollback_time then %}
+		<div class="ui teal icon button upgrade_ack">{{_("Upgrade ACK")}}</div>
+		{% else %}
+		{% if using_beta then %}
+		<div class="ui checkbox check_beta">
+			<input type="checkbox">
+			<label>{{_("Check Beta")}}</label>
+		</div>
+		{% end %}
+		<div class="ui teal button check_update">{{_("Check Updates")}}</div>
+		{% end %}
+		<div class="ui purple button quit">{{_("Restart")}}</div>
+		<div class="ui red button reboot">{{_("Device Reboot")}}</div>
+
+		<div class="ui success message"></div>
+		<div class="ui error message"></div>
+	</form>
 </div>
 
 {% if force_upgrade then %}
@@ -103,22 +108,27 @@
 	<h4 class="ui header">
 		{{_("System Upgrade")}}
 	</h4>
-	<div class="ui upgrade checkbox">
-		<input id="upgrade_ack" type="checkbox">
-		<label>{{_("Skip Ack?")}}</label>
-	</div>
-	<div class="ui upgrade skynet checked checkbox">
-		<input id="with_skynet" type="checkbox" checked="true">
-		<label id="skynet_version_label">{{_("With Skynet?")}}</label>
-	</div>
-	<div class="ui upgrade labeled button" onclick="upgrade_sys();">
-		<div class="ui yellow button">
-			<i class="info circle icon"></i> {{_("Upgrade To")}}
+	<form class="ui sys_upgrade form" action="/sys/upgrade" method="post">
+		<input type="hidden" name="from_web" value="1">
+		<input type="hidden" name="version" value="latest">
+		<input type="hidden" name="skyent_version" value="latest">
+		<div class="ui checkbox" name="skip_ack">
+			<input type="checkbox">
+			<label>{{_("Skip Ack?")}}</label>
 		</div>
-		<a id="iot_version_label" class="ui basic yellow left pointing label">
-			Latest
-		</a>
-	</div>
+		<div class="ui skynet checked checkbox" name="with_skynet">
+			<input type="checkbox" checked="true">
+			<label>{{_("With Skynet?")}}</label>
+		</div>
+		<div class="ui primary labeled button">
+			<div class="ui yellow button">
+				<i class="info circle icon"></i> {{_("Upgrade To")}}
+			</div>
+			<a class="ui basic yellow left pointing label">
+				Latest
+			</a>
+		</div>
+	</form>
 </div>
 
 <div class="ui basic segment">
@@ -155,160 +165,161 @@
 	</div>
 </div>
 
-<div class="ui icon message">
-	<i class="inbox icon"></i>
-	<div class="content">
-		<div class="header">
-			<div id="message_ui">
-				{{ message }}
-			</div>
-		</div>
-	</div>
-</div>
-
-
 {-main-}
 
 {-script-}
 <script>
+function reset_message(form) {
+	form.removeClass('success').removeClass('error');
+};
+function print_err_message(form, msg) {
+	reset_message(form);
+	console.log('Exception:' + msg);
+	form.find('.ui.error.message').html(msg);
+	form.addClass('error');
+};
+function print_ok_message(form, msg) {
+	reset_message(form);
+	console.log('OK:' + msg);
+	form.find('.ui.success.message').html(msg);
+	form.addClass('success');
+};
 function refresh_page() {
 	//window.location.reload();
 	window.location.replace("/dashboard");
-}
+};
 function loader_test() {
 	//var loader = $('#myloader');
 	var loader = $('#mydimmer');
 	loader.removeClass('disabled');
 	loader.addClass('active');
-}
-var upgrade_version = 'latest';
-var upgrade_skynet_version = 'latest';
-function upgrade_sys() {
-	var no_ack = $('#upgrade_ack').is(':checked');
-	var with_skynet = $('#with_skynet').is(':checked');
-	$.post("/sys/upgrade", {from_web:true, version:upgrade_version, no_ack:no_ack, skynet:with_skynet, skynet_version:upgrade_skynet_version}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
+};
+function sys_control(action, timeout) {
+	var cf = $('.ui.control.form');
+	$.post("/sys/control", {from_web:true, action:action}, function(data) {
+		log_ok_message(cf, '<i>' + data + '</i>');
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 10000);
+		setTimeout(refresh_page, timeout);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send system upgrade request")}} </i>');
+		log_ok_message(cf, '<i>{{_("Failed to send request ")}}' + action + ' </i>');
 	});
-}
-function upgrade_ack() {
-	$.post("/sys/upgrade_ack", {from_web:true}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
-	})
-	.done(function() {
-		setTimeout('refresh_page()', 3000);
-	})
-	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send system upgrade ack request")}} </i>');
-	});
-}
-function sys_reboot() {
-	$.post("/sys/reboot", {from_web:true}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
-	})
-	.done(function() {
-		setTimeout('refresh_page()', 20000);
-	})
-	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send device reboot request")}} </i>');
-	});
-}
-function sys_quit() {
-	$.post("/sys/quit", {from_web:true}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
-	})
-	.done(function() {
-		setTimeout('refresh_page()', 3000);
-	})
-	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send system restart request")}} </i>');
-	});
-}
+
+};
 function check_iot_version() {
+	var iot_label = $('.version.value');
+	var skynet_label = $('.skynet_version.value');
 	$.get("/sys/check_version", {from_web:true, version:{{version.iot.ver}}, skynet_version:{{version.skynet.ver}} }, function(data) {
 		if (data && data.iot) {
 			if (data.iot == "release") {
-				$('#iot_version').html('{{version.iot.ver}} <i class="mini green check icon"></i>');
+				iot_label.html('{{version.iot.ver}} <i class="mini green check icon"></i>');
 			} else if (data.iot == "beta") {
-				$('#iot_version').html('{{version.iot.ver}} <i class="mini yellow warning sign icon"></i>');
+				iot_label.html('{{version.iot.ver}} <i class="mini yellow warning sign icon"></i>');
 			} else {
-				$('#iot_version').html('{{version.iot.ver}} <i class="mini red close icon"></i>');
+				iot_label.html('{{version.iot.ver}} <i class="mini red close icon"></i>');
 			}
 		};
 		if (data && data.skynet) {
 			if (data.skynet == "release") {
-				$('#skynet_version').html('{{version.skynet.ver}} <i class="mini green check icon"></i>');
+				skynet_label.html('{{version.skynet.ver}} <i class="mini green check icon"></i>');
 			} else if (data.skynet == "beta") {
-				$('#skynet_version').html('{{version.skynet.ver}} <i class="mini yellow warning sign icon"></i>');
+				skynet_label.html('{{version.skynet.ver}} <i class="mini yellow warning sign icon"></i>');
 			} else {
-				$('#skynet_version').html('{{version.skynet.ver}} <i class="mini red close icon"></i>');
+				skynet_label.html('{{version.skynet.ver}} <i class="mini red close icon"></i>');
 			}
 		};
 	})
 	.done(function() {
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to check system version")}} </i>');
+		var cf = $('.ui.control.form');
+		log_err_message(cf, '<i>{{_("Failed to check system version")}} </i>');
 	});
-}
+};
 function enable_update_btn() {
-	$('#check_for_update_btn').removeClass('disabled');
-}
-function check_for_update() {
-	$('#check_for_update_btn').addClass('disabled');
+	$('.ui.button.check_update').removeClass('disabled');
+};
+function check_for_update(btn) {
+	btn.addClass('disabled');
 {% if not force_upgrade then %}
-	$('.ui.upgrade.segment').attr('hidden', true);
+	$('.ui.upgrade.segment').hide();
 {% end %}
-	$('#message_ui').html('');
+
+	var cf = $('.ui.control.form');
+	reset_message(cf);
 
 	check_iot_version();
 
-	var beta = $('#check_with_beta').is(':checked');
+	var beta = cf.find('.check_beta').is(':checked');
 	var version = {{version.iot.ver}};
 	var skynet_version = {{version.skynet.ver}};
 	$.get("/sys/check_update", {from_web:true, beta:beta}, function(data) {
 		if (data && data.iot) {
 			if (data.iot.version > version) {
-				$('.ui.upgrade.segment').attr('hidden', false);
+				$('.ui.upgrade.segment').show();
 			} else {
-				$('#message_ui').html('<i>{{_("There is no new system updates")}} </i>');
+				print_ok_message(cf, '<i>{{_("There is no new system updates")}} </i>');
 			}
 			upgrade_version = data.iot.version;
 			if (data.iot.beta) {
 				upgrade_version = "beta." + upgrade_version
 			}
-			$('#iot_version_label').html(upgrade_version);
+			$('.ui.sys_upgrade.form .primary.button .label').html(upgrade_version);
 		}
 		if (data && data.skynet) {
 {% if not force_upgrade then %}
 			if (data.skynet.version > skynet_version) {
-				$('.ui.upgrade.skynet.checkbox').checkbox('check');
-				$('.ui.upgrade.skynet.checkbox').removeClass('disabled');
+				cf.find('.skynet.checkbox').checkbox('check');
+				cf.find('.skynet.checkbox').removeClass('disabled');
 			} else {
-				$('.ui.upgrade.skynet.checkbox').checkbox('uncheck');
-				$('.ui.upgrade.skynet.checkbox').addClass('disabled');
+				cf.find('.skynet.checkbox').checkbox('uncheck');
+				cf.find('.skynet.checkbox').addClass('disabled');
 			}
 {% end %}
 			upgrade_skynet_version = data.skynet.version;
 			if (data.skynet.beta) {
 				upgrade_skynet_version = "beta." + upgrade_skynet_version
 			}
-			$('#skynet_version_label').html('With Skynet ' + upgrade_skynet_version);
+			$('.ui.sys_upgrade.form .skynet.checkbox label').html('With Skynet ' + upgrade_skynet_version);
 		}
 	})
 	.done(function() {
-		$('#message_ui').html('<i>{{_("Checking system update finished")}} </i>');
-		setTimeout('enable_update_btn();', 3000);
+		setTimeout(enable_update_btn, 3000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to check system updates")}} </i>');
-		setTimeout('enable_update_btn();', 5000);
+		print_err_message(cf, '<i>{{_("Failed to check system updates")}} </i>');
+		setTimeout(enable_update_btn, 5000);
 	});
-}
+};
+$(document).ready(function(){
+	$('.ui.sys_upgrade.form').ajaxForm({
+		beforeSend: function () {
+			$(this).removeClass('success').removeClass('error');
+		},
+		success: function (response) {
+			$(this).find('.ui.success.message').html(response);
+			$(this).addClass('success');
+			setTimeout(refresh_page, 10000);
+		},
+		error: function(xhr) {
+			console.log('Exception:' + xhr.responseText);
+			$(this).find('.ui.error.message').html(xhr.responseText);
+			$(this).addClass('error');
+		}
+	});
+	$('.ui.button.check_update').click(function() {
+		check_for_update($(this));
+	});
+	$('.ui.control.form .button.upgrade_ack').click(function() {
+		sys_control('upgrade_ack', 3000);
+	});
+	$('.ui.control.form .button.quit').click(function() {
+		sys_control('quit', 3000);
+	});
+	$('.ui.control.form .button.upgrade_ack').click(function() {
+		sys_control('reboot', 20000);
+	});
+});
 </script>
 {-script-}
