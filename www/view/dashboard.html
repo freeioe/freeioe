@@ -268,7 +268,11 @@ function check_for_update(btn) {
 			if (data.iot.version > version) {
 				$('.ui.upgrade.segment').show();
 			} else {
+{% if not force_upgrade then %}
 				print_ok_message(cf, '<i>{{_("There is no new system updates")}} </i>');
+{% else %}
+				print_ok_message($('ui.sys_upgrade.form'), '<i>{{_("There is no new system updates")}} </i>');
+{% end %}
 			}
 			upgrade_version = data.iot.version;
 			if (data.iot.beta) {
