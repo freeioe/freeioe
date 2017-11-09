@@ -46,7 +46,11 @@ html.ios {
 
                     <div class="ui container center aligned errorcontainer">
                         <h1 class="ui header inverted">
+							{% if code == 404 then %}
 							{{_("Oooops! Sorry The Page Not Found :(")}}
+							{% else %}
+							{{_("Oooops! Error %d :(", code)}}
+							{% end %}
                         </h1>
                         <a class="ui button" href="/">
 							{{_("Return the Homepage")}}
