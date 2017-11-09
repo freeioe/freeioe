@@ -9,51 +9,61 @@
 
 <div class="ui basic segment">
 	<div class="ui teal button check_update" data-content="Query application updates">{{_("Check Updates")}}</div>
-</div>
 
-<div class="ui icon message">
-	<i class="inbox icon"></i>
-	<div class="content">
-		<div class="header">
-			<div id="message_ui">
-				{{ message }}
-			</div>
-		</div>
-	</div>
+</div>
+<div class="ui basic msg_print form">
+	<div class="ui success message"></div>
+	<div class="ui error message"></div>
 </div>
 {-main-}
 
 {-script-}
 <script>
+var msg_form = null;
+function reset_message() {
+	msg_form.removeClass('success').removeClass('error');
+};
+function print_err_message(msg) {
+	reset_message();
+	console.log('Exception:' + msg);
+	msg_form.find('.ui.error.message').html(msg);
+	msg_form.addClass('error');
+};
+function print_message(msg) {
+	reset_message();
+	console.log('OK:' + msg);
+	msg_form.find('.ui.success.message').html(msg);
+	msg_form.addClass('success');
+};
 function refresh_page() {
 	window.location.replace("/app");
 }
 function upgrade_app(inst, app, version) {
 	$.post("/app/upgrade", {from_web:true, inst:inst, app:app, version:version}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
+		print_message('<i>' + data + '</i>');
 	})
 	.done(function() {
 		setTimeout('refresh_page()', 10000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send upgrade request")}}</i>');
+		print_err_message('<i>{{_("Failed to send upgrade request")}}</i>');
 	});
 }
 function uninstall_app(inst) {
 	$.post("/app/uninstall", {from_web:true, inst:inst}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
+		print_message('<i>' + data + '</i>');
 	})
 	.done(function() {
 		setTimeout('refresh_page()', 3000);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send uninstall request")}}</i>');
+		print_err_message('<i>{{_("Failed to send uninstall request")}}</i>');
 	});
 }
 
 function start_app(inst) {
 	$.post("/app/start", {from_web:true, inst:inst}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
+		print_message('<i>' + data + '</i>');
 	})
 	.done(function() {
 		//setTimeout('refresh_page()', 3000);
@@ -62,13 +72,13 @@ function start_app(inst) {
 		$(filter + '.ui.button.stop').show();
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send start request")}}</i>');
+		print_err_message('<i>{{_("Failed to send start request")}}</i>');
 	});
 }
 
 function stop_app(inst) {
 	$.post("/app/stop", {from_web:true, inst:inst, reason:'Stop from web'}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
+		print_message('<i>' + data + '</i>');
 	})
 	.done(function() {
 		//setTimeout('refresh_page()', 3000);
@@ -77,7 +87,7 @@ function stop_app(inst) {
 		$(filter + '.ui.button.start').show();
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send stop request")}}</i>');
+		print_err_message('<i>{{_("Failed to send stop request")}}</i>');
 	});
 }
 
@@ -122,10 +132,12 @@ function check_for_update() {
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
+	print_message('Check updates done!');
 }
 
 $(document).ready(function(){
 	//setTimeout('check_for_updates()', 1000);
+	msg_form = $('.ui.msg_print.form');
 	{% if not force_upgrade then %}
 	$('.ui.button.upgrade').hide();
 	{% end %}
