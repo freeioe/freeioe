@@ -308,7 +308,10 @@ function check_for_update(btn) {
 	});
 };
 $(document).ready(function(){
-	$('.ui.control.form').ajaxForm();
+	$('.ui.control.form').ajaxForm({
+		success: function (response) {},
+		error: function(xhr) {}
+	});
 	var sf = $('.ui.sys_upgrade.form');
 	sf.ajaxForm({
 		beforeSend: function () {
