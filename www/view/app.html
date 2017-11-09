@@ -129,6 +129,9 @@ function check_for_update() {
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
+	$('.ui.button.upgrade').click(function() {
+		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
+	});
 }
 
 $(document).ready(function(){
