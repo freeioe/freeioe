@@ -407,7 +407,10 @@ $(document).ready(function() {
 	var debug_application = function() {
 		$('.ui.debug_app.modal')
 			.modal({
-				closable  : false
+				closable  : false,
+				onShow : function() {
+					debug_init();
+				}
 			})
 			.modal('show')
 		;

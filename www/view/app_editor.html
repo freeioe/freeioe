@@ -7,6 +7,7 @@
 {-base_header-}
 <link rel="stylesheet" type="text/css" href="/assets/jstree/themes/default/style.min.css">
 <link rel="stylesheet" type="text/css" href="/assets/css/app_editor.css">
+<link rel="stylesheet" type="text/css" href="/assets/datatable/css/dataTables.semanticui.min.css">
 {-base_header-}
 
 {-main_header-}
@@ -67,7 +68,7 @@ io.write("Hello world, from ",_VERSION,"!\n")</div>
 	<div class="header">
 		{{_("Application Debuger")}}
 	</div>
-	<div class="content">
+	<div class="scrolling content">
 		{(widget/app_debug.html, {app=app})}
 	</div>
 </div>
@@ -92,6 +93,8 @@ io.write("Hello world, from ",_VERSION,"!\n")</div>
 {-main-}
 
 {-script-}
+<script type="text/javascript" src="/assets/datatable/js/jquery.dataTables.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/assets/datatable/js/dataTables.semanticui.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="/assets/jstree/jstree.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="/assets/ace/ace.js" charset="utf-8"></script>
 <script type="text/javascript" src="/assets/js/app_editor.js" charset="utf-8"></script>

@@ -1,4 +1,19 @@
 local lfs = require 'lfs'
+local cjson = require 'cjson.safe'
+
+local function parse_log(s)
+	local logs = {}
+	for line in string.gmatch(s, "[^\n]+") do
+		local time, level, process, content = string.match(line, '^(%g+ %g+) %[(.+)%] %[(.+)%]: (.+)$')
+		logs[#logs + 1] = {
+			time = time,
+			level = level,
+			process = process,
+			content = content
+		}
+	end
+	return logs
+end
 
 local function tail_log_file(file, max_line)
 	local dir = lfs.currentdir()
@@ -28,16 +43,22 @@ return {
 		local typ = get['type']
 		local max_line = get.max_line or 64
 
-		ngx.header.content_type = "text/plain; charset=utf-8"
+		local s = nil
 		if typ == 'sys' then
-			local s = tail_log_file('skynet_sys.log', max_line)
-			return ngx.print(s)
+			s = tail_log_file('skynet_sys.log', max_line)
 		elseif typ == 'dmesg' then
-			local s = dmesg_log()
-			return ngx.print(s)
+			s = dmesg_log()
 		else
-			local s = tail_log_file('skynet.log', max_line)
-			return ngx.print(s)
+			s = tail_log_file('skynet.log', max_line)
+		end
+		local accept_json = string.match(ngx.var.header.accept, 'application/json')
+		if s and accept_json and typ ~= 'dmesg' then
+			ngx.header.content_type = "application/json; charset=utf-8"
+			local logs = parse_log(s)
+			ngx.print(cjson.encode(logs))
+		else
+			ngx.header.content_type = "text/plain; charset=utf-8"
+			ngx.print(s)
 		end
 	end,
 }
