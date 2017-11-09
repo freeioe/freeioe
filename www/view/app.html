@@ -88,17 +88,10 @@ function check_app_update(inst, app, version) {
 			if (data.beta) {
 				vstr = "beta." + vstr;
 			};
-			var html = [
-				'<div class="ui labeled button upgrade" data-inst="'+inst+'" data-app="'+app+'" data-version="'+data.version+'">',
-				'<div class="ui orange button">',
-				'<i class="info circle icon"></i> {{_("Upgrade To")}}',
-				'</div>',
-				'<a class="ui basic orange left pointing label">',
-				vstr,
-				'</a>',
-				'</div>',
-			].join("\r\n");
-			$('#'+inst+'_upgrade_col').html(html);
+			var btn = $('.ui.button.upgrade[data-inst="' + inst + '"]');
+			btn.attr('data-version', vstr);
+			btn.find('.label').text(vstr);
+			btn.show();
 		};
 	})
 	.done(function() {
@@ -129,13 +122,13 @@ function check_for_update() {
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
-	$('.ui.button.upgrade').click(function() {
-		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
-	});
 }
 
 $(document).ready(function(){
 	//setTimeout('check_for_updates()', 1000);
+	{% if not force_upgrade then %}
+	$('.ui.button.upgrade').hide();
+	{% end %}
 	$('.ui.button.upgrade').click(function() {
 		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
 	});

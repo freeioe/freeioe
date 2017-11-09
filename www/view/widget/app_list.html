@@ -18,8 +18,7 @@
 			<td id="{{k}}_version_col"> {{v.version}} </td>
 			<td id="{{k}}_actions_col">
 				<i id="{{k}}_upgrade_col">
-					{% if force_upgrade then %}
-					<div class="ui labeled button button upgrade" data-inst="{{k}}", data-app="{{v.name}}" data-version="latest">
+					<div class="ui labeled button button upgrade" data-inst="{{k}}" data-app="{{v.name}}" data-version="latest">
 						<div class="ui orange button">
 							<i class="info circle icon"></i> {{_("Upgrade To")}}
 						</div>
@@ -27,7 +26,6 @@
 							latest
 						</a>
 					</div>
-					{% end %}
 				</i>
 
 				{% if not v.running then %}
