@@ -260,7 +260,11 @@ function check_for_update(btn) {
 
 	check_iot_version();
 
+{% if using_beta then %}
 	var beta = cf.find('.check_beta').checkbox('is checked');
+{% else %}
+	var beta = false;
+{% end %}
 	var version = {{version.iot.ver}};
 	var skynet_version = {{version.skynet.ver}};
 	$.get("/sys/check_update", {from_web:true, beta:beta}, function(data) {
@@ -308,10 +312,6 @@ function check_for_update(btn) {
 	});
 };
 $(document).ready(function(){
-	$('.ui.control.form').ajaxForm({
-		success: function (response) {},
-		error: function(xhr) {}
-	});
 	var sf = $('.ui.sys_upgrade.form');
 	sf.ajaxForm({
 		beforeSend: function () {
