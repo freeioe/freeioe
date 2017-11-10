@@ -28,6 +28,9 @@
 					</div>
 				</i>
 
+				<div class="ui blue icon button refresh" data-content="{{_('Reinstall From Store')}}" data-inst="{{k}}" data-app="{{v.name}}" data-version="{{v.version}}" style="display: none;">
+					<i class="refresh icon"></i>
+				</div>
 				{% if not v.running then %}
 				<div class="ui green icon button start" data-content="{{_('Start Application')}}" 1data-inst="{{k}}">
 					<i class="play icon"></i>

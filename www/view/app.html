@@ -115,12 +115,16 @@ function check_app_version(inst, app, version) {
 		if (data && data.type) {
 			if (data.type == "release") {
 				$('#'+inst+'_version_col').html(version + '<i class="green check icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
 			} else if (data.type == "beta") {
 				$('#'+inst+'_version_col').html(version + '<i class="yellow warning sign icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
 			} else if (data.type == "local") {
 				$('#'+inst+'_version_col').html(version + '<i class="blue write square icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').show();
 			} else {
 				$('#'+inst+'_version_col').html(version + '<i class="red attention icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
 			}
 		};
 	})
@@ -157,6 +161,9 @@ $(document).ready(function(){
 	});
 	$('.ui.button.editor').click(function() {
 		window.location.href = "/app_editor?app=" + $(this).data('inst');
+	});
+	$('.ui.button.refresh').click(function() {
+		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
 	});
 	$('.ui.segment .ui.button.check_update').click(function() {
 		var btn = $(this);
