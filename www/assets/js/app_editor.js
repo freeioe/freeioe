@@ -29,11 +29,11 @@ $(document).ready(function() {
     var code_editor = ace.edit("editor_code");
     code_editor.setTheme("ace/theme/tomorrow");
     code_editor.session.setMode("ace/mode/lua");
-    code_editor.setOptions({
-		enableBasicAutocompletion: true,
-		enableSnippets: true,
-		enableLiveAutocompletion: true
-	});
+	code_editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: true
+    });
     var local_storage_prefix = cur_app + "_saved_file:";
     var doc_list = {};
 
@@ -43,7 +43,7 @@ $(document).ready(function() {
 	code_editor.on("change", function(e) {
 		var session = code_editor.getSession();
 		session.changed = true;
-		editor_title_item.html('<b>' + session.name + " ***" + '</b>');
+		editor_title_item.html('<b><font color="#EE1111">' + session.name + " ***" + '</font></b>');
 		$('#jstree_tree_menu .item.upload').removeClass('disabled');
 		$('#editor_menu .item.save').removeClass('disabled');
 	});
@@ -57,7 +57,7 @@ $(document).ready(function() {
 		var session = code_editor.getSession();
 		var title = session.name;
 		if (session.changed) {
-			title = title + ' *'
+			title = '<font color="#EE1111">' + title + ' *</font>'
 		}
 		editor_title_item.html('<b>' + title + '</b>');
 		if (session.changed) {
@@ -80,7 +80,7 @@ $(document).ready(function() {
 				session.getValue()
 			);
 			session.changed = true;
-			editor_title_item.html('<b>' + session.name + " *" + '</b>');
+			editor_title_item.html('<b><font color="#EE1111">' + session.name + " *" + '</font></b>');
 			//code_editor.cmdLine.setValue("saved "+ name);
 		}
 	});
