@@ -7,8 +7,9 @@ function getUrlParam(name) {
 $(document).ready(function() {
 	$(window).resize(function () {
 		var h = Math.max($(window).height() - 150, 420);
-		$('#editor_container, #editor_data, #jstree_tree, #editor_data .content').height(h).filter('.default').css('lineHeight', h + 'px');
-		$('#jstree_tree_menu').width($('#jstree_tree').width())
+		$('#editor_container, #editor_data, #jstree_tree, #editor_data .content').height(h);
+		$('#jstree_tree_menu').width($('#jstree_tree').width());
+		$('.ui.debug_app.modal .scrolling.content').css('min-height', h + 'px');
 	}).resize();
 
 	var cur_app = getUrlParam('app');
@@ -379,10 +380,6 @@ $(document).ready(function() {
 		ref.delete_node(sel);
 	};
 
-	$('.ui.debuger_main.form .cancel.button').click(function(){
-		$('.ui.debug_app.modal').modal('hide');
-	});
-
 	var upload_application_file = function(name, content) {
 		var backend_url = '/app/editor';
 		var args = {
@@ -414,7 +411,15 @@ $(document).ready(function() {
 			.modal({
 				closable  : true,
 				onShow : function() {
+					$('#hideToggle').hide();
+					$('#showToggle').show();
+					$('#sideMenu').addClass('hide');
 					debug_init();
+				},
+				onHide : function() {
+					$('#showToggle').hide();
+					$('#hideToggle').show();
+					$('#sideMenu').removeClass('hide');
 				}
 			})
 			.modal('show')
