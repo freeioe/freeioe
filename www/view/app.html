@@ -117,6 +117,8 @@ function check_app_version(inst, app, version) {
 				$('#'+inst+'_version_col').html(version + '<i class="green check icon"></i>');
 			} else if (data.type == "beta") {
 				$('#'+inst+'_version_col').html(version + '<i class="yellow warning sign icon"></i>');
+			} else if (data.type == "local") {
+				$('#'+inst+'_version_col').html(version + '<i class="blue write square icon"></i>');
 			} else {
 				$('#'+inst+'_version_col').html(version + '<i class="red attention icon"></i>');
 			}

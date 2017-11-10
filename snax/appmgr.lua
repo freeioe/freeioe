@@ -88,6 +88,13 @@ function response.get_channel(name)
 	return nil, "No multicast channel for "..name
 end
 
+function accept.app_modified(inst, from)
+	log.warning("Application has modified from "..from)
+	local app = applist[inst]
+	app.islocal = 1
+	dc.set("APPS", inst, 'islocal', 1)
+end
+
 function init(...)
 	log.info("AppMgr service starting...")
 

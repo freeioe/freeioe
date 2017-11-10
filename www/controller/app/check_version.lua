@@ -9,6 +9,13 @@ return {
 		local app = dc.get('APPS', inst)
 		assert(app and app.name==get.app)
 
+		if app.islocal then
+			lwf.json(self, {
+				['type'] = 'local'
+			})
+			return
+		end
+
 		local tp, err = skynet.call("UPGRADER", "lua", "pkg_check_version", app.name, app.version)
 		local ret = {}
 		if tp then
