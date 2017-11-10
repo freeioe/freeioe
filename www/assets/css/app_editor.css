@@ -101,3 +101,6 @@
 #jstree_tree .file-lua, #jstree_tree .file-py {
     background-position: -434px -18px
 }
+#editor_menu .disabled.item.title.modified {
+    color: #990055;
+}
