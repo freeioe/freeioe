@@ -4,7 +4,7 @@ local lfs = require 'lfs'
 
 local function get_file_ext(filename)
 	local ext = string.match(filename, '%.(%w-)$')
-	return ext or 'unknown'
+	return ext or 'text'
 end
 
 local function path_join(...)
