@@ -99,23 +99,25 @@ end
 
 function cov:timer(now, cb)
 	local opt = self._opt
+	local opt_ttl = opt.ttl
+	local next_loop = opt_ttl
 	for key, v in pairs(self._retained_map) do
 		local tv = v[2]
-		local quality = v[4]
-		local g = math.abs(now - tv)
-		if cb and quality == 0 and g >= opt.ttl then
+		local quality = v[3] or 0
+		local gap = opt_ttl - math.abs(now - tv)
+		if quality == 0 and gap <= 0 then
 			v[2] = now
 			local r = cb(key, table.unpack(v))	
 			if not r then
 				v[2] = tv
 			end
 			self._retained_map[key] = v
-		else
-			if g > (opt.ttl * 3) then
-				self._retained_map[key] = nil
-			end
+		end
+		if quality == 0 and gap > 0 and next_loop > gap then
+			next_loop = gap
 		end
 	end
+	return math.floor(next_loop)
 end
 
 return cov
