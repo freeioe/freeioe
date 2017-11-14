@@ -52,6 +52,11 @@ function app:start()
 			desc = "Skynet Platform Version",
 			vt = "int",
 		},
+		{
+			name = "skynet_platform",
+			desc = "Skynet Platform type",
+			vt = "string",
+		},
 	}
 	self._dev = self._api:add_device(sys_id, inputs)
 
@@ -73,12 +78,14 @@ function app:run(tms)
 		self._log:notice("System Version:", v, gv)
 		local sv, sgv = sysinfo.skynet_version()
 		self._log:notice("Skynet Platform Version:", sv, sgv)
+		local skynet_plat = sysinfo.skynet_platform() or "unknown"
 
 		self._dev:set_input_prop('starttime', "value", self._start_time)
 		self._dev:set_input_prop('version', "value", v)
 		self._dev:set_input_prop('version', "git_version", gv)
 		self._dev:set_input_prop('skynet_version', "value", sv)
 		self._dev:set_input_prop('skynet_version', "git_version", sgv)
+		self._dev:set_input_prop('skynet_platform', "value", skynet_plat)
 
 		local calc_uptime = nil
 		calc_uptime = function()
