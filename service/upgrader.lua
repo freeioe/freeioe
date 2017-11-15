@@ -118,7 +118,7 @@ function command.upgrade_app(id, args)
 	end
 	local appmgr = snax.uniqueservice("appmgr")
 
-	local name = app.name
+	local name = args.fork and args.name or app.name
 	if args.name then
 		assert(args.name == name)
 	end
