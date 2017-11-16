@@ -155,8 +155,6 @@ local get_ops = {
 		local f = assert(io.open(path, 'r'))
 		local content = f:read('a')
 		f:close()
-		local appmgr = snax.uniqueservice("appmgr")
-		appmgr.post.app_modified(app, 'web_editor')
 		return {
 			['type'] = get_file_ext(node),
 			content = content
@@ -171,6 +169,8 @@ local post_ops = {
 		local f = assert(io.open(path, 'w'))
 		f:write(content)
 		f:close()
+		local appmgr = snax.uniqueservice("appmgr")
+		appmgr.post.app_modified(app, 'web_editor')
 		return { status = 'OK' }
 	end,
 }
