@@ -8,7 +8,7 @@
 {(widget/app_list.html, {apps=apps, force_upgrade=force_upgrade, using_beta=using_beta})}
 
 <div class="ui basic segment">
-	<div class="ui teal button check_update" data-content="Query application updates">{{_("Check Updates")}}</div>
+	<div class="ui teal button check_update" data-content="{{_('Query application updates')}}">{{_("Check Updates")}}</div>
 
 </div>
 <div class="ui basic msg_print form">
@@ -138,7 +138,7 @@ function check_for_update() {
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
 	{% end %}
-	print_message('Check updates done!');
+	print_message("{{_('Check updates done!')}}");
 }
 
 $(document).ready(function(){

@@ -112,11 +112,11 @@
 		<input type="hidden" name="skynet_version" value="latest">
 		<div class="ui toggle checkbox">
 			<input class="hidden" type="checkbox" name="skip_ack">
-			<label>{{_("Skip Ack?")}}</label>
+			<label>{{_("Skip Ack")}}?</label>
 		</div>
 		<div class="ui skynet toggle checked checkbox">
 			<input class="hidden" type="checkbox" checked="true" name="with_skynet">
-			<label>{{_("With Skynet?")}}</label>
+			<label>{{_("With Skynet")}} ?</label>
 		</div>
 		<div class="ui primary labeled submit button">
 			<div class="ui yellow button">
@@ -299,7 +299,7 @@ function check_for_update(btn) {
 			if (data.skynet.beta) {
 				upgrade_skynet_version = "beta." + upgrade_skynet_version
 			}
-			$('.ui.sys_upgrade.form .skynet.checkbox label').html('With Skynet ' + upgrade_skynet_version);
+			$('.ui.sys_upgrade.form .skynet.checkbox label').html("{{_('With Skynet')}} " + upgrade_skynet_version);
 			$('.ui.sys_upgrade.form input[name="skynet_version"]').val(upgrade_skynet_version);
 		}
 	})

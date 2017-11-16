@@ -1,26 +1,8 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "%d page 112"
-msgstr "%d 页面 112"
-
-msgid "%d page 113"
-msgstr "%d 页面 113"
-
-msgid "%d page 114"
-msgstr "%d 页面 114"
-
-msgid "%d page 115"
-msgstr "%d 页面 115"
-
-msgid "%d page 117"
-msgstr "%d 页面 117"
-
-msgid "%d page 118"
-msgstr "%d 页面 118"
-
-msgid "%d page 119"
-msgstr "%d 页面 119"
+msgid "<p>This will delete all local changes! Are you sure?</p>"
+msgstr "<p>是否确定删除所有本地缓存的改动？</p>"
 
 msgid "API"
 msgstr "接口"
@@ -49,6 +31,9 @@ msgstr "应用"
 msgid "Application API"
 msgstr "应用接口"
 
+msgid "Application Debuger"
+msgstr "应用调试器"
+
 msgid "Application Document"
 msgstr "应用文档"
 
@@ -61,17 +46,11 @@ msgstr "应用已启动!"
 msgid "Application stoped!"
 msgstr "应用已停止!"
 
-msgid "Beta"
-msgstr ""
-
 msgid "Beta Usage Warning"
 msgstr "Beta版本使用警告"
 
 msgid "CLA"
 msgstr ""
-
-msgid "COMMANDS"
-msgstr "指令集"
 
 msgid "CPU Model"
 msgstr "CPU型号"
@@ -88,6 +67,9 @@ msgstr "检查Beta版本"
 msgid "Check Updates"
 msgstr "检查更新"
 
+msgid "Check updates done!"
+msgstr "检查更新完成！"
+
 msgid "Cloud"
 msgstr "云"
 
@@ -97,8 +79,14 @@ msgstr "云平台配置"
 msgid "Cloud option is changed, you need restart system to apply changes!"
 msgstr "云平台设定已修改，重启后才能使之生效!"
 
+msgid "Comm Data Watcher"
+msgstr "报文监视"
+
 msgid "Comm Upload"
 msgstr "报文上送"
+
+msgid "Commands"
+msgstr "指令"
 
 msgid "Contribute"
 msgstr "共享"
@@ -120,6 +108,9 @@ msgstr "仪表盘"
 
 msgid "Data Upload"
 msgstr "数据上送"
+
+msgid "Description"
+msgstr "描述"
 
 msgid "Development Reference"
 msgstr "开发参考手册"
@@ -151,23 +142,20 @@ msgstr "文档索引"
 msgid "Documents"
 msgstr "文档"
 
-msgid "Error Page 111"
-msgstr "错误页面 111"
-
-msgid "Error Page 116"
-msgstr "错误页面 116"
-
 msgid "FT CSV Parser"
 msgstr "FT CSV解析器"
 
 msgid "Failed to check system updates"
 msgstr "发送检查系统更新请求失败"
 
-msgid "Failed to send device reboot request"
-msgstr "发送设备重启请求失败"
+msgid "Failed to check system version"
+msgstr "发送检测系统版本请求失败"
 
 msgid "Failed to send request"
 msgstr "发送请求失败"
+
+msgid "Failed to send request "
+msgstr "请求发送失败"
 
 msgid "Failed to send start request"
 msgstr "发送启动命令失败"
@@ -178,17 +166,17 @@ msgstr "发送停止命令失败"
 msgid "Failed to send system restart request"
 msgstr "发送系统重启请求失败"
 
-msgid "Failed to send system upgrade ack request"
-msgstr "发送系统升级确认信息失败!"
-
-msgid "Failed to send system upgrade request"
-msgstr "发送系统升级请求失败"
-
 msgid "Failed to send uninstall request"
 msgstr "发送卸载请求失败"
 
 msgid "Failed to send upgrade request"
 msgstr "发送升级请求失败"
+
+msgid "Fetch file from server"
+msgstr "从服务器重新获取文件"
+
+msgid "File Editor"
+msgstr "文件编辑器"
 
 msgid "Forum"
 msgstr "社区"
@@ -217,9 +205,6 @@ msgstr "序列号"
 msgid "INI Parser"
 msgstr "INI解析器"
 
-msgid "INPUTS"
-msgstr "输入项"
-
 msgid "IOT Network"
 msgstr "IOT网络"
 
@@ -234,6 +219,9 @@ msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GibHub账�
 
 msgid "Information"
 msgstr "信息"
+
+msgid "Inputs"
+msgstr "输入项"
 
 msgid "Installed Application List"
 msgstr "安装应用列表"
@@ -256,6 +244,9 @@ msgstr "加载中..."
 msgid "Log Upload"
 msgstr "日志上送"
 
+msgid "Log Watcher"
+msgstr "日志监视"
+
 msgid "Login"
 msgstr "登入"
 
@@ -277,7 +268,28 @@ msgstr "更多信息"
 msgid "Name"
 msgstr "名称"
 
-msgid "OUTPUTS"
+msgid "No"
+msgstr "否"
+
+msgid "Offline"
+msgstr "离线"
+
+msgid "Online"
+msgstr "在线"
+
+msgid "Online Editor"
+msgstr "在线编辑"
+
+msgid "Online Editor "
+msgstr "在线编辑 "
+
+msgid "Oooops! Error %d :("
+msgstr ""
+
+msgid "Oooops! Sorry The Page Not Found :("
+msgstr ""
+
+msgid "Outputs"
 msgstr "输出项"
 
 msgid "PKG"
@@ -307,14 +319,23 @@ msgstr "端口"
 msgid "Profile"
 msgstr "资料"
 
+msgid "Query application updates"
+msgstr "在线检测应用更新"
+
 msgid "Re-Type"
 msgstr "重新输入"
+
+msgid "Reinstall From Store"
+msgstr "重新安装"
 
 msgid "Remember Me"
 msgstr "记住我"
 
 msgid "Restart"
 msgstr "重启"
+
+msgid "Return the Homepage"
+msgstr "返回主页"
 
 msgid "Review"
 msgstr "评价"
@@ -331,6 +352,9 @@ msgstr "分析数据"
 msgid "SYS"
 msgstr "系统接口"
 
+msgid "Select a file from the tree."
+msgstr ""
+
 msgid "SerialChannel"
 msgstr "串口通道"
 
@@ -346,8 +370,8 @@ msgstr "登入"
 msgid "Sign Up"
 msgstr "注册"
 
-msgid "Skip Ack?"
-msgstr "无需更新确认？"
+msgid "Skip Ack"
+msgstr "无需确认"
 
 msgid "Skynet Git Version"
 msgstr "Skynet代码版本"
@@ -361,14 +385,14 @@ msgstr ""
 msgid "SocketChannel"
 msgstr "网络接口"
 
-msgid "Start"
-msgstr "开启"
+msgid "Start Application"
+msgstr "开启应用"
 
 msgid "Stat Upload"
 msgstr "分析数据上送"
 
-msgid "Stop"
-msgstr "停止"
+msgid "Stop Application"
+msgstr "停止应用"
 
 msgid "System"
 msgstr "系统"
@@ -378,6 +402,9 @@ msgstr "系统控制"
 
 msgid "System Settings"
 msgstr "系统配置"
+
+msgid "System Upgrade"
+msgstr "系统升级"
 
 msgid "System upgrade ack is done!"
 msgstr "系统升级确认已完成!"
@@ -391,8 +418,8 @@ msgstr "系统将在5秒钟后重启"
 msgid "Test View Page"
 msgstr "测试浏览页面"
 
-msgid "There is no system updates"
-msgstr "没有系统更新"
+msgid "There is no new system updates"
+msgstr "未检测到系统更新"
 
 msgid "Tiemout"
 msgstr "超时"
@@ -406,11 +433,14 @@ msgstr "翻译中心"
 msgid "UNAME"
 msgstr ""
 
+msgid "UPTIME"
+msgstr "启动时间"
+
 msgid "UUID Module"
 msgstr "UUID模块"
 
-msgid "Uninstall"
-msgstr "卸载"
+msgid "Uninstall Application"
+msgstr "卸载应用"
 
 msgid "Upgrade ACK"
 msgstr "升级确认"
@@ -433,6 +463,9 @@ msgstr "使用Beta版本"
 msgid "Value"
 msgstr "值"
 
+msgid "Value Type"
+msgstr "数值类型"
+
 msgid "Version"
 msgstr "版本"
 
@@ -445,11 +478,77 @@ msgstr "欢迎 %s"
 msgid "Welcome in IOT"
 msgstr "欢迎"
 
-msgid "With Skynet?"
-msgstr "升级Skynet?"
+msgid "With Skynet"
+msgstr "同步升级Skynet"
+
+msgid "Yes"
+msgstr "是"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "Skip Ack?"
+#~ msgstr "无需更新确认？"
+
+#~ msgid "With Skynet?"
+#~ msgstr "升级Skynet?"
+
+#~ msgid "%d page 112"
+#~ msgstr "%d 页面 112"
+
+#~ msgid "%d page 113"
+#~ msgstr "%d 页面 113"
+
+#~ msgid "%d page 114"
+#~ msgstr "%d 页面 114"
+
+#~ msgid "%d page 115"
+#~ msgstr "%d 页面 115"
+
+#~ msgid "%d page 117"
+#~ msgstr "%d 页面 117"
+
+#~ msgid "%d page 118"
+#~ msgstr "%d 页面 118"
+
+#~ msgid "%d page 119"
+#~ msgstr "%d 页面 119"
+
+#~ msgid "COMMANDS"
+#~ msgstr "指令集"
+
+#~ msgid "Error Page 111"
+#~ msgstr "错误页面 111"
+
+#~ msgid "Error Page 116"
+#~ msgstr "错误页面 116"
+
+#~ msgid "Failed to send device reboot request"
+#~ msgstr "发送设备重启请求失败"
+
+#~ msgid "Failed to send system upgrade ack request"
+#~ msgstr "发送系统升级确认信息失败!"
+
+#~ msgid "Failed to send system upgrade request"
+#~ msgstr "发送系统升级请求失败"
+
+#~ msgid "INPUTS"
+#~ msgstr "输入项"
+
+#~ msgid "OUTPUTS"
+#~ msgstr "输出项"
+
+#~ msgid "Start"
+#~ msgstr "开启"
+
+#~ msgid "Stop"
+#~ msgstr "停止"
+
+#~ msgid "There is no system updates"
+#~ msgstr "没有系统更新"
+
+#~ msgid "Uninstall"
+#~ msgstr "卸载"
 
 #~ msgid "Free Memory"
 #~ msgstr "剩余内存"

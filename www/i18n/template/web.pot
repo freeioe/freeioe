@@ -2,31 +2,7 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 
-msgid "%d page 112"
-msgstr ""
-
-
-msgid "%d page 113"
-msgstr ""
-
-
-msgid "%d page 114"
-msgstr ""
-
-
-msgid "%d page 115"
-msgstr ""
-
-
-msgid "%d page 117"
-msgstr ""
-
-
-msgid "%d page 118"
-msgstr ""
-
-
-msgid "%d page 119"
+msgid "<p>This will delete all local changes! Are you sure?</p>"
 msgstr ""
 
 
@@ -66,6 +42,10 @@ msgid "Application API"
 msgstr ""
 
 
+msgid "Application Debuger"
+msgstr ""
+
+
 msgid "Application Document"
 msgstr ""
 
@@ -82,19 +62,11 @@ msgid "Application stoped!"
 msgstr ""
 
 
-msgid "Beta"
-msgstr ""
-
-
 msgid "Beta Usage Warning"
 msgstr ""
 
 
 msgid "CLA"
-msgstr ""
-
-
-msgid "COMMANDS"
 msgstr ""
 
 
@@ -118,6 +90,10 @@ msgid "Check Updates"
 msgstr ""
 
 
+msgid "Check updates done!"
+msgstr ""
+
+
 msgid "Cloud"
 msgstr ""
 
@@ -130,7 +106,15 @@ msgid "Cloud option is changed, you need restart system to apply changes!"
 msgstr ""
 
 
+msgid "Comm Data Watcher"
+msgstr ""
+
+
 msgid "Comm Upload"
+msgstr ""
+
+
+msgid "Commands"
 msgstr ""
 
 
@@ -159,6 +143,10 @@ msgstr ""
 
 
 msgid "Data Upload"
+msgstr ""
+
+
+msgid "Description"
 msgstr ""
 
 
@@ -202,14 +190,6 @@ msgid "Documents"
 msgstr ""
 
 
-msgid "Error Page 111"
-msgstr ""
-
-
-msgid "Error Page 116"
-msgstr ""
-
-
 msgid "FT CSV Parser"
 msgstr ""
 
@@ -218,11 +198,15 @@ msgid "Failed to check system updates"
 msgstr ""
 
 
-msgid "Failed to send device reboot request"
+msgid "Failed to check system version"
 msgstr ""
 
 
 msgid "Failed to send request"
+msgstr ""
+
+
+msgid "Failed to send request "
 msgstr ""
 
 
@@ -238,19 +222,19 @@ msgid "Failed to send system restart request"
 msgstr ""
 
 
-msgid "Failed to send system upgrade ack request"
-msgstr ""
-
-
-msgid "Failed to send system upgrade request"
-msgstr ""
-
-
 msgid "Failed to send uninstall request"
 msgstr ""
 
 
 msgid "Failed to send upgrade request"
+msgstr ""
+
+
+msgid "Fetch file from server"
+msgstr ""
+
+
+msgid "File Editor"
 msgstr ""
 
 
@@ -290,10 +274,6 @@ msgid "INI Parser"
 msgstr ""
 
 
-msgid "INPUTS"
-msgstr ""
-
-
 msgid "IOT Network"
 msgstr ""
 
@@ -311,6 +291,10 @@ msgstr ""
 
 
 msgid "Information"
+msgstr ""
+
+
+msgid "Inputs"
 msgstr ""
 
 
@@ -342,6 +326,10 @@ msgid "Log Upload"
 msgstr ""
 
 
+msgid "Log Watcher"
+msgstr ""
+
+
 msgid "Login"
 msgstr ""
 
@@ -370,7 +358,35 @@ msgid "Name"
 msgstr ""
 
 
-msgid "OUTPUTS"
+msgid "No"
+msgstr ""
+
+
+msgid "Offline"
+msgstr ""
+
+
+msgid "Online"
+msgstr ""
+
+
+msgid "Online Editor"
+msgstr ""
+
+
+msgid "Online Editor "
+msgstr ""
+
+
+msgid "Oooops! Error %d :("
+msgstr ""
+
+
+msgid "Oooops! Sorry The Page Not Found :("
+msgstr ""
+
+
+msgid "Outputs"
 msgstr ""
 
 
@@ -410,7 +426,15 @@ msgid "Profile"
 msgstr ""
 
 
+msgid "Query application updates"
+msgstr ""
+
+
 msgid "Re-Type"
+msgstr ""
+
+
+msgid "Reinstall From Store"
 msgstr ""
 
 
@@ -419,6 +443,10 @@ msgstr ""
 
 
 msgid "Restart"
+msgstr ""
+
+
+msgid "Return the Homepage"
 msgstr ""
 
 
@@ -442,6 +470,10 @@ msgid "SYS"
 msgstr ""
 
 
+msgid "Select a file from the tree."
+msgstr ""
+
+
 msgid "SerialChannel"
 msgstr ""
 
@@ -462,7 +494,7 @@ msgid "Sign Up"
 msgstr ""
 
 
-msgid "Skip Ack?"
+msgid "Skip Ack"
 msgstr ""
 
 
@@ -482,7 +514,7 @@ msgid "SocketChannel"
 msgstr ""
 
 
-msgid "Start"
+msgid "Start Application"
 msgstr ""
 
 
@@ -490,7 +522,7 @@ msgid "Stat Upload"
 msgstr ""
 
 
-msgid "Stop"
+msgid "Stop Application"
 msgstr ""
 
 
@@ -503,6 +535,10 @@ msgstr ""
 
 
 msgid "System Settings"
+msgstr ""
+
+
+msgid "System Upgrade"
 msgstr ""
 
 
@@ -522,7 +558,7 @@ msgid "Test View Page"
 msgstr ""
 
 
-msgid "There is no system updates"
+msgid "There is no new system updates"
 msgstr ""
 
 
@@ -542,11 +578,15 @@ msgid "UNAME"
 msgstr ""
 
 
+msgid "UPTIME"
+msgstr ""
+
+
 msgid "UUID Module"
 msgstr ""
 
 
-msgid "Uninstall"
+msgid "Uninstall Application"
 msgstr ""
 
 
@@ -578,6 +618,10 @@ msgid "Value"
 msgstr ""
 
 
+msgid "Value Type"
+msgstr ""
+
+
 msgid "Version"
 msgstr ""
 
@@ -594,7 +638,11 @@ msgid "Welcome in IOT"
 msgstr ""
 
 
-msgid "With Skynet?"
+msgid "With Skynet"
+msgstr ""
+
+
+msgid "Yes"
 msgstr ""
 
 
