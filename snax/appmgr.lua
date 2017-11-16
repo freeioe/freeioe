@@ -19,7 +19,7 @@ function response.start(name, conf)
 	applist[name] = app
 
 	local s = snax.self()
-	local inst = snax.newservice("appwrap", name, conf, s.handle, s.type)
+	local inst = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
 
 	local r, err = inst.req.start()
 	if not r then
