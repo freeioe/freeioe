@@ -15,7 +15,7 @@ function response.start(name, conf)
 	if app.inst then
 		return app.inst
 	end
-	app.conf = conf or app.conf or {}
+	app.conf = conf or app.conf
 	applist[name] = app
 
 	local s = snax.self()
@@ -67,7 +67,7 @@ function response.set_conf(inst, conf)
 		return nil, "There is no app instance name is "..inst
 	end
 
-	app.conf = conf
+	app.conf = conf or {}
 	local r, err = app.inst.req.set_conf(conf)
 	return r, err
 end
@@ -77,7 +77,7 @@ function response.get_conf(inst)
 	if not app or not app.inst then
 		return nil, "There is no app instance name is "..inst
 	end
-	return app.conf or {}
+	return app.conf
 end
 
 function response.get_channel(name)
@@ -117,7 +117,7 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
-			snax.self().req.start(k, v.conf)
+			snax.self().req.start(k, v.conf or {})
 		end
 		if not apps['iot'] then
 			snax.self().req.start('iot')
