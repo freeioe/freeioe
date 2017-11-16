@@ -91,6 +91,9 @@ end
 function accept.app_modified(inst, from)
 	log.warning("Application has modified from "..from)
 	local app = applist[inst]
+	if app.islocal then
+		return
+	end
 	app.islocal = 1
 	dc.set("APPS", inst, 'islocal', 1)
 end
