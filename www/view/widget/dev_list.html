@@ -1,21 +1,88 @@
 <h3 class="ui dividing header">{{_("Devices List")}} </h3>
-<table class="ui celled basic table">
-	<thead>
-		<tr>
-			<th>{{_("SN")}}</th>
-			<th>{{_("INPUTS")}}</th>
-			<th>{{_("OUTPUTS")}}</th>
-			<th>{{_("COMMANDS")}}</th>
-		</tr>
-	</thead>
-	<tbody>
-		{% for k, v in pairs(devices) do %}
-		<tr>
-			<td>{{k}} </td>
-			<td>{{cjson.encode(v.inputs)}} </td>
-			<td>{{cjson.encode(v.outputs)}} </td>
-			<td>{{cjson.encode(v.commands)}} </td>
-		</tr>
-		{% end %}
-	</tbody>
-</table>
+
+<div class="ui styled fluid accordion">
+	{% for k, v in pairs(devices) do %}
+	<div class="title">
+		<i class="dropdown icon"></i>
+		{{k}}
+	</div>
+	<div class="content">
+		<div class="accordion">
+			{% if v.inputs and #v.inputs > 0 then %}
+			<div class="title">
+				<i class="dropdown icon"></i>
+				{{_("Inputs")}}
+			</div>
+			<div class="content">
+				<table class="ui celled basic table">
+					<thead>
+						<tr>
+							<th>{{_("Name")}}</th>
+							<th>{{_("Description")}}</th>
+							<th>{{_("Value Type")}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for _, input in ipairs(v.inputs) do %}
+						<tr>
+							<td>{{input.name}} </td>
+							<td>{{input.desc}} </td>
+							<td>{{input.vt or 'double'}} </td>
+						</tr>
+						{% end %}
+					</tbody>
+				</table>
+			</div>
+			{% end %}
+			{% if v.outputs and #v.outputs > 0 then %}
+			<div class="title">
+				<i class="dropdown icon"></i>
+				{{_("Outputs")}}
+			</div>
+			<div class="content">
+				<table class="ui celled basic table">
+					<thead>
+						<tr>
+							<th>{{_("Name")}}</th>
+							<th>{{_("Description")}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for _, output in ipairs(v.outputs) do %}
+						<tr>
+							<td>{{output.name}} </td>
+							<td>{{output.desc}} </td>
+						</tr>
+						{% end %}
+					</tbody>
+				</table>
+			</div>
+			{% end %}
+			{% if v.commands and #v.commands > 0 then %}
+			<div class="title">
+				<i class="dropdown icon"></i>
+				{{_("Commands")}}
+			</div>
+			<div class="content">
+				<table class="ui celled basic table">
+					<thead>
+						<tr>
+							<th>{{_("Name")}}</th>
+							<th>{{_("Description")}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for _, command in ipairs(v.commands) do %}
+						<tr>
+							<td>{{command.name}} </td>
+							<td>{{command.desc}} </td>
+						</tr>
+						{% end %}
+					</tbody>
+				</table>
+			</div>
+			{% end %}
+		</div>
+	</div>
+	{% end %}
+</div>

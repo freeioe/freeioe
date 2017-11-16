@@ -122,6 +122,7 @@ function command.upgrade_app(id, args)
 	if args.name then
 		assert(args.name == name)
 	end
+	assert(version >= app.version)
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
 	local target_folder = get_target_folder(inst_name)
