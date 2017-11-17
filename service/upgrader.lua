@@ -347,6 +347,8 @@ then
 	mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
 fi
 
+sync
+
 ]]
 
 local rollback_sh_str = [[
@@ -369,6 +371,8 @@ then
 	cp -f $IOT_DIR/ipt/cfg.json.bak $SKYNET_PATH/cfg.json
 	cp -f $IOT_DIR/ipt/cfg.json.md5.bak $SKYNET_PATH/cfg.json.md5
 fi
+
+sync
 ]]
 
 local upgrade_ack_sh_str = [[
@@ -380,6 +384,8 @@ mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
 mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
 mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
 rm -f $IOT_DIR/ipt/rollback
+
+sync
 
 ]]
 
