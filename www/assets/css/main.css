@@ -9,7 +9,7 @@ body {
   border-radius: 0 !important;
 }
 .ui.fixed.top.menu {
-  background-color: #494949;
+  background-color: #2B637B;
   z-index: 9999;
 }
 .ui.fixed.top.menu .item {
@@ -22,7 +22,7 @@ body {
   color: #FFFFFF;
 }
 .side.menu {
-  background-color: #696969;
+  background-color: #2D6D79;
   width: 230px;
   height: 100vh;
   padding: 10px 0px 0px 0px;
@@ -66,12 +66,12 @@ body {
   }
 }
 .side.menu .ui.vertical.menu .item {
-  background-color: #696969;
+  background-color: #2D6D79;
   color: rgba(255, 255, 255, 0.8);
   border-radius: 0;
 }
 .side.menu .ui.vertical.menu .item:hover {
-  background-color: #708090;
+  background-color: #024055;
   color: #ffffff;
 }
 @media (max-width: 768px) {
