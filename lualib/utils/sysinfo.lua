@@ -188,6 +188,7 @@ local plat_names = {
 	armv5tejl = 'mx0',
 	armv7l = 'openwrt',
 	x86_64 = 'amd64',
+	mips = 'mips_24kc',
 }
 
 _M.skynet_platform = function()
