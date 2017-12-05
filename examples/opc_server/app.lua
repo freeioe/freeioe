@@ -27,9 +27,9 @@ end
 local function set_var_value(var, value, timestamp, quality)
 	local val = opcua.DataValue.new(value)
 	val.Status = quality
-	--val:SetSourceTimestamp(opcua.DateTime.Current()) --FromTimeT(timestamp)
 	local tm = opcua.DateTime.FromTimeT(math.floor(timestamp), math.floor((timestamp%1) * 1000000))
 	val:SetSourceTimestamp(tm)
+	val:SetServerTimestamp(opcua.DateTime.Current())
 	var.DataValue = val
 	print(val)
 end
