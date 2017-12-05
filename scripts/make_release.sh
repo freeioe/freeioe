@@ -38,14 +38,6 @@ rm -rf __install/scripts
 echo $VERSION > __install/version
 echo $REVISION >> __install/version
 
-# copy lwf files
-rm -f __install/lualib/lwf.lua
-rm -f __install/lualib/lwf
-rm -f __install/lualib/resty
-cp lualib/lwf.lua __install/lualib/lwf.lua
-cp -rL lualib/lwf __install/lualib/lwf
-cp -rL lualib/resty __install/lualib/resty
-
 # Compile lua files
 # ./scripts/compile_lua.sh 
 

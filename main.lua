@@ -11,7 +11,6 @@ skynet.start(function()
 	skynet.newservice("debug_console",7000)
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
-	skynet.newservice("lwf", 8808)
 
 	local cloud = snax.uniqueservice("cloud")
 	local appmgr = snax.uniqueservice("appmgr")
