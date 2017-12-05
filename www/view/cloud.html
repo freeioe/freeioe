@@ -59,11 +59,11 @@ function mqtt_option(option, value) {
 	});
 };
 function sys_quit() {
-	$.post("/sys/quit", {from_web:true}, function(data) {
+	$.post("/sys/control", {from_web:true, action:'quit'}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 3000);
+		setTimeout('refresh_page()', 6000);
 	})
 	.fail(function() {
 		$('#message_ui').html('<i>{{_("Failed to send system restart request")} </i>');
