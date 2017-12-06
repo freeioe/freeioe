@@ -162,7 +162,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	end
 	local r, m = xpcall(lf, debug.traceback)
 	if not r then
-		log.error("App loading failed "..m)
+		log.error("Loading app failed "..m)
 		return nil, m
 	end
 
@@ -180,7 +180,12 @@ function init(name, conf, mgr_handle, mgr_type)
 	mgr_snax = snax.bind(mgr_handle, mgr_type)
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 
-	app = assert(m:new(app_name, sys_api, conf))
+	r, err = xpcall(m.new, debug.traceback, m, app_name, sys_api, conf)
+	if not r then
+		log.error("Create App instance failed. ", err)
+		return nil, err
+	end
+	app = err
 end
 
 function exit(...)
