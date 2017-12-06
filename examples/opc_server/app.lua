@@ -18,6 +18,11 @@ local default_vals = {
 }
 
 local function create_var(idx, devobj, prop)
+	local r, var = pcall(devobj.GetChild, devobj, prop.name)
+	if r and var then
+		var.Description = opcua.LocalizedText.new(prop.desc)
+		return var
+	end
 	local val = prop.vt and default_vals[prop.vt] or 0.0
 	local var = devobj:AddVariable(idx, prop.name, opcua.Variant.new(val))
 	var.Description = opcua.LocalizedText.new(prop.desc)
@@ -31,7 +36,6 @@ local function set_var_value(var, value, timestamp, quality)
 	val:SetSourceTimestamp(tm)
 	val:SetServerTimestamp(opcua.DateTime.Current())
 	var.DataValue = val
-	print(val)
 end
 
 local function create_handler(app)
@@ -40,11 +44,21 @@ local function create_handler(app)
 	return {
 		on_add_device = function(app, sn, props)
 			-- 
-			local idx = server:RegisterNamespace(app)
 			local objects = server:GetObjectsNode()
+			local r, idx = pcall(server.GetNamespaceIndex, server, app)
+			if not r then
+				idx = server:RegisterNamespace(app)
+			end
 			local id = opcua.NodeId.new(sn, idx)
 			local name = opcua.QualifiedName.new("Device "..sn, idx)
-			local devobj = objects:AddObject(id, name)
+			local r, devobj = pcall(objects.GetChild, objects, idx..":Device "..sn)
+			if not r or not devobj then
+				r, devobj = pcall(objects.AddObject, objects, idx, "Device "..sn)
+				if not r then
+					app._log:warning('Create device object failed, error', devobj)
+					return
+				end
+			end
 
 			local vars = {}
 			for i, prop in ipairs(props.inputs) do
