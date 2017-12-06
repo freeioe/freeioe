@@ -119,10 +119,10 @@ function command.upgrade_app(id, args)
 	local appmgr = snax.uniqueservice("appmgr")
 
 	local name = args.fork and args.name or app.name
-	if args.name then
-		assert(args.name == name)
+	if args.name and args.name ~= name then
+		return install_result(id, false, "Cannot upgrade application as name is different, installed "..app.name.." wanted "..args.name)
 	end
-	assert(version >= app.version)
+	--assert(version >= app.version)
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
 	local target_folder = get_target_folder(inst_name)
