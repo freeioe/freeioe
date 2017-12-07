@@ -41,15 +41,12 @@ end
 local function create_handler(app)
 	local server = app._server
 	local log = app._log
+	local idx = app._idx
 	local nodes = {}
 	return {
 		on_add_device = function(app, sn, props)
 			-- 
 			local objects = server:GetObjectsNode()
-			local r, idx = pcall(server.GetNamespaceIndex, server, app)
-			if not r then
-				idx = server:RegisterNamespace(app)
-			end
 			local id = opcua.NodeId.new(sn, idx)
 			local name = opcua.QualifiedName.new(sn, idx)
 			local r, devobj = pcall(objects.GetChild, objects, idx..":"..sn)
@@ -62,7 +59,6 @@ local function create_handler(app)
 			end
 
 			local node = nodes[sn] or {
-				idx = idx,
 				devobj = devobj,
 				vars = {}
 			}
@@ -88,7 +84,7 @@ local function create_handler(app)
 			for i, prop in ipairs(props.inputs) do
 				local var = vars[prop.name]
 				if not var then
-					vars[prop.name] = create_var(node.idx, node.devobj, prop)
+					vars[prop.name] = create_var(idx, node.devobj, prop)
 				else
 					var.Description = opcua.LocalizedText.new(prop.desc)
 				end
@@ -114,7 +110,11 @@ function app:start()
 	server:SetServerURI("urn:://iot.freeopcua.symid.com")
 	server:Start()
 
+	local id = self._sys:id()
+	local idx = server:RegisterNamespace("http://iot.symid.com/"..id)
+
 	self._server = server
+	self._idx = idx
 	self._api:set_handler(create_handler(self), true)
 	return true
 end
