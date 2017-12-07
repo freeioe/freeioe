@@ -46,6 +46,10 @@ local function create_task(func, task_name, ...)
 end
 
 local function parse_version_string(version)
+	if type(version) == 'number' then
+		return tostring(math.floor(version)), false
+	end
+
 	local beta = false
 	local version = version or 'latest'
 	if string.sub(version, 1, 5) == 'beta.' then
@@ -122,7 +126,6 @@ function command.upgrade_app(id, args)
 	if args.name and args.name ~= name then
 		return install_result(id, false, "Cannot upgrade application as name is different, installed "..app.name.." wanted "..args.name)
 	end
-	--assert(version >= app.version)
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
 	local target_folder = get_target_folder(inst_name)
