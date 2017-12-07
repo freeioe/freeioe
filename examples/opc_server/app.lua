@@ -40,6 +40,7 @@ end
 
 local function create_handler(app)
 	local server = app._server
+	local log = app._log
 	local nodes = {}
 	return {
 		on_add_device = function(app, sn, props)
@@ -50,26 +51,31 @@ local function create_handler(app)
 				idx = server:RegisterNamespace(app)
 			end
 			local id = opcua.NodeId.new(sn, idx)
-			local name = opcua.QualifiedName.new("Device "..sn, idx)
-			local r, devobj = pcall(objects.GetChild, objects, idx..":Device "..sn)
+			local name = opcua.QualifiedName.new(sn, idx)
+			local r, devobj = pcall(objects.GetChild, objects, idx..":"..sn)
 			if not r or not devobj then
-				r, devobj = pcall(objects.AddObject, objects, idx, "Device "..sn)
+				r, devobj = pcall(objects.AddObject, objects, idx, sn)
 				if not r then
-					app._log:warning('Create device object failed, error', devobj)
+					log:warning('Create device object failed, error', devobj)
 					return
 				end
 			end
 
-			local vars = {}
-			for i, prop in ipairs(props.inputs) do
-				vars[prop.name] = create_var(idx, devobj, prop)
-			end
-
-			nodes[sn] = {
+			local node = nodes[sn] or {
 				idx = idx,
 				devobj = devobj,
-				vars = vars
+				vars = {}
 			}
+			local vars = node.vars
+			for i, prop in ipairs(props.inputs) do
+				local var = vars[prop.name]
+				if not var then
+					vars[prop.name] = create_var(idx, devobj, prop)
+				else
+					var.Description = opcua.LocalizedText.new(prop.desc)
+				end
+			end
+			nodes[sn] = node
 		end,
 		on_del_device = function(app, sn)
 			print(app, sn)
@@ -83,12 +89,15 @@ local function create_handler(app)
 				local var = vars[prop.name]
 				if not var then
 					vars[prop.name] = create_var(node.idx, node.devobj, prop)
+				else
+					var.Description = opcua.LocalizedText.new(prop.desc)
 				end
 			end
 		end,
 		on_input = function(app, sn, input, prop, value, timestamp, quality)
 			local node = nodes[sn]
 			if not node or not node.vars then
+				log:error("Unknown sn", sn)
 				return
 			end
 			local var = node.vars[input]
