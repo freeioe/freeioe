@@ -50,13 +50,19 @@ local function parse_version_string(version)
 		return tostring(math.floor(version)), false
 	end
 
+	local editor = false
 	local beta = false
 	local version = version or 'latest'
-	if string.sub(version, 1, 5) == 'beta.' then
+	if string.len(version) > 5 and string.sub(version, 1, 5) == 'beta.' then
 		version = string.sub(version, 6)
 		beta = true
 	end
-	return version, beta
+	if string.len(version) > 7 and string.sub(version, -7) == '.editor' then
+		version = string.sub(version, 1, -8)
+		beta = true
+		editor = true
+	end
+	return version, beta, editor
 end
 
 local function create_download(app_name, version, cb, ext)
@@ -115,7 +121,7 @@ end
 
 function command.upgrade_app(id, args)
 	local inst_name = args.inst
-	local version, beta = parse_version_string(args.version)
+	local version, beta, editor = parse_version_string(args.version)
 	local app = datacenter.get("APPS", inst_name)
 	if not app then
 		return install_result(id, false, "There is no app for instance name "..inst_name)	
@@ -144,6 +150,9 @@ function command.upgrade_app(id, args)
 				version = get_app_version(inst_name)
 			end
 			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+			if editor then
+				datacenter.set("APPS", inst_name, "islocal", 1)
+			end
 
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
@@ -162,7 +171,7 @@ end
 function command.install_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
-	local version, beta = parse_version_string(args.version)
+	local version, beta, editor = parse_version_string(args.version)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
@@ -183,6 +192,9 @@ function command.install_app(id, args)
 				version = get_app_version(inst_name)
 			end
 			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+			if editor then
+				datacenter.set("APPS", inst_name, "islocal", 1)
+			end
 
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
