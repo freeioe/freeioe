@@ -35,7 +35,7 @@ function _M.pkg_enable_beta(pkg_host, sys_id)
 	if status == 200 then
 		local msg = cjson.decode(body)
 		local val = tonumber(msg.message or 0)
-		return val
+		return val == 1
 	else
 		return nil, body
 	end

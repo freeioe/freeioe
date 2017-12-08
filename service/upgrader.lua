@@ -126,6 +126,9 @@ function command.upgrade_app(id, args)
 	if not app then
 		return install_result(id, false, "There is no app for instance name "..inst_name)	
 	end
+	if beta and not datacenter.get('CLOUD', 'USING_BETA') then
+		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
+	end
 	local appmgr = snax.uniqueservice("appmgr")
 
 	local name = args.fork and args.name or app.name
@@ -180,6 +183,10 @@ function command.install_app(id, args)
 		local err = "Application already installed"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
+	if beta and not datacenter.get('CLOUD', 'USING_BETA') then
+		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
+	end
+
 	local appmgr = snax.uniqueservice("appmgr")
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)

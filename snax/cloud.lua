@@ -117,7 +117,7 @@ local msg_handler = {
 			snax.self().post.enable_comm(tonumber(args.data))
 		end
 		if action == 'enable/beta' then
-			datacenter.set('CLOUD', 'USING_BETA')
+			snax.self().post.enable_beta(tonumber(args.data) == 1)
 		end
 		if action == 'conf' then
 			local conf = args.data
@@ -485,6 +485,20 @@ function accept.enable_comm(sec)
 		enable_comm_upload = nil
 	end
 	datacenter.set("CLOUD", "COMM_UPLOAD", enable_comm_upload)
+end
+
+function accept.enable_beta(enable)
+	if not enable then
+		datacenter.set('CLOUD', 'USING_BETA', false)
+	else
+		local r, err = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
+		if r then
+			log.warning("Using beta is enabled from cloud!")
+			datacenter.set('CLOUD', 'USING_BETA', true)
+		else
+			log.warning("Cannot enable beta", err)
+		end
+	end
 end
 
 ---
