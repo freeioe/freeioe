@@ -73,19 +73,19 @@ function app:start()
 	local sys_id = self._sys:id()
 	local config = self._conf or {
 		--channel_type = "socket",
-		devs = {
-			{
-				port = "/dev/ttymxc1",
-				baudrate = 115200
-			}
-			--[[
-			{
-				host = "127.0.0.1",
-				port = 1502,
-				nodelay = true,
-			},
-			]]--
+	}
+	config.devs = config.devs or {
+		{
+			port = "/dev/ttymxc1",
+			baudrate = 115200
 		}
+		--[[
+		{
+		host = "127.0.0.1",
+		port = 1502,
+		nodelay = true,
+		},
+		]]--
 	}
 	assert(config)
 
