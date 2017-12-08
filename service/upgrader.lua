@@ -136,7 +136,8 @@ function command.upgrade_app(id, args)
 	local conf = args.conf or app.conf
 	local target_folder = get_target_folder(inst_name)
 
-	create_download(name, version, function(r, info)
+	local download_version = editor and version..".editor" or version
+	create_download(name, download_version, function(r, info)
 		if r then
 			log.notice("Download application finished", name)
 			local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
@@ -183,7 +184,8 @@ function command.install_app(id, args)
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 
-	create_download(name, version, function(r, info)
+	local download_version = editor and version..".editor" or version
+	create_download(name, download_version, function(r, info)
 		if r then
 			log.notice("Download application finished", name)
 			os.execute("unzip -oq "..info.." -d "..target_folder)
