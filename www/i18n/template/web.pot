@@ -2,10 +2,6 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 
-msgid "<p>This will delete all local changes! Are you sure?</p>"
-msgstr ""
-
-
 msgid "API"
 msgstr ""
 
@@ -559,6 +555,10 @@ msgstr ""
 
 
 msgid "There is no new system updates"
+msgstr ""
+
+
+msgid "This will delete all local changes! Are you sure?"
 msgstr ""
 
 

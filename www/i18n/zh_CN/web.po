@@ -1,9 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "<p>This will delete all local changes! Are you sure?</p>"
-msgstr "<p>是否确定删除所有本地缓存的改动？</p>"
-
 msgid "API"
 msgstr "接口"
 
@@ -421,6 +418,9 @@ msgstr "测试浏览页面"
 msgid "There is no new system updates"
 msgstr "未检测到系统更新"
 
+msgid "This will delete all local changes! Are you sure?"
+msgstr "删除本地所有的改动，是否确认?"
+
 msgid "Tiemout"
 msgstr "超时"
 
@@ -487,74 +487,3 @@ msgstr "是"
 msgid "seconds"
 msgstr "秒"
 
-#~ msgid "Skip Ack?"
-#~ msgstr "无需更新确认？"
-
-#~ msgid "With Skynet?"
-#~ msgstr "升级Skynet?"
-
-#~ msgid "%d page 112"
-#~ msgstr "%d 页面 112"
-
-#~ msgid "%d page 113"
-#~ msgstr "%d 页面 113"
-
-#~ msgid "%d page 114"
-#~ msgstr "%d 页面 114"
-
-#~ msgid "%d page 115"
-#~ msgstr "%d 页面 115"
-
-#~ msgid "%d page 117"
-#~ msgstr "%d 页面 117"
-
-#~ msgid "%d page 118"
-#~ msgstr "%d 页面 118"
-
-#~ msgid "%d page 119"
-#~ msgstr "%d 页面 119"
-
-#~ msgid "COMMANDS"
-#~ msgstr "指令集"
-
-#~ msgid "Error Page 111"
-#~ msgstr "错误页面 111"
-
-#~ msgid "Error Page 116"
-#~ msgstr "错误页面 116"
-
-#~ msgid "Failed to send device reboot request"
-#~ msgstr "发送设备重启请求失败"
-
-#~ msgid "Failed to send system upgrade ack request"
-#~ msgstr "发送系统升级确认信息失败!"
-
-#~ msgid "Failed to send system upgrade request"
-#~ msgstr "发送系统升级请求失败"
-
-#~ msgid "INPUTS"
-#~ msgstr "输入项"
-
-#~ msgid "OUTPUTS"
-#~ msgstr "输出项"
-
-#~ msgid "Start"
-#~ msgstr "开启"
-
-#~ msgid "Stop"
-#~ msgstr "停止"
-
-#~ msgid "There is no system updates"
-#~ msgstr "没有系统更新"
-
-#~ msgid "Uninstall"
-#~ msgstr "卸载"
-
-#~ msgid "Free Memory"
-#~ msgstr "剩余内存"
-
-#~ msgid "System upgrade is done!"
-#~ msgstr "系统升级完成!"
-
-#~ msgid "Used Memory"
-#~ msgstr "已用内存"
