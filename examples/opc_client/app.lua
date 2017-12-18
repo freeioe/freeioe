@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 local opcua = require 'opcua'
 
-local app = class("IOT_OPCUA_SERVER_APP")
+local app = class("IOT_OPCUA_CLIENT_APP")
 app.API_VER = 1
 
 function app:initialize(name, sys, conf)
@@ -10,6 +10,9 @@ function app:initialize(name, sys, conf)
 	self._conf = conf
 	self._api = sys:data_api()
 	self._log = sys:logger()
+	self._connect_retry = 1000
+	self._input_count_in = 0
+	self._input_count_out = 0
 end
 
 local default_vals = {
@@ -17,87 +20,134 @@ local default_vals = {
 	string = '',
 }
 
-local function create_var(idx, devobj, prop)
-	local r, var = pcall(devobj.GetChild, devobj, prop.name)
-	if r and var then
-		var.Description = opcua.LocalizedText.new(prop.desc)
+local function create_var(idx, devobj, input, device)
+	local var, err = devobj:getChild(input.name)
+	if var then
+		var.description = opcua.LocalizedText.new("zh_CN", input.desc)
 		return var
 	end
-	local val = prop.vt and default_vals[prop.vt] or 0.0
-	local var = devobj:AddVariable(idx, prop.name, opcua.Variant.new(val))
-	var.Description = opcua.LocalizedText.new(prop.desc)
-	return var
+	local attr = opcua.VariableAttributes.new()
+	attr.displayName = opcua.LocalizedText.new("zh_CN", input.name)
+	if input.desc then
+		attr.description = opcua.LocalizedText.new("zh_CN", input.desc)
+	end
+
+	local current = device:get_input_prop(input.name, 'value')
+	local val = input.vt and default_vals[input.vt] or 0.0
+	attr.value = opcua.Variant.new(current or val)
+
+	--[[
+	attr.writeMask = opcua.WriteMask.ALL
+	attr.userWriteMask = opcua.WriteMask.ALL
+	]]
+	attr.accessLevel = opcua.AccessLevel.READ ~ opcua.AccessLevel.WRITE ~ opcua.AccessLevel.STATUSWRITE
+	--attr.userAccessLevel = opcua.AccessLevel.READ ~ opcua.AccessLevel.READ ~ opcua.AccessLevel.STATUSWRITE
+	
+	--return devobj:addVariable(opcua.NodeId.new(idx, input.name), input.name, attr)
+	return devobj:addVariable(opcua.NodeId.new(idx, 0), input.name, attr)
 end
 
 local function set_var_value(var, value, timestamp, quality)
-	local val = opcua.DataValue.new(value)
-	val.Status = quality
-	local tm = opcua.DateTime.FromTimeT(math.floor(timestamp), math.floor((timestamp%1) * 1000000))
-	val:SetSourceTimestamp(tm)
-	val:SetServerTimestamp(opcua.DateTime.Current())
-	var.DataValue = val
+	local val = opcua.DataValue.new(opcua.Variant.new(value))
+	val.status = quality
+	local tm = opcua.DateTime.fromUnixTime(math.floor(timestamp)) +  math.floor((timestamp%1) * 100) * 100000
+	val.sourceTimestamp = tm
+	var.dataValue = val
+	--return var.SetDataValue(var, val)
 end
 
-function app:on_add_device(app, sn, props)
+function app:is_connected()
+	if self._client then
+		return true
+	end
+end
+
+function app:create_device_node(sn, props)
+	if not self:is_connected() then
+		return
+	end
+
 	local client = self._client
 	local log = self._log
 	local idx = self._idx
 	local nodes = self._nodes
+	local device = self._api:get_device(sn)
 
 	-- 
-	local objects = client:GetObjectsNode()
-	local r, idx = pcall(client.GetNamespaceIndex, client, "http://iot.symid.com")
-	if not r then
-		log:warning("Cannot find namespace")
+	local objects = client:getObjectsNode()
+	local idx, err = client:getNamespaceIndex("http://iot.symid.com")
+	if not idx then
+		log:warning("Cannot find namespace", err)
 		return
 	end
-	local id = opcua.NodeId.new(sn, idx)
-	local name = opcua.QualifiedName.new(sn, idx)
-	local r, devobj = pcall(objects.GetChild, objects, idx..":"..sn)
-	if not r or not devobj then
-		r, devobj = pcall(objects.AddObject, objects, idx, sn)
-		if not r then
-			log:warning('Create device object failed, error', devobj)
+	local devobj, err = objects:getChild(idx..":"..sn)
+	if not devobj then
+		local attr = opcua.ObjectAttributes.new()
+		attr.displayName = opcua.LocalizedText.new("zh_CN", "Device "..sn)
+		devobj, err = objects:addObject(opcua.NodeId.new(idx, sn), sn, attr)
+		if not devobj then
+			log:warning('Create device object failed, error', err)
 			return
+		else
+			log:debug('Device created', devobj)
 		end
+	else
+		log:debug("Device object found", devobj)
 	end
 
 	local node = nodes[sn] or {
 		idx = idx,
+		device = device,
 		devobj = devobj,
 		vars = {}
 	}
 	local vars = node.vars
-	for i, prop in ipairs(props.inputs) do
-		local var = vars[prop.name]
+	for i, input in ipairs(props.inputs) do
+		local var = vars[input.name]
 		if not var then
-			vars[prop.name] = create_var(idx, devobj, prop)
+			local var = create_var(idx, devobj, input, device)
+			vars[input.name] = var
+			log:debug('Variable created', var)
 		else
-			var.Description = opcua.LocalizedText.new(prop.desc)
+			var.description = opcua.LocalizedText.new("zh_CN", input.desc)
 		end
 	end
 	nodes[sn] = node
+end
 
+function app:on_add_device(app, sn, props)
+	if not self:is_connected() then
+		return
+	end
+	return self:create_device_node(sn, props)
 end
 
 function app:on_mod_device(app, sn, props)
+	if not self:is_connected() then
+		return
+	end
+
 	local node = self._nodes[sn]
 	local idx = self._idx
 
 	if not node or not node.vars then
 	end
 	local vars = node.vars
-	for i, prop in ipairs(props.inputs) do
-		local var = vars[prop.name]
+	for i, input in ipairs(props.inputs) do
+		local var = vars[input.name]
 		if not var then
-			vars[prop.name] = create_var(idx, node.devobj, prop)
+			vars[input.name] = create_var(idx, node.devobj, input, node.device)
 		else
-			var.Description = opcua.LocalizedText.new(prop.desc)
+			var.description = opcua.LocalizedText.new("zh_CN", input.desc)
 		end
 	end
 end
 
-function app:on_input(app, sn, input, prop, value, timestamp, quality)
+function app:on_post_input(app, sn, input, prop, value, timestamp, quality)
+	if not self:is_connected() then
+		return
+	end
+
 	local node = self._nodes[sn]
 	if not node or not node.vars then
 		log:error("Unknown sn", sn)
@@ -105,24 +155,74 @@ function app:on_input(app, sn, input, prop, value, timestamp, quality)
 	end
 	local var = node.vars[input]
 	if var and prop == 'value' then
-		set_var_value(var, value, timestamp, quality)
+		self._input_count_in = self._input_count_in + 1
+		local r, err = pcall(set_var_value, var, value, timestamp, quality)
+		self._input_count_out = self._input_count_out + 1
+		if not r then
+			self._log:error("OPC Client failure!", err, self._sys:time())
+		end
 	end
 end
 
-local function create_handler(self)
-	return end
+function app:on_disconnect()
+	self._nodes = {}
+	self._client = nil
+	self._sys:timeout(self._connect_retry, function() self:connect_proc() end)
+	self._connect_retry = self._connect_retry * 2
+	if self._connect_retry > 2000 * 64 then
+		self._connect_retry = 2000
+	end
+end
 
 function app:connect_proc()
-	local client = self._client
-	local r, err = pcall(client.Connect, client, "opc.tcp://127.0.0.1:4840/freeopcua/server/")
-	print(r, err)
+	self._log:notice("OPC Client start connection!")
+	local client = self._client_obj
+
+	local r, err = client:connect_username("opc.tcp://127.0.0.1:4840", "user1", "password")
+	if r then
+		self._log:notice("OPC Client connect successfully!", self._sys:time())
+		self._client = client
+		self._connect_retry = 2000
+		
+		local devs = self._api:list_devices() or {}
+		for sn, props in pairs(devs) do
+			self:create_device_node(sn, props)
+		end
+	else
+		self._log:error("OPC Client connect failure!", err, self._sys:time())
+		self:on_disconnect()
+	end
+end
+
+function app:print_debug()
+	while true do
+		if self._client then
+			if 0 == self._client:getState() then
+				self._sys:fork(function()
+					self:on_disconnect()
+				end)
+			end
+		end
+		print(self._input_count_in, self._input_count_out)
+		self._sys:sleep(2000)
+	end
 end
 
 function app:start()
-	local client = opcua.Client.new(false)
-	self._sys:fork(function() self:connect_proc() end)
-	self._client = client
 	self._nodes = {}
+
+	local config = opcua.ConnectionConfig.new()
+	config.protocolVersion = 0
+	config.sendBufferSize = 65535
+	config.recvBufferSize = 65535
+	config.maxMessageSize = 0
+	config.maxChunkCount = 0
+
+	local client = opcua.Client.new(5000, 10 * 60 * 1000, config)
+	self._client_obj = client
+
+	self._sys:fork(function() self:print_debug() end)
+	self._sys:fork(function() self:connect_proc() end)
 	self._api:set_handler({
 		on_add_device = function(app, sn, props)
 			return self:on_add_device(app, sn, props)
@@ -134,7 +234,7 @@ function app:start()
 			return self:on_mod_device(app, sn, props)
 		end,
 		on_input = function(app, sn, input, prop, value, timestamp, quality)
-			return self:on_input(app, sn, input, prop, value, timestamp, quality)
+			return self._sys:post('input', app, sn, input, prop, value, timestamp, quality)
 		end,
 	}, true)
 
@@ -143,8 +243,12 @@ end
 
 function app:close(reason)
 	print(self._name, reason)
-	self._client:Disconnect()
 	self._client = nil
+	if self._client_obj then
+		self._nodes = {}
+		self._client_obj:disconnect()
+		self._client_obj = nil
+	end
 end
 
 function app:run(tms)

@@ -88,7 +88,9 @@ end
 
 function device:get_input_prop(input, prop)
 	local t = dc.get('INPUT', self._sn, input, prop)
-	return t.value, t.timestamp, t.quality
+	if t then
+		return t.value, t.timestamp, t.quality
+	end
 end
 
 function device:set_input_prop(input, prop, value, timestamp, quality)
