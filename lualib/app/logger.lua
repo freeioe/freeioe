@@ -65,5 +65,6 @@ make_func(logger, 'info')
 make_func(logger, 'notice')
 make_func(logger, 'warning')
 make_func(logger, 'error')
+make_func(logger, 'fatal')
 
 return logger

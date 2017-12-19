@@ -107,7 +107,6 @@ function app:create_device_node(sn, props)
 		if not var then
 			local var = create_var(idx, devobj, input, device)
 			vars[input.name] = var
-			log:debug('Variable created', var)
 		else
 			var.description = opcua.LocalizedText.new("zh_CN", input.desc)
 		end
