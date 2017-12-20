@@ -146,6 +146,7 @@ function app:start()
 	Category_Names[opcua.LogCategory.CLIENT] = "client"
 	Category_Names[opcua.LogCategory.USERLAND] = "userland"
 	Category_Names[opcua.LogCategory.SECURITYPOLICY] = "securitypolicy"
+
 	server:setLogger(function(level, category, ...)
 		Level_Funcs[level](self._log, Category_Names[category], ...)
 	end)

@@ -1,5 +1,5 @@
 local class = require 'middleclass'
-local log = require 'log'
+local log = require 'utils.log'
 local formatter = require 'log.formatter.concat'.new()
 
 local logger = class("APP_MGR_LOG")
