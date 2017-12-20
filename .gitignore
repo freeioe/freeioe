@@ -47,3 +47,4 @@ apps
 *.swp
 __install
 __release
+prebuild
