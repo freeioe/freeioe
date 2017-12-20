@@ -20,7 +20,7 @@ local default_vals = {
 local function create_var(idx, devobj, input, device)
 	local var, err = devobj:getChild(input.name)
 	if var then
-		var.description = opcua.LocalizedText.new('zh_CN', input.desc)
+		var:setDescription(opcua.LocalizedText.new('zh_CN', input.desc))
 		return var
 	end
 	local attr = opcua.VariableAttributes.new()
@@ -37,15 +37,16 @@ local function create_var(idx, devobj, input, device)
 end
 
 local function set_var_value(var, value, timestamp, quality)
-	var.value = opcua.Variant.new(value)
+	var:setValue(opcua.Variant.new(value))
+
 	--[[
 	local val = opcua.DataValue.new(opcua.Variant.new(value))
 	val.status = quality
 	local tm = opcua.DateTime.fromUnixTime(math.floor(timestamp)) +  math.floor((timestamp%1) * 100) * 100000
 	val.sourceTimestamp = tm
-	var.dataValue = val
+	--var.dataValue = val
+	var:setDataValue(val)
 	]]--
-	--return var.SetDataValue(var, val)
 end
 
 local function create_handler(app)
@@ -83,7 +84,7 @@ local function create_handler(app)
 				if not var then
 					vars[input.name] = create_var(idx, devobj, input, device)
 				else
-					var.description = opcua.LocalizedText.new('zh_CN', input.desc)
+					var:setDescription(opcua.LocalizedText.new('zh_CN', input.desc))
 				end
 			end
 			nodes[sn] = node
@@ -104,7 +105,7 @@ local function create_handler(app)
 				if not var then
 					vars[input.name] = create_var(idx, node.devobj, input, node.device)
 				else
-					var.description = opcua.LocalizedText.new('zh_CN', input.desc)
+					var:setDescription(opcua.LocalizedText.new('zh_CN', input.desc))
 				end
 			end
 		end,
