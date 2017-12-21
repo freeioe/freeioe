@@ -201,7 +201,7 @@ function app:print_debug()
 				end)
 			end
 		end
-		print(self._input_count_in, self._input_count_out)
+		--print(self._input_count_in, self._input_count_out)
 		self._sys:sleep(2000)
 	end
 end
