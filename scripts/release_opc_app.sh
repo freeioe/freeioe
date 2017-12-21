@@ -1,6 +1,6 @@
 
-if [ $# != 3 ] ; then
-	echo "Usage: release.sh <app name> <version> <git version>"
+if [ $# != 4 ] ; then
+	echo "Usage: release_opc_app.sh <app name> <version> <git version> <platform>"
 	exit 0
 fi
 
@@ -13,13 +13,13 @@ echo $2 > version
 echo $3 >> version
 
 # for so linked
-mv luaclib/opcua.so luaclib/opcua.so.bak~
+mv luaclib/opcua.so ./opcua.so.bak~
 cp ../../prebuild/$4/opcua.so luaclib/opcua.so
 
-zip -r -q ../../__release/$1/$2.zip * -x *~
+zip -r -q ../../__release/$1_$4/$2.zip * -x *~
 rm -f version
 rm -f luaclib/opcua.so
-mv luaclib/opcua.so.bak~ luaclib/opcua.so
+mv ./opcua.so.bak~ luaclib/opcua.so
 cd ../../
 md5sum -b __release/$1/$2.zip > __release/$1/$2.zip.md5
 du __release/$1/$2.zip -sh

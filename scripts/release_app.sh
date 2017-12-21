@@ -1,6 +1,6 @@
 
 if [ $# != 3 ] ; then
-	echo "Usage: release.sh <app name> <version> <git version>"
+	echo "Usage: release_app.sh <app name> <version> <git version>"
 	exit 0
 fi
 
