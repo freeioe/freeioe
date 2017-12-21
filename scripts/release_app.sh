@@ -1,5 +1,5 @@
 
-if [ $# != 3 ] ; then
+if [ $# -lt 3 ] ; then
 	echo "Usage: release_app.sh <app name> <version> <git version>"
 	exit 0
 fi
