@@ -113,15 +113,25 @@ function device:get_output_prop(output, prop)
 end
 
 function device:set_output_prop(output, prop, value)
-	local timestamp = skynet.time()
-	dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
-	self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp)
-	return true
+	for _, v in ipairs(self._props.outputs) do
+		if v.name == output then
+			local timestamp = skynet.time()
+			dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
+			self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp)
+			return true
+		end
+	end
+	return nil, "Output property "..output.." does not exits in device "..self._sn
 end
 
 function device:send_command(command, param)
-	self._ctrl_chn:publish("command", self._app_name, self._sn, command, param)
-	return true
+	for _, v in ipairs(self._props.outputs) do
+		if v.name == output then
+			self._ctrl_chn:publish("command", self._app_name, self._sn, command, param)
+			return true
+		end
+	end
+	return nil, "Command "..command.." does not exits in device "..self._sn
 end
 
 function device:list_props()

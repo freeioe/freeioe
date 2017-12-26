@@ -6,30 +6,34 @@ local inifile = require 'inifile'
 local app = class("IOT_APP_FRP_CLASS")
 app.API_VER = 1
 
-function app:initialize(name, sys, conf)
-	self._name = name
-	self._sys = sys
-	self._conf = conf
-	self._api = self._sys:data_api()
-	self._log = sys:logger()
+local function get_default_conf(sys, conf)
+	local ini_conf = conf or {}
+	local id = sys:id()
 
-	local id = string.lower(sys:id())
-
-	local ini_conf = {
-		common = {
-			server_addr = 'm2mio.com',
-			server_port = '5443',
-			privilege_token = 'BWYJVj2HYhVtdGZL',
-		}
+	ini_conf.common = ini_conf.common or {
+		server_addr = 'm2mio.com',
+		server_port = '5443',
+		privilege_token = 'BWYJVj2HYhVtdGZL',
 	}
-	ini_conf[id..'_web'] = {
+
+	ini_conf[id..'_web'] = ini_conf[id..'_web'] or {
 		['type'] = 'http',
 		local_port = 8808,
 		custom_domains = 'symgrid.com',
-		subdomain = id,
+		subdomain = string.lower(id),
 	}
+	return ini_conf
+end
+
+function app:initialize(name, sys, conf)
+	self._name = name
+	self._sys = sys
+	self._conf = get_default_conf(sys, conf)
+	self._api = self._sys:data_api()
+	self._log = sys:logger()
+
 	local ini_file = sys:app_dir().."frpc.ini"
-	inifile.save(ini_file, ini_conf)
+	inifile.save(ini_file, self._conf)
 
 	--local frp_bin = sys:app_dir().."arm/frpc"
 	local frp_bin = sys:app_dir().."amd64/frpc"
