@@ -56,7 +56,7 @@ function app:start()
 				local ini_file = sys:app_dir().."frpc.ini"
 				inifile.save(ini_file, self._conf)
 
-				self._sys:post('pm_ctrl', 'restart')
+				self._sys:post('pm_ctrl', 'restart', conf)
 				return true
 			end
 			return true, "done"
@@ -166,9 +166,12 @@ function app:run(tms)
 	return 1000 * 5
 end
 
-function app:on_post_pm(action)
+function app:on_post_pm_ctrl(action, conf)
 	if action == 'restart' then
-		self._pm:restart()
+		local r, err = self._pm:restart()
+		if r then
+			self._sys:set_conf(conf)
+		end
 	end
 end
 return app
