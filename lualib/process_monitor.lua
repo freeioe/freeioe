@@ -39,7 +39,7 @@ function pm:start()
 		pm_file = './iot/linux/x86_64/process-monitor'
 	end
 
-	local cmd = { pm_file, "-d", "-p", self._pid }
+	local cmd = { pm_file, "-z", "-d", "-p", self._pid }
 	--local cmd = { pm_file, "-p", self._pid }
 	if self._options.user then
 		cmd[#cmd + 1] = "-u"
