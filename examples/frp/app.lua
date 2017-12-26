@@ -13,6 +13,8 @@ function app:initialize(name, sys, conf)
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
 
+	local id = string.lower(sys:id())
+
 	local ini_conf = {
 		common = {
 			server_addr = 'm2mio.com',
@@ -20,11 +22,11 @@ function app:initialize(name, sys, conf)
 			privilege_token = 'BWYJVj2HYhVtdGZL',
 		}
 	}
-	ini_conf[sys:id()..'_web'] = {
+	ini_conf[id..'_web'] = {
 		['type'] = 'http',
 		local_port = 8808,
 		custom_domains = 'symgrid.com',
-		subdomain = sys:id(),
+		subdomain = id,
 	}
 	local ini_file = sys:app_dir().."frpc.ini"
 	inifile.save(ini_file, ini_conf)
