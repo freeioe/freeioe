@@ -7,7 +7,7 @@ return {
 		local get = ngx.req.get_uri_args()
 		local version = get.version
 		local skynet_version = get.skynet_version
-		local plat = sysinfo.skynet_platform()
+		local plat = sysinfo.platform()
 
 		local iot_type, err = skynet.call("UPGRADER", "lua", "pkg_check_version", "skynet_iot", version)
 		local skynet_type, err = skynet.call("UPGRADER", "lua", "pkg_check_version", plat.."_skynet", skynet_version)

@@ -124,13 +124,6 @@ local function create_handler(app)
 end
 
 function app:start()
-	local server = opcua.Server.new()
-
-	server.config:setServerURI("urn:://opcua.symid.com")
-
-	local id = self._sys:id()
-	local idx = server:addNamespace("http://iot.symid.com/"..id)
-
 	local Level_Funcs = {}
 	Level_Funcs[opcua.LogLevel.TRACE] = assert(self._log.trace)
 	Level_Funcs[opcua.LogLevel.DEBUG] = assert(self._log.debug)
@@ -147,9 +140,17 @@ function app:start()
 	Category_Names[opcua.LogCategory.USERLAND] = "userland"
 	Category_Names[opcua.LogCategory.SECURITYPOLICY] = "securitypolicy"
 
-	server:setLogger(function(level, category, ...)
+	self._logger = function(level, category, ...)
 		Level_Funcs[level](self._log, Category_Names[category], ...)
-	end)
+	end
+	opcua.setLogger(self._logger)
+
+	local server = opcua.Server.new()
+
+	server.config:setServerURI("urn:://opcua.symid.com")
+
+	local id = self._sys:id()
+	local idx = server:addNamespace("http://iot.symid.com/"..id)
 
 	self._server = server
 	self._idx = idx
@@ -167,10 +168,11 @@ function app:close(reason)
 end
 
 function app:run(tms)
-	while true do
+	while self._server.running do
 		local ms = self._server:run_once(false)
 		self._sys:sleep(10)
 	end
+	print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
 	return 1000
 end

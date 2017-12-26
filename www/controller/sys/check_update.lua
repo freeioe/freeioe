@@ -8,7 +8,7 @@ return {
 		local iot_ver, iot_beta = skynet.call("UPGRADER", "lua", "pkg_check_update", "skynet_iot", beta)
 		assert(iot_ver)
 
-		local plat = sysinfo.skynet_platform()
+		local plat = sysinfo.platform()
 		local sver, sbeta = skynet.call("UPGRADER", "lua", "pkg_check_update", plat.."_skynet", beta)
 		assert(sver)
 		local ret = {

@@ -664,7 +664,10 @@ end
 function accept.command_to_app(id, cmd)
 	local device = cmd.device
 	if device then
-		local dev = api:get_device(device)
+		local dev, err = api:get_device(device)
+		if not dev then
+			return snax.self().post.action_result('command', id, nil, err)
+		end
 		local r, err = dev:send_command(cmd.cmd, cmd.param)
 		snax.self().post.action_result('command', id, r, err or "OK")
 	end

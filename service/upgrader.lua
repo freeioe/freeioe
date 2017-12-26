@@ -285,7 +285,7 @@ end
 
 local function get_core_name(name, platform)
 	local name = name
-	local platform = platform or sysinfo.skynet_platform()
+	local platform = platform or sysinfo.platform()
 	if platform then
 		name = platform.."_"..name
 	end

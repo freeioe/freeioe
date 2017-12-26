@@ -2,6 +2,7 @@ local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 
 local app = class("IOT_SYS_APP_CLASS")
+app.API_VER = 1
 
 function app:initialize(name, sys, conf)
 	self._name = name
@@ -53,7 +54,7 @@ function app:start()
 			vt = "int",
 		},
 		{
-			name = "skynet_platform",
+			name = "platform",
 			desc = "Skynet Platform type",
 			vt = "string",
 		},
@@ -78,14 +79,14 @@ function app:run(tms)
 		self._log:notice("System Version:", v, gv)
 		local sv, sgv = sysinfo.skynet_version()
 		self._log:notice("Skynet Platform Version:", sv, sgv)
-		local skynet_plat = sysinfo.skynet_platform() or "unknown"
+		local plat = sysinfo.platform() or "unknown"
 
 		self._dev:set_input_prop('starttime', "value", self._start_time)
 		self._dev:set_input_prop('version', "value", v)
 		self._dev:set_input_prop('version', "git_version", gv)
 		self._dev:set_input_prop('skynet_version', "value", sv)
 		self._dev:set_input_prop('skynet_version', "git_version", sgv)
-		self._dev:set_input_prop('skynet_platform', "value", skynet_plat)
+		self._dev:set_input_prop('platform', "value", plat)
 
 		local calc_uptime = nil
 		calc_uptime = function()

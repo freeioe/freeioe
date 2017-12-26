@@ -191,7 +191,7 @@ local plat_names = {
 	mips = 'mips_24kc',
 }
 
-_M.skynet_platform = function()
+_M.platform = function()
 	local uname = _M.uname('-m')
 	local plat = plat_names[uname]
 	return assert(plat or os.getenv("IOT_PLATFORM"))

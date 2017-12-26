@@ -58,7 +58,7 @@ return {
 		local meminfo =  sysinfo.meminfo()
 		local uname = sysinfo.uname("-a")
 		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
-		local plat = sysinfo.skynet_platform()
+		local plat = sysinfo.platform()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
 		
 		local cloud = snax.uniqueservice('cloud')
