@@ -14,15 +14,17 @@ function pm:initialize(name, cmd, args, options)
 	self._cmd = cmd
 	local pn = cmd:match("([^/]+)$") or cmd
 	self._pid = "/tmp/iot_pm_"..self._name.."_"..pn..".pid"
+	self._log = "/tmp/iot_pm_"..self._name.."_"..pn..".log"
 	if args then
 		self._cmd = cmd .. ' ' .. table.concat(args, ' ')
+		if not string.find(self._cmd, '-L') then
+			self._cmd = self._cmd .. ' -L ' .. self._log
+		end
 	end
 	self._options = options or {}
 end
 
 function pm:start()
-	self:stop()
-
 	local plat = sysinfo.platform()
 	assert(plat)
 	local pm_file = 'process-monitor'
@@ -86,7 +88,6 @@ end
 
 function pm:restart()
 	self:stop()
-	skynet.sleep(100)
 	return self:start()
 end
 

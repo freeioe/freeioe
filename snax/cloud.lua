@@ -654,7 +654,10 @@ function accept.output_to_app(id, info)
 		log.warning("device is missing in data")
 		return
 	end
-	local dev = api:get_device(device)
+	local dev, err = api:get_device(device)
+	if not dev then
+		return snax.self().post.action_result('command', id, false, err)
+	end
 	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
 	snax.self().post.action_result('output', id, r, err or "Done")
 end
@@ -664,7 +667,7 @@ function accept.command_to_app(id, cmd)
 	if device then
 		local dev, err = api:get_device(device)
 		if not dev then
-			return snax.self().post.action_result('command', id, nil, err)
+			return snax.self().post.action_result('command', id, false, err)
 		end
 		local r, err = dev:send_command(cmd.cmd, cmd.param)
 		snax.self().post.action_result('command', id, r, err or "OK")

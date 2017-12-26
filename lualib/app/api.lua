@@ -167,6 +167,9 @@ end
 -- Get readonly device object to access input / fire command / output
 function api:get_device(sn)
 	local props = dc.get('DEVICES', sn)
+	if not props then
+		return nil, string.format("Device %s does not exits", sn)
+	end
 	return dev_api:new(self, sn, props, true)
 end
 

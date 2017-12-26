@@ -52,11 +52,10 @@ function app:start()
 			if output == 'frp_config' then
 				local conf = cjson.decode(value)
 				self._conf = get_default_conf(self._sys, conf)
-				self._dev:set_input_prop('frp_config', 'value', cjson.encode(self._conf))
-				local ini_file = sys:app_dir().."frpc.ini"
+				local ini_file = self._sys:app_dir().."frpc.ini"
 				inifile.save(ini_file, self._conf)
 
-				self._sys:post('pm_ctrl', 'restart', conf)
+				self._sys:post('pm_ctrl', 'restart', cjson.decode(value))
 				return true
 			end
 			return true, "done"
@@ -168,9 +167,11 @@ end
 
 function app:on_post_pm_ctrl(action, conf)
 	if action == 'restart' then
+		self._log:debug("Restart frpc(process-monitor)")
 		local r, err = self._pm:restart()
 		if r then
 			self._sys:set_conf(conf)
+			self._dev:set_input_prop('frp_config', 'value', conf)
 		end
 	end
 end
