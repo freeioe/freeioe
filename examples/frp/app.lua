@@ -2,6 +2,7 @@ local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local pm = require 'process_monitor'
 local inifile = require 'inifile'
+local cjson = require 'cjson'
 
 local app = class("IOT_APP_FRP_CLASS")
 app.API_VER = 1
@@ -19,7 +20,6 @@ local function get_default_conf(sys, conf)
 	ini_conf[id..'_web'] = ini_conf[id..'_web'] or {
 		['type'] = 'http',
 		local_port = 8808,
-		custom_domains = 'symgrid.com',
 		subdomain = string.lower(id),
 	}
 	return ini_conf
@@ -38,12 +38,27 @@ function app:initialize(name, sys, conf)
 	--local frp_bin = sys:app_dir().."arm/frpc"
 	local frp_bin = sys:app_dir().."amd64/frpc"
 	self._pm = pm:new(self._name, frp_bin, {'-c', ini_file})
+	self._pm:stop()
 end
 
 function app:start()
 	self._api:set_handler({
 		on_output = function(app, sn, output, prop, value)
 			print('on_output', app, sn, output, prop, value)
+			if sn ~= self._sys:id()..'.frp' then
+				self._log:error('device sn incorrect', sn)
+				return false, 'device sn incorrect'
+			end
+			if output == 'frp_config' then
+				local conf = cjson.decode(value)
+				self._conf = get_default_conf(self._sys, conf)
+				self._dev:set_input_prop('frp_config', 'value', cjson.encode(self._conf))
+				local ini_file = sys:app_dir().."frpc.ini"
+				inifile.save(ini_file, self._conf)
+
+				self._sys:post('pm_ctrl', 'restart')
+				return true
+			end
 			return true, "done"
 		end,
 		on_command = function(app, sn, command, param)
@@ -105,20 +120,23 @@ function app:start()
 	local cmds = {
 		{
 			name = "start",
+			desc = "start frp process",
 		},
 		{
 			name = "stop",
+			desc = "stop frp process",
 		},
 	}
 
 	self._dev = self._api:add_device(sys_id, inputs, outputs, cmds)
 
-	--self._pm:start()
+	self._pm:start()
 
 	return true
 end
 
 function app:close(reason)
+	self._pm:stop()
 	--print(self._name, reason)
 	if self._cancel_uptime_timer then
 		self._cancel_uptime_timer()
@@ -129,22 +147,28 @@ end
 function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
-		self._dev:set_input_prop('starttime', "value", self._start_time)
+		self._dev:set_input_prop('starttime', 'value', self._start_time)
+		self._dev:set_input_prop('frp_config', 'value', cjson.encode(self._conf))
 
 		local calc_uptime = nil
 		calc_uptime = function()
-			self._dev:set_input_prop('uptime', "value", self._sys:now())
+			self._dev:set_input_prop('uptime', 'value', self._sys:now())
 			self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
 		end
 		calc_uptime()
 	end
 
 	local loadavg = sysinfo.loadavg()
-	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))
+	self._dev:set_input_prop('cpuload', 'value', tonumber(loadavg.lavg_15))
 
 	local status = self._pm:status()
-	self._dev:set_input_prop('frp_run', "value", status and 1 or 0)
+	self._dev:set_input_prop('frp_run', 'value', status and 1 or 0)
 	return 1000 * 5
 end
 
+function app:on_post_pm(action)
+	if action == 'restart' then
+		self._pm:restart()
+	end
+end
 return app

@@ -4,6 +4,7 @@
 
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
+local log = require 'utils.log'
 
 local pm = class("IOT_PROCESS_MONITOR_WRAP")
 
@@ -39,14 +40,17 @@ function pm:start()
 	end
 
 	local cmd = { pm_file, "-d", "-p", self._pid }
+	--local cmd = { pm_file, "-p", self._pid }
 	if self._options.user then
-		cmd[#cmd+1] = "-u"
-		cmd[#cmd+1] = self._options.user
+		cmd[#cmd + 1] = "-u"
+		cmd[#cmd + 1] = self._options.user
 	end
-	cmd[#cmd+1] = "--"
-	cmd[#cmd+1] = self._cmd
+	cmd[#cmd + 1] = "--"
+	cmd[#cmd + 1] = self._cmd
+	--cmd[#cmd + 1] = "> /dev/null &"
 
 	local cmd_str = table.concat(cmd, ' ') 
+	log.debug('process-monitor', cmd_str)
 	return os.execute(cmd_str)
 end
 
@@ -78,6 +82,12 @@ function pm:status()
 		return nil, err
 	end
 	return os.execute('kill -0 '..pid)
+end
+
+function pm:restart()
+	self:stop()
+	skynet.sleep(100)
+	return self:start()
 end
 
 return pm

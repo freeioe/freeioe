@@ -125,8 +125,8 @@ function device:set_output_prop(output, prop, value)
 end
 
 function device:send_command(command, param)
-	for _, v in ipairs(self._props.outputs) do
-		if v.name == output then
+	for _, v in ipairs(self._props.commands) do
+		if v.name == command then
 			self._ctrl_chn:publish("command", self._app_name, self._sn, command, param)
 			return true
 		end

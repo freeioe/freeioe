@@ -656,9 +656,7 @@ function accept.output_to_app(id, info)
 	end
 	local dev = api:get_device(device)
 	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
-	if r then
-		snax.self().post.action_result('output', id, r, err or "Done")
-	end
+	snax.self().post.action_result('output', id, r, err or "Done")
 end
 
 function accept.command_to_app(id, cmd)
@@ -674,6 +672,7 @@ function accept.command_to_app(id, cmd)
 end
 
 function accept.action_result(action, id, result, message)
+	local result = result or false
 	if mqtt_client then
 		local r = {
 			id = id,
@@ -682,6 +681,7 @@ function accept.action_result(action, id, result, message)
 			timestamp = skynet.time(),
 			timestamp_str = os.date(),
 		}
+		log.debug("action_result", action, id, result, message)
 		mqtt_client:publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
