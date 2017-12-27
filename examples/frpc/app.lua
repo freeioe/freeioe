@@ -150,7 +150,9 @@ function app:start()
 
 	self._dev = self._api:add_device(sys_id, inputs, outputs, cmds)
 
-	self._pm:start()
+	if self._conf.auto_start then
+		self._pm:start()
+	end
 
 	return true
 end
