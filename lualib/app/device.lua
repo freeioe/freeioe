@@ -113,7 +113,7 @@ function device:get_output_prop(output, prop)
 end
 
 function device:set_output_prop(output, prop, value)
-	for _, v in ipairs(self._props.outputs) do
+	for _, v in ipairs(self._props.outputs or {}) do
 		if v.name == output then
 			local timestamp = skynet.time()
 			dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
@@ -125,7 +125,7 @@ function device:set_output_prop(output, prop, value)
 end
 
 function device:send_command(command, param)
-	for _, v in ipairs(self._props.commands) do
+	for _, v in ipairs(self._props.commands or {}) do
 		if v.name == command then
 			self._ctrl_chn:publish("command", self._app_name, self._sn, command, param)
 			return true
