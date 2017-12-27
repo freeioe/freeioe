@@ -68,7 +68,7 @@ function app:start()
 	self._api:set_handler({
 		on_output = function(app, sn, output, prop, value)
 			print('on_output', app, sn, output, prop, value)
-			if sn ~= self._sys:id()..'.frpc' then
+			if sn ~= self._dev_sn then
 				self._log:error('device sn incorrect', sn)
 				return false, 'device sn incorrect'
 			end
@@ -82,7 +82,7 @@ function app:start()
 			return true, "done"
 		end,
 		on_command = function(app, sn, command, param)
-			if sn ~= self._sys:id()..'.frpc' then
+			if sn ~= self._dev_sn then
 				self._log:error('device sn incorrect', sn)
 				return false, 'device sn incorrect'
 			end
@@ -91,6 +91,9 @@ function app:start()
 				local r, err = f(self._pm)
 				if not r then
 					self._log:error(err)
+				end
+				if command ~= 'stop' then
+					self:on_frpc_start()
 				end
 				return r, err
 			else
@@ -103,7 +106,7 @@ function app:start()
 		end,
 	})
 
-	local sys_id = self._sys:id()..'.'..self._name
+	local dev_sn = self._sys:id()..'.'..self._name
 	local inputs = {
 		{
 			name = 'cpuload',
@@ -111,12 +114,12 @@ function app:start()
 		},
 		{
 			name = "uptime",
-			desc = "System uptime",
+			desc = "frpc process uptime",
 			vt = "int",
 		},
 		{
 			name = "starttime",
-			desc = "System start time in UTC",
+			desc = "frpc start time in UTC",
 			vt = "int",
 		},
 		{
@@ -152,10 +155,12 @@ function app:start()
 		},
 	}
 
-	self._dev = self._api:add_device(sys_id, inputs, outputs, cmds)
+	self._dev_sn = dev_sn 
+	self._dev = self._api:add_device(dev_sn, inputs, outputs, cmds)
 
 	if self._conf.auto_start then
 		self._pm:start()
+		self:on_frpc_start()
 	end
 
 	return true
@@ -164,30 +169,40 @@ end
 function app:close(reason)
 	self._pm:stop()
 	--print(self._name, reason)
+	self:on_frpc_stop()
+end
+
+function app:on_frpc_start()
+	self._start_time = self._sys:time()
+	self._uptime_start = self._sys:now()
+	self._dev:set_input_prop('starttime', 'value', self._start_time)
+	self._dev:set_input_prop('frpc_config', 'value', cjson.encode(self._conf))
+
+	local calc_uptime = nil
+	calc_uptime = function()
+		self._dev:set_input_prop('uptime', 'value', self._sys:now() - self._uptime_start)
+		self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
+	end
+	calc_uptime()
+end
+
+function app:on_frpc_stop()
 	if self._cancel_uptime_timer then
 		self._cancel_uptime_timer()
 		self._cancel_uptime_timer = nil
+		self._start_time = nil
+		self._uptime_start = nil
 	end
 end
 
 function app:run(tms)
-	if not self._start_time then
-		self._start_time = self._sys:start_time()
-		self._dev:set_input_prop('starttime', 'value', self._start_time)
-		self._dev:set_input_prop('frpc_config', 'value', cjson.encode(self._conf))
-
-		local calc_uptime = nil
-		calc_uptime = function()
-			self._dev:set_input_prop('uptime', 'value', self._sys:now())
-			self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
-		end
-		calc_uptime()
-	end
-
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', 'value', tonumber(loadavg.lavg_15))
 
 	local status = self._pm:status()
+	if not status then
+		self:on_frpc_stop()
+	end
 	self._dev:set_input_prop('frpc_run', 'value', status and 1 or 0)
 	return 1000 * 5
 end
