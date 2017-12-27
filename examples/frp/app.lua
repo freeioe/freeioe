@@ -8,36 +8,52 @@ local app = class("IOT_APP_FRP_CLASS")
 app.API_VER = 1
 
 local function get_default_conf(sys, conf)
-	local ini_conf = conf or {}
+	local ini_conf = {}
 	local id = sys:id()
 
-	ini_conf.common = ini_conf.common or {
-		server_addr = 'm2mio.com',
-		server_port = '5443',
-		privilege_token = 'BWYJVj2HYhVtdGZL',
+	ini_conf.common = {
+		server_addr = conf.server_addr or 'm2mio.com',
+		server_port = conf.server_port or '5443',
+		privilege_token = conf.privilege_token or 'BWYJVj2HYhVtdGZL',
 	}
 
-	ini_conf[id..'_web'] = ini_conf[id..'_web'] or {
-		['type'] = 'http',
-		local_port = 8808,
-		subdomain = string.lower(id),
-	}
+	if conf.enable_web then
+		ini_conf[id..'__web'] = {
+			['type'] = 'http',
+			local_port = 8808,
+			subdomain = string.lower(id),
+		}
+	end
+	if conf.enable_debug then
+		ini_conf[id..'__debug'] = {
+			['type'] = 'tcp',
+			sk = string.lower(id),
+			local_ip = 127.0.0.1,
+			local_port = 7000,
+		}
+	end
+
+	for k,v in pairs(conf.visitors or {}) do
+		ini_conf[id..'_'..k] = v
+	end
+
 	return ini_conf
 end
+
 
 function app:initialize(name, sys, conf)
 	self._name = name
 	self._sys = sys
-	self._conf = get_default_conf(sys, conf)
+	self._conf = conf
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
+	self._ini_file = sys:app_dir()..".frpc.ini"
 
-	local ini_file = sys:app_dir().."frpc.ini"
-	inifile.save(ini_file, self._conf)
+	inifile.save(self._ini_file, get_default_conf(sys, self._conf))
 
 	--local frp_bin = sys:app_dir().."arm/frpc"
 	local frp_bin = sys:app_dir().."amd64/frpc"
-	self._pm = pm:new(self._name, frp_bin, {'-c', ini_file})
+	self._pm = pm:new(self._name, frp_bin, {'-c', self._ini_file})
 	self._pm:stop()
 end
 
@@ -50,12 +66,10 @@ function app:start()
 				return false, 'device sn incorrect'
 			end
 			if output == 'frp_config' then
-				local conf = cjson.decode(value)
-				self._conf = get_default_conf(self._sys, conf)
-				local ini_file = self._sys:app_dir().."frpc.ini"
-				inifile.save(ini_file, self._conf)
+				self._conf = cjson.decode(value)
+				inifile.save(self._ini_file, get_default_conf(self._sys, self._conf))
 
-				self._sys:post('pm_ctrl', 'restart', cjson.decode(value))
+				self._sys:post('pm_ctrl', 'restart')
 				return true
 			end
 			return true, "done"
@@ -165,13 +179,13 @@ function app:run(tms)
 	return 1000 * 5
 end
 
-function app:on_post_pm_ctrl(action, conf)
+function app:on_post_pm_ctrl(action)
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
 		local r, err = self._pm:restart()
 		if r then
-			self._sys:set_conf(conf)
-			self._dev:set_input_prop('frp_config', 'value', conf)
+			self._sys:set_conf(self._conf)
+			self._dev:set_input_prop('frp_config', 'value', cjson.encode(self._conf))
 		end
 	end
 end
