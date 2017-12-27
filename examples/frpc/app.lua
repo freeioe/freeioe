@@ -59,8 +59,8 @@ function app:initialize(name, sys, conf)
 	if plat == 'mips_24kc' then
 		arch = 'mips'
 	end
-	local frp_bin = sys:app_dir()..arch.."/frpc"
-	self._pm = pm:new(self._name, frp_bin, {'-c', self._ini_file})
+	local frpc_bin = sys:app_dir()..arch.."/frpc"
+	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
 	self._pm:stop()
 end
 
@@ -68,11 +68,11 @@ function app:start()
 	self._api:set_handler({
 		on_output = function(app, sn, output, prop, value)
 			print('on_output', app, sn, output, prop, value)
-			if sn ~= self._sys:id()..'.frp' then
+			if sn ~= self._sys:id()..'.frpc' then
 				self._log:error('device sn incorrect', sn)
 				return false, 'device sn incorrect'
 			end
-			if output == 'frp_config' then
+			if output == 'frpc_config' then
 				self._conf = cjson.decode(value)
 				inifile.save(self._ini_file, get_default_conf(self._sys, self._conf))
 
@@ -82,7 +82,7 @@ function app:start()
 			return true, "done"
 		end,
 		on_command = function(app, sn, command, param)
-			if sn ~= self._sys:id()..'.frp' then
+			if sn ~= self._sys:id()..'.frpc' then
 				self._log:error('device sn incorrect', sn)
 				return false, 'device sn incorrect'
 			end
@@ -120,31 +120,35 @@ function app:start()
 			vt = "int",
 		},
 		{
-			name = "frp_run",
-			desc = "frp process running status",
+			name = "frpc_run",
+			desc = "frpc process running status",
 			vt = "int",
 		},
 		{
-			name = "frp_config",
-			desc = "frp configuration",
+			name = "config",
+			desc = "frpc configuration",
 			vt = "string",
 		},
 	}
 	local outputs = {
 		{
-			name = "frp_config",
-			desc = "frp configuration",
+			name = "config",
+			desc = "frpc configuration",
 			vt = "string",
 		},
 	}
 	local cmds = {
 		{
 			name = "start",
-			desc = "start frp process",
+			desc = "start frpc process",
 		},
 		{
 			name = "stop",
-			desc = "stop frp process",
+			desc = "stop frpc process",
+		},
+		{
+			name = "restart",
+			desc = "restart frpc process",
 		},
 	}
 
@@ -170,7 +174,7 @@ function app:run(tms)
 	if not self._start_time then
 		self._start_time = self._sys:start_time()
 		self._dev:set_input_prop('starttime', 'value', self._start_time)
-		self._dev:set_input_prop('frp_config', 'value', cjson.encode(self._conf))
+		self._dev:set_input_prop('frpc_config', 'value', cjson.encode(self._conf))
 
 		local calc_uptime = nil
 		calc_uptime = function()
@@ -184,7 +188,7 @@ function app:run(tms)
 	self._dev:set_input_prop('cpuload', 'value', tonumber(loadavg.lavg_15))
 
 	local status = self._pm:status()
-	self._dev:set_input_prop('frp_run', 'value', status and 1 or 0)
+	self._dev:set_input_prop('frpc_run', 'value', status and 1 or 0)
 	return 1000 * 5
 end
 
@@ -194,7 +198,7 @@ function app:on_post_pm_ctrl(action)
 		local r, err = self._pm:restart()
 		if r then
 			self._sys:set_conf(self._conf)
-			self._dev:set_input_prop('frp_config', 'value', cjson.encode(self._conf))
+			self._dev:set_input_prop('frpc_config', 'value', cjson.encode(self._conf))
 		end
 	end
 end
