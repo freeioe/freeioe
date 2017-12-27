@@ -694,7 +694,7 @@ function init()
 	mosq.init()
 
 	load_conf()
-	log.debug("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
+	log.notice("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	comm_buffer = cyclebuffer:new(32, "COMM")
 	log_buffer = cyclebuffer:new(128, "LOG")
