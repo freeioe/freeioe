@@ -28,7 +28,7 @@ local function get_default_conf(sys, conf)
 		ini_conf[id..'__debug'] = {
 			['type'] = 'tcp',
 			sk = string.lower(id),
-			local_ip = 127.0.0.1,
+			local_ip = '127.0.0.1',
 			local_port = 7000,
 		}
 	end
@@ -51,8 +51,15 @@ function app:initialize(name, sys, conf)
 
 	inifile.save(self._ini_file, get_default_conf(sys, self._conf))
 
-	--local frp_bin = sys:app_dir().."arm/frpc"
-	local frp_bin = sys:app_dir().."amd64/frpc"
+	local plat = sysinfo.platform()
+	local arch = 'amd64'
+	if plat == 'mx0' or plat == 'openwrt' then
+		arch = 'arm'
+	end
+	if plat == 'mips_24kc' then
+		arch = 'mips'
+	end
+	local frp_bin = sys:app_dir()..arch.."/frpc"
 	self._pm = pm:new(self._name, frp_bin, {'-c', self._ini_file})
 	self._pm:stop()
 end

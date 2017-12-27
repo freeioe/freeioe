@@ -54,6 +54,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh iot $VERSION $REVISION
 ./scripts/release_app.sh bms $VERSION $REVISION
 ./scripts/release_app.sh modbus_lua $VERSION $REVISION
+./scripts/release_app.sh frpc $VERSION $REVISION
 ./scripts/release_opc_app.sh opc_server $VERSION $REVISION $SKYNET_PLAT
 ./scripts/release_opc_app.sh opc_client $VERSION $REVISION $SKYNET_PLAT
 
