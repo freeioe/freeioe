@@ -153,7 +153,7 @@ local msg_handler = {
 }
 
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	log.debug("msg_callback", packet_id, topic, data, qos, retained)
+	log.notice("msg_callback", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		return
@@ -684,7 +684,7 @@ function accept.action_result(action, id, result, message)
 			timestamp = skynet.time(),
 			timestamp_str = os.date(),
 		}
-		log.debug("action_result", action, id, result, message)
+		log.notice("action_result", action, id, result, message)
 		mqtt_client:publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
