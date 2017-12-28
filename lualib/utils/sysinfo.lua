@@ -198,6 +198,26 @@ _M.cpu_arch = function()
 	return assert(os.getenv("IOT_CPU_ARCH") or arch)
 end
 
+local function read_lede_arch()
+	local f, err = io.open('/etc/os-release', 'r')
+	if not f then
+		return nil, 'os-release file does not exits'
+	end
+	for l in f:lines() do
+		local id = string.match(l, '^LEDE_ARCH="*(.-)"*$')
+		if id then
+			f:close()
+			return id
+		end
+	end
+	f:close()
+	return nil, 'os-release file does not contains LEDE_ARCH'
+end
+
+_M.lede_cpu_arch = function()
+	return assert(os.getenv("IOT_CPU_ARCH") or read_lede_arch())
+end
+
 local function read_os_id()
 	local f, err = io.open('/etc/os-release', 'r')
 	if not f then
@@ -220,7 +240,12 @@ end
 
 _M.platform = function()
 	local os_id = _M.os_id()
-	local arch = _M.cpu_arch()
+	local arch = 'unknown'
+	if os_id == 'lede' then
+		arch = _M.lede_cpu_arch()
+	else
+		arch = _M.cpu_arch()
+	end
 	return os_id.."."..arch
 end
 
