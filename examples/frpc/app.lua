@@ -22,6 +22,8 @@ local function get_default_conf(sys, conf)
 			['type'] = 'http',
 			local_port = 8808,
 			subdomain = string.lower(id),
+			use_encryption = true,
+			use_compression = true,
 		}
 	end
 	if conf.enable_debug then
@@ -30,10 +32,18 @@ local function get_default_conf(sys, conf)
 			sk = string.lower(id),
 			local_ip = '127.0.0.1',
 			local_port = 7000,
+			use_encryption = true,
+			use_compression = true,
 		}
 	end
 
 	for k,v in pairs(conf.visitors or {}) do
+		if v.use_encryption == nil then
+			v.use_encryption = true
+		end
+		if v.use_compression == nil then
+			v.use_compression = true
+		end
 		ini_conf[id..'_'..k] = v
 	end
 
