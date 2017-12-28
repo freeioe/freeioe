@@ -15,10 +15,31 @@ echo "Skynet IN:" $SKYNET_DIR " PLAT:" $SKYNET_PLAT
 
 cd $SKYNET_DIR
 
+### Get the version by count the commits
+VERSION=`git log --oneline | wc -l | tr -d ' '`
+
+### Generate the revision by last commit
+set -- $(git log -1 --format="%ct %h")
+R_SECS="$(($1 % 86400))"
+R_YDAY="$(date --utc --date="@$1" "+%y.%j")"
+REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
+
+echo 'Version:'$VERSION
+echo 'Revision:'$REVISION
+
+if [ -f "iot/__release/$SKYNET_PLAT/$VERSION.tar.gz" ]
+then
+	echo 'skynet already released'
+	exit
+fi
+
 # Clean up the cramfs folder
 #sudo rm -rf __install
 rm -rf __install
 mkdir __install
+
+echo $VERSION > __install/version
+echo $REVISION >> __install/version
 
 # Copy files
 cp -r lualib __install/lualib
@@ -33,20 +54,6 @@ cd __install/
 ln -s ../skynet_iot ./iot
 ln -s /var/log ./logs
 cd - > /dev/null
-
-### Get the version by count the commits
-VERSION=`git log --oneline | wc -l | tr -d ' '`
-
-### Generate the revision by last commit
-set -- $(git log -1 --format="%ct %h")
-R_SECS="$(($1 % 86400))"
-R_YDAY="$(date --utc --date="@$1" "+%y.%j")"
-REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
-
-echo 'Version:'$VERSION
-echo 'Revision:'$REVISION
-echo $VERSION > __install/version
-echo $REVISION >> __install/version
 
 # Compile lua files
 # ./scripts/compile_lua.sh 
