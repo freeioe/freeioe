@@ -192,7 +192,11 @@ local arch_names = {
 }
 ---
 -- for detecting cpu arch. when calling binrary built by go-lang
-_M.cpu_arch = function()
+_M.cpu_arch = function(os_id)
+	local os_id = os_id or _M.os_id()
+	if os_id == 'lede' then
+		return _M.lede_cpu_arch()
+	end
 	local uname = _M.uname('-m')
 	local arch = arch_names[uname]
 	return assert(os.getenv("IOT_CPU_ARCH") or arch)
@@ -240,12 +244,7 @@ end
 
 _M.platform = function()
 	local os_id = _M.os_id()
-	local arch = 'unknown'
-	if os_id == 'lede' then
-		arch = _M.lede_cpu_arch()
-	else
-		arch = _M.cpu_arch()
-	end
+	local arch = _M.cpu_arch(os_id)
 	return os_id.."."..arch
 end
 
