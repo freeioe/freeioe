@@ -204,7 +204,7 @@ local function read_os_id()
 		return nil, 'os-release file does not exits'
 	end
 	for l in f:lines() do
-		local id = string.match(l, '^ID="*(.+)"*$')
+		local id = string.match(l, '^ID="*(.-)"*$')
 		if id then
 			f:close()
 			return id
