@@ -70,7 +70,8 @@ local function create_download(app_name, version, cb, ext)
 	local cb = cb
 	local ext = ext or ".zip"
 	local down = function()
-		local path = "/tmp/"..app_name.."_"..version..ext
+		local app_name_escape = string.gsub(app_name, '/', '__')
+		local path = "/tmp/"..app_name_escape.."_"..version..ext
 		local file, err = io.open(path, "w+")
 		if not file then
 			return cb(nil, err)
