@@ -58,7 +58,8 @@ return {
 		local meminfo =  sysinfo.meminfo()
 		local uname = sysinfo.uname("-a")
 		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
-		local plat = sysinfo.platform()
+		local arch = sysinfo.cpu_arch()
+		local os_id = sysinfo.os_id()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
 		
 		local cloud = snax.uniqueservice('cloud')
@@ -78,7 +79,8 @@ return {
 			}, 
 			uname = uname,
 			rollback_time = rollback_time,
-			platform = plat,
+			cpu_arch = arch,
+			os_id = os_id,
 			using_beta = using_beta,
 			force_upgrade = get.force_upgrade,
 			cloud_status = cloud_status,

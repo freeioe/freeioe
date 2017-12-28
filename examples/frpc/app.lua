@@ -61,14 +61,7 @@ function app:initialize(name, sys, conf)
 
 	inifile.save(self._ini_file, get_default_conf(sys, self._conf))
 
-	local plat = sysinfo.platform()
-	local arch = 'amd64'
-	if plat == 'mx0' or plat == 'openwrt' then
-		arch = 'arm'
-	end
-	if plat == 'mips_24kc' then
-		arch = 'mips'
-	end
+	local arch = sysinfo.cpu_arch()
 	local frpc_bin = sys:app_dir()..arch.."/frpc"
 	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
 	self._pm:stop()

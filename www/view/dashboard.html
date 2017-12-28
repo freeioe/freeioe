@@ -27,10 +27,10 @@
 	</div>
 	<div class="ui black statistic">
 		<div class="value">
-			{{platform}}
+			{{cpu_arch}}
 		</div>
 		<div class="label">
-			{{_("Platform")}}
+			{{_("CPU Arch")}}
 		</div>
 	</div>
 	<div class="ui blue statistic">
@@ -145,6 +145,10 @@
 				</tr>
 			</thead>
 			<tbody>
+				<tr>
+					<td>{{_("OS")}} </td>
+					<td>{{os_id}}</td>
+				</tr>
 				<tr>
 					<td>{{_("Git Version")}} </td>
 					<td>{{version.iot.git_ver}}</td>

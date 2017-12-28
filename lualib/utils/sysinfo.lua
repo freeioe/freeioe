@@ -184,17 +184,56 @@ _M.skynet_version = function()
 	return v, gv
 end
 
-local plat_names = {
+local arch_names = {
+	armv5tejl = 'arm',
+	armv7l = 'arm',
+	x86_64 = 'amd64',
+	mips = 'mips',
+}
+---
+-- for detecting cpu arch. when calling binrary built by go-lang
+_M.cpu_arch = function()
+	local uname = _M.uname('-m')
+	local arch = arch_names[uname]
+	return assert(os.getenv("IOT_CPU_ARCH") or arch)
+end
+
+local function read_os_id()
+	local f, err = io.open('/etc/os-release', 'r')
+	if not f then
+		return nil, 'os-release file does not exits'
+	end
+	for l in f:lines() do
+		local id = string.match(l, '^ID="*(.+)"*$')
+		if id then
+			f:close()
+			return id
+		end
+	end
+	f:close()
+	return nil, 'os-release file does not contains ID'
+end
+
+_M.os_id = function()
+	return assert(os.getenv("IOT_OS_ID") or read_os_id())
+end
+
+_M.platform = function()
+	local os_id = _M.os_id()
+	local arch = _M.cpu_arch()
+	return os_id.."."..arch
+end
+
+local device_id_names = {
 	armv5tejl = 'mx0',
-	armv7l = 'openwrt',
+	armv7l = 'q102',
 	x86_64 = 'amd64',
 	mips = 'mips_24kc',
 }
 
-_M.platform = function()
+_M.device_id = function()
 	local uname = _M.uname('-m')
-	local plat = plat_names[uname]
-	return assert(plat or os.getenv("IOT_PLATFORM"))
+	return assert(os.getenv("IOT_DEVICE_ID") or device_id_names[uname])
 end
 
 return _M
