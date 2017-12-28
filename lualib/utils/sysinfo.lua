@@ -245,7 +245,7 @@ end
 _M.platform = function()
 	local os_id = _M.os_id()
 	local arch = _M.cpu_arch(os_id)
-	return os_id.."."..arch
+	return os_id.."/"..arch
 end
 
 local device_id_names = {
