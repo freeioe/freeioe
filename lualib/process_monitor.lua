@@ -25,22 +25,10 @@ function pm:initialize(name, cmd, args, options)
 end
 
 function pm:start()
-	local plat = sysinfo.platform()
-	assert(plat)
-	local pm_file = 'process-monitor'
-	if plat == 'openwrt' then
-		pm_file = './iot/openwrt/arm_cortex-a9_neon/process-monitor'
-	end
-	if plat == 'mx0' then
-		pm_file = './iot/linux/mx0/process-monitor'
-	end
-	if plat == 'mips_24kc' then
-		pm_file = './iot/openwrt/mips_24kc/process-monitor'
-	end
-	if plat == 'amd64' then
-		pm_file = './iot/linux/x86_64/process-monitor'
-	end
-
+	local os_id = sysinfo.os_id()
+	local arch = sysinfo.cpu_arch()
+	assert(os_id, arch)
+	local pm_file = './iot/'..os_id..'/'..arch..'/process-monitor'
 	local cmd = { pm_file, "-z", "-d", "-p", self._pid }
 	--local cmd = { pm_file, "-p", self._pid }
 	if self._options.user then

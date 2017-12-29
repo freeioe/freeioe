@@ -15,6 +15,7 @@ local function get_default_conf(sys, conf)
 		server_addr = conf.server_addr or 'm2mio.com',
 		server_port = conf.server_port or '5443',
 		privilege_token = conf.privilege_token or 'BWYJVj2HYhVtdGZL',
+		protocol = conf.protocol or 'kcp',
 	}
 
 	if conf.enable_web then

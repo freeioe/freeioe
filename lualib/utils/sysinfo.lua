@@ -238,8 +238,14 @@ local function read_os_id()
 	return nil, 'os-release file does not contains ID'
 end
 
+local os_id_names = {
+	debian = 'linux',
+}
+
 _M.os_id = function()
-	return assert(os.getenv("IOT_OS_ID") or read_os_id())
+	local os_id = read_os_id()
+	os_id = os_id_names[os_id] or os_id
+	return assert(os.getenv("IOT_OS_ID") or os_id)
 end
 
 _M.platform = function()
