@@ -184,22 +184,29 @@ _M.skynet_version = function()
 	return v, gv
 end
 
-local arch_names = {
+local arch_short_names = {
+	arm_cortex-a9_neon = 'arm', -- lede imx6
 	armv5tejl = 'arm', --mx0
 	armv7l = 'arm', --imx6
 	x86_64 = 'amd64',
 	mips = 'mips',
 }
+
+-- for detecting cpu arch short name. when calling binrary built by go-lang
+_M.cpu_arch_short = function(os_id)
+	local arch = _M.cpu_arch(os_id)
+	return arch_short_names[arch] or arch
+end
+
 ---
--- for detecting cpu arch. when calling binrary built by go-lang
+-- for detecting cpu arch
 _M.cpu_arch = function(os_id)
 	local os_id = os_id or _M.os_id()
 	if os_id == 'lede' then
 		return _M.lede_cpu_arch()
 	end
-	local uname = _M.uname('-m')
-	local arch = arch_names[uname]
-	return assert(os.getenv("IOT_CPU_ARCH") or arch)
+	local matchine_arch = _M.uname('-m')
+	return assert(os.getenv("IOT_CPU_ARCH") or matchine_arch)
 end
 
 local function read_lede_arch()
