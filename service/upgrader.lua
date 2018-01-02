@@ -163,8 +163,9 @@ function command.upgrade_app(id, args)
 			if r then
 				return install_result(id, true, "Application upgradation is done!")
 			else
-				datacenter.set("APPS", inst_name, nil)
-				os.execute("rm -rf "..target_folder)
+				-- Upgrade will not remove app folder
+				--datacenter.set("APPS", inst_name, nil)
+				--os.execute("rm -rf "..target_folder)
 				return install_result(id, false, "Failed to start App. Error: "..err)
 			end
 		else
