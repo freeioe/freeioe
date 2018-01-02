@@ -67,6 +67,7 @@ function app:initialize(name, sys, conf)
 	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
 	self._pm:stop()
 	self._sys:sleep(100)
+	self._pm:cleanup()
 end
 
 function app:start()

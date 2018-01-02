@@ -79,4 +79,9 @@ function pm:restart()
 	return self:start()
 end
 
+function pm:cleanup()
+	os.execute('rm -f '..self._pid)
+	os.execute('rm -f '..self._log)
+end
+
 return pm
