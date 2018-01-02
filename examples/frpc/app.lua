@@ -66,7 +66,7 @@ function app:initialize(name, sys, conf)
 	local frpc_bin = sys:app_dir()..arch.."/frpc"
 	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
 	self._pm:stop()
-	skynet.sleep(100)
+	self._sys:sleep(100)
 end
 
 function app:start()
