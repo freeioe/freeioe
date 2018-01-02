@@ -185,8 +185,8 @@ _M.skynet_version = function()
 end
 
 local arch_names = {
-	armv5tejl = 'arm',
-	armv7l = 'arm',
+	armv5tejl = 'arm', --mx0
+	armv7l = 'arm', --imx6
 	x86_64 = 'amd64',
 	mips = 'mips',
 }
@@ -240,6 +240,7 @@ end
 
 local os_id_names = {
 	debian = 'linux',
+	ubuntu = 'linux',
 }
 
 _M.os_id = function()
