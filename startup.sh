@@ -45,4 +45,6 @@ else
 	echo "NO rollback needed!" >> $STARTUP_LOG
 fi
 
+sync &
+
 echo "Startup Script Done!" >> $STARTUP_LOG
