@@ -348,6 +348,7 @@ cd "$IOT_DIR"
 if [ -f $SKYNET_IOT_FILE ]
 then
 	cd $SKYNET_IOT_PATH
+	rm ./* -rf
 	tar xzf $SKYNET_IOT_FILE
 
 	if [ $? -eq 0 ]
