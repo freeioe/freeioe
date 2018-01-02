@@ -185,7 +185,7 @@ _M.skynet_version = function()
 end
 
 local arch_short_names = {
-	arm_cortex-a9_neon = 'arm', -- lede imx6
+	['arm_cortex-a9_neon'] = 'arm', -- lede imx6
 	armv5tejl = 'arm', --mx0
 	armv7l = 'arm', --imx6
 	x86_64 = 'amd64',
