@@ -40,7 +40,7 @@ function pm:start()
 	--cmd[#cmd + 1] = "> /dev/null &"
 
 	local cmd_str = table.concat(cmd, ' ') 
-	log.debug('process-monitor', cmd_str)
+	log.info('start process-monitor', cmd_str)
 	return os.execute(cmd_str)
 end
 

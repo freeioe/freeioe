@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local datacenter = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
 local httpdown = require 'httpdown'
+local log = require 'utils.log'
 
 local _M = {}
 
@@ -16,6 +17,7 @@ function _M.pkg_check_update(pkg_host, app, beta)
 		query.beta = 1
 	end
 	local status, header, body = httpdown.get(pkg_host, url, api_header, query)
+	log.info('pkg_check_update', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
@@ -31,6 +33,7 @@ end
 function _M.pkg_enable_beta(pkg_host, sys_id)
 	local url = '/pkg/enable_beta'
 	local status, header, body = httpdown.get(pkg_host, url, api_header, {sn=sys_id})
+	log.info('pkg_enable_beta', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
@@ -48,6 +51,7 @@ function _M.pkg_check_version(pkg_host, app, version)
 	end
 	local url = '/pkg/check_version'
 	local status, header, body = httpdown.get(pkg_host, url, api_header, {app=app, version=version})
+	log.info('pkg_check_version', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
