@@ -65,8 +65,21 @@ local function load_cfg(path)
 	local mfile, err = io.open(path..".md5", "r")
 	if mfile then
 		local md5s = mfile:read("*l")
+		mfile:close()
 		if md5s ~= sum then
-			log.warning("::CFG:: File md5 checksum error", md5s, sum)
+			log.error("::CFG:: File md5 checksum error", md5s, sum)
+			log.error("::CFG:: System is aborting, please correct this error manually!")
+			skynet.sleep(100)
+			skynet.abort()
+		end
+	else
+		log.warning("::CFG:: Config File md5 file is missing, try create new one")
+		local mfile, err = io.open(path..".md5", "w+")
+		if mfile then
+			mfile:write(sum)
+			mfile:close()
+		else
+			log.warning("::CFG:: Failed to open md5 file for writing")
 		end
 	end
 
