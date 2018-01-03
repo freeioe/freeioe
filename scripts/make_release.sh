@@ -2,6 +2,22 @@
 
 SKYNET_PLAT=$1
 
+# Validate platform name
+PLAT_NAMES="linux/amd64 lede/arm_cortex-a9_neon lede/mips_24kc"
+PLAT_OK=0
+for plat in $PLAT_NAMES; do
+	if [ "$SKYNET_PLAT" == "$plat" ]; then
+		PLAT_OK=1
+		break
+	fi
+done
+
+if [ "$SKYNET_PLAT" != "" ] && [ $PLAT_OK == 0 ]; then
+	echo "Platform name your input is not valid"
+	echo "   $PLAT_NAMES"
+	exit 0
+fi
+
 # Release Skynet
 ./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
 
