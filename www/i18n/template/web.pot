@@ -66,6 +66,10 @@ msgid "CLA"
 msgstr ""
 
 
+msgid "CPU Arch"
+msgstr ""
+
+
 msgid "CPU Model"
 msgstr ""
 
@@ -111,6 +115,10 @@ msgstr ""
 
 
 msgid "Commands"
+msgstr ""
+
+
+msgid "Comms"
 msgstr ""
 
 
@@ -342,10 +350,6 @@ msgid "MQTT"
 msgstr ""
 
 
-msgid "Messages"
-msgstr ""
-
-
 msgid "More Information"
 msgstr ""
 
@@ -355,6 +359,10 @@ msgstr ""
 
 
 msgid "No"
+msgstr ""
+
+
+msgid "OS"
 msgstr ""
 
 
@@ -407,10 +415,6 @@ msgstr ""
 
 
 msgid "Password updated!!"
-msgstr ""
-
-
-msgid "Platform"
 msgstr ""
 
 
@@ -519,6 +523,10 @@ msgstr ""
 
 
 msgid "Stop Application"
+msgstr ""
+
+
+msgid "Sys Logs"
 msgstr ""
 
 
@@ -643,6 +651,10 @@ msgstr ""
 
 
 msgid "Yes"
+msgstr ""
+
+
+msgid "dmesg"
 msgstr ""
 
 

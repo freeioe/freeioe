@@ -49,6 +49,9 @@ msgstr "Beta版本使用警告"
 msgid "CLA"
 msgstr ""
 
+msgid "CPU Arch"
+msgstr "CPU架构"
+
 msgid "CPU Model"
 msgstr "CPU型号"
 
@@ -84,6 +87,9 @@ msgstr "报文上送"
 
 msgid "Commands"
 msgstr "指令"
+
+msgid "Comms"
+msgstr "通讯报文"
 
 msgid "Contribute"
 msgstr "共享"
@@ -256,9 +262,6 @@ msgstr "日志"
 msgid "MQTT"
 msgstr ""
 
-msgid "Messages"
-msgstr "消息"
-
 msgid "More Information"
 msgstr "更多信息"
 
@@ -267,6 +270,9 @@ msgstr "名称"
 
 msgid "No"
 msgstr "否"
+
+msgid "OS"
+msgstr "操作系统"
 
 msgid "Offline"
 msgstr "离线"
@@ -306,9 +312,6 @@ msgstr "两次密码不一致"
 
 msgid "Password updated!!"
 msgstr "密码已修改"
-
-msgid "Platform"
-msgstr "硬件平台"
 
 msgid "Port"
 msgstr "端口"
@@ -350,7 +353,7 @@ msgid "SYS"
 msgstr "系统接口"
 
 msgid "Select a file from the tree."
-msgstr ""
+msgstr "从文件树中选择一个文件进行编辑"
 
 msgid "SerialChannel"
 msgstr "串口通道"
@@ -390,6 +393,9 @@ msgstr "分析数据上送"
 
 msgid "Stop Application"
 msgstr "停止应用"
+
+msgid "Sys Logs"
+msgstr "SKYNET日志"
 
 msgid "System"
 msgstr "系统"
@@ -484,6 +490,14 @@ msgstr "同步升级Skynet"
 msgid "Yes"
 msgstr "是"
 
+msgid "dmesg"
+msgstr "内核日志"
+
 msgid "seconds"
 msgstr "秒"
 
+#~ msgid "Messages"
+#~ msgstr "消息"
+
+#~ msgid "Platform"
+#~ msgstr "硬件平台"
