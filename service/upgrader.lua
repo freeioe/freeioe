@@ -150,6 +150,7 @@ function command.upgrade_app(id, args)
 			end
 
 			os.execute("unzip -oq "..info.." -d "..target_folder)
+			os.execute("rm -rf "..info)
 
 			if not version or version == 'latest' then
 				version = get_app_version(inst_name)
@@ -202,6 +203,7 @@ function command.install_app(id, args)
 		if r then
 			log.notice("Download application finished", name)
 			os.execute("unzip -oq "..info.." -d "..target_folder)
+			os.execute("rm -rf "..info)
 
 			if not version or version == 'latest' then
 				version = get_app_version(inst_name)
