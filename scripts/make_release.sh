@@ -77,6 +77,7 @@ cp -rL lualib/resty __install/lualib/resty
 # For pre-installed applications
 mkdir __install/apps
 ./scripts/pre_inst.sh iot iot $VERSION
+./scripts/pre_inst.sh frpc frpc $VERSION
 
 #################################
 # Count the file sizes
