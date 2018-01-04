@@ -1,6 +1,14 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 
+local default_conf = {
+	iot_frpc = {
+		auto_start = true,
+		enable_web = true,
+		privilege_token = "BWYJVj2HYhVtdGZL",
+	},
+}
+
 return {
 	post = function(self)
 		ngx.req.read_body()
@@ -11,7 +19,7 @@ return {
 		local version = post.version or 'latest'
 		assert(inst and app)
 
-		local conf = post.conf
+		local conf = post.conf or default_conf[inst] or {}
 		if type(conf) == 'string' then
 			conf = cjson.decode(conf)
 		end
@@ -26,13 +34,13 @@ return {
 		}
 		local r, err = skynet.call("UPGRADER", "lua", "install_app", id, args)
 		if r then
-			ngx.print('Application uninstall is done!')
+			ngx.print('Application installation is done!')
 			local cloud = snax.uniqueservice('cloud')
 			if cloud then
 				cloud.post.fire_apps()
 			end
 		else
-			ngx.print('Application uninstall failed', err)
+			ngx.print('Application installation failed', err)
 		end
 	end,
 }

@@ -18,12 +18,7 @@ return {
 			end
 			local pkg_host_url = dc.get('PKG_HOST_URL')
 			local using_beta = dc.get('CLOUD', 'USING_BETA')
-			local default_frpc_conf = cjson.encode({
-				auto_start = true,
-				enable_web = true,
-				privilege_token = "BWYJVj2HYhVtdGZL",
-			})
-			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta, default_frpc_conf=default_frpc_conf})
+			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta})
 		end
 	end
 }

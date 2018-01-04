@@ -174,6 +174,7 @@ function command.upgrade_app(id, args)
 			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end)
+	return true
 end
 
 function command.install_app(id, args)
@@ -183,7 +184,7 @@ function command.install_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
-	if (id and id ~= 'from_web') and (inst_name == 'iot' or inst_name == 'frpc') then
+	if (id and id ~= 'from_web') and (inst_name == 'iot' or inst_name == 'iot_frpc') then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -226,6 +227,7 @@ function command.install_app(id, args)
 			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end)
+	return true
 end
 
 function command.install_missing_app(inst_name)
@@ -241,6 +243,7 @@ function command.install_missing_app(inst_name)
 			force = true
 		})
 	end)
+	return true
 end
 
 function command.uninstall_app(id, args)
