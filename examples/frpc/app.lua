@@ -12,7 +12,7 @@ local function get_default_conf(sys, conf)
 	local id = sys:id()
 
 	ini_conf.common = {
-		server_addr = conf.server_addr or 'symgrid.com',
+		server_addr = conf.server_addr or 'frp.symgrid.com',
 		server_port = conf.server_port or '5443',
 		privilege_token = conf.privilege_token or 'IOT1@SYMGRID.COM',
 		protocol = conf.protocol or 'kcp',

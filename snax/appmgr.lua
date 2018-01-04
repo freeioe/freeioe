@@ -101,7 +101,7 @@ end
 local pre_install_apps = {
 	iot = {},
 	frpc = {
-		privilege_token = "BWYJVj2HYhVtdGZL"
+		privilege_token = "BWYJVj2HYhVtdGZL",
 		enable_web = true,
 		auto_start = true,
 	},
