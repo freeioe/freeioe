@@ -118,6 +118,7 @@ local function install_result(id, result, ...)
 	if cloud then
 		cloud.post.action_result("app", id, result, ...)
 	end
+	return result, ...
 end
 
 function command.upgrade_app(id, args)
@@ -182,7 +183,7 @@ function command.install_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
-	if id and (inst_name == 'iot' or inst_name == 'frpc') then
+	if (id and id ~= 'from_web') and (inst_name == 'iot' or inst_name == 'frpc') then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -253,17 +254,9 @@ function command.uninstall_app(id, args)
 	if r then
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
-		if from_web and id == 'from_web' then
-			return true
-		else
-			return install_result(id, true, "Application uninstall is done")
-		end
+		return install_result(id, true, "Application uninstall is done")
 	else
-		if from_web and id == 'from_web' then
-			return false, "Application uninstall failed, Error: "..err
-		else
-			return install_result(id, false, "Application uninstall failed, Error: "..err)
-		end
+		return install_result(id, false, "Application uninstall failed, Error: "..err)
 	end
 end
 

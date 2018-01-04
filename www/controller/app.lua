@@ -1,5 +1,6 @@
 local dc = require 'skynet.datacenter'
 local snax = require 'skynet.snax'
+local cjson = require 'cjson'
 
 return {
 	get = function(self)
@@ -17,7 +18,12 @@ return {
 			end
 			local pkg_host_url = dc.get('PKG_HOST_URL')
 			local using_beta = dc.get('CLOUD', 'USING_BETA')
-			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta})
+			local default_frpc_conf = cjson.encode({
+				auto_start = true,
+				enable_web = true,
+				privilege_token = "BWYJVj2HYhVtdGZL",
+			})
+			lwf.render('app.html', {apps=apps, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta, default_frpc_conf=default_frpc_conf})
 		end
 	end
 }

@@ -9,12 +9,29 @@
 
 <div class="ui basic segment">
 	<div class="ui teal button check_update" data-content="{{_('Query application updates')}}">{{_("Check Updates")}}</div>
-
+	{% if not apps['frpc'] then %}
+	<div class="ui blue button install_frpc" data-content="{{_('Install FRP Client application')}}">{{_("Install FRP Client")}}</div>
+	{% end %}
 </div>
 <div class="ui basic msg_print form">
 	<div class="ui success message"></div>
 	<div class="ui error message"></div>
 </div>
+
+<div class="ui install_frpc modal hidden">
+	<div class="ui header">{{_("Install FRP Client")}}</div>
+	<div class="content">
+		<form class="ui install_frpc form" action="/app/install" method="post">
+			<input type="hidden" name="from_web" value="1">
+			<input type="hidden" name="version" value="latest">
+			<input type="hidden" name="app" value="frpc">
+			<input type="hidden" name="inst" value="frpc">
+			<input type="hidden" name="conf" value="{{default_frpc_conf}}">
+			<div class="ui submit button"> {{_("Install")}}</div>
+		</form>
+	</div>
+</div>
+
 {-main-}
 
 {-script-}
@@ -172,6 +189,28 @@ $(document).ready(function(){
 		setTimeout(function() {
 			btn.removeClass('disabled');
 		}, 5000);
+	});
+	$('.ui.segment .ui.button.install_frpc').click(function() {
+		$('.ui.install_frpc.modal')
+			.modal({
+				closable  : true,
+			})
+			.modal('show')
+		;
+	});
+	$('.ui.install_frpc.form').ajaxForm({
+		beforeSend: function () {
+			reset_message();
+		},
+		success: function (response) {
+			$('.ui.install_frpc.modal').modal('hide');
+			print_message(response)
+			setTimeout(refresh_page, 1000);
+		},
+		error: function(xhr) {
+			$('.ui.install_frpc.modal').modal('hide');
+			print_err_message(xhr.responseText);
+		}
 	});
 });
 </script>
