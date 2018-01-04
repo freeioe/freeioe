@@ -74,7 +74,8 @@ function app:create_device_node(sn, props)
 
 	-- 
 	local objects = client:getObjectsNode()
-	local idx, err = client:getNamespaceIndex("http://iot.symid.com")
+	local namespace = self._conf.namespace or "http://iot.symid.com"
+	local idx, err = client:getNamespaceIndex(namespace)
 	if not idx then
 		log:warning("Cannot find namespace", err)
 		return
