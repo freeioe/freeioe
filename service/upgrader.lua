@@ -237,6 +237,7 @@ function command.install_missing_app(inst_name)
 end
 
 function command.uninstall_app(id, args)
+	local from_web = args.from_web
 	local inst_name = args.inst
 
 	local appmgr = snax.uniqueservice("appmgr")
@@ -246,9 +247,17 @@ function command.uninstall_app(id, args)
 	if r then
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
-		return install_result(id, true, "Application uninstall is done")
+		if from_web and id == 'from_web' then
+			return true
+		else
+			return install_result(id, true, "Application uninstall is done")
+		end
 	else
-		return install_result(id, false, "Application uninstall failed, Error: "..err)
+		if from_web and id == 'from_web' then
+			return false, "Application uninstall failed, Error: "..err
+		else
+			return install_result(id, false, "Application uninstall failed, Error: "..err)
+		end
 	end
 end
 
