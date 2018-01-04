@@ -7,7 +7,8 @@ return {
 		local post = ngx.req.get_post_args()
 		local cjson = require 'cjson'
 		local inst = post.inst
-		assert(inst and app)
+		assert(inst)
+
 		local id = "from_web"
 		local args = {
 			inst = inst,
