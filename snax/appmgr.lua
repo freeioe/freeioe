@@ -98,15 +98,6 @@ function accept.app_modified(inst, from)
 	dc.set("APPS", inst, 'islocal', 1)
 end
 
-local pre_install_apps = {
-	iot = {},
-	frpc = {
-		privilege_token = "BWYJVj2HYhVtdGZL",
-		enable_web = true,
-		auto_start = true,
-	},
-}
-
 function init(...)
 	log.info("AppMgr service starting...")
 
@@ -131,10 +122,8 @@ function init(...)
 		for k,v in pairs(apps) do
 			snax.self().req.start(k, v.conf or {})
 		end
-		for k,v in pairs(pre_install_apps) do
-			if not apps[k] then
-				snax.self().req.start(k, v)
-			end
+		if not apps['iot'] then
+			snax.self().req.start('iot')
 		end
 	end)
 end
