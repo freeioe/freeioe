@@ -181,6 +181,10 @@ function command.install_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
+	if id and (inst_name == 'iot' or inst_name == 'frpc') then
+		local err = "Application instance name is reserved"
+		return install_result(id, false, "Failed to install App. Error: "..err)
+	end
 	if datacenter.get("APPS", inst_name) and not args.force then
 		local err = "Application already installed"
 		return install_result(id, false, "Failed to install App. Error: "..err)
