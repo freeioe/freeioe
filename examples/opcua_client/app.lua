@@ -176,7 +176,10 @@ function app:connect_proc()
 	self._log:notice("OPC Client start connection!")
 	local client = self._client_obj
 
-	local r, err = client:connect_username("opc.tcp://127.0.0.1:4840", "user1", "password")
+	local ep = self._conf.endpoint or "opc.tcp://127.0.0.1:4840"
+	local username = self._conf.username or "user1"
+	local password = self._conf.password or "password"
+	local r, err = client:connect_username(ep, username, password)
 	if r then
 		self._log:notice("OPC Client connect successfully!", self._sys:time())
 		self._client = client
