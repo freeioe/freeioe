@@ -347,7 +347,7 @@ cd $IOT_DIR
 if [ -f $SKYNET_FILE ]
 then
 	cd $SKYNET_PATH
-	tar xzf $SKYNET_FILE
+	tar xzfU $SKYNET_FILE
 
 	if [ $? -eq 0 ]
 	then
@@ -362,7 +362,7 @@ cd "$IOT_DIR"
 if [ -f $SKYNET_IOT_FILE ]
 then
 	cd $SKYNET_IOT_PATH
-	tar xzf $SKYNET_IOT_FILE
+	tar xzfU $SKYNET_IOT_FILE
 
 	if [ $? -eq 0 ]
 	then
@@ -399,11 +399,11 @@ SKYNET_IOT_PATH=%s
 
 cd $IOT_DIR
 cd $SKYNET_PATH
-tar xzf $IOT_DIR/ipt/skynet.tar.gz
+tar xzfU $IOT_DIR/ipt/skynet.tar.gz
 
 cd $IOT_DIR
 cd $SKYNET_IOT_PATH
-tar xzf $IOT_DIR/ipt/skynet_iot.tar.gz
+tar xzfU $IOT_DIR/ipt/skynet_iot.tar.gz
 
 if [ -f $IOT_DIR/ipt/cfg.json.bak ]
 then
