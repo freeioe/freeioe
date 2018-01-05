@@ -32,11 +32,11 @@ end
 local function cfg_defaults()
 	return {
 		ID = os.getenv("IOT_SN") or "UNKNOWN_ID",
-		HOST = "cloud.symid.com",
+		HOST = "iot.symgrid.com",
 		PORT = 1883,
 		KEEPALIVE = 300,
 		DATA_UPLOAD = true,
-		PKG_HOST_URL = "pkg.symid.com",
+		PKG_HOST_URL = "iot.symgrid.com",
 	}
 end
 

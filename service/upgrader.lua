@@ -196,6 +196,9 @@ function command.install_app(id, args)
 		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
 	end
 
+	-- Reserve app instance name
+	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, downloading=true})
+
 	local appmgr = snax.uniqueservice("appmgr")
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
