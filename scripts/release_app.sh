@@ -6,6 +6,12 @@ fi
 
 echo "Release App:" $1
 
+if [ -f "__release/$1/$2.zip" ]
+then
+	echo $1/$2'.zip already released'
+	exit
+fi
+
 # zip files
 mkdir -p __release/$1
 cd ./examples/$1

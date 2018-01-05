@@ -13,6 +13,12 @@ TARGET_FOLDER=$1_$TARGET_PLAT
 
 echo "Release App:" $TARGET_FOLDER
 
+if [ -f "__release/$TARGET_FOLDER/$2.zip" ]
+then
+	echo $TARGET_FOLDER/$2'.zip already released'
+	exit
+fi
+
 # zip files
 mkdir -p __release/$TARGET_FOLDER
 cd ./examples/$1
