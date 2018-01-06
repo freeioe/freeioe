@@ -7,6 +7,11 @@ return {
 		lwf.render('user/profile.html', {user=lwf.auth.user})
 	end,
 	post = function(self)
+		if lwf.auth.user == 'Guest' then
+			self:redirect('/user/login')
+			return
+		end
+
 		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 		local action = post.action
