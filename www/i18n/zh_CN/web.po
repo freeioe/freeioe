@@ -218,7 +218,7 @@ msgid "IOT System DashBoard"
 msgstr "IOT系统仪表盘"
 
 msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
-msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GibHub账户"
+msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GitHub账户"
 
 msgid "Information"
 msgstr "信息"
