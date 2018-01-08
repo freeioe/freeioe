@@ -5,6 +5,7 @@ local md5 = require "md5"
 local lfs = require 'lfs'
 local restful = require 'restful'
 local log = require 'utils.log'
+local sysinfo = require 'utils.sysinfo'
 
 local db_file = "cfg.json"
 local md5sum = ""
@@ -30,8 +31,9 @@ local function get_cfg_str()
 end
 
 local function cfg_defaults()
+	local iot_sn = sysinfo.iot_sn()
 	return {
-		ID = os.getenv("IOT_SN") or "UNKNOWN_ID",
+		ID = iot_sn,
 		HOST = "iot.symgrid.com",
 		PORT = 1883,
 		KEEPALIVE = 300,
@@ -44,6 +46,9 @@ local function set_cfg_defaults(data)
 	local defaults = cfg_defaults()
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
+	end
+	if defaults.ID ~= sysinfo.unknown_iot_sn then
+		data.ID = defaults.ID
 	end
 	return data
 end

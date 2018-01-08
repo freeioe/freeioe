@@ -3,7 +3,7 @@
 {-main_header-}
 
 {-main-}
-<h1 class="header"> {{_("IOT System DashBoard")}}</h1>
+<h1 class="header"> {{_("IOT")}} - {{iot_sn}} </h1>
 
 <h3 class="ui top attached header">
 	{{_("Information")}}
@@ -146,8 +146,8 @@
 			</thead>
 			<tbody>
 				<tr>
-					<td>{{_("CPU Arch")}} </td>
-					<td>{{cpu_arch}}</td>
+					<td>{{_("SN")}} </td>
+					<td>{{iot_sn}}</td>
 				</tr>
 				<tr>
 					<td>{{_("Git Version")}} </td>
@@ -156,6 +156,10 @@
 				<tr>
 					<td>{{_("Skynet Git Version")}} </td>
 					<td>{{version.skynet.git_ver}}</td>
+				</tr>
+				<tr>
+					<td>{{_("CPU Arch")}} </td>
+					<td>{{cpu_arch}}</td>
 				</tr>
 				<tr>
 					<td>{{_("CPU Model")}} </td>

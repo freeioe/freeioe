@@ -20,11 +20,15 @@
 			</td>
 			<td>
 				<div class="ui action input">
+					{% if not edit_enable then %}
+					<input id="pkg_host_url" value="{{pkg_host}}" type="text" readonly="true">
+					{% else %}
 					<input id="pkg_host_url" value="{{pkg_host}}" type="text">
 					<button id="pkg_host_url_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
+					{% end %}
 				</div>
 			</td>
 		</tr>

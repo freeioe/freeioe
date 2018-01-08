@@ -7,9 +7,10 @@ return {
 		if lwf.auth.user == 'Guest' then
 			self:redirect('/user/login')
 		else
+			local get = ngx.req.get_uri_args()
 			--local cloud = snax.uniqueservice('cloud')
 			local cfg = dc.get('CLOUD')
-			lwf.render('cloud.html', {cfg=cfg, nowtime=skynet.time()})
+			lwf.render('cloud.html', {cfg=cfg, nowtime=skynet.time(), edit_enable=get.edit_enable})
 		end
 	end,
 	post = function(self)

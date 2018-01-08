@@ -9,11 +9,15 @@
 		<tr>
 			<td>
 				<div class="ui action input">
+					{% if edit_enable then %}
 					<input id="iot_id" value="{{cfg.ID}}" type="text">
 					<button id="iot_id_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
+					{% else %}
+					<input id="iot_id" value="{{cfg.ID}}" type="text" readonly="true">
+					{% end %}
 				</div>
 			</td>
 		</tr>
@@ -33,30 +37,42 @@
 		<tr>
 			<td>
 				<div class="ui action input">
+					{% if edit_enable then %}
 					<input id="mqtt_host" value="{{cfg.HOST}}" type="text">
 					<button id="mqtt_host_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
+					{% else %}
+					<input id="mqtt_host" value="{{cfg.HOST}}" type="text" readonly="true">
+					{% end %}
 				</div>
 			</td>
 			<td>
 				<div class="ui action input">
+					{% if edit_enable then %}
 					<input id="mqtt_port" value="{{cfg.PORT}}" type="number">
 					<button id="mqtt_port_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
+					{% else %}
+					<input id="mqtt_port" value="{{cfg.PORT}}" type="number" readonly="true">
+					{% end %}
 				</div>
 			</td>
 			</td>
 			<td>
 				<div class="ui action input">
+					{% if edit_enable then %}
 					<input id="mqtt_keepalive" value="{{cfg.KEEPALIVE}}" type="number">
 					<button id="mqtt_keepalive_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
+					{% else %}
+					<input id="mqtt_keepalive" value="{{cfg.KEEPALIVE}}" type="number" readonly="true">
+					{% end %}
 				</div>
 			</td>
 		</tr>

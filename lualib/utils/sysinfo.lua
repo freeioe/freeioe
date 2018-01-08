@@ -113,9 +113,12 @@ local function network_if(ifname)
 		return nil, err
 	end
 
-	local hwaddr = s:match('HWaddr%s-('..patt..'+)')
-	local ipv4 = s:match('inet%s+addr:%s-('..patt..'+)')
-	local ipv6 = s:match('inet6%s+addr:%s-('..patt..'+)')
+	local hwaddr = s:match('HWaddr%s-('..patt..'+)') or s:match('ether%s-('..patt..'+)')
+	if not hwaddr then
+		return nil, "Cannot get correct MAC address from "..ifname
+	end
+	local ipv4 = s:match('inet%s+addr:%s-('..patt..'+)') or s:match('inet%s-('..patt..'+)')
+	local ipv6 = s:match('inet6%s+addr:%s-('..patt..'+)') or s:match('inet6%s-('..patt..'+)')
 	return {hwaddr=hwaddr, ipv4 = ipv4, ipv6=ipv6}
 end
 
@@ -262,16 +265,61 @@ _M.platform = function()
 	return os_id.."/"..arch
 end
 
-local device_id_names = {
+local device_types_names = {
 	armv5tejl = 'mx0',
 	armv7l = 'q102',
 	x86_64 = 'amd64',
-	mips = 'mips_24kc',
+	mips = 'tp-720n',
 }
 
-_M.device_id = function()
+_M.device_type = function()
 	local uname = _M.uname('-m')
-	return assert(os.getenv("IOT_DEVICE_ID") or device_id_names[uname])
+	return assert(os.getenv("IOT_DEVICE_TYPE") or device_types_names[uname])
+end
+
+local try_read_iot_sn_from_config = function()
+	local f, err = io.open("/sbin/uci", "r")
+	if f then
+		--- This is lede/openwrt system
+		f:close()
+		local s, err = _M.exec('uci get iot.@system[0].sn')
+		if s then
+			return s
+		end
+	else
+		local f, err = io.open("/etc/iot.ini")
+		if f then
+			local inifile = require 'inifile'
+			local data, err = inifile.parse("/etc/iot.ini")
+			f:close()
+			if data and data.system then
+				return data.system.sn
+			end
+		end
+	end
+end
+
+local try_gen_iot_sn_by_mac_addr = function()
+	local ndi = network_if('eth0') or network_if('br-lan') or network_if('wan')
+	if ndi and ndi.hwaddr then
+		return string.upper(string.gsub(ndi.hwaddr, ':', ''))
+	end
+end
+
+--- Buffer the sn
+local _iot_sn = nil
+local read_iot_sn = function()
+	if _iot_sn then
+		return _iot_sn
+	end
+	-- TODO: for device sn api
+	_iot_sn = try_read_iot_sn_from_config() or try_gen_iot_sn_by_mac_addr() or _M.unknown_iot_sn
+	return _iot_sn
+end
+
+_M.unknown_iot_sn = "UNKNOWN_ID"
+_M.iot_sn = function()
+	return assert(os.getenv("IOT_SN") or read_iot_sn())
 end
 
 return _M
