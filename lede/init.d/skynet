@@ -13,12 +13,12 @@ PM_BIN=process-monitor
 SKYNET_BIN=$SKYNET_DIR/skynet
 STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
 
-if [ -f /etc/openwrt_release ]
+if [ -f /etc/os-release ]
 then
-	source /etc/openwrt_release
-	if [ -f $SKYNET_IOT_DIR/openwrt/$DISTRIB_ARCH/process-monitor ]
+	source /etc/os-release
+	if [ -f $SKYNET_IOT_DIR/lede/$LEDE_ARCH/process-monitor ]
 	then
-		PM_BIN=$SKYNET_IOT_DIR/openwrt/$DISTRIB_ARCH/process-monitor
+		PM_BIN=$SKYNET_IOT_DIR/lede/$LEDE_ARCH/process-monitor
 	fi
 fi
 

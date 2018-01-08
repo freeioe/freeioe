@@ -3,7 +3,7 @@
 SKYNET_PLAT=$1
 
 # Validate platform name
-PLAT_NAMES="linux/amd64 lede/arm_cortex-a9_neon lede/mips_24kc"
+PLAT_NAMES="linux/amd64 lede/arm_cortex-a9_neon lede/mips_24kc lede/amd64"
 PLAT_OK=0
 for plat in $PLAT_NAMES; do
 	if [ "$SKYNET_PLAT" == "$plat" ]; then
