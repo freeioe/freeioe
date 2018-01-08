@@ -133,7 +133,8 @@ function app:start()
 		end
 	})
 
-	local dev = self._api:add_device('TEST', inputs)
+	local sys_id = self._sys:id()
+	local dev = self._api:add_device(sys_id..'.OPCUA_TEST', inputs)
 	self._devs['Simulation'] = dev
 
 	return true
