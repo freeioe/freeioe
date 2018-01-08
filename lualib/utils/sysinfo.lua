@@ -283,7 +283,7 @@ local try_read_iot_sn_from_config = function()
 		--- This is lede/openwrt system
 		f:close()
 		local s, err = _M.exec('uci get iot.@system[0].sn')
-		if s then
+		if s and string.len(s) > 0 then
 			return s
 		end
 	else
