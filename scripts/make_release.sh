@@ -73,6 +73,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh frpc $VERSION $REVISION
 ./scripts/release_opc_app.sh opcua_server $VERSION $REVISION $SKYNET_PLAT
 ./scripts/release_opc_app.sh opcua_client $VERSION $REVISION $SKYNET_PLAT
+./scripts/release_opc_app.sh opcua_collect_example $VERSION $REVISION $SKYNET_PLAT
 
 # For pre-installed applications
 mkdir __install/apps
