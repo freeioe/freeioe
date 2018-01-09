@@ -14,7 +14,7 @@ NAME=skynet
 DESC="IOT based on skynet"
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-BASE_DIR=/mnt
+BASE_DIR=/usr/iot
 SKYNET_DIR=$BASE_DIR/skynet
 SKYNET_IOT_DIR=$SKYNET_DIR/iot
 

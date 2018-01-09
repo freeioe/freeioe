@@ -3,7 +3,7 @@
 NAME="Skynet/IOT"
 DESC="IOT based on skynet"
 
-BASE_DIR=/mnt
+BASE_DIR=/usr/iot
 SKYNET_DIR=$BASE_DIR/skynet
 SKYNET_IOT_DIR=$SKYNET_DIR/iot
 
