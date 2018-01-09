@@ -5,7 +5,7 @@ START=90
 
 USE_PROCD=1
 
-BASE_DIR=/mnt
+BASE_DIR=/usr
 SKYNET_DIR=$BASE_DIR/skynet
 SKYNET_IOT_DIR=$SKYNET_DIR/iot
 
@@ -16,9 +16,9 @@ STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
 if [ -f /etc/os-release ]
 then
 	source /etc/os-release
-	if [ -f $SKYNET_IOT_DIR/lede/$LEDE_ARCH/process-monitor ]
+	if [ -f $SKYNET_IOT_DIR/openwrt/$LEDE_ARCH/process-monitor ]
 	then
-		PM_BIN=$SKYNET_IOT_DIR/lede/$LEDE_ARCH/process-monitor
+		PM_BIN=$SKYNET_IOT_DIR/openwrt/$LEDE_ARCH/process-monitor
 	fi
 fi
 
