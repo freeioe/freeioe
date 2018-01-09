@@ -188,7 +188,7 @@ _M.skynet_version = function()
 end
 
 local arch_short_names = {
-	['arm_cortex-a9_neon'] = 'arm', -- lede imx6
+	['arm_cortex-a9_neon'] = 'arm', -- openwrt imx6
 	armv5tejl = 'arm', --mx0
 	armv7l = 'arm', --imx6
 	x86_64 = 'amd64',
@@ -205,20 +205,20 @@ end
 -- for detecting cpu arch
 _M.cpu_arch = function(os_id)
 	local os_id = os_id or _M.os_id()
-	if os_id == 'lede' then
-		return _M.lede_cpu_arch()
+	if os_id == 'openwrt' then
+		return _M.openwrt_cpu_arch()
 	end
 	local matchine_arch = _M.uname('-m')
 	return assert(os.getenv("IOT_CPU_ARCH") or matchine_arch)
 end
 
-local function read_lede_arch()
+local function read_openwrt_arch()
 	local f, err = io.open('/etc/os-release', 'r')
 	if not f then
 		return nil, 'os-release file does not exits'
 	end
 	for l in f:lines() do
-		local id = string.match(l, '^LEDE_ARCH="*(.-)"*$')
+		local id = string.match(l, '^LEDE_ARCH="*(.-)"*$') or string.match(l, '^OPENWRT_ARCH="*(.-)"*$')
 		if id then
 			f:close()
 			return id
@@ -228,8 +228,8 @@ local function read_lede_arch()
 	return nil, 'os-release file does not contains LEDE_ARCH'
 end
 
-_M.lede_cpu_arch = function()
-	return assert(os.getenv("IOT_CPU_ARCH") or read_lede_arch())
+_M.openwrt_cpu_arch = function()
+	return assert(os.getenv("IOT_CPU_ARCH") or read_openwrt_arch())
 end
 
 local function read_os_id()
@@ -251,6 +251,7 @@ end
 local os_id_names = {
 	debian = 'linux',
 	ubuntu = 'linux',
+	lede = 'openwrt',
 }
 
 _M.os_id = function()
@@ -280,7 +281,7 @@ end
 local try_read_iot_sn_from_config = function()
 	local f, err = io.open("/sbin/uci", "r")
 	if f then
-		--- This is lede/openwrt system
+		--- This is openwrt system
 		f:close()
 		local s, err = _M.exec('uci get iot.@system[0].sn')
 		if s and string.len(s) > 0 then
