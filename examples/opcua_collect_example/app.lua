@@ -53,6 +53,7 @@ end
 
 local inputs = {
 	{ name = "Counter1", desc = "Counter1"},
+	{ name = "s1", desc = "Simulation 1"},
 }
 
 function app:on_connected(client)
@@ -165,7 +166,7 @@ function app:run(tms)
 			print(dv:asLong(), dv:asDouble(), dv:asString())
 			]]--
 			local now = self._sys:time()
-			dev:set_input_prop(k, "value", dv:asLong(), now, 0)
+			dev:set_input_prop(k, "value", dv:asDouble(), now, 0)
 		end
 	end
 
