@@ -1,5 +1,6 @@
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
+local datacenter = require 'skynet.datacenter'
 
 local app = class("IOT_SYS_APP_CLASS")
 app.API_VER = 1
@@ -58,6 +59,31 @@ function app:start()
 			desc = "Skynet Platform type",
 			vt = "string",
 		},
+		{
+			name = "data_upload",
+			desc = "Upload data to cloud",
+			vt = "int",
+		},
+		{
+			name = "stat_upload",
+			desc = "Upload statictis data to cloud",
+			vt = "int",
+		},
+		{
+			name = "comm_upload",
+			desc = "Upload communication data to cloud",
+			vt = "int",
+		},
+		{
+			name = "log_upload",
+			desc = "Upload logs to cloud",
+			vt = "int",
+		},
+		{
+			name = "enable_beta",
+			desc = "Device using beta enable flag",
+			vt = "int",
+		}
 	}
 	self._dev = self._api:add_device(sys_id, inputs)
 
@@ -98,6 +124,21 @@ function app:run(tms)
 
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))
+	
+	-- cloud flags
+	--
+	local enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	local enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
+	local enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
+	local enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
+	local enable_beta = datacenter.get('CLOUD', 'USING_BETA')
+
+	self._dev:set_input_prop('data_upload', 'value', enable_data_upload and 1 or 0)
+	self._dev:set_input_prop('stat_upload', 'value', enable_stat_upload  and 1 or 0)
+	self._dev:set_input_prop('comm_upload', 'value', enable_comm_upload or 0)
+	self._dev:set_input_prop('log_upload', 'value', enable_log_upload or 0)
+	self._dev:set_input_prop('enable_beta', 'value', enable_beta and 1 or 0)
+
 	return 1000 * 5
 end
 
