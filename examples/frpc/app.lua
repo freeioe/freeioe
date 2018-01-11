@@ -65,12 +65,13 @@ function app:initialize(name, sys, conf)
 	local arch = sysinfo.cpu_arch_short()
 	local frpc_bin = sys:app_dir()..arch.."/frpc"
 	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
-	self._pm:stop()
-	self._pm:cleanup()
-	self._sys:sleep(500)
 end
 
 function app:start()
+	self._pm:stop()
+	self._pm:cleanup()
+	self._sys:sleep(500)
+
 	self._api:set_handler({
 		on_output = function(app, sn, output, prop, value)
 			print('on_output', app, sn, output, prop, value)

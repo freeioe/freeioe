@@ -98,6 +98,11 @@ function accept.app_modified(inst, from)
 	dc.set("APPS", inst, 'islocal', 1)
 end
 
+function accept.app_start(inst)
+	local v = dc.get("APPS", inst)
+	snax.self().req.start(inst, v.conf or {})
+end
+
 function init(...)
 	log.info("AppMgr service starting...")
 
@@ -120,7 +125,7 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
-			snax.self().req.start(k, v.conf or {})
+			snax.self().post.app_start(k)
 		end
 		if not apps['iot'] then
 			snax.self().req.start('iot')
