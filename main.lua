@@ -10,6 +10,7 @@ skynet.start(function()
 	end
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
+	skynet.newservice("iot_ext")
 
 	local cloud = snax.uniqueservice("cloud")
 	local appmgr = snax.uniqueservice("appmgr")

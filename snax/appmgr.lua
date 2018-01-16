@@ -18,6 +18,13 @@ function response.start(name, conf)
 	app.conf = conf or app.conf
 	applist[name] = app
 
+	log.debug("Try to install depends for ", name)
+	local r, err = skynet.call("IOT_EXT", "lua", "install_depends", name)
+	if not r then
+		log.error("Failed to install depends for ", name, "error:", err)
+		return nil, "Failed to start app. install depends failed"
+	end
+
 	local s = snax.self()
 	local inst = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
 
