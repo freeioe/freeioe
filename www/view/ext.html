@@ -1,0 +1,128 @@
+{% layout="base.html" %}
+{-main_header-}
+{-main_header-}
+
+{-main-}
+<h1 class="header"> {{_("Installed Extensions")}} </h1>
+
+{(widget/ext_list.html, {exts=exts, force_upgrade=force_upgrade, using_beta=using_beta})}
+
+<div class="ui basic segment">
+	<div class="ui stackable two column grid">
+		<div class="column">
+			<div class="ui teal button check_update" data-content="{{_('Query extension updates')}}">{{_("Check Updates")}}</div>
+		</div>
+	</div>
+</div>
+
+<div class="ui basic msg_print form">
+	<div class="ui success message"></div>
+	<div class="ui error message"></div>
+</div>
+{-main-}
+
+{-script-}
+<script>
+var msg_form = null;
+function reset_message() {
+	msg_form.removeClass('success').removeClass('error');
+};
+function print_err_message(msg) {
+	reset_message();
+	console.log('Exception:' + msg);
+	msg_form.find('.ui.error.message').html(msg);
+	msg_form.addClass('error');
+};
+function print_message(msg) {
+	reset_message();
+	console.log('OK:' + msg);
+	msg_form.find('.ui.success.message').html(msg);
+	msg_form.addClass('success');
+};
+function refresh_page() {
+	window.location.replace("/ext");
+}
+function upgrade_ext(inst, ext, version) {
+	$.post("/ext/upgrade", {from_web:true, inst:inst, ext:ext, version:version}, function(data) {
+		print_message('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 10000);
+	})
+	.fail(function() {
+		print_err_message('<i>{{_("Failed to send upgrade request")}}</i>');
+	});
+}
+
+function check_ext_update(inst, ext, version) {
+	$.get("/ext/check_update", {from_web:true, inst:inst, ext:ext}, function(data) {
+		if (data && data.version && data.version > version) {
+			var vstr = data.version;
+			if (data.beta) {
+				vstr = "beta." + vstr;
+			};
+			var btn = $('.ui.button.upgrade[data-inst="' + inst + '"]');
+			btn.attr('data-version', vstr);
+			btn.find('.label').text(vstr);
+			btn.show();
+		};
+	})
+	.done(function() {
+	})
+	.fail(function() {
+	});
+}
+
+function check_ext_version(inst, ext, version) {
+	$.get("/ext/check_version", {from_web:true, inst:inst, ext:ext, version:version}, function(data) {
+		if (data && data.type) {
+			if (data.type == "release") {
+				$('#'+inst+'_version_col').html(version + '<i class="green check icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
+			} else if (data.type == "beta") {
+				$('#'+inst+'_version_col').html(version + '<i class="yellow warning sign icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
+			} else if (data.type == "local") {
+				$('#'+inst+'_version_col').html(version + '<i class="blue write square icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').show();
+			} else {
+				$('#'+inst+'_version_col').html(version + '<i class="red attention icon"></i>');
+				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
+			}
+		};
+	})
+	.done(function() {
+	})
+	.fail(function() {
+	});
+}
+function check_for_update() {
+	{% for k, v in pairs(exts) do %}
+	{%	if v.version == 'latest' then %}
+	check_ext_version('{{k}}', '{{v.name}}', {{v.real_version}});
+	check_ext_update('{{k}}', '{{v.name}}', {{v.real_version}});
+	{%	end %}
+	{% end %}
+	print_message("{{_('Check updates done!')}}");
+}
+
+$(document).ready(function(){
+	//setTimeout('check_for_updates()', 1000);
+	msg_form = $('.ui.msg_print.form');
+	{% if not force_upgrade then %}
+	$('.ui.button.upgrade').hide();
+	{% end %}
+	$('.ui.button.upgrade').click(function() {
+		upgrade_ext($(this).data('inst'), $(this).data('ext'), $(this).data('version'));
+	});
+	$('.ui.segment .ui.button.check_update').click(function() {
+		var btn = $(this);
+		btn.addClass('disabled');
+		check_for_update();
+		setTimeout(function() {
+			btn.removeClass('disabled');
+		}, 5000);
+	});
+});
+</script>
+{-script-}

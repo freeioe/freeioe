@@ -1,6 +1,5 @@
 local dc = require 'skynet.datacenter'
 local snax = require 'skynet.snax'
-local cjson = require 'cjson'
 
 return {
 	get = function(self)

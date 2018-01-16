@@ -130,6 +130,10 @@ local function install_depends_to_app(ext_inst, app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
 
+function command.list()
+	return installed
+end
+
 function command.install_depends(app_inst)
 	local exts = get_app_depends(app_inst)
 	local wait_list = {}
@@ -203,11 +207,39 @@ function command.install_depends(app_inst)
 	return nil, "timeout"
 end
 
+function command.pkg_check_update(ext, beta)
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
+	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
+	return pkg_api.pkg_check_update(pkg_host, ext, beta)
+end
+
+function command.pkg_check_version(ext, version)
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
+	return pkg_api.pkg_check_version(pkg_host, ext, version)
+end
+
+
 function remove_depends(inst)
 	log.warning('Remove Ext', inst)
 	installed[inst] = nil
 	local target_folder = get_target_folder(inst)
 	os.execute("rm -rf "..target_folder)
+end
+
+local function get_ext_version(inst_name)
+	local dir = get_target_folder(inst_name)
+	local f, err = io.open(dir.."/version", "r")
+	if not f then
+		return nil, err
+	end
+	local v, err = f:read('l')
+	f:close()
+	if not v then
+		return err
+	end
+	return tonumber(v)
 end
 
 local function list_installed()
@@ -222,6 +254,9 @@ local function list_installed()
 					name = name,
 					version = version
 				}
+				if version == 'latest' then
+					list[filename].real_version = get_ext_version(filename)
+				end
 			end
 		end
 	end
