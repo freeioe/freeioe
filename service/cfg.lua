@@ -178,6 +178,7 @@ function command.SAVE(opt_path)
 			md5sum = sum
 		end
 		save_cfg_cloud(str, sum)
+		os.execute('sync')
 	end
 end
 

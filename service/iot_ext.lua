@@ -122,7 +122,6 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 			end
 		end
 	end
-	os.execute('sync')
 end
 
 local function install_depends_to_app(ext_inst, app_inst)
@@ -254,6 +253,7 @@ local function auto_clean_exts()
 			remove_depends(inst)
 		end
 	end
+	os.execute('sync')
 end
 
 skynet.start(function()
