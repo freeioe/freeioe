@@ -232,7 +232,7 @@ local function get_ext_version(inst_name)
 	local dir = get_target_folder(inst_name)
 	local f, err = io.open(dir.."/version", "r")
 	if not f then
-		return nil, err
+		return 0
 	end
 	local v, err = f:read('l')
 	f:close()
