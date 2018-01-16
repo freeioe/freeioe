@@ -2,6 +2,7 @@ local skynet = require 'skynet.manager'
 local datacenter = require 'skynet.datacenter'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
+local httpdown = require 'httpdown'
 local pkg_api = require 'pkg_api'
 local lfs = require 'lfs'
 
@@ -30,12 +31,12 @@ local function parse_inst_name(inst_name)
 	if string.len(inst_name) > 8 and string.sub(inst_name, -7) == '.latest' then
 		return string.sub(inst_name, 1, -8), 'latest'
 	end
-	return string.match(inst_name, '^(.+)_(%d+)$')
+	return string.match(inst_name, '^(.+).(%d+)$')
 end
 
 local function create_task(func, task_name, ...)
 	skynet.fork(function(task_name, ...)
-		_M.tasks[coroutine.running()] = {
+		tasks[coroutine.running()] = {
 			name = task_name
 		}
 		func(...)
@@ -91,10 +92,9 @@ local function get_app_depends(app_inst)
 	local exts = {}
 	local dir = get_app_target_folder(app_inst)
 	local f, err = io.open(dir.."/depends.txt", "r")
-
 	if f then
 		for line in f:lines() do
-			local name, version = string.match(line, '^([^:]+):(%d)$')
+			local name, version = string.match(line, '^([^:]+):(%d+)$')
 			name = name or line
 			version = version or 'latest'
 			exts[name] = version
@@ -105,22 +105,28 @@ local function get_app_depends(app_inst)
 end
 
 local function install_depends_to_app_ext(ext_inst, app_inst, folder)
-	local luaclib_folder = get_target_folder(inst).."/"..folder.."/"
-	local app_luaclib_folder = get_app_target_folder(app_inst).."/"..folder.."/"
-	lfs.mkdir(app_luaclib_folder)
-	for filename in lfs.dir(luaclib_folder) do
+	local src_folder = get_target_folder(ext_inst)..folder.."/"
+	if lfs.attributes(src_folder, 'mode') ~= 'directory' then
+		return
+	end
+	local target_folder = get_app_target_folder(app_inst)..folder.."/"
+	lfs.mkdir(target_folder)
+	for filename in lfs.dir(src_folder) do
 		if filename ~= '.' and filename ~= '..' then
-			local path = luaclib_folder..filename
+			local path = src_folder..filename
 			if lfs.attributes(path, 'mode') == 'file' then
-				local lnpath = app_luaclib_folder..filename
-				log.debug('Link luaclib ', path, lnpath)
+				local lnpath = target_folder..filename
+				os.execute("rm -f "..lnpath)
+				log.debug('Link ', path, lnpath)
 				os.execute("ln -s "..path.." "..lnpath)
 			end
 		end
 	end
+	os.execute('sync')
 end
 
 local function install_depends_to_app(ext_inst, app_inst)
+	log.debug("Try to install "..ext_inst.." to "..app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'luaclib')
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
@@ -153,9 +159,10 @@ function command.install_depends(app_inst)
 
 					local target_folder = get_target_folder(inst)
 					lfs.mkdir(target_folder)
-					local code, status = os.execute("unzip -oq "..info.." -d "..target_folder)
+					log.debug("tar xzf "..info.." -C "..target_folder)
+					local r, status = os.execute("tar xzf "..info.." -C "..target_folder)
 					os.execute("rm -rf "..info)
-					if code == 'exit' and status == 0 then
+					if r and status == 'exit' then
 						install_depends_to_app(inst, app_inst)
 					else
 						wait_list[inst].result = false
@@ -240,6 +247,7 @@ end
 ---
 -- Check installed exts whether its required application exists for not
 local function auto_clean_exts()
+	log.notice("Auto cleanup installed extensions")
 	local depends = list_depends()
 	for inst, v in pairs(installed) do
 		if not depends[inst] then
@@ -262,8 +270,8 @@ skynet.start(function()
 
 	skynet.fork(function()
 		while true do
-			auto_clean_exts()
 			skynet.sleep(10 * 60 * 100) -- 10 mins
+			auto_clean_exts()
 		end
 	end)
 end)

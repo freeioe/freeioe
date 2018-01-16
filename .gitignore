@@ -44,6 +44,7 @@ luac.out
 lwf
 conf
 apps
+ext
 *.swp
 __install
 __release

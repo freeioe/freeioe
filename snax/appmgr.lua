@@ -18,7 +18,6 @@ function response.start(name, conf)
 	app.conf = conf or app.conf
 	applist[name] = app
 
-	log.debug("Try to install depends for ", name)
 	local r, err = skynet.call("IOT_EXT", "lua", "install_depends", name)
 	if not r then
 		log.error("Failed to install depends for ", name, "error:", err)
