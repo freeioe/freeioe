@@ -71,9 +71,16 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh bms $VERSION $REVISION
 ./scripts/release_app.sh modbus_lua $VERSION $REVISION
 ./scripts/release_app.sh frpc $VERSION $REVISION
-./scripts/release_opc_app.sh opcua_server $VERSION $REVISION $SKYNET_PLAT
-./scripts/release_opc_app.sh opcua_client $VERSION $REVISION $SKYNET_PLAT
-./scripts/release_opc_app.sh opcua_collect_example $VERSION $REVISION $SKYNET_PLAT
+./scripts/release_app.sh opcua_server $VERSION $REVISION
+./scripts/release_app.sh opcua_client $VERSION $REVISION
+./scripts/release_app.sh opcua_collect_example $VERSION $REVISION
+
+# Release Extensions
+
+for plat in $PLAT_NAMES; do
+	./scripts/release_ext.sh opcua $VERSION $REVISION $plat "luaclib"
+	./scripts/release_ext.sh frpc $VERSION $REVISION $plat "bin"
+done
 
 # For pre-installed applications
 mkdir __install/apps

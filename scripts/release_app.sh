@@ -18,8 +18,16 @@ cd ./examples/$1
 echo $2 > version
 echo $3 >> version
 
+if [ -f "luaclib/opcua.so" ]; then
+	mv luaclib/opcua.so ./opcua.so.bak~
+fi
+
 zip -r -q ../../__release/$1/$2.zip * -x *~
 rm -f version
+
+if [ -f "./opcua.so.bak~" ]; then
+	mv ./opcua.so.bak~ luaclib/opcua.so
+fi
 cd ../../
 md5sum -b __release/$1/$2.zip > __release/$1/$2.zip.md5
 du __release/$1/$2.zip -sh
