@@ -62,8 +62,7 @@ function app:initialize(name, sys, conf)
 
 	inifile.save(self._ini_file, get_default_conf(sys, self._conf))
 
-	local arch = sysinfo.cpu_arch_short()
-	local frpc_bin = sys:app_dir()..arch.."/frpc"
+	local frpc_bin = sys:app_dir().."/bin/frpc"
 	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
 end
 
