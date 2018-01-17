@@ -154,6 +154,7 @@ function command.install_app(id, args)
 				return install_result(id, false, "Failed to start App. Error: "..err)
 			end
 		else
+			datacenter.set("APPS", inst_name, nil)
 			return install_result(id, false, "Failed to download App. Error: "..info)
 		end
 	end)

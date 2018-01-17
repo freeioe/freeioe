@@ -19,6 +19,7 @@ function app:initialize(name, sys, conf)
 	self._api = sys:data_api()
 	--- 获取日志接口
 	self._log = sys:logger()
+	self._nodes = {}
 end
 
 --- 设定变量的默认值
@@ -77,7 +78,7 @@ local function create_handler(app)
 	local server = app._server
 	local log = app._log
 	local idx = app._idx
-	local nodes = {}
+	local nodes = app._nodes
 	return {
 		--- 处理设备对象添加消息
 		on_add_device = function(app, sn, props)
@@ -199,7 +200,15 @@ function app:start()
 	self._server = server
 	self._idx = idx
 	--- 设定回调处理对象
-	self._api:set_handler(create_handler(self), true)
+	self._handler = create_handler(self)
+	self._api:set_handler(self._handler, true)
+
+	self._sys:fork(function()
+		local devs = self._api:list_devices() or {}
+		for sn, props in pairs(devs) do
+			self._handler.on_add_device(self, sn, props)
+		end
+	end)
 	
 	--- 启动服务器
 	server:startup()

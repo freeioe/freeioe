@@ -82,7 +82,8 @@ function sys:yield()
 end
 
 function sys:sleep(ms)
-	return skynet.sleep(ms / 10)
+	local ts = math.floor(ms / 10)
+	return skynet.sleep(ts)
 end
 
 function sys:data_api()
