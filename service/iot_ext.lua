@@ -133,7 +133,7 @@ end
 ---
 -- Check installed exts whether its required application exists for not
 local function auto_clean_exts()
-	log.notice("Auto cleanup installed extensions")
+	log.debug("Auto cleanup installed extensions")
 	local depends = list_depends()
 	for inst, v in pairs(installed) do
 		if not depends[inst] then
