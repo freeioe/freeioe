@@ -11,9 +11,8 @@
 	<tbody>
 		{% for k, v in pairs(exts) do %}
 		<tr>
-			<td>{{v.name}} </td>
-			<td id="{{k}}_version_col"> {{v.version}} </td>
-			<td id="{{k}}_real_version_col"> {{v.real_version}} </td>
+			<td>{{k}} </td>
+			<td id="{{k}}_version_col"> {{v.real_version or v.version}} </td>
 			<td id="{{k}}_actions_col">
 				<i id="{{k}}_upgrade_col">
 					<div class="ui labeled button button upgrade" data-inst="{{k}}" data-ext="{{v.name}}" data-version="latest">

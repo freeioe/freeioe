@@ -76,18 +76,15 @@ function check_ext_update(inst, ext, version) {
 function check_ext_version(inst, ext, version) {
 	$.get("/ext/check_version", {from_web:true, inst:inst, ext:ext, version:version}, function(data) {
 		if (data && data.type) {
+			var col = $('#'+inst+'_version_col');
 			if (data.type == "release") {
-				$('#'+inst+'_version_col').html(version + '<i class="green check icon"></i>');
-				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
+				col.html(version + '<i class="green check icon"></i>');
 			} else if (data.type == "beta") {
-				$('#'+inst+'_version_col').html(version + '<i class="yellow warning sign icon"></i>');
-				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
+				col.html(version + '<i class="yellow warning sign icon"></i>');
 			} else if (data.type == "local") {
-				$('#'+inst+'_version_col').html(version + '<i class="blue write square icon"></i>');
-				$('.ui.button.refresh[data-inst="' + inst + '"]').show();
+				col.html(version + '<i class="blue write square icon"></i>');
 			} else {
-				$('#'+inst+'_version_col').html(version + '<i class="red attention icon"></i>');
-				$('.ui.button.refresh[data-inst="' + inst + '"]').hide();
+				col.html(version + '<i class="red attention icon"></i>');
 			}
 		};
 	})
@@ -98,8 +95,8 @@ function check_ext_version(inst, ext, version) {
 }
 function check_for_update() {
 	{% for k, v in pairs(exts) do %}
+	check_ext_version('{{k}}', '{{v.name}}', {{v.real_version or v.version}});
 	{%	if v.version == 'latest' then %}
-	check_ext_version('{{k}}', '{{v.name}}', {{v.real_version}});
 	check_ext_update('{{k}}', '{{v.name}}', {{v.real_version}});
 	{%	end %}
 	{% end %}
