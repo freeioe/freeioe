@@ -5,6 +5,7 @@ local cjson = require 'cjson.safe'
 local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
+local helper = require 'utils.helper'
 
 local _M = {}
 
@@ -80,9 +81,24 @@ function _M.get_app_version(inst_name)
 	return tonumber(v)
 end
 
+
 function _M.get_app_folder(inst_name)
 	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
 	--return os.getenv("PWD").."/iot/apps/"..inst_name
+end
+
+function _M.get_ext_version(inst_name)
+	local dir = _M.get_app_folder(inst_name)
+	local f, err = io.open(dir.."/version", "r")
+	if not f then
+		return nil, err
+	end
+	local v, err = f:read('l')
+	f:close()
+	if not v then
+		return err
+	end
+	return tonumber(v)
 end
 
 function _M.get_ext_root()
@@ -114,8 +130,12 @@ function _M.parse_version_string(version)
 end
 
 function _M.create_download_func(app_name, version, ext, cb, is_extension)
+	local app_name = app_name:gsub('%.', '/')
+	local version = version
+	local ext = ext
+	local cb = cb
+	local is_extension = is_extension
 	return function()
-		local app_name = app_name:gsub('%.', '/')
 		local app_name_escape = string.gsub(app_name, '/', '__')
 		local path = "/tmp/"..app_name_escape.."_"..version..ext
 		local file, err = io.open(path, "w+")

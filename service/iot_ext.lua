@@ -13,6 +13,7 @@ local command = {}
 
 local get_target_folder = pkg_api.get_ext_folder
 local get_target_root = pkg_api.get_ext_root
+local get_ext_version = pkg_api.get_ext_version
 local parse_version_string = pkg_api.parse_version_string
 local get_app_target_folder = pkg_api.get_app_folder
 
@@ -91,20 +92,6 @@ function remove_depends(inst)
 	installed[inst] = nil
 	local target_folder = get_target_folder(inst)
 	os.execute("rm -rf "..target_folder)
-end
-
-local function get_ext_version(inst_name)
-	local dir = get_target_folder(inst_name)
-	local f, err = io.open(dir.."/version", "r")
-	if not f then
-		return 0
-	end
-	local v, err = f:read('l')
-	f:close()
-	if not v then
-		return err
-	end
-	return tonumber(v)
 end
 
 local function list_installed()

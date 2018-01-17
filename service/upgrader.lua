@@ -2,7 +2,6 @@ local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local httpdown = require 'httpdown'
 local log = require 'utils.log'
-local helper = require 'utils.helper'
 local sysinfo = require 'utils.sysinfo' 
 local lfs = require 'lfs'
 local cjson = require 'cjson.safe'
@@ -15,6 +14,7 @@ local cloud = nil
 
 local get_target_folder = pkg_api.get_app_folder
 local parse_version_string = pkg_api.parse_version_string
+local get_app_version = pkg_api.get_app_version
 
 local function get_iot_dir()
 	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
