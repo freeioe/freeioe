@@ -200,7 +200,6 @@ local function auto_clean_exts()
 	os.execute('sync')
 end
 
-
 function command.list()
 	return installed
 end
@@ -298,19 +297,21 @@ function command.upgrade_ext(id, args)
 
 	create_download(plat, name, version, function(result, path)
 		if not result then
-			log.error(path)
+			log.error("Failed to download extension. Error: "..path)
 		else
 			log.notice("Download Extension finished", name, version)
 
 			local target_folder = get_target_folder(inst)
-			lfs.mkdir(target_folder)
 			log.debug("tar xzf "..path.." -C "..target_folder)
 			local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 			os.execute("rm -rf "..path)
 			log.notice("Install Extension finished", name, version, r, status)
 
 			for _,v in ipairs(applist) do
-				appmgr.req.start(inst)
+				local r, err = appmgr.req.start(inst)
+				if not r then
+					log.error("Failed to start application after extension upgraded. Error: "..err)
+				end
 			end
 		end
 	end)
