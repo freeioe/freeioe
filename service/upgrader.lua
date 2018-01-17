@@ -13,24 +13,8 @@ local tasks = {}
 local command = {}
 local cloud = nil
 
-local function get_target_folder(inst_name)
-	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
-	--return os.getenv("PWD").."/iot/apps/"..inst_name
-end
-
-local function get_app_version(inst_name)
-	local dir = get_target_folder(inst_name)
-	local f, err = io.open(dir.."/version", "r")
-	if not f then
-		return nil, err
-	end
-	local v, err = f:read('l')
-	f:close()
-	if not v then
-		return err
-	end
-	return tonumber(v)
-end
+local get_target_folder = pkg_api.get_app_folder
+local parse_version_string = pkg_api.parse_version_string
 
 local function get_iot_dir()
 	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
@@ -45,67 +29,9 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
-local function parse_version_string(version)
-	if type(version) == 'number' then
-		return tostring(math.floor(version)), false
-	end
-
-	local editor = false
-	local beta = false
-	local version = version or 'latest'
-	if string.len(version) > 5 and string.sub(version, 1, 5) == 'beta.' then
-		version = string.sub(version, 6)
-		beta = true
-	end
-	if string.len(version) > 7 and string.sub(version, -7) == '.editor' then
-		version = string.sub(version, 1, -8)
-		beta = true
-		editor = true
-	end
-	return version, beta, editor
-end
-
-local function create_download(app_name, version, cb, ext)
-	local app_name = app_name:gsub('%.', '/')
-	local cb = cb
-	local ext = ext or ".zip"
-	local down = function()
-		local app_name_escape = string.gsub(app_name, '/', '__')
-		local path = "/tmp/"..app_name_escape.."_"..version..ext
-		local file, err = io.open(path, "w+")
-		if not file then
-			return cb(nil, err)
-		end
-
-		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
-
-		local url = "/download/"..app_name.."/"..version..ext
-		log.notice('Start Download', app_name, 'From URL:', pkg_host..url)
-		local status, header, body = httpdown.get(pkg_host, url)
-		if not status then
-			return cb(nil, tostring(header))
-		end
-		if status < 200 or status > 400 then
-			return cb(nil, "Download failed, status code "..status)
-		end
-		file:write(body)
-		file:close()
-
-		local status, header, body = httpdown.get(pkg_host, url..".md5")
-		if status and status == 200 then
-			local sum, err = helper.md5sum(path)
-			if not sum then
-				return cb(nil, "Cannot caculate md5, error:\t"..err)
-			end
-			log.notice("Downloaded file md5 sum", sum)
-			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
-			if sum ~= md5 then
-				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
-			end
-		end
-		cb(true, path)
-	end
-	create_task(down, "Download App "..app_name)
+local function create_download(app_name, version, cb)
+	local down = pkg_api.create_download_func(app_name, version, ".zip", cb)
+	create_task(down, "Download Application "..app_name)
 end
 
 local function install_result(id, result, ...)

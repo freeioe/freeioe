@@ -1,4 +1,5 @@
 local skynet = require 'skynet.manager'
+local snax = require 'skynet.snax'
 local datacenter = require 'skynet.datacenter'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
@@ -10,17 +11,10 @@ local tasks = {}
 local installed = {}
 local command = {}
 
-local function get_target_root()
-	return lfs.currentdir().."/iot/ext/"
-end
-
-local function get_app_target_folder(inst_name)
-	return lfs.currentdir().."/iot/apps/"..inst_name.."/"
-end
-
-local function get_target_folder(inst_name)
-	return lfs.currentdir().."/iot/ext/"..inst_name.."/"
-end
+local get_target_folder = pkg_api.get_ext_folder
+local get_target_root = pkg_api.get_ext_root
+local parse_version_string = pkg_api.parse_version_string
+local get_app_target_folder = pkg_api.get_app_folder
 
 local function make_inst_name(lib_name, version)
 	local version = version or 'latest'
@@ -41,49 +35,11 @@ local function create_task(func, task_name, ...)
 		}
 		func(...)
 	end, task_name, ...)
-	return true, task_name
 end
 
-local function create_download(plat, app_name, version, cb)
-	local app_name = app_name:gsub('%.', '/')
-	local cb = cb
-	local ext = ".tar.gz"
-	local down = function()
-		local app_name_escape = string.gsub(app_name, '/', '__')
-		local path = "/tmp/"..app_name_escape.."_"..version..ext
-		local file, err = io.open(path, "w+")
-		if not file then
-			return cb(nil, err)
-		end
 
-		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
-
-		local url = "/download/ext/"..plat.."/"..app_name.."/"..version..ext
-		log.notice('Start Download Extension', app_name, 'From URL:', pkg_host..url)
-		local status, header, body = httpdown.get(pkg_host, url)
-		if not status then
-			return cb(nil, tostring(header))
-		end
-		if status < 200 or status > 400 then
-			return cb(nil, "Download Extension failed, status code "..status)
-		end
-		file:write(body)
-		file:close()
-
-		local status, header, body = httpdown.get(pkg_host, url..".md5")
-		if status and status == 200 then
-			local sum, err = helper.md5sum(path)
-			if not sum then
-				return cb(nil, "Cannot caculate md5, error:\t"..err)
-			end
-			log.notice("Downloaded file md5 sum", sum)
-			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
-			if sum ~= md5 then
-				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
-			end
-		end
-		cb(true, path)
-	end
+local function create_download(app_name, version, cb)
+	local down = pkg_api.create_download_func(app_name, version, ".tar.gz", cb, true)
 	create_task(down, "Download Extension "..app_name)
 end
 
@@ -223,9 +179,7 @@ function command.install_depends(app_inst)
 				running = true,
 			}
 
-			local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
-
-			create_download(plat, name, version, function(result, info)
+			create_download(name, version, function(result, info)
 				wait_list[inst].result = result
 				wait_list[inst].msg = info
 				if not result then
@@ -284,8 +238,7 @@ end
 function command.upgrade_ext(id, args)
 	local inst = args.inst
 	local name = args.name
-	local version = args.version
-	local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
+	local version, beta, editor = parse_version_string(args.version)
 
 	--- Stop all applications depends on this extension
 	local depends = list_depends()
@@ -295,7 +248,7 @@ function command.upgrade_ext(id, args)
 		appmgr.req.stop(inst, "Upgrade Extension "..inst)
 	end
 
-	create_download(plat, name, version, function(result, path)
+	create_download(name, version, function(result, path)
 		if not result then
 			log.error("Failed to download extension. Error: "..path)
 		else

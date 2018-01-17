@@ -18,7 +18,7 @@ return {
 		local args = {
 			version = version,
 			inst = inst,
-			name = app,
+			name = ext,
 		}
 		skynet.call("IOT_EXT", "lua", "upgrade_ext", id, args)
 		ngx.print('Extension upgrade is done!')
