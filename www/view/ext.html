@@ -76,7 +76,8 @@ function check_ext_update(inst, ext, version) {
 function check_ext_version(inst, ext, version) {
 	$.get("/ext/check_version", {from_web:true, inst:inst, ext:ext, version:version}, function(data) {
 		if (data && data.type) {
-			var col = $('#'+inst+'_version_col');
+			var inst_s = $.escapeSelector(inst);
+			var col = $('#'+inst_s+'_version_col');
 			if (data.type == "release") {
 				col.html(version + '<i class="green check icon"></i>');
 			} else if (data.type == "beta") {
