@@ -59,13 +59,13 @@ local function create_download(plat, app_name, version, cb)
 		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
 
 		local url = "/download/ext/"..plat.."/"..app_name.."/"..version..ext
-		log.notice('Start Download Ext', app_name, 'From URL:', pkg_host..url)
+		log.notice('Start Download Extension', app_name, 'From URL:', pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
 			return cb(nil, tostring(header))
 		end
 		if status < 200 or status > 400 then
-			return cb(nil, "Download Ext failed, status code "..status)
+			return cb(nil, "Download Extension failed, status code "..status)
 		end
 		file:write(body)
 		file:close()
@@ -84,7 +84,7 @@ local function create_download(plat, app_name, version, cb)
 		end
 		cb(true, path)
 	end
-	create_task(down, "Download Ext "..app_name)
+	create_task(down, "Download Extension "..app_name)
 end
 
 
@@ -130,99 +130,8 @@ local function install_depends_to_app(ext_inst, app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
 
-function command.list()
-	return installed
-end
-
-function command.install_depends(app_inst)
-	local exts = get_app_depends(app_inst)
-	local wait_list = {}
-	for name, version in pairs(exts) do
-		local inst = make_inst_name(name, version)
-		if not installed[inst] then
-			installed[inst] = {
-				name = name,
-				version = version,
-			}
-			wait_list[inst] = {
-				task_name = tname,
-				running = true,
-			}
-
-			local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
-
-			create_download(plat, name, version, function(result, info)
-				wait_list[inst].result = result
-				wait_list[inst].msg = info
-				if not result then
-					installed[inst] = nil
-					log.error(info)
-				else
-					log.notice("Download Ext finished", name, version)
-
-					local target_folder = get_target_folder(inst)
-					lfs.mkdir(target_folder)
-					log.debug("tar xzf "..info.." -C "..target_folder)
-					local r, status = os.execute("tar xzf "..info.." -C "..target_folder)
-					os.execute("rm -rf "..info)
-					if r and status == 'exit' then
-						install_depends_to_app(inst, app_inst)
-					else
-						wait_list[inst].result = false
-						wait_list[inst].msg = "failed to unzip Ext"
-					end
-				end
-				wait_list[inst].running = false
-			end)
-		else
-			install_depends_to_app(inst, app_inst)
-		end
-	end
-
-	local t = skynet.now()
-	--- max timeout 10 mins
-	while (skynet.now() - t) < (10 * 60 * 100) do
-		local finished = true
-		local result = true
-		local info = "done"
-		local failed_depends = {}
-
-		for k,v in pairs(wait_list) do
-			if v.running then
-				finished = false
-			end
-			if not v.result then
-				result = false
-				failed_depends[#failed_depends + 1] = k
-			end
-		end
-		if not result then
-			info = "Install depends failed, failed exts: "..table.concat(failed_depends)
-		end
-		if finished then
-			return result, info
-		end
-		skynet.sleep(100)
-	end
-	return nil, "timeout"
-end
-
-function command.pkg_check_update(ext, beta)
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
-	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
-	return pkg_api.pkg_check_update(pkg_host, ext, beta)
-end
-
-function command.pkg_check_version(ext, version)
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
-	return pkg_api.pkg_check_version(pkg_host, ext, version)
-end
-
-
 function remove_depends(inst)
-	log.warning('Remove Ext', inst)
+	log.warning('Remove Extension', inst)
 	installed[inst] = nil
 	local target_folder = get_target_folder(inst)
 	os.execute("rm -rf "..target_folder)
@@ -249,7 +158,7 @@ local function list_installed()
 		if filename ~= '.' and filename ~= '..' then
 			if lfs.attributes(root..filename, 'mode') == 'directory' then
 				local name, version = parse_inst_name(filename)
-				log.debug('Installed Ext', name, version)
+				log.debug('Installed Extension', name, version)
 				list[filename] = {
 					name = name,
 					version = version
@@ -289,6 +198,135 @@ local function auto_clean_exts()
 		end
 	end
 	os.execute('sync')
+end
+
+
+function command.list()
+	return installed
+end
+
+function command.tasks()
+	return tasks
+end
+
+function command.install_depends(app_inst)
+	local exts = get_app_depends(app_inst)
+	local wait_list = {}
+	for name, version in pairs(exts) do
+		local inst = make_inst_name(name, version)
+		if not installed[inst] then
+			installed[inst] = {
+				name = name,
+				version = version,
+			}
+			wait_list[inst] = {
+				task_name = tname,
+				running = true,
+			}
+
+			local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
+
+			create_download(plat, name, version, function(result, info)
+				wait_list[inst].result = result
+				wait_list[inst].msg = info
+				if not result then
+					installed[inst] = nil
+					log.error(info)
+				else
+					log.notice("Download Extension finished", name, version)
+
+					local target_folder = get_target_folder(inst)
+					lfs.mkdir(target_folder)
+					log.debug("tar xzf "..info.." -C "..target_folder)
+					local r, status = os.execute("tar xzf "..info.." -C "..target_folder)
+					os.execute("rm -rf "..info)
+					if r and status == 'exit' then
+						install_depends_to_app(inst, app_inst)
+					else
+						wait_list[inst].result = false
+						wait_list[inst].msg = "failed to unzip Extension"
+					end
+				end
+				wait_list[inst].running = false
+			end)
+		else
+			install_depends_to_app(inst, app_inst)
+		end
+	end
+
+	local t = skynet.now()
+	--- max timeout 10 mins
+	while (skynet.now() - t) < (10 * 60 * 100) do
+		local finished = true
+		local result = true
+		local info = "done"
+		local failed_depends = {}
+
+		for k,v in pairs(wait_list) do
+			if v.running then
+				finished = false
+			end
+			if not v.result then
+				result = false
+				failed_depends[#failed_depends + 1] = k
+			end
+		end
+		if not result then
+			info = "Install depends failed, failed exts: "..table.concat(failed_depends)
+		end
+		if finished then
+			return result, info
+		end
+		skynet.sleep(100)
+	end
+	return nil, "timeout"
+end
+
+function command.upgrade_ext(id, args)
+	local inst = args.inst
+	local name = args.name
+	local version = args.version
+	local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
+
+	--- Stop all applications depends on this extension
+	local depends = list_depends()
+	local applist = depends[inst]
+	local appmgr = snax.uniqueservice("appmgr")
+	for _,v in ipairs(applist) do
+		appmgr.req.stop(inst, "Upgrade Extension "..inst)
+	end
+
+	create_download(plat, name, version, function(result, path)
+		if not result then
+			log.error(path)
+		else
+			log.notice("Download Extension finished", name, version)
+
+			local target_folder = get_target_folder(inst)
+			lfs.mkdir(target_folder)
+			log.debug("tar xzf "..path.." -C "..target_folder)
+			local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
+			os.execute("rm -rf "..path)
+			log.notice("Install Extension finished", name, version, r, status)
+
+			for _,v in ipairs(applist) do
+				appmgr.req.start(inst)
+			end
+		end
+	end)
+end
+
+function command.pkg_check_update(ext, beta)
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
+	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
+	return pkg_api.pkg_check_update(pkg_host, ext, beta)
+end
+
+function command.pkg_check_version(ext, version)
+	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
+	return pkg_api.pkg_check_version(pkg_host, ext, version)
 end
 
 skynet.start(function()
