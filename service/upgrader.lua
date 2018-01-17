@@ -29,8 +29,9 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
-local function create_download(app_name, version, cb)
-	local down = pkg_api.create_download_func(app_name, version, ".zip", cb)
+local function create_download(app_name, version, cb, ext)
+	local ext = ext or ".zip"
+	local down = pkg_api.create_download_func(app_name, version, ext, cb)
 	create_task(down, "Download Application "..app_name)
 end
 
