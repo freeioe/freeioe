@@ -88,7 +88,7 @@ function _M.get_app_folder(inst_name)
 end
 
 function _M.get_ext_version(inst_name)
-	local dir = _M.get_app_folder(inst_name)
+	local dir = _M.get_ext_folder(inst_name)
 	local f, err = io.open(dir.."/version", "r")
 	if not f then
 		return nil, err
