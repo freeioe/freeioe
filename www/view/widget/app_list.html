@@ -2,6 +2,7 @@
 <table class="ui celled basic table">
 	<thead>
 		<tr>
+			<th>{{_("ID")}}</th>
 			<th>{{_("Name")}}</th>
 			<th>{{_("Application")}}</th>
 			<th>{{_("SN")}}</th>
@@ -12,6 +13,7 @@
 	<tbody>
 		{% for k, v in pairs(apps) do %}
 		<tr>
+			<td>{{v.running and v.running.handle or ""}} </td>
 			<td>{{k}} </td>
 			<td>{{v.name}} </td>
 			<td>{{v.sn}} </td>

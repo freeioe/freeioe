@@ -61,6 +61,14 @@ function response.list()
 	return applist
 end
 
+function response.app_inst(name)
+	local app = applist[name]
+	if not app then
+		return nil, "Application does not exits"
+	end
+	return app.inst
+end
+
 function response.set_conf(inst, conf)
 	local app = applist[inst]
 	if not app or not app.inst then
