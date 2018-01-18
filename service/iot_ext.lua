@@ -223,7 +223,7 @@ function command.install_depends(app_inst)
 end
 
 function command.upgrade_ext(id, args)
-	local inst = args.inst
+	local inst = args.inst or args.name..".latest"
 	local name = args.name
 	local version, beta, editor = parse_version_string(args.version)
 

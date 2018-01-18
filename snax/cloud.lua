@@ -640,6 +640,10 @@ function accept.app_list()
 	end	
 end
 
+function accept.ext_upgrade(id, args)
+	skynet.call("IOT_EXT", "lua", "upgrade_ext", id, args)
+end
+
 function accept.sys_upgrade(id, args)
 	skynet.call("UPGRADER", "lua", "upgrade_core", id, args)
 end
