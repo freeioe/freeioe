@@ -87,7 +87,7 @@ local msg_handler = {
 			snax.self().post.app_upgrade(args.id, args.data)
 		end
 		if action == 'list' then
-			snax.self().post.app_list()
+			snax.self().post.app_list(args.id, args.data)
 		end
 		if action == 'conf' then
 			snax.self().post.app_conf(args.id, args.data)
@@ -129,7 +129,10 @@ local msg_handler = {
 		if action == 'upgrade/ack' then
 			snax.self().post.sys_upgrade_ack(args.id, args.data)
 		end
-		if action == 'upgrade_ext' then
+		if action == 'ext/list' then
+			snax.self().post.ext_list(args.id, args.data)
+		end
+		if action == 'ext/upgrade' then
 			snax.self().post.ext_upgrade(args.id, args.data)
 		end
 	end,
@@ -634,17 +637,14 @@ function accept.app_conf(id, args)
 	snax.self().post.fire_apps(100)
 end
 
-function accept.app_list()
+function accept.app_list(id, args)
 	local r, err = skynet.call("UPGRADER", "lua", "list_app")
+	snax.self().post.action_result('app', id, r, err or "Done")
 	if r then
 		if mqtt_client then
 			mqtt_client:publish(mqtt_id.."/apps", cjson.encode(r), 1, true)
 		end
 	end	
-end
-
-function accept.ext_upgrade(id, args)
-	skynet.call("IOT_EXT", "lua", "upgrade_ext", id, args)
 end
 
 function accept.sys_upgrade(id, args)
@@ -653,6 +653,20 @@ end
 
 function accept.sys_upgrade_ack(id, args)
 	skynet.call("UPGRADER", "lua", "upgrade_core_ack", id, args)
+end
+
+function accept.ext_list(id, args)
+	local r, err = skynet.call("IOT_EXT", "lua", "list")
+	snax.self().post.action_result('app', id, r, err or "Done")
+	if r then
+		if mqtt_client then
+			mqtt_client:publish(mqtt_id.."/exts", cjson.encode(r), 1, true)
+		end
+	end
+end
+
+function accept.ext_upgrade(id, args)
+	skynet.call("IOT_EXT", "lua", "upgrade_ext", id, args)
 end
 
 function accept.output_to_app(id, info)
