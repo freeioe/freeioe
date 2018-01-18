@@ -129,6 +129,9 @@ local msg_handler = {
 		if action == 'upgrade/ack' then
 			snax.self().post.sys_upgrade_ack(args.id, args.data)
 		end
+		if action == 'upgrade_ext' then
+			snax.self().post.ext_upgrade(args.id, args.data)
+		end
 	end,
 	output = function(topic, data, qos, retained)
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
