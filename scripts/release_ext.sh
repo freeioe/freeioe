@@ -28,7 +28,7 @@ fi
 mkdir -p __release/$TARGET_FOLDER
 mkdir -p __release/$TARGET_FOLDER/temp
 echo $2 > __release/$TARGET_FOLDER/temp/version
-echo $3 > __release/$TARGET_FOLDER/temp/version
+echo $3 >> __release/$TARGET_FOLDER/temp/version
 
 if [ "$TARGET_TYPE" == "luaclib" ] ; then
 	mkdir -p __release/$TARGET_FOLDER/temp/luaclib

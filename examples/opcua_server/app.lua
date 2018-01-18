@@ -127,7 +127,8 @@ local function create_handler(app)
 			local node = nodes[sn]
 			if node then
 				--- 删除设备对象
-				node:deleteNode(true)
+				server:deleteNode(node.devobj.id, true)
+				nodes[sn] = nil
 			end
 		end,
 		--- 处理设备对象修改消息
@@ -203,9 +204,11 @@ function app:start()
 	self._handler = create_handler(self)
 	self._api:set_handler(self._handler, true)
 
+	--- List all devices and then create opcua object
 	self._sys:fork(function()
 		local devs = self._api:list_devices() or {}
 		for sn, props in pairs(devs) do
+			--- Calling handler for creating opcua object
 			self._handler.on_add_device(self, sn, props)
 		end
 	end)

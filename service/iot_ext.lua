@@ -231,8 +231,8 @@ function command.upgrade_ext(id, args)
 	local depends = list_depends()
 	local applist = depends[inst]
 	local appmgr = snax.uniqueservice("appmgr")
-	for _,v in ipairs(applist) do
-		appmgr.req.stop(inst, "Upgrade Extension "..inst)
+	for _,app_inst in ipairs(applist) do
+		appmgr.req.stop(app_inst, "Upgrade Extension "..inst)
 	end
 
 	create_download(name, version, function(result, path)
@@ -247,8 +247,8 @@ function command.upgrade_ext(id, args)
 			os.execute("rm -rf "..path)
 			log.notice("Install Extension finished", name, version, r, status)
 
-			for _,v in ipairs(applist) do
-				local r, err = appmgr.req.start(inst)
+			for _,app_inst in ipairs(applist) do
+				local r, err = appmgr.req.start(app_inst)
 				if not r then
 					log.error("Failed to start application after extension upgraded. Error: "..err)
 				end

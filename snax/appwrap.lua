@@ -155,6 +155,12 @@ function init(name, conf, mgr_handle, mgr_type)
 	end
 	f:close()
 
+	local r, err = skynet.call("IOT_EXT", "lua", "install_depends", name)
+	if not r then
+		log.error("Failed to install depends for ", name, "error:", err)
+		return nil, "Failed to start app. install depends failed"
+	end
+
 	local lf, err = loadfile("./iot/apps/"..name.."/app.lua")
 	if not lf then
 		log.error("Loading app failed "..err)

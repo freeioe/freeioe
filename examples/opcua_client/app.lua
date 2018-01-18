@@ -130,7 +130,9 @@ function app:on_mod_device(app, sn, props)
 	local idx = self._idx
 
 	if not node or not node.vars then
+		return on_add_device(app, sn, props)
 	end
+
 	local vars = node.vars
 	for i, input in ipairs(props.inputs) do
 		local var = vars[input.name]
@@ -140,6 +142,20 @@ function app:on_mod_device(app, sn, props)
 			var:setDescription(opcua.LocalizedText.new("zh_CN", input.desc))
 		end
 	end
+end
+
+function app:on_del_device(app, sn)
+	if not self:is_connected() then
+		return
+	end
+	
+	local node = self._nodes[sn]
+	if not node then
+		return
+	end
+	
+	self._client:deleteNode(node.devobj.id)
+	self._nodes[sn] = nil
 end
 
 function app:on_post_input(app, sn, input, prop, value, timestamp, quality)
@@ -230,7 +246,7 @@ function app:start()
 			return self:on_add_device(app, sn, props)
 		end,
 		on_del_device = function(app, sn)
-			print(app, sn)
+			return self:on_del_device(app, sn)
 		end,
 		on_mod_device = function(app, sn, props)
 			return self:on_mod_device(app, sn, props)

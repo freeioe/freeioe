@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 local modbus = require 'libmodbus'
 
-local app = class("XXXX_App")
+local app = class("Modbus.IO.libmodbus")
 
 function app:initialize(name, sys, conf)
 	self._name = name
