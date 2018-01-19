@@ -98,6 +98,9 @@ local msg_handler = {
 		if action == 'stop' then
 			snax.self().post.app_stop(args.id, args.data)
 		end
+		if action == 'query_log' then
+			snax.self().post.app_query_log(args.id, args.data)
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
@@ -619,7 +622,7 @@ function accept.app_start(id, args)
 	local conf = args.conf
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.start(inst, conf)
-	snax.self().post.action_result('app', id, r and true or false, err or "Done")
+	snax.self().post.action_result('app', id, r, err or "Done")
 end
 
 function accept.app_stop(id, args)
@@ -645,6 +648,19 @@ function accept.app_list(id, args)
 			mqtt_client:publish(mqtt_id.."/apps", cjson.encode(r), 1, true)
 		end
 	end	
+end
+
+function accept.app_query_log(id, args)
+	local log_finder = require 'log_finder'
+	local app = args.name
+	local count = tonumber(args.count) or 60
+	local log, err = log_finder.by_app(app, count) 
+	snax.self().post.action_result('app', id, r, err or "Done")
+	if log then
+		if mqtt_client then
+			mqtt_client:publish(mqtt_id.."/app/log", cjson.encode({name=app, log=log}), 1, false)
+		end
+	end
 end
 
 function accept.sys_upgrade(id, args)
@@ -696,7 +712,7 @@ function accept.command_to_app(id, cmd)
 end
 
 function accept.action_result(action, id, result, message)
-	local result = result or false
+	local result = result and true or false
 	if mqtt_client then
 		local r = {
 			id = id,
