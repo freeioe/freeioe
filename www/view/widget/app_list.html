@@ -13,7 +13,7 @@
 	<tbody>
 		{% for k, v in pairs(apps) do %}
 		<tr>
-			<td>{{v.running and v.running.handle or ""}} </td>
+			<td>{{v.running and string.format("%08x", v.running.handle) or ""}} </td>
 			<td>{{k}} </td>
 			<td>{{v.name}} </td>
 			<td>{{v.sn}} </td>

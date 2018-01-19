@@ -31,8 +31,41 @@ local function tail_log_file(file, max_line)
 	return s
 end
 
+local function filter_log_file(file, max_line, s_match)
+	local dir = lfs.currentdir()
+	local cmd = 'tail -n '..max_line..' '..dir..'/logs/'..file
+	local f, err = io.popen(cmd)
+	if not f then
+		return {}
+	end
 
-function _M.by_app(app, count)
+	local l = {}
+	for line in f:lines() do
+		if string.match(line, s_match) then
+			l[#l + 1] = line
+			print(line)
+		end
+	end
+	return l
+end
+
+function _M.by_app(app_name, count)
+	local appmgr = snax.uniqueservice("appmgr")
+	local app_inst, err = appmgr.req.app_inst(app_name)
+	if not app_inst then
+		return nil, err
+	end
+
+	local log_inst = string.format("%08x", app_inst.handle)
+	local filter = "%["..log_inst.."%]"
+
+	local sys_log = filter_log_file('skynet_sys.log', count, filter)
+	local log = filter_log_file('skynet.log', count, filter)
+
+	for _, l in ipairs(log) do
+		sys_log[#sys_log + 1] = l
+	end
+	return table.concat(sys_log, '\n')
 end
 
 function _M.by_type(typ, count)
