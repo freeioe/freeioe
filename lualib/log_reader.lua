@@ -49,6 +49,7 @@ local function filter_log_file(file, max_line, s_match)
 	return l
 end
 
+-- Return {log={...}, sys={...}}
 function _M.by_app(app_name, count)
 	local appmgr = snax.uniqueservice("appmgr")
 	local app_inst, err = appmgr.req.app_inst(app_name)
@@ -62,12 +63,20 @@ function _M.by_app(app_name, count)
 	local sys_log = filter_log_file('skynet_sys.log', count, filter)
 	local log = filter_log_file('skynet.log', count, filter)
 
+	return {
+		sys = sys_log,
+		log = log
+	}
+
+	--[[
 	for _, l in ipairs(log) do
 		sys_log[#sys_log + 1] = l
 	end
 	return table.concat(sys_log, '\n')
+	]]--
 end
 
+-- Return plain text log
 function _M.by_type(typ, count)
 	local s = nil
 	if typ == 'sys' then
