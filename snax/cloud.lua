@@ -658,7 +658,7 @@ function accept.app_query_log(id, args)
 	snax.self().post.action_result('app', id, r, err or "Done")
 	if log then
 		if mqtt_client then
-			mqtt_client:publish(mqtt_id.."/app/log", cjson.encode({name=app, log=log}), 1, false)
+			mqtt_client:publish(mqtt_id.."/app_log", cjson.encode({name=app, log=log}), 1, false)
 		end
 	end
 end
