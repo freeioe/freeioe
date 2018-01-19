@@ -43,7 +43,7 @@ local function filter_log_file(file, max_line, s_match)
 	for line in f:lines() do
 		if string.match(line, s_match) then
 			l[#l + 1] = line
-			print(line)
+			--print(line)
 		end
 	end
 	return l

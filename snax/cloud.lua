@@ -651,10 +651,10 @@ function accept.app_list(id, args)
 end
 
 function accept.app_query_log(id, args)
-	local log_finder = require 'log_finder'
+	local log_reader = require 'log_reader'
 	local app = args.name
-	local count = tonumber(args.count) or 60
-	local log, err = log_finder.by_app(app, count) 
+	local max_count = tonumber(args.max_count) or 60
+	local log, err = log_reader.by_app(app, max_count) 
 	snax.self().post.action_result('app', id, r, err or "Done")
 	if log then
 		if mqtt_client then
