@@ -285,7 +285,7 @@ local Handler = {
 		end
 	end,
 	on_event = function(app, sn, level, data, timestamp)
-		if enable_event_upload and (tonumber(level) < enable_event_upload)  then
+		if enable_event_upload >= 0 and (tonumber(level) >= enable_event_upload)  then
 			return
 		end
 		event_buffer:handle(function(sn, level, data, timestamp)
