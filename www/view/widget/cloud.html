@@ -87,6 +87,7 @@
 			<th>{{_("Stat Upload")}}</th>
 			<th>{{_("Comm Upload")}}</th>
 			<th>{{_("Log Upload")}}</th>
+			<th>{{_("Event Upload")}}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -143,6 +144,19 @@
 				</div>
 				{% end %}
 
+			</td>
+			<td>
+				<div class="ui action input">
+					{% if edit_enable then %}
+					<input id="event_upload" value="{{cfg.EVENT_UPLOAD}}" type="number">
+					<button id="event_upload_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+					{% else %}
+					<input id="event_upload" value="{{cfg.EVENT_UPLOAD}}" type="number" readonly="true">
+					{% end %}
+				</div>
 			</td>
 		</tr>
 	</tbody>

@@ -38,6 +38,8 @@ return {
 			elseif option == 'comm' then
 				--print(option, tonumber(post.enable) or 0)
 				cloud.post.enable_comm(tonumber(post.enable) or 0)
+			elseif option == 'event' then
+				cloud.post.enable_event(tonumber(post.enable) or -1)
 			else
 				info = string.format(_("Action %s is not allowed"), option)
 			end

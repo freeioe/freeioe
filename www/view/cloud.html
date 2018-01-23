@@ -75,6 +75,10 @@ $(document).ready(function(){
 		var enable = $('#data_upload').is(':checked');
 		enable_option('data', enable);
 	});
+	$("#event_upload_btn").click(function() {
+		var value = $('#event_upload').val();
+		enable_option('event', value);
+	});
 	$("#stat_upload").change(function() {
 		var enable = $('#stat_upload').is(':checked');
 		enable_option('stat', enable);
