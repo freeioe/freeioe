@@ -120,6 +120,18 @@ function app:run(tms)
 			self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
 		end
 		calc_uptime()
+
+		--[[
+		self._sys:timeout(100, function()
+			self._log:debug("Fire event")
+			local data = {
+				['type'] = "EEE",
+				info = "System Started!"
+			}
+			local level = 0
+			self._dev:fire_event(level, data, self._sys:time())
+		end)
+		]]--
 	end
 
 	local loadavg = sysinfo.loadavg()

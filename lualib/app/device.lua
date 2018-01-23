@@ -19,6 +19,7 @@ function device:initialize(api, sn, props, readonly)
 	self._data_chn = api._data_chn
 	self._ctrl_chn = api._ctrl_chn
 	self._comm_chn = api._comm_chn
+	self._event_chn = api._event_chn
 	self._readonly = readonly
 
 	self._inputs_map = {}
@@ -140,6 +141,10 @@ end
 
 function device:dump_comm(dir, ...)
 	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
+end
+
+function device:fire_event(level, data, timestamp)
+	return self._event_chn:publish(self._app_name, self._sn, level, data, timestamp)
 end
 
 function device:stat(name)

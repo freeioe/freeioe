@@ -28,6 +28,7 @@ local close_connection = false
 --- Cloud options
 local enable_data_upload = nil -- true
 local enable_stat_upload = nil
+local enable_event_upload = nil
 local enable_comm_upload = nil
 local max_enable_comm_upload = 60 * 10
 local enable_log_upload = nil
@@ -35,6 +36,8 @@ local max_enable_log_upload = 60 * 10
 
 local api = nil
 local cov = nil
+local log_buffer = nil
+local event_buffer = nil
 
 --- Log function handler
 local log_func = nil
@@ -121,6 +124,9 @@ local msg_handler = {
 		end
 		if action == 'enable/beta' then
 			snax.self().post.enable_beta(tonumber(args.data) == 1)
+		end
+		if action == 'enable/event' then
+			snax.self().post.enable_event(tonumber(args.data))
 		end
 		if action == 'conf' then
 			local conf = args.data
@@ -241,6 +247,7 @@ local function load_conf()
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
+	enable_event_upload = datacenter.get("CLOUD", "EVENT_UPLOAD")
 
 	load_cov_conf()
 end
@@ -276,6 +283,16 @@ local Handler = {
 			}
 			return mqtt_client:publish(key, cjson.encode(msg), 1, false)
 		end
+	end,
+	on_event = function(app, sn, level, data, timestamp)
+		if enable_event_upload and (tonumber(level) < enable_event_upload)  then
+			return
+		end
+		event_buffer:handle(function(sn, level, data, timestamp)
+			if mqtt_client then
+				return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, level, data, timestamp}), 1, false)
+			end
+		end, sn, level, data, timestamp)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
@@ -510,10 +527,14 @@ function accept.enable_beta(enable)
 	end
 end
 
+function accept.enable_event(level)
+	enable_event_upload = level
+	datacenter.set('CLOUD', 'EVENT_UPLOAD', enable_event_upload)
+end
+
 ---
 -- When register to logger service, this is used to handle the log messages
 --
-local log_buffer = nil
 function accept.log(ts, lvl, ...)
 	local id = mqtt_id
 	log_buffer:handle(function(ts, lvl, ...)
@@ -735,6 +756,7 @@ function init()
 
 	comm_buffer = cyclebuffer:new(32, "COMM")
 	log_buffer = cyclebuffer:new(128, "LOG")
+	event_buffer = cyclebuffer:new(16, "EVENT")
 
 	connect_log_server(true)
 

@@ -38,6 +38,7 @@ local function cfg_defaults()
 		PORT = 1883,
 		KEEPALIVE = 300,
 		DATA_UPLOAD = true,
+		EVENT_UPLOAD = 0,
 		PKG_HOST_URL = "iot.symgrid.com",
 	}
 end

@@ -130,6 +130,10 @@ function init(...)
 	dc.set("MC", "APP", "STAT", chn.channel)
 	mc_map['STAT'] = chn
 
+	local chn = mc.new()
+	dc.set("MC", "APP", "EVENT", chn.channel)
+	mc_map['EVENT'] = chn
+
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
@@ -152,6 +156,7 @@ function exit(...)
 	dc.set("MC", "APP", "CTRL", nil)
 	dc.set("MC", "APP", "COMM", nil)
 	dc.set("MC", "APP", "STAT", nil)
+	dc.set("MC", "APP", "EVENT", nil)
 	for k,v in mc_map do
 		v:delete()
 	end

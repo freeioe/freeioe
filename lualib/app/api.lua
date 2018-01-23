@@ -66,6 +66,16 @@ function api:stat_dispatch(channel, source, app, sn, ...)
 	end
 end
 
+function api:event_dispatch(channel, source, app, sn, ...)
+	--log.trace('Event Dispatch', channel, source, ...)
+	local f = self._handler.on_event
+	if f then
+		return f(app, sn, ...)
+	else
+		log.trace('No handler for on_event')
+	end
+end
+
 function api:set_handler(handler, watch_data)
 	self._handler = handler
 	local mgr = self._mgr_snax
@@ -135,6 +145,23 @@ function api:set_handler(handler, watch_data)
 		if self._stat_chn then
 			self._stat_chn:unsubscribe()
 			self._stat_chn = nil
+		end
+	end
+
+	if handler then
+		self._event_chn = mc.new({
+			channel = mgr.req.get_channel('event'),
+			dispatch = function(channel, source, ...)
+				self:event_dispatch(channel, source, ...)
+			end
+		})
+		if handler.on_event then
+			self._event_chn:subscribe()
+		end
+	else
+		if self._event_chn then
+			self._event_chn:unsubscribe()
+			self._event_chn = nil
 		end
 	end
 end
