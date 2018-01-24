@@ -286,7 +286,7 @@ local try_read_iot_sn_from_config = function()
 		local s, err = _M.exec('uci get iot.@system[0].sn')
 		if s and string.len(s) > 0 then
 			if string.sub(s, -1) == "\n" then
-				return string.sub(s, 1, -1)
+				return string.sub(s, 1, -2)
 			end
 			return s
 		end
