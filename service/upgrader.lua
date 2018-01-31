@@ -1,10 +1,8 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
-local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo' 
 local lfs = require 'lfs'
-local cjson = require 'cjson.safe'
 local datacenter = require 'skynet.datacenter'
 local pkg_api = require 'pkg_api'
 
