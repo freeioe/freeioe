@@ -56,16 +56,25 @@ local function create_handler(app)
 	return {
 		--- 处理设备对象添加消息
 		on_add_device = function(app, sn, props)
+			return self:fire_devices(1000)
 		end,
 		--- 处理设备对象删除消息
 		on_del_device = function(app, sn)
+			return self:fire_devices(1000)
 		end,
 		--- 处理设备对象修改消息
 		on_mod_device = function(app, sn, props)
+			return self:fire_devices()
 		end,
 		--- 处理设备输入项数值变更消息
 		on_input = function(app, sn, input, prop, value, timestamp, quality)
 			return self:handle_input(app, sn, input, prop, value, timestamp, quality)
+		end,
+		on_event = function(app, sn, level, data, timestamp)
+			return self:handle_event(app, sn, level, data, timestamp)
+		end,
+		on_stat = function(app, sn, stat, prop, value, timestamp)
+			return self:handle_stat(app, sn, stat, prop, value, timestamp)
 		end,
 	}
 end
@@ -84,17 +93,23 @@ function app:start_reconnect()
 
 end
 
-function app:create_event_msg(etype, msg)
+function app:create_event_msg(app, sn, level, data, timestamp)
 	return {
 		header = {
-			eventType = etype,
-			from = "/devices/"..self._device_id.."/services/gw",
-			to = "/event/v1.1.0/devices/"..self._device_id.."/services/gw",
+			eventType = "event",
+			from = "/devices/"..self._device_id.."/services/"..sn,
+			to = "/event/v1.1.0/devices/"..self._device_id.."/services/"..sn,
 			access_token = self._refresh_token,
-			timestamp = "20180201T110600Z",
-			eventTime = "20180201T110600Z"
+			timestamp = huawei_timestamp(timestamp),
+			eventTime = huawei_timestamp(timestamp),
 		},
-		body = msg,
+		body = {
+			app = app,
+			sn = sn,
+			level = level,
+			data = data,
+			timestamp = timestamp
+		},
 	}
 end
 
@@ -125,6 +140,40 @@ function app:handle_input(app, sn, input, prop, value, timestamp, quality)
 	if self._mqtt_client then
 		self._mqtt_client:publish(".cloud.signaltrans.v2.categories.data", cjson.encode(msg), 1, false)
 	end
+end
+
+function app:handle_event(app, sn, level, data, timestamp)
+	local msg = self:create_event_msg("event", app, sn, level, data, timestamp)
+	if self._mqtt_client then
+		self._mqtt_client:publish(".cloud.signaltrans.v2.categories.event", cjson.encode(msg), 1, false)
+	end
+end
+
+function app:handle_stat(app, sn, stat, prop, value, timestamp)
+end
+
+function app:fire_devices(timeout)
+	local timeout = timeout or 100
+	if self._fire_device_timer  then
+		return
+	end
+
+	self._fire_device_timer = function()
+		local devs = self._api:list_devices() or {}
+		local r, err = self._huawei_http:sync_devices(devs)
+		if not r then
+			self._log:error("Sync device failed", err)
+		else
+			self._log:debug("Sync device return", cjson.encode(r))
+		end
+	end
+
+	self._sys:timeout(timeout, function()
+		if self._fire_device_timer then
+			self._fire_device_timer()
+			self._fire_device_timer = nil
+		end
+	end)
 end
 
 function app:connect_proc()
@@ -236,6 +285,7 @@ function app:huawei_http_login()
 	if r then
 		if r and r.refreshToken then
 			self._log:notice("Login done!", cjson.encode(r))
+			self._huawei_http:set_access_token(r.accessToken)
 			self._mqtt_id = r.mqttClientId
 			self._mqtt_host = r.addrHAServer
 			self._mqtt_port = 8883
@@ -258,6 +308,7 @@ function app:huawei_http_refresh_token()
 	if r then
 		if r and r.refreshToken then
 			self._log:notice("Refresh token done!", cjson.encode(r))
+			self._huawei_http:set_access_token(r.accessToken)
 			self._refresh_token = r.refreshToken
 			self._refresh_token_timeout = os.time() + (r.timeout or 43199)
 			return
