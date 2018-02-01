@@ -9,6 +9,8 @@ local cjson = require 'cjson.safe'
 local cyclebuffer = require 'cyclebuffer'
 local uuid = require 'uuid'
 local md5 = require 'md5'
+local sha1 = require 'hashings.sha1'
+local hmac = require 'hashings.hmac'
 
 --- Connection options
 local mqtt_id = nil --"UNKNOWN_ID"
@@ -243,6 +245,7 @@ local function load_conf()
 	mqtt_host = datacenter.get("CLOUD", "HOST")
 	mqtt_port = datacenter.get("CLOUD", "PORT")
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
+	mqtt_secret = datacenter.get("CLOUD", "SECRET")
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
@@ -342,9 +345,9 @@ connect_proc = function(clean_session, username, password)
 	if username then
 		client:login_set(username, password)
 	else
-		--client:login_set('root', 'root')
-		local pwd = md5.sumhexa(mqtt_id..'ZGV2aWNlIGlkCg==')
-		client:login_set(mqtt_id, pwd)
+		local id = "dev="..mqtt_id.."|time="..os.time()
+		local pwd = hmac:new(sha1, mqtt_secret, id):hexdigest()
+		client:login_set(id, string.lower(pwd))
 	end
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then

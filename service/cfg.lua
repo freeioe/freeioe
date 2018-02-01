@@ -40,6 +40,7 @@ local function cfg_defaults()
 		DATA_UPLOAD = true,
 		EVENT_UPLOAD = 0,
 		PKG_HOST_URL = "iot.symgrid.com",
+		SECRET = "ZGV2aWNlIGlkCg==",
 	}
 end
 
