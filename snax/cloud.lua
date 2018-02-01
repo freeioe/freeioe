@@ -347,7 +347,7 @@ connect_proc = function(clean_session, username, password)
 	else
 		local id = "dev="..mqtt_id.."|time="..os.time()
 		local pwd = hmac:new(sha1, mqtt_secret, id):hexdigest()
-		client:login_set(id, string.lower(pwd))
+		client:login_set(id, pwd)
 	end
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
