@@ -45,6 +45,8 @@ function app:initialize(name, sys, conf)
 	local app_id = conf.app_id or "fxfB_JFz_rvuihHjxOj_kpWcgjQb"
 
 	self._huawei_http = huawei_http:new(self._sys, host, port, app_id)
+
+	self._close_connection = false
 end
 
 -- @param app: 应用实例对象
@@ -178,6 +180,8 @@ end
 
 function app:connect_proc()
 	local log = self._log
+	local sys = self._sys
+
 	local mqtt_id = self._mqtt_id
 	local mqtt_host = self._mqtt_host
 	local mqtt_port = self._mqtt_port
@@ -185,24 +189,28 @@ function app:connect_proc()
 	local username = self._device_id
 	local password = self._secret
 
+	-- 创建MQTT客户端实例
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	client:version_set(mosq.PROTOCOL_V311)
 	client:login_set(username, password)
-	client:tls_set(self._sys:app_dir().."/rootcert.pem")
+	client:tls_set(sys:app_dir().."/rootcert.pem")
 	client:tls_opts_set(0)
 	client:tls_insecure_set(1)
 
+	-- 注册回调函数
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
 			log:notice("ON_CONNECT", success, rc, msg) 
 			--client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			self._mqtt_client = client
-			self._mqtt_client_last = self._sys:time()
+			self._mqtt_client_last = sys:time()
 			for _, v in ipairs(categories) do
 				client:subscribe("/gws/"..self._device_id.."/signaltrans/v2/categories/"..v, 1)
 			end
 			--client:subscribe("+/#", 1)
+			--
 			mqtt_reconnect_timeout = 100
+			self:fire_devices(1000)
 		else
 			log:warning("ON_CONNECT", success, rc, msg) 
 			self:start_reconnect()
@@ -210,11 +218,10 @@ function app:connect_proc()
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log:warning("ON_DISCONNECT", success, rc, msg) 
-		if not enable_async and self._mqtt_client then
+		if self._mqtt_client then
 			self:start_reconnect()
 		end
 	end
-
 	client.ON_LOG = function(...)
 		--print(...)
 	end
@@ -224,67 +231,64 @@ function app:connect_proc()
 
 	--client:will_set(self._mqtt_id.."/status", "OFFLINE", 1, true)
 
-	if enable_async then
-		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
-		client:loop_start()
-	else
-		close_connection = false
-		local r, err
-		local ts = 1
-		while not r do
-			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
-			if not r then
-				log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
-				self.sys:sleep(ts * 500)
-				ts = ts * 2
-				if ts >= 64 then
-					client:destroy()
-					self.sys:timeout(100, function() self:connect_proc() end)
-					-- We meet bug that if client reconnect to broker with lots of failures, it's socket will be broken. 
-					-- So we will re-create the client
-					return
-				end
+	self._close_connection = false
+	local r, err
+	local ts = 1
+	while not r do
+		r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+		if not r then
+			log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+			sys:sleep(ts * 500)
+			ts = ts * 2
+			if ts >= 64 then
+				client:destroy()
+				sys:timeout(100, function() self:connect_proc() end)
+				-- We meet bug that if client reconnect to broker with lots of failures, it's socket will be broken. 
+				-- So we will re-create the client
+				return
 			end
 		end
+	end
 
-		self._mqtt_client = client
+	self._mqtt_client = client
 
-		--- Worker thread
-		while self._mqtt_client and not close_connection do
-			self._sys:sleep(0)
-			if self._mqtt_client then
-				self._mqtt_client:loop(50, 1)
-			else
-				self._sys:sleep(50)
-			end
-		end
+	--- Worker thread
+	while self._mqtt_client and not self._close_connection do
+		sys:sleep(0)
 		if self._mqtt_client then
-			self._mqtt_client:disconnect()
-			log:notice("Cloud Connection Closed!")
+			self._mqtt_client:loop(50, 1)
+		else
+			sys:sleep(50)
 		end
+	end
+	if self._mqtt_client then
+		self._mqtt_client:disconnect()
+		self._mqtt_client = nil
+		log:notice("Cloud Connection Closed!")
 	end
 end
 
 function app:disconnect()
-	local client = self._mqtt_client
-	self._log:debug("Cloud Connection Closing!")
+	if not self._mqtt_client then
+		return
+	end
 
-	if enable_async then
-		self._mqtt_client = nil
-		client:disconnect()
-		client:loop_stop()
-		self._log:notice("Cloud Connection Closed!")
-	else
-		close_connection = true
+	self._log:debug("Cloud Connection Closing!")
+	self._close_connection = true
+	while self._mqtt_client do
+		self._sys:sleep(10)
 	end
 	return true
 end
 
 function app:huawei_http_login()
+	self:disconnect()
 	local r, err = self._huawei_http:login(self._device_id, self._secret)
 	if r then
 		if r and r.refreshToken then
-			self._log:notice("Login done!", cjson.encode(r))
+			self._retry_login = 100
+
+			self._log:notice("HuaWei login done!", cjson.encode(r))
 			self._huawei_http:set_access_token(r.accessToken)
 			self._mqtt_id = r.mqttClientId
 			self._mqtt_host = r.addrHAServer
@@ -300,7 +304,13 @@ function app:huawei_http_login()
 	self._refresh_token = nil
 	self._refresh_token_timeout = nil
 	self._log:error("Refresh token failed!", r, err)
-	self._sys:timeout(10, function() self:huawei_http_login() end)
+
+	-- Retry login
+	if not self._retry_login or self._retry_login > 1000 * 128 then
+		self._retry_login = 100
+	end
+	self._sys:timeout(self._retry_login, function() self:huawei_http_login() end)
+	self._retry_login = self._retry_login * 2
 end
 
 function app:huawei_http_refresh_token()
@@ -330,19 +340,7 @@ function app:start()
 	self._sys:fork(function()
 		self:huawei_http_login()
 	end)
-
-	--[[
-	--- List all devices and then create opcua object
-	self._sys:fork(function()
-		local devs = self._api:list_devices() or {}
-		for sn, props in pairs(devs) do
-			--- Calling handler for creating opcua object
-			self._handler.on_add_device(self, sn, props)
-		end
-	end)
-	]]--
 	
-	self._log:notice("Started!!!!")
 	return true
 end
 
