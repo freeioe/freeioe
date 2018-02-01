@@ -12,16 +12,11 @@ function api:initialize(sys, host, port, appid)
 	self._appid = appid
 end
 
-function api:login(device_id, secret)
-	local body = cjson.encode({
-		appId = self._appid,
-		deviceId = device_id,
-		secret = secret
-	})
-
+function api:post(url, body)
+	local body = cjson.encode(body)
 	local result = {}
 	local easy_handle = lcurl.easy()
-		:setopt_url("https://"..self._host..":"..self._port.."/iocm/dev/sec/v1.1.0/login")
+		:setopt_url("https://"..self._host..":"..self._port.."/iocm/dev/sec/v1.1.0/"..url)
 		:setopt_writefunction(function(str) 
 			result[#result + 1] = str
 		end)
@@ -47,6 +42,22 @@ function api:login(device_id, secret)
 
 	local str = table.concat(result)
 	return cjson.decode(str)
+
+end
+
+function api:login(device_id, secret)
+	local body = {
+		appId = self._appid,
+		deviceId = device_id,
+		secret = secret
+	}
+	return self:post("login", body)
+end
+
+function api:refresh_token(refresh_token)
+	return self:post("refreshToken", {
+		refreshToken = refresh_token
+	})
 end
 
 return api

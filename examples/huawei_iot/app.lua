@@ -1,6 +1,22 @@
 local class = require 'middleclass'
 local mosq = require 'mosquitto'
 local huawei_http = require 'huawei_http'
+local cjson = require 'cjson.safe'
+
+local categories = {
+	"event",
+	"data",
+	"rawData",
+	"alarm",
+	"command",
+	"reply",
+	"response",
+}
+local mqtt_reconnect_timeout = 100
+
+local function huawei_timestamp(timestamp)
+	return os.date("%Y%m%dT%H%M%SZ", math.floor(timestamp))
+end
 
 --- 注册对象(请尽量使用唯一的标识字符串)
 local app = class("HUAWEI_IOT_CLOUD")
@@ -21,6 +37,14 @@ function app:initialize(name, sys, conf)
 	--- 获取日志接口
 	self._log = sys:logger()
 	self._nodes = {}
+
+	self._device_id = conf.device_id or "6bcfe38c-936b-4ffb-9913-54ef2232ba9a"
+	self._secret = conf.secret or "2efe9e3c6d7ca4317c18"
+	local host = conf.server or "117.78.47.188"
+	local port = conf.port or "8943"
+	local app_id = conf.app_id or "fxfB_JFz_rvuihHjxOj_kpWcgjQb"
+
+	self._huawei_http = huawei_http:new(self._sys, host, port, app_id)
 end
 
 -- @param app: 应用实例对象
@@ -28,8 +52,7 @@ local function create_handler(app)
 	local api = app._api
 	local server = app._server
 	local log = app._log
-	local idx = app._idx
-	local nodes = app._nodes
+	local self = app
 	return {
 		--- 处理设备对象添加消息
 		on_add_device = function(app, sn, props)
@@ -42,15 +65,17 @@ local function create_handler(app)
 		end,
 		--- 处理设备输入项数值变更消息
 		on_input = function(app, sn, input, prop, value, timestamp, quality)
+			return self:handle_input(app, sn, input, prop, value, timestamp, quality)
 		end,
 	}
 end
 
 function app:start_reconnect()
+	self._mqtt_client = nil
 	if true then
 		return
 	end
-	self._mqtt_client = nil
+
 	self._sys:timeout(mqtt_reconnect_timeout, function() self:connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
 	if mqtt_reconnect_timeout > 10 * 60 * 100 then
@@ -59,14 +84,57 @@ function app:start_reconnect()
 
 end
 
+function app:create_event_msg(etype, msg)
+	return {
+		header = {
+			eventType = etype,
+			from = "/devices/"..self._device_id.."/services/gw",
+			to = "/event/v1.1.0/devices/"..self._device_id.."/services/gw",
+			access_token = self._refresh_token,
+			timestamp = "20180201T110600Z",
+			eventTime = "20180201T110600Z"
+		},
+		body = msg,
+	}
+end
+
+function app:create_data_msg(app, sn, input, prop, value, timestamp, quality)
+	return {
+		header = {
+			method = "PUT",
+			from = "/device/"..sn,
+			to = "/data/v1.1.0/devices/"..sn.."/services/data",
+			access_token = self._refresh_token,
+			timestamp = huawei_timestamp(timestamp),
+			eventTime = huawei_timestamp(timestamp),
+		},
+		body = {
+			app = app,
+			sn = sn,
+			input = input,
+			prop = prop,
+			value = value,
+			timestamp = timestamp,
+			quality = quality
+		}
+	}
+end
+
+function app:handle_input(app, sn, input, prop, value, timestamp, quality)
+	local msg = self:create_data_msg(app, sn, input, prop, value, timestamp, quality)
+	if self._mqtt_client then
+		self._mqtt_client:publish(".cloud.signaltrans.v2.categories.data", cjson.encode(msg), 1, false)
+	end
+end
+
 function app:connect_proc()
 	local log = self._log
 	local mqtt_id = self._mqtt_id
 	local mqtt_host = self._mqtt_host
 	local mqtt_port = self._mqtt_port
 	local clean_session = self._clean_session or true
-	local username = self._username
-	local password = self._password
+	local username = self._device_id
+	local password = self._secret
 
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	client:version_set(mosq.PROTOCOL_V311)
@@ -76,18 +144,15 @@ function app:connect_proc()
 	client:tls_insecure_set(1)
 
 	client.ON_CONNECT = function(success, rc, msg) 
-		print(success)
 		if success then
 			log:notice("ON_CONNECT", success, rc, msg) 
-			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
+			--client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			self._mqtt_client = client
 			self._mqtt_client_last = self._sys:time()
-			--[[
-			for _, v in ipairs(wildtopics) do
-				--client:subscribe("ALL/"..v, 1)
-				client:subscribe(mqtt_id.."/"..v, 1)
+			for _, v in ipairs(categories) do
+				client:subscribe("/gws/"..self._device_id.."/signaltrans/v2/categories/"..v, 1)
 			end
-			]]--
+			--client:subscribe("+/#", 1)
 			mqtt_reconnect_timeout = 100
 		else
 			log:warning("ON_CONNECT", success, rc, msg) 
@@ -108,7 +173,7 @@ function app:connect_proc()
 		print(...)
 	end
 
-	client:will_set(self._mqtt_id.."/status", "OFFLINE", 1, true)
+	--client:will_set(self._mqtt_id.."/status", "OFFLINE", 1, true)
 
 	if enable_async then
 		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
@@ -167,26 +232,42 @@ function app:disconnect()
 end
 
 function app:huawei_http_login()
-	local api = huawei_http:new(self._sys, "117.78.47.187", "8943", "fxfB_JFz_rvuihHjxOj_kpWcgjQa")
-
-	local device_id = "6bcfe38c-936b-4ffb-9913-54ef2232ba99"
-	local secret = "2efe9e3c6d7ca4317c17"
-	local r, err = api:login(device_id, secret)
+	local r, err = self._huawei_http:login(self._device_id, self._secret)
 	if r then
 		if r and r.refreshToken then
-			local srv = r.addrHAServer
-			local token = r.refreshToken
-			local mqtt_id = r.mqttClientId
-			print(srv, token, mqtt_id)
-			self._mqtt_id = mqtt_id
-			self._mqtt_host = srv
+			self._log:notice("Login done!", cjson.encode(r))
+			self._mqtt_id = r.mqttClientId
+			self._mqtt_host = r.addrHAServer
 			self._mqtt_port = 8883
-			self._username = device_id
-			self._password = secret
+			self._refresh_token = r.refreshToken
+			self._refresh_token_timeout = os.time() + (r.timeout or 43199)
 
-			self._sys:timeout(10, function() self:connect_proc(true, device_id, secret) end)
+			self._sys:timeout(10, function() self:connect_proc() end)
+			return
 		end
 	end
+
+	self._refresh_token = nil
+	self._refresh_token_timeout = nil
+	self._log:error("Refresh token failed!", r, err)
+	self._sys:timeout(10, function() self:huawei_http_login() end)
+end
+
+function app:huawei_http_refresh_token()
+	local r, err = self._huawei_http:refresh_token(self._refresh_token)
+	if r then
+		if r and r.refreshToken then
+			self._log:notice("Refresh token done!", cjson.encode(r))
+			self._refresh_token = r.refreshToken
+			self._refresh_token_timeout = os.time() + (r.timeout or 43199)
+			return
+		end
+	end
+	-- TODO: disconnect mqtt
+	self._refresh_token = nil
+	self._refresh_token_timeout = nil
+	self._log:error("Refresh token failed!", r, err)
+	self._sys:timeout(10, function() self:huawei_http_login() end)
 end
 
 --- 应用启动函数
@@ -221,15 +302,11 @@ end
 
 --- 应用运行入口
 function app:run(tms)
-	--- OPCUA模块运行入口
-	while self._server.running do
-		local ms = self._server:run_once(false)
-		--- 暂停OPCUA模块运行，处理IOT系统消息
-		self._sys:sleep(ms % 10)
+	if self._refresh_token_timeout and self._refresh_token_timeout - os.time() < 60  then
+		self:huawei_http_refresh_token()
 	end
-	print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
-	return 1000
+	return 1000 * 10 -- 10 seconds
 end
 
 --- 返回应用对象
