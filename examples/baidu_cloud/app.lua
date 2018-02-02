@@ -158,9 +158,13 @@ function app:connect_proc()
 	local password = self._password
 
 	-- 创建MQTT客户端实例
+	log:debug("Baidu Cloud MQTT", mqtt_id, mqtt_host, mqtt_port, username, password)
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	client:version_set(mosq.PROTOCOL_V311)
 	client:login_set(username, password)
+	if self._enable_tls then
+		client:tls_set(sys:app_dir().."/root_cert.pem")
+	end
 
 	-- 注册回调函数
 	client.ON_CONNECT = function(success, rc, msg) 
