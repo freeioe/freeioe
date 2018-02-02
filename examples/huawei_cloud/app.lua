@@ -40,6 +40,8 @@ function app:initialize(name, sys, conf)
 
 	self._device_id = conf.device_id or "6bcfe38c-936b-4ffb-9913-54ef2232ba9a"
 	self._secret = conf.secret or "2efe9e3c6d7ca4317c18"
+
+	--- HTTP Configruation
 	local host = conf.server or "117.78.47.188"
 	local port = conf.port or "8943"
 	local app_id = conf.app_id or "fxfB_JFz_rvuihHjxOj_kpWcgjQb"
@@ -83,16 +85,11 @@ end
 
 function app:start_reconnect()
 	self._mqtt_client = nil
-	if true then
-		return
-	end
-
 	self._sys:timeout(mqtt_reconnect_timeout, function() self:connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
 	if mqtt_reconnect_timeout > 10 * 60 * 100 then
 		mqtt_reconnect_timeout = 100
 	end
-
 end
 
 function app:create_event_msg(app, sn, level, data, timestamp)
