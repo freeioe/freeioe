@@ -74,6 +74,10 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh opcua_server $VERSION $REVISION
 ./scripts/release_app.sh opcua_client $VERSION $REVISION
 ./scripts/release_app.sh opcua_collect_example $VERSION $REVISION
+# Cloud connectors
+./scripts/release_app.sh aliyun $VERSION $REVISION
+./scripts/release_app.sh baidu_cloud $VERSION $REVISION
+./scripts/release_app.sh huawei_cloud $VERSION $REVISION
 
 # Release Extensions
 
