@@ -99,9 +99,30 @@ function app:handle_input(app, sn, input, prop, value, timestamp, quality)
 end
 
 function app:handle_event(app, sn, level, data, timestamp)
+	local msg = {
+		app = app,
+		sn = sn,
+		level = level,
+		data = data,
+		timestamp = timestamp,
+	}
+	if self._mqtt_client then
+		self._mqtt_client:publish("/event", cjson.encode(msg), 1, false)
+	end
 end
 
 function app:handle_stat(app, sn, stat, prop, value, timestamp)
+	local msg = {
+		app = app,
+		sn = sn,
+		stat = stat,
+		prop = prop,
+		value = value,
+		timestamp = timestamp,
+	}
+	if self._mqtt_client then
+		self._mqtt_client:publish("/statistics", cjson.encode(msg), 1, false)
+	end
 end
 
 function app:fire_devices(timeout)
@@ -112,14 +133,9 @@ function app:fire_devices(timeout)
 
 	self._fire_device_timer = function()
 		local devs = self._api:list_devices() or {}
-		--[[
-		local r, err = self._huawei_http:sync_devices(devs)
-		if not r then
-			self._log:error("Sync device failed", err)
-		else
-			self._log:debug("Sync device return", cjson.encode(r))
+		if self._mqtt_client then
+			self._mqtt_client:publish("/devices", cjson.encode(devs), 1, true)
 		end
-		]]--
 	end
 
 	self._sys:timeout(timeout, function()
