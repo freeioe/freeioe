@@ -317,7 +317,7 @@ local try_read_iot_sn_by_sysinfo = function()
 		if _VERSION == 'Lua 5.1' then
 			patt = '[^%s]'
 		end
-		return string.match("PSN:%s+("..patt..")")
+		return string.match(s, "PSN:%s+("..patt.."+)")
 	end
 end
 
