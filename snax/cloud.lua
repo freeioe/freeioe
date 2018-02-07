@@ -363,6 +363,7 @@ connect_proc = function(clean_session, username, password)
 			mqtt_reconnect_timeout = 100
 			-- Only fire apps and device once
 			if not apps_devices_fired then
+				log.trace("ON_CONNECT fire devices and apps")
 				apps_devices_fired = true
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
