@@ -181,6 +181,10 @@ function app:close(reason)
 end
 
 function app:on_frpc_start()
+	if self._start_time then
+		self:on_frpc_stop()
+	end
+
 	self._start_time = self._sys:time()
 	self._uptime_start = self._sys:now()
 	self._dev:set_input_prop('starttime', 'value', self._start_time)

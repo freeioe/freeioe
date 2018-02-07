@@ -83,7 +83,7 @@ function response.start()
 		end
 
 		if app.run then
-			skynet.fork(work_proc)
+			skynet.timeout(10, work_proc)
 		end
 
 		return true
