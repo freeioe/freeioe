@@ -26,6 +26,7 @@ local mqtt_reconnect_timeout = 100
 --- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
 local close_connection = false
+local fire_apps_devices = true
 
 --- Cloud options
 local enable_data_upload = nil -- true
@@ -360,6 +361,12 @@ connect_proc = function(clean_session, username, password)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
 			mqtt_reconnect_timeout = 100
+			-- Only fire apps and device once
+			if fire_apps_devices then
+				fire_apps_devices = false
+				snax.self().post.fire_devices()
+				snax.self().post.fire_apps()
+			end
 		else
 			log.warning("ON_CONNECT", success, rc, msg) 
 			start_reconnect()
@@ -615,10 +622,16 @@ function accept.fire_apps(timeout)
 		return
 	end
 	fire_app_timer = function()
-		snax.self().post.app_list()
+		if mqtt_client then
+			snax.self().post.app_list()
+		else
+			-- If mqtt connection is offline, retry after five seconds.
+			snax.self().post.fire_apps(500)
+		end
 	end
 	-- Timeout 10 seconds
-	skynet.timeout(timeout or 1000, function()
+	local timeout = timeout or 1000
+	skynet.timeout(timeout, function()
 		if fire_app_timer then
 			fire_app_timer()
 			fire_app_timer = nil
@@ -666,7 +679,11 @@ end
 
 function accept.app_list(id, args)
 	local r, err = skynet.call("UPGRADER", "lua", "list_app")
-	snax.self().post.action_result('app', id, r, err or "Done")
+	-- Fire action result if id is not empty
+	if id then
+		snax.self().post.action_result('app', id, r, err or "Done")
+	end
+
 	if r then
 		if mqtt_client then
 			mqtt_client:publish(mqtt_id.."/apps", cjson.encode(r), 1, true)
