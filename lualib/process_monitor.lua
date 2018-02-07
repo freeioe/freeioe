@@ -76,6 +76,7 @@ end
 
 function pm:restart()
 	self:stop()
+	self:cleanup()
 	return self:start()
 end
 

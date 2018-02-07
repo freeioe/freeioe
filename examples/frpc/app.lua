@@ -67,10 +67,6 @@ function app:initialize(name, sys, conf)
 end
 
 function app:start()
-	self._pm:stop()
-	self._pm:cleanup()
-	self._sys:sleep(500)
-
 	self._api:set_handler({
 		on_output = function(app, sn, output, prop, value)
 			print('on_output', app, sn, output, prop, value)
@@ -164,10 +160,16 @@ function app:start()
 	self._dev_sn = dev_sn 
 	self._dev = self._api:add_device(dev_sn, inputs, outputs, cmds)
 
-	if self._conf.auto_start then
-		self._pm:start()
-		self:on_frpc_start()
-	end
+	self._sys:timeout(100, function()
+		self._pm:stop()
+		self._pm:cleanup()
+		--self._sys:sleep(500)
+
+		if self._conf.auto_start then
+			self._pm:start()
+			self:on_frpc_start()
+		end
+	end)
 
 	return true
 end
