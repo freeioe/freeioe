@@ -3,7 +3,7 @@ local _M = {}
 local function init_httpc(timeout)
 	local httpc = require 'http.httpc'
 
-	httpc.dns()
+	--httpc.dns()
 	if timeout then
 		httpc.timeout = timeout
 	end

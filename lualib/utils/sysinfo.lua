@@ -310,6 +310,17 @@ local try_gen_iot_sn_by_mac_addr = function()
 	end
 end
 
+local try_read_iot_sn_by_sysinfo = function()
+	local s, err = _M.exec('sysinfo psn')
+	if s and string.len(s) > 0 then
+		local patt = '%g'
+		if _VERSION == 'Lua 5.1' then
+			patt = '[^%s]'
+		end
+		return string.match("PSN:%s+("..patt..")")
+	end
+end
+
 --- Buffer the sn
 local _iot_sn = nil
 local read_iot_sn = function()
@@ -317,7 +328,10 @@ local read_iot_sn = function()
 		return _iot_sn
 	end
 	-- TODO: for device sn api
-	_iot_sn = try_read_iot_sn_from_config() or try_gen_iot_sn_by_mac_addr() or _M.unknown_iot_sn
+	_iot_sn = try_read_iot_sn_from_config() or try_read_iot_sn_by_sysinfo()
+	if not _iot_sn then
+		_iot_sn = try_gen_iot_sn_by_mac_addr() or _M.unknown_iot_sn
+	end
 	return _iot_sn
 end
 
