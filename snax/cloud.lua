@@ -26,7 +26,7 @@ local mqtt_reconnect_timeout = 100
 --- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
 local close_connection = false
-local fire_apps_devices = true
+local apps_devices_fired = false
 
 --- Cloud options
 local enable_data_upload = nil -- true
@@ -362,8 +362,8 @@ connect_proc = function(clean_session, username, password)
 			end
 			mqtt_reconnect_timeout = 100
 			-- Only fire apps and device once
-			if fire_apps_devices then
-				fire_apps_devices = false
+			if not apps_devices_fired then
+				apps_devices_fired = true
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
 			end
@@ -618,6 +618,7 @@ end
 -- Delay application list post
 local fire_app_timer = nil
 function accept.fire_apps(timeout)
+	local timeout = timeout or 10
 	if fire_app_timer then
 		return
 	end
@@ -629,8 +630,6 @@ function accept.fire_apps(timeout)
 			snax.self().post.fire_apps(500)
 		end
 	end
-	-- Timeout 10 seconds
-	local timeout = timeout or 1000
 	skynet.timeout(timeout, function()
 		if fire_app_timer then
 			fire_app_timer()
@@ -646,7 +645,7 @@ end
 
 function accept.app_uninstall(id, args)
 	skynet.call("UPGRADER", "lua", "uninstall_app", id, args)
-	snax.self().post.fire_apps(100)
+	snax.self().post.fire_apps()
 end
 
 function accept.app_upgrade(id, args)
@@ -674,7 +673,7 @@ function accept.app_conf(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.set_conf(args.inst, args.conf)
 	snax.self().post.action_result('app', id, r, err or "Done")
-	snax.self().post.fire_apps(100)
+	snax.self().post.fire_apps()
 end
 
 function accept.app_list(id, args)
@@ -784,10 +783,12 @@ function init()
 	skynet.call("UPGRADER", "lua", "bind_cloud", s.handle, s.type)
 
 	skynet.fork(function()
+		connect_proc() 
+	end)
+	skynet.fork(function()
 		api = app_api:new('CLOUD')
 		api:set_handler(Handler, true)
 	end)
-	skynet.timeout(10, function() connect_proc() end)
 end
 
 function exit(...)
