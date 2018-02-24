@@ -1,0 +1,100 @@
+<h3 class="ui dividing header">{{_("Devices List")}} </h3>
+
+<div id="dev_list">
+	<div class="ui teal button" v-on:click="load_data">Load Data</div>
+	<div class="ui styled fluid accordion">
+{-raw-}
+	<div v-for="dev in devices">
+		<div class="title">
+			<i class="dropdown icon"></i>
+			{{dev.sn}}
+		</div>
+{-raw-}
+		<div class="content">
+			<div class="accordion">
+				<div v-if="dev.props.inputs">
+					<div class="title">
+						<i class="dropdown icon"></i>
+						{{_("Inputs")}}
+					</div>
+					<div class="content">
+						<table class="ui celled basic table">
+							<thead>
+								<tr>
+									<th>{{_("Name")}}</th>
+									<th>{{_("Description")}}</th>
+									<th>{{_("Value Type")}}</th>
+									<th>{{_("Value")}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{-raw-}
+								<tr v-for="input in dev.props.inputs">
+									<td>{{input.name}} </td>
+									<td>{{input.desc}} </td>
+									<td>
+										<i v-if="input.vt">{{input.vt}}</i>
+										<i v-else>Real</i>
+									</td>
+									<td>{{input.value}} </td>
+								</tr>
+								{-raw-}
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div v-if="dev.props.outputs">
+					<div class="title">
+						<i class="dropdown icon"></i>
+						{{_("Outputs")}}
+					</div>
+					<div class="content">
+						<table class="ui celled basic table">
+							<thead>
+								<tr>
+									<th>{{_("Name")}}</th>
+									<th>{{_("Description")}}</th>
+									<th>{{_("Value")}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{-raw-}
+								<tr v-for="output in dev.props.outputs">
+									<td>{{output.name}} </td>
+									<td>{{output.desc}} </td>
+									<td>{{output.value}} </td>
+								</tr>
+								{-raw-}
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div v-if="dev.props.commands">
+					<div class="title">
+						<i class="dropdown icon"></i>
+						{{_("Commands")}}
+					</div>
+					<div class="content">
+						<table class="ui celled basic table">
+							<thead>
+								<tr>
+									<th>{{_("Name")}}</th>
+									<th>{{_("Description")}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{-raw-}
+								<tr v-for="command in dev.props.commands">
+									<td>{{command.name}} </td>
+									<td>{{command.desc}} </td>
+								</tr>
+								{-raw-}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+

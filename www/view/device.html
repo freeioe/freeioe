@@ -1,9 +1,45 @@
 {% layout="base.html" %}
+
+{-title-}
+	{{_("Devices")}}
+{-title-}
+
+{-base_header-}
+<script type="text/javascript" src="/assets/library/vue.min.js"></script>
+{-base_header-}
+
 {-main_header-}
 {-main_header-}
 
 {-main-}
 <h1 class="header"> {{_("Device List")}} </h1>
 
-{(widget/dev_list.html, {devices=devices, cjson=cjson})}
+{(widget/dev_list_vue.html)}
 {-main-}
+
+{-script-}
+<script>
+	const dev_list = new Vue({
+		el: '#dev_list',
+		data: {
+			devices: [],
+		},
+		created () {
+			fetch('/device_data', {credentials: 'include'})
+				.then(response => response.json())
+				.then(json => {
+					this.devices = json.devices
+				})
+		},
+		methods: {
+			load_data: function (event) {
+				fetch('/device_data', {credentials: 'include'})
+					.then(response => response.json())
+					.then(json => {
+						this.devices = json.devices
+					})
+			}
+		}
+	});
+</script>
+{-script-}
