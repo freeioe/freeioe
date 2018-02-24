@@ -25,6 +25,8 @@
 									<th>{{_("Description")}}</th>
 									<th>{{_("Value Type")}}</th>
 									<th>{{_("Value")}}</th>
+									<th>{{_("Timestamp")}}</th>
+									<th>{{_("Quality")}}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -36,7 +38,9 @@
 										<i v-if="input.vt">{{input.vt}}</i>
 										<i v-else>Real</i>
 									</td>
-									<td>{{input.value}} </td>
+									<td>{{input.value.value}} </td>
+									<td>{{input.value.timestamp}} </td>
+									<td>{{input.value.quality}} </td>
 								</tr>
 								{-raw-}
 							</tbody>
