@@ -36,7 +36,6 @@ local on_close = function(...)
 	sys_api = nil
 	app = nil
 	app_name = "UNKNOWN"
-	app = nil
 	return true
 end
 

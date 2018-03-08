@@ -330,6 +330,7 @@ end
 
 local connect_proc = nil
 local function start_reconnect()
+	close_connection = true
 	mqtt_client = nil
 	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
@@ -413,15 +414,16 @@ connect_proc = function(clean_session, username, password)
 		--- Worker thread
 		while mqtt_client and not close_connection do
 			skynet.sleep(0)
-			if mqtt_client then
-				mqtt_client:loop(50, 1)
+			if client then
+				client:loop(50, 1)
 			else
 				skynet.sleep(50)
 			end
 		end
-		if mqtt_client then
-			mqtt_client:disconnect()
+		if client then
+			client:disconnect()
 			log.notice("Cloud Connection Closed!")
+			client:destroy()
 		end
 	end
 end
@@ -434,6 +436,7 @@ function response.disconnect()
 		mqtt_client = nil
 		client:disconnect()
 		client:loop_stop()
+		client:destory()
 		log.notice("Cloud Connection Closed!")
 	else
 		close_connection = true
