@@ -18,7 +18,7 @@ return {
 			local appmgr = snax.uniqueservice('appmgr')
 			local applist = appmgr.req.list()
 			app.running = applist[inst] and applist[inst].inst or nil
-			app.version = math.floor(app.version)
+			app.version = math.floor(app.version or 0)
 			app.inst = app.inst or inst
 			lwf.render('app_editor.html', {app=app})
 		end

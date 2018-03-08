@@ -10,7 +10,10 @@
 <div class="ui basic segment">
 	<div class="ui stackable two column grid">
 		<div class="column">
-			<div class="ui teal button check_update" data-content="{{_('Query application updates')}}">{{_("Check Updates")}}</div>
+			{% if using_beta then %}
+			<div class="ui olive icon button new_app" data-content="{{_('Create an new application')}}"><i class="ui add icon"></i>{{_("New Application")}}</div>
+			{% end %}
+			<div class="ui teal icon button check_update" data-content="{{_('Query application updates')}}"><i class="ui refresh icon"></i>{{_("Check Updates")}}</div>
 		</div>
 		{% if not apps['iot_frpc'] then %}
 		<div class="column">
@@ -34,10 +37,31 @@
 	</div>
 </div>
 
+<div class="ui mini new_app modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("New application")}}
+	</div>
+	<div class="content">
+		<form class="ui new_app form" action="/app/new" method="post" accept-charset="utf-8">
+			<div class="field">
+				<label>{{_("Instance Name")}}</label>
+				<input value="" name="inst" type="text">
+			</div>
+			<div class="field">
+				<label>{{_("Application Name")}}</label>
+				<input value="" name="app" type="text">
+			</div>
+			<div class="ui primary submit button">{{_("Create")}}</div>
+		</form>
+	</div>
+</div>
+
 <div class="ui basic msg_print form">
 	<div class="ui success message"></div>
 	<div class="ui error message"></div>
 </div>
+
 {-main-}
 
 {-script-}
@@ -198,6 +222,27 @@ $(document).ready(function(){
 	});
 	$('.ui.app_frpc.form').ajaxForm({
 		beforeSend: function () {
+			reset_message();
+		},
+		success: function (response) {
+			print_message(response)
+			setTimeout(refresh_page, 5000);
+		},
+		error: function(xhr) {
+			print_err_message(xhr.responseText);
+		}
+	});
+	$('.ui.segment .ui.button.new_app').click(function() {
+		$('.ui.new_app.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	});
+	$('.ui.new_app.form').ajaxForm({
+		beforeSend: function () {
+			$('.ui.new_app.modal').modal('hide');
 			reset_message();
 		},
 		success: function (response) {

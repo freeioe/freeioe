@@ -159,10 +159,45 @@ function command.install_app(id, args)
 	return true
 end
 
+function command.create_app(id, args)
+	local name = args.name
+	local inst_name = args.inst
+	local version = 0
+	local sn = args.sn or cloud.req.gen_sn(inst_name)
+	local conf = args.conf or {}
+
+	if (id and id ~= 'from_web') and (inst_name == 'iot' or inst_name == 'iot_frpc') then
+		local err = "Application instance name is reserved"
+		return install_result(id, false, "Failed to install App. Error: "..err)
+	end
+	if datacenter.get("APPS", inst_name) and not args.force then
+		local err = "Application already installed"
+		return install_result(id, false, "Failed to install App. Error: "..err)
+	end
+	if not datacenter.get('CLOUD', 'USING_BETA') then
+		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
+	end
+
+	-- Reserve app instance name
+	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, islocal=1})
+
+	local appmgr = snax.uniqueservice("appmgr")
+	local target_folder = get_target_folder(inst_name)
+	lfs.mkdir(target_folder)
+	os.execute('cp ./iot/doc/app/example_app.lua '..target_folder.."/app.lua")
+	os.execute('echo 0 > '..target_folder.."/version")
+	os.execute('echo editor >> '..target_folder.."/version")
+
+	return true
+end
+
 function command.install_missing_app(inst_name)
 	skynet.timeout(100, function()
 		local appmgr = snax.uniqueservice("appmgr")
 		local info = datacenter.get("APPS", inst_name)
+		if not info or info.islocal then
+			return
+		end
 		return command.install_app(nil, {
 			inst = inst_name,
 			name = info.name,
