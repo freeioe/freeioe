@@ -113,6 +113,7 @@ end
 
 function accept.app_option(inst, option, value)
 	dc.set("APPS", inst, option, value)
+	return true
 end
 
 function init(...)
@@ -141,7 +142,7 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
-			if not v.once then
+			if v.auto ~= 0 then
 				snax.self().post.app_start(k)
 			end
 		end

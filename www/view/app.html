@@ -138,6 +138,17 @@ function stop_app(inst) {
 	});
 }
 
+function option_app(inst, option, value) {
+	$.post("/app/option", {from_web:true, inst:inst, option:option, value:value}, function(data) {
+		print_message('<i>' + data + '</i>');
+	})
+	.done(function() {
+	})
+	.fail(function() {
+		print_err_message('<i>{{_("Failed to send stop request")}}</i>');
+	});
+}
+
 function check_app_update(inst, app, version) {
 	$.get("/app/check_update", {from_web:true, inst:inst, app:app}, function(data) {
 		if (data && data.version && data.version > version) {
@@ -211,6 +222,15 @@ $(document).ready(function(){
 	});
 	$('.ui.button.refresh').click(function() {
 		upgrade_app($(this).data('inst'), $(this).data('app'), $(this).data('version'));
+	});
+	$('.ui.toggle.checkbox.auto_start').checkbox({
+		onChecked: function() {
+			option_app($(this).data('inst'), 'auto', 1);
+		},
+		// uncheck all children
+		onUnchecked: function() {
+			option_app($(this).data('inst'), 'auto', 0);
+		}
 	});
 	$('.ui.segment .ui.button.check_update').click(function() {
 		var btn = $(this);

@@ -1,7 +1,7 @@
 local snax = require 'skynet.snax'
 
 local options = {
-	once = 1
+	auto = 1
 }
 
 return {
@@ -20,11 +20,7 @@ return {
 		end
 
 		local appmgr = snax.uniqueservice('appmgr')
-		local r, err = appmgr.post.app_option(post.inst, post.option, post.value)
-		if r then
-			ngx.print(_('Application option changed!'))
-		else
-			ngx.print(err)
-		end
+		appmgr.post.app_option(post.inst, post.option, post.value)
+		ngx.print(_('Application option changed!'))
 	end,
 }
