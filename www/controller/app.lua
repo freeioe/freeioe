@@ -14,6 +14,7 @@ return {
 			for k, v in pairs(apps) do
 				v.running = applist[k] and applist[k].inst or nil
 				v.version = math.floor(tonumber(v.version) or 0)
+				v.auto = math.floor(tonumber(v.auto or 1))
 			end
 			local pkg_host_url = dc.get('PKG_HOST_URL')
 			local using_beta = dc.get('CLOUD', 'USING_BETA')

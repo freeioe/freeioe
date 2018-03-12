@@ -20,14 +20,14 @@
 			<td>{{v.sn}} </td>
 			<td id="{{k}}_version_col"> {{v.version}} </td>
 			<td>
-				{% if v.auto ~= 0 then %}
-				<div class="ui toggle checked checkbox auto_start">
-					<input class="hidden" type="checkbox" checked="true" data-inst="{{k}}">
+				{% if v.auto == 0 then %}
+				<div class="ui toggle checkbox auto_start">
+					<input class="hidden" type="checkbox" data-inst="{{k}}">
 					<label></label>
 				</div>
 				{% else %}
-				<div class="ui toggle checkbox auto_start">
-					<input class="hidden" type="checkbox" data-inst="{{k}}">
+				<div class="ui toggle checked checkbox auto_start">
+					<input class="hidden" type="checkbox" checked="true" data-inst="{{k}}">
 					<label></label>
 				</div>
 				{% end %}

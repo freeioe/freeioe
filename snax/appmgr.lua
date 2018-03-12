@@ -142,7 +142,7 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
-			if v.auto ~= 0 then
+			if tonumber(v.auto or 1) ~= 0 then
 				snax.self().post.app_start(k)
 			end
 		end
