@@ -1,0 +1,56 @@
+{% layout="base.html" %}
+{-main_header-}
+{-main_header-}
+
+{-main-}
+<form class="ui batch_script form" method="post" accept-charset="utf-8">
+	<div class="field">
+		<label>{{_("ID")}}</label>
+		<input name="id" type="text">
+	</div>
+	<div class="field">
+		<label>{{_("Script")}}</label>
+		<textarea name="script"></textarea>
+	</div>
+	<div class="ui submit button">Submit</div>
+	<div class="ui success message"></div>
+	<div class="ui error message"></div>
+</form>
+{-main-}
+
+{-script-}
+<script>
+var msg_form = null;
+function reset_message() {
+	msg_form.removeClass('success').removeClass('error');
+};
+function print_err_message(msg) {
+	reset_message();
+	console.log('Exception:' + msg);
+	msg_form.find('.ui.error.message').html(msg);
+	msg_form.addClass('error');
+};
+function print_message(msg) {
+	reset_message();
+	console.log('OK:' + msg);
+	msg_form.find('.ui.success.message').html(msg);
+	msg_form.addClass('success');
+};
+
+$(document).ready(function(){
+	msg_form = $('.ui.batch_script.form');
+	$('.ui.batch_script.form').ajaxForm({
+		beforeSend: function () {
+			reset_message();
+		},
+		success: function (response) {
+			print_message(response)
+			setTimeout(refresh_page, 5000);
+		},
+		error: function(xhr) {
+			print_err_message(xhr.responseText);
+		}
+	});
+});
+</script>
+{-script-}

@@ -86,7 +86,7 @@ local msg_handler = {
 		if action == 'install' then
 			snax.self().post.app_install(args.id, args.data)
 		end
-		if action == 'uninstall' then
+		if action == 'uninstall' or action == 'remove' then
 			snax.self().post.app_uninstall(args.id, args.data)
 		end
 		if action == 'upgrade' then
@@ -146,6 +146,9 @@ local msg_handler = {
 		end
 		if action == 'ext/upgrade' then
 			snax.self().post.ext_upgrade(args.id, args.data)
+		end
+		if action == 'batch_script' then
+			snax.self().post.batch_script(args.id, args.data)
 		end
 	end,
 	output = function(topic, data, qos, retained)
@@ -727,6 +730,12 @@ end
 
 function accept.ext_upgrade(id, args)
 	skynet.call("IOT_EXT", "lua", "upgrade_ext", id, args)
+end
+
+function accept.batch_script(id, script)
+	datacenter.set("BATCH", id, "script", script)
+	local runner = skynet.newservice("run_batch", id)
+	datacenter.set("BATCH", id, "inst", runner)
 end
 
 function accept.output_to_app(id, info)

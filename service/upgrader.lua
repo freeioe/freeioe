@@ -439,7 +439,7 @@ end
 function command.upgrade_core(id, args)
 	local is_windows = package.config:sub(1,1) == '\\'
 	local version, beta = parse_version_string(args.version)
-	local skynet = args.skynet
+	local skynet_args = args.skynet
 
 	if args.no_ack then
 		local base_dir = get_iot_dir()
@@ -453,8 +453,8 @@ function command.upgrade_core(id, args)
 
 	create_download('skynet_iot', version, function(r, info)
 		if r then
-			if skynet then
-				download_upgrade_skynet(id, skynet, function(path) 
+			if skynet_args then
+				download_upgrade_skynet(id, skynet_args, function(path) 
 					local r, err = start_upgrade_proc(info, path) 
 					return install_result(id, r, err)
 				end)
