@@ -30,7 +30,7 @@ function app:start()
 			desc='tag'..i..' description',
 		}
 	end
-	self._dev1 = self._api:add_device("xxxx", args)
+	self._dev1 = self._api:add_device("xxxx", {}, args)
 	--self._api:del_device("xxxx")
 
 	return true

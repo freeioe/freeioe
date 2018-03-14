@@ -53,7 +53,7 @@ function app:start()
 	--- 生成设备的序列号
 	local dev_sn = sys_id..".modbus_"..self._name
 	--- 生成设备对象
-	local dev = self._api:add_device(dev_sn, inputs)
+	local dev = self._api:add_device(dev_sn, {}, inputs)
 	--- 生成设备通讯口统计对象
 	local stat = dev:stat('port')
 	local client = nil

@@ -90,11 +90,15 @@ function app:start()
 	assert(config)
 
 	local devs = {}
+	local meta = self._api:default_meta()
+	meta.name = "BMS"
+	meta.description = "Shanshan BMS"
+	meta.series = "X1"
 	for i, v in ipairs(config.devs) do
 		assert(v.port)
 		self._log:info("Creating device via port", v.port)
 		local dev_sn = sys_id.."."..self._sys:gen_sn("bg"..i)
-		local dev = self._api:add_device(dev_sn, inputs)
+		local dev = self._api:add_device(dev_sn, meta, inputs)
 		local stat = dev:stat("device")
 		local client = nil
 

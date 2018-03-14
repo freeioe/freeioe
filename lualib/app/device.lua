@@ -72,6 +72,7 @@ end
 function device:mod(inputs, outputs, commands)
 	assert(not self._readonly, "This is not created device")
 	self._props = {
+		meta = meta,
 		inputs = inputs,
 		outputs = outputs,
 		commands = commands,

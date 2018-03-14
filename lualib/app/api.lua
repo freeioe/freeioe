@@ -173,13 +173,37 @@ function api:list_devices()
 	return dc.get('DEVICES')
 end
 
-function api:add_device(sn, inputs, outputs, commands)
+function valid_device_meta(meta)
+	local meta_assert = function(name)
+		assert(meta[name], "Device "..name.." is required in meta info!")
+	end
+	assert(meta, 'Device meta is required!')
+	meta_assert("name")
+	meta_assert("description")
+	meta_assert("manufacturer")
+	meta_assert("series")
+	meta_assert("link")
+end
+
+function api:default_meta()
+	return {
+		name = "Unknown",
+		description = "Unknown device",
+		manufacturer = "Bamboo IOT",
+		series = "Unknown",
+		link = "http://unknown",
+	}
+end
+
+function api:add_device(sn, meta, inputs, outputs, commands)
+	assert(sn, "Device Serial Number is required")
+	valid_device_meta(meta or default_meta())
 	local dev = self._devices[sn]
 	if dev then
 		return dev
 	end
 
-	local props = {inputs = inputs, outputs = outputs, commands = commands}
+	local props = {meta = meta, inputs = inputs, outputs = outputs, commands = commands}
 	dev = dev_api:new(self, sn, props)
 	self._devices[sn] = dev
 	self._data_chn:publish('add_device', self._app_name, sn, props)

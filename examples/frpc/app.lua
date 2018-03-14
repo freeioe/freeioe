@@ -158,7 +158,11 @@ function app:start()
 	}
 
 	self._dev_sn = dev_sn 
-	self._dev = self._api:add_device(dev_sn, inputs, outputs, cmds)
+	local meta = self._api:default_meta()
+	meta.name = "FRPC Client"
+	meta.description = "FRPC Client Running Status"
+	meta.series = "X"
+	self._dev = self._api:add_device(dev_sn, meta, inputs, outputs, cmds)
 
 	self._sys:timeout(100, function()
 		self._pm:stop()

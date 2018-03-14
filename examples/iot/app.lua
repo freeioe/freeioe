@@ -85,7 +85,11 @@ function app:start()
 			vt = "int",
 		}
 	}
-	self._dev = self._api:add_device(sys_id, inputs)
+	local meta = self._api:default_meta()
+	meta.name = "Bamboo IOT"
+	meta.description = "Bamboo IOT Device"
+	meta.series = "Q102" -- TODO:
+	self._dev = self._api:add_device(sys_id, meta, inputs)
 
 	return true
 end

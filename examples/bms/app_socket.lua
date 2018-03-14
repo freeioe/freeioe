@@ -112,7 +112,7 @@ function app:start()
 
 	local devs = {}
 	for i = 1, battery_group_count do
-		local dev = self._api:add_device(app_sn..".bg"..i, inputs)
+		local dev = self._api:add_device(app_sn..".bg"..i, {}, inputs)
 		local client = modbus.client(create_stream(dev, self._sock), modbus.apdu_tcp, i)
 		devs[#devs + 1] = {
 			dev = dev,

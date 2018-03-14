@@ -41,7 +41,7 @@ function app:start()
 	})
 
 	local sn = '666'--self._api:gen_sn()
-	self._dev1 = self._api:add_device(sn, {{name="tag1", desc="tag1 desc"}})
+	self._dev1 = self._api:add_device(sn, {}, {{name="tag1", desc="tag1 desc"}})
 
 	--[[
 	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
