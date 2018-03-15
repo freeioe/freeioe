@@ -42,6 +42,7 @@ local batch_env = {
 		})
 	end,
 	TEST = function(...)
+		print(...)
 		log.debug(...)
 	end,
 }
@@ -50,8 +51,6 @@ skynet.start(function()
 	log.notice("Batch script: ", id)
 	local script = arg.n == 2 and arg[2] or datacenter.get("BATCH", id, "script")
 	assert(script)
-	print(script)
-
 	local f, err = load(script, nil, "bt", batch_env)
 	if not f then
 		log.error("Loading batch script failed", err)

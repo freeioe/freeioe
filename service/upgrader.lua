@@ -18,19 +18,22 @@ local function get_iot_dir()
 	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
 end
 
-local function create_task(func, task_name, ...)
+local function create_task(func, task_name, task_desc, ...)
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
-			name = task_name
+			name = task_name,
+			desc = task_desc,
+			status = 'RUNNING',
 		}
 		func(...)
+		tasks[coroutine.running()] = nil
 	end, task_name, ...)
 end
 
-local function create_download(app_name, version, cb, ext)
+local function create_download(inst_name, app_name, version, cb, ext)
 	local ext = ext or ".zip"
-	local down = pkg_api.create_download_func(app_name, version, ext, cb)
-	create_task(down, "Download Application "..app_name)
+	local down = pkg_api.create_download_func(inst_name, app_name, version, ext, cb)
+	create_task(down, inst_name, "Download Application "..app_name)
 end
 
 local function install_result(id, result, ...)
@@ -67,7 +70,7 @@ function command.upgrade_app(id, args)
 	local target_folder = get_target_folder(inst_name)
 
 	local download_version = editor and version..".editor" or version
-	create_download(name, download_version, function(r, info)
+	create_download(inst_name, name, download_version, function(r, info)
 		if r then
 			log.notice("Download application finished", name)
 			local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
@@ -129,7 +132,7 @@ function command.install_app(id, args)
 	lfs.mkdir(target_folder)
 
 	local download_version = editor and version..".editor" or version
-	create_download(name, download_version, function(r, info)
+	create_download(inst_name, name, download_version, function(r, info)
 		if r then
 			log.notice("Download application finished", name)
 			os.execute("unzip -oq "..info.." -d "..target_folder)
@@ -274,7 +277,7 @@ local function download_upgrade_skynet(id, args, cb)
 	local version, beta = parse_version_string(args.version)
 	local kname = get_core_name('skynet', args.platform)
 
-	create_download(kname, version, function(r, info)
+	create_download('__SKYNET__', kname, version, function(r, info)
 		if r then
 			cb(info)
 		else
@@ -451,7 +454,7 @@ function command.upgrade_core(id, args)
 		end
 	end
 
-	create_download('skynet_iot', version, function(r, info)
+	create_download('__SKYNET_IOT__', 'skynet_iot', version, function(r, info)
 		if r then
 			if skynet_args then
 				download_upgrade_skynet(id, skynet_args, function(path) 

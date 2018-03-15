@@ -129,7 +129,8 @@ function _M.parse_version_string(version)
 	return version, beta, editor
 end
 
-function _M.create_download_func(app_name, version, ext, cb, is_extension)
+function _M.create_download_func(inst_name, app_name, version, ext, cb, is_extension)
+	local inst_name = inst_name
 	local app_name = app_name:gsub('%.', '/')
 	local version = version
 	local ext = ext
@@ -137,7 +138,7 @@ function _M.create_download_func(app_name, version, ext, cb, is_extension)
 	local is_extension = is_extension
 	return function()
 		local app_name_escape = string.gsub(app_name, '/', '__')
-		local path = "/tmp/"..app_name_escape.."_"..version..ext
+		local path = "/tmp/"..inst_name..'__'..app_name_escape.."_"..version..ext
 		local file, err = io.open(path, "w+")
 		if not file then
 			return cb(nil, err)
