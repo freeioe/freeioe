@@ -54,9 +54,11 @@ local batch_env = {
 		})
 	end,
 	TEST = function(...)
-		local id = gen_task_id()
 		print(...)
 		log.debug(...)
+	end,
+	LOG = function(level, ...)
+		log[level](...)
 	end,
 }
 
@@ -64,18 +66,22 @@ skynet.start(function()
 	log.notice("Batch script: ", batch_id)
 	local script = arg.n == 2 and arg[2] or datacenter.get("BATCH", batch_id, "script")
 	assert(script)
+
+	--- Loading script string
 	local f, err = load(script, nil, "bt", batch_env)
 	if not f then
 		log.error("Loading batch script failed", err)
+		cloud.post.action_result("batch_script", batch_id, false, err)
 	else
 		local r, err = xpcall(f, debug.traceback)
-		print(cjson.encode(tasks))
 		if not r then
 			log.warning("BATCH run error", err)
-			datacenter.set("BATCH_RESULT", batch_id, err)
+			cloud.post.action_result("batch_script", batch_id, false, err)
 		else
-			datacenter.set("BATCH_RESULT", batch_id, "DONE")
+			cloud.post.action_result("batch_script", batch_id, false, cjson.encode(tasks))
 		end
-		datacenter.set("BATCH", batch_id, nil)
 	end
+
+	--- Cleanup script 
+	datacenter.set("BATCH", batch_id, nil)
 end)
