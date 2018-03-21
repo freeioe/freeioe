@@ -182,14 +182,17 @@ function command.create_app(id, args)
 	end
 
 	-- Reserve app instance name
-	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, islocal=1})
+	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, islocal=1, auto=0})
 
-	local appmgr = snax.uniqueservice("appmgr")
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 	os.execute('cp ./iot/doc/app/example_app.lua '..target_folder.."/app.lua")
 	os.execute('echo 0 > '..target_folder.."/version")
 	os.execute('echo editor >> '..target_folder.."/version")
+
+	--- Post to appmgr for instance added
+	local appmgr = snax.uniqueservice("appmgr")
+	appmgr.post.app_create(inst_name)
 
 	return true
 end

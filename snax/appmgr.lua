@@ -99,10 +99,15 @@ end
 function accept.app_modified(inst, from)
 	log.warning("Application has modified from "..from)
 	local app = applist[inst]
-	if app.islocal then
+	if not app then
 		return
 	end
-	app.islocal = 1
+
+	local islocal = dc.get("APPS", inst, 'islocal')
+	if islocal then
+		return
+	end
+
 	dc.set("APPS", inst, 'islocal', 1)
 end
 
@@ -114,6 +119,12 @@ end
 function accept.app_option(inst, option, value)
 	dc.set("APPS", inst, option, value)
 	return true
+end
+
+function accept.app_create(inst, opts)
+	if not applist[inst] then
+		applist[inst] = {}
+	end
 end
 
 function init(...)
@@ -144,6 +155,8 @@ function init(...)
 		for k,v in pairs(apps) do
 			if tonumber(v.auto or 1) ~= 0 then
 				snax.self().post.app_start(k)
+			else
+				applist[k] = { conf = v.conf }
 			end
 		end
 		if not apps['iot'] then
