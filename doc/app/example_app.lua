@@ -20,6 +20,8 @@ function app:initialize(name, sys, conf)
 	self._api = self._sys:data_api()
 	--- 获取日志接口
 	self._log = sys:logger()
+	--- 设备实例
+	self._devs = {}
 
 	self._log:debug("XXXX Application initlized")
 end
@@ -33,13 +35,10 @@ function app:start()
 		end,
 		]]
 		on_output = function(app, sn, output, prop, value)
-			print(...)
 		end,
 		on_command = function(app, sn, command, param)
-			print(...)
 		end,	
 		on_ctrl = function(app, command, param, ...)
-			print(...)
 		end,
 	})
 
@@ -47,7 +46,7 @@ function app:start()
 	local sys_id = self._sys:id()
 	local sn = sys_id.."."..self._sys:gen_sn('example_device_serial_number')
 
-	--- 增加设备示例
+	--- 增加设备实例
 	local inputs = {
 		{name="tag1", desc="tag1 desc"}
 	}
@@ -55,7 +54,7 @@ function app:start()
 	meta.name = "Example Device"
 	meta.description = "Example Device Meta"
 	local dev = self._api:add_device(sn, meta, inputs)
-	self._devs[#self.devs + 1] = dev
+	self._devs[#self._devs + 1] = dev
 
 	return true
 end
@@ -67,7 +66,7 @@ end
 
 --- 应用运行入口
 function app:run(tms)
-	for dev in ipairs(self._devs) do
+	for _, dev in ipairs(self._devs) do
 		dev:dump_comm("IN", "XXXXXXXXXXXX")
 		dev:set_input_prop('tag1', "value", math.random())
 	end

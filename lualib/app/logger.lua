@@ -55,7 +55,8 @@ local function make_func(logger, name)
 		if os.getenv('IOT_LOG_LEVEL') == 'trace' then
 			return self:debug_log(name, ...)
 		end
-		return self:log(name, ...)
+		--return self:log(name, ...)
+		return self:debug_log(name, ...)
 	end
 end
 

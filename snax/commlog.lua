@@ -41,8 +41,22 @@ function response.get(app)
 	return buf_list[app]
 end
 
+function accept.log(ts, lvl, ...)
+end
+
+local function connect_log_server(enable)
+	local logger = snax.uniqueservice('logger')
+	local obj = snax.self()
+	if enable then
+		logger.post.reg_snax(obj.handle, obj.type)
+	else
+		logger.post.unreg_snax(obj.handle)
+	end
+end
+
 function init()
 	log.notice("COMM data buffer service started!")
+	--connect_log_server(true)
 
 	skynet.fork(function()
 		api = app_api:new('__COMM_DATA_LOGGER')
