@@ -733,6 +733,7 @@ function accept.ext_upgrade(id, args)
 end
 
 function accept.batch_script(id, script)
+	log.debug("Cloud batch script received", id, script)
 	datacenter.set("BATCH", id, "script", script)
 	local runner = skynet.newservice("run_batch", id)
 	datacenter.set("BATCH", id, "inst", runner)

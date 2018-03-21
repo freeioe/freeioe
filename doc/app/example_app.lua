@@ -1,102 +1,79 @@
 local class = require 'middleclass'
-local serial = require 'serialdriver'
 
 local app = class("XXXX_App")
 
+--- 注册对象(请尽量使用唯一的标识字符串)
+local app = class("YOUR_APP_NAME_App")
+--- 设定应用最小运行接口版本(目前版本为1,为了以后的接口兼容性)
+app.API_VER = 1
+
+---
+-- 应用对象初始化函数
+-- @param name: 应用本地安装名称。 如modbus_com_1
+-- @param sys: 系统sys接口对象。参考API文档中的sys接口说明
+-- @param conf: 应用配置参数。由安装配置中的json数据转换出来的数据对象
 function app:initialize(name, sys, conf)
 	self._name = name
 	self._sys = sys
 	self._conf = conf
+	--- 获取数据接口
 	self._api = self._sys:data_api()
-	sys:log("debug", "XXXX Application initlized")
-	--print("folder", sys:app_dir())
-	--[[
-	print(sys:write_json("xx.json", conf))
-	print(sys:read_json("xx.json"))
-	]]--
+	--- 获取日志接口
+	self._log = sys:logger()
 
-	--local modbus = require(name..".modbus")
+	self._log:debug("XXXX Application initlized")
 end
 
+--- 应用启动函数
 function app:start()
-	self._sys:fork(function()
-		self._sys:log('debug', 'testing sys:fork')
-		self._sys:sleep(1000)
-		self._sys:log('debug', 'testing sys:fork end')
-	end)
-
 	self._api:set_handler({
-		on_input = function(...)
+		--[[
+		--- 处理设备输入项数值变更消息，当需要监控其他设备时才需要此接口，并在set_handler函数传入监控标识
+		on_input = function(app, sn, input, prop, value, timestamp, quality)
+		end,
+		]]
+		on_output = function(app, sn, output, prop, value)
 			print(...)
 		end,
-		on_output = function(...)
-			print(...)
-		end,
-		on_command = function(...)
+		on_command = function(app, sn, command, param)
 			print(...)
 		end,	
-		on_ctrl = function(...)
+		on_ctrl = function(app, command, param, ...)
 			print(...)
 		end,
 	})
 
-	local sn = '666'--self._api:gen_sn()
-	self._dev1 = self._api:add_device(sn, {{name="tag1", desc="tag1 desc"}})
+	--- 生成设备唯一序列号
+	local sys_id = self._sys:id()
+	local sn = sys_id.."."..self._sys:gen_sn('example_device_serial_number')
 
-	--[[
-	local port = serial:new("/tmp/ttyS10", 9600, 8, "NONE", 1, "OFF")
-	local r, err = port:open()
-	if not r then
-		self._sys:log("warning", "Failed open port, error: "..err)
-		return nil, err
-	end
-	port:start(function(data, err)
-		print(data, err)
-	end)
-	self._port = port
-	]]--
+	--- 增加设备示例
+	local inputs = {
+		{name="tag1", desc="tag1 desc"}
+	}
+	local meta = self._api:default_meta()
+	meta.name = "Example Device"
+	meta.description = "Example Device Meta"
+	local dev = self._api:add_device(sn, meta, inputs)
+	self._devs[#self.devs + 1] = dev
+
 	return true
 end
 
+--- 应用退出函数
 function app:close(reason)
-	--[[
-	self._port:close()
-	self._port = nil
-	]]--
-	print(self._name, reason)
+	--print(self._name, reason)
 end
 
-function app:list_devices()
-	return {
-		{
-			name = '666',
-			desc = "Description A Device",
-		}
-	}
-end
-
-function app:list_props(device)
-	return {
-		inputs = {
-			{
-				name="tag1",
-				desc = "Property A Description",
-				-- vt = "int",
-			}
-		}
-	}
-end
-
+--- 应用运行入口
 function app:run(tms)
-	--[[
-	if self._port then
-		self._port:write("BBBB")
+	for dev in ipairs(self._devs) do
+		dev:dump_comm("IN", "XXXXXXXXXXXX")
+		dev:set_input_prop('tag1', "value", math.random())
 	end
-	]]--
-	--self._dev1:set_input_prop('tag1', "value", self._sys:now())
-	self._dev1:set_input_prop('tag1', "value", math.random())
-	self._sys:dump_comm(nil, "IN", "XXXXXXXXXXXX")
-	return 10000
+
+	return 10000 --下一采集周期为10秒
 end
 
+--- 返回应用对象
 return app

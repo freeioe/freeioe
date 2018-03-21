@@ -84,7 +84,7 @@ skynet.start(function()
 			log.warning("BATCH run error", err)
 			cloud.post.action_result("batch_script", batch_id, false, err)
 		else
-			cloud.post.action_result("batch_script", batch_id, false, cjson.encode(tasks))
+			cloud.post.action_result("batch_script", batch_id, true, cjson.encode(tasks))
 		end
 	end
 
