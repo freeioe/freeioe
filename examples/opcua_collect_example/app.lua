@@ -171,7 +171,11 @@ function app:start()
 
 	--- 创建设备对象实例
 	local sys_id = self._sys:id()
-	local dev = self._api:add_device(sys_id..'.OPCUA_TEST', {}, inputs)
+	local meta = self._api:default_meta()
+	meta.name = "OPCUA"
+	meta.description = "Unknown OPCUA Device"
+	meta.series = "XXX"
+	local dev = self._api:add_device(sys_id..'.OPCUA_TEST', meta, inputs)
 	self._devs['Simulation'] = dev
 
 	return true
