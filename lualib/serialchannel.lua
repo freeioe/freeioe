@@ -25,10 +25,10 @@ serial_channel.error = serial_error
 local function map_serial_opt(desc)
 	return {
 		baud = '_'..(desc.baudrate or 9600),
-		data_bits = '_'..(desc.bytesize or 8),
+		data_bits = '_'..(desc.data_bits or 8),
 		parity = string.upper(desc.parity or "NONE"),
-		stop_bits = '_'..(desc.stopbits or 1),
-		flow_control = string.upper(desc.flowcontrol or "OFF")
+		stop_bits = '_'..(desc.stop_bits or 1),
+		flow_control = string.upper(desc.flow_control or "OFF")
 	}
 end
 
