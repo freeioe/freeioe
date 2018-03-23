@@ -434,8 +434,25 @@ $(document).ready(function() {
 			}
 		}
 	};
+	var download_application = function() {
+		var backend_url = '/app/pack';
+		var args = {
+			'app': cur_app,
+		};
+		$.post(backend_url, args)
+			.done(function (d) {
+				if (d.result) {
+					window.location.href = d.message;
+				} else {
+					alert(d.message);
+				}
+			})
+			.fail(function () {
+			});
+	};
 
 	$('#jstree_tree_menu .item.debug').click(debug_application);
+	$('#jstree_tree_menu .item.download').click(download_application);
 	$('#jstree_tree_menu .item.upload').click(upload_application);
 	$('#jstree_tree_menu .item.file').click(jstree_create_file);
 	$('#jstree_tree_menu .item.folder').click(jstree_create_folder);

@@ -186,7 +186,8 @@ function command.create_app(id, args)
 
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
-	os.execute('cp ./iot/doc/app/example_app.lua '..target_folder.."/app.lua")
+	local target_folder_escape = string.gsub(target_folder, ' ', '\\ ')
+	os.execute('cp ./iot/doc/app/example_app.lua '..target_folder_escape..'/app.lua')
 	os.execute('echo 0 > '..target_folder.."/version")
 	os.execute('echo editor >> '..target_folder.."/version")
 
