@@ -15,10 +15,14 @@ end
 local function pack_app(inst, version)
 	local app = dc.get("APPS", inst)
 
-	local target_file = inst.."_v"..version..".tar.gz"
+	--local target_file = inst.."_v"..version..".tar.gz"
+	local target_file = inst.."_v"..version..".zip"
 	local target_file_escape = string.gsub(target_file, " ", "__")
 	os.execute("mkdir -p "..pack_target_path)
-	local cmd = "tar -cvzf "..pack_target_path..target_file_escape.." "..string.gsub(get_app_path(inst, "*"), " ", "\\ ")
+	os.execute("rm -f "..pack_target_path..target_file_escape)
+
+	--local cmd = "tar -cvzf "..pack_target_path..target_file_escape.." "..string.gsub(get_app_path(inst, "*"), " ", "\\ ")
+	local cmd = "cd "..string.gsub(get_app_path(inst), " ", "\\ ").." && zip -r -q "..pack_target_path..target_file_escape.." ./*"
 	local r, status, code = os.execute(cmd)
 	if not r then
 		return nil, "failed to pack application"..inst
