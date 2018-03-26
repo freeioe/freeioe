@@ -441,13 +441,18 @@ $(document).ready(function() {
 		};
 		$.post(backend_url, args)
 			.done(function (d) {
-				if (d.result) {
-					window.location.href = d.message;
+				if (typeof d === 'object') {
+					if (d.result) {
+						window.location.href = d.message;
+					} else {
+						alert(d.message);
+					}
 				} else {
-					alert(d.message);
+					alert(d);
 				}
 			})
 			.fail(function () {
+				alert("Download Application Failed!");
 			});
 	};
 

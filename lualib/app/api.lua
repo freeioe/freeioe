@@ -191,7 +191,7 @@ function api:default_meta()
 		description = "Unknown device",
 		manufacturer = "Bamboo IOT",
 		series = "Unknown",
-		link = "http://unknown",
+		link = "http://iot.symgrid.com/device?name=",
 	}
 end
 
