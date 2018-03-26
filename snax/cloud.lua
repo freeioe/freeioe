@@ -691,6 +691,19 @@ function accept.app_list(id, args)
 	end
 
 	if r then
+		local appmgr = snax.uniqueservice('appmgr')
+		local app_list = appmgr.req.list()
+		local now_time = skynet.time()
+		for k, v in pairs(r) do
+			local app = app_list[k]
+			if app and app.inst then
+				v.running = now_time
+				if now_time - app.last > 5 then
+					v.blocked = app.last
+				end
+			end
+		end
+
 		if mqtt_client then
 			mqtt_client:publish(mqtt_id.."/apps", cjson.encode(r), 1, true)
 		end

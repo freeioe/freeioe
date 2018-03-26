@@ -29,6 +29,7 @@ function response.start(name, conf)
 	end
 
 	app.inst = inst
+	app.last = skynet.time()
 
 	return inst
 end
@@ -128,7 +129,7 @@ function accept.app_create(inst, opts)
 end
 
 function accept.app_heartbeat(inst, time)
-	log.debug("Application heartbeat received from", inst, time)
+	--log.debug("Application heartbeat received from", inst, time)
 	if applist[inst] then
 		applist[inst].last = time
 	end
