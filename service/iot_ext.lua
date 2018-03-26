@@ -40,7 +40,7 @@ end
 
 
 local function create_download(app_name, version, cb)
-	local down = pkg_api.create_download_func(app_name, version, ".tar.gz", cb, true)
+	local down = pkg_api.create_download_func(app_name, app_name, version, ".tar.gz", cb, true)
 	create_task(down, "Download Extension "..app_name)
 end
 
