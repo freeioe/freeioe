@@ -9,6 +9,9 @@ local app_name = "UNKNOWN"
 local mgr_snax = nil
 local sys_api = nil
 
+local cancel_ping_timer = nil
+local cancel_ping_timeout = 5000 -- ms
+
 local function protect_call(app, func, ...)
 	assert(app and func)
 	local f = app[func]
@@ -60,20 +63,6 @@ function response.ping()
 	return "Pong "..app_name
 end
 
---[[
--- List device map {<device_key> = {...}}
---]]
-function response.list_devices()
-	assert(app)
-	return protect_call(app, 'list_device')
-end
-
---- List device props map by device key which from list_devices
-function response.list_props(device)
-	assert(app)
-	return protect_call(app, 'list_props')
-end
-
 function response.start()
 	if app then
 		local r, err = protect_call(app, 'start')
@@ -84,6 +73,13 @@ function response.start()
 		if app.run then
 			skynet.timeout(10, work_proc)
 		end
+
+		local ping_mgr = nil
+		ping_mgr = function()
+			mgr_snax.post.app_heartbeat(app_name, skynet.time())
+			cancel_ping_timer = app_sys:cancelable_timeout(cancel_ping_timeout, ping_mgr)
+		end
+		cancel_ping_timer = app_sys:cancelable_timeout(cancel_ping_timeout, ping_mgr)
 
 		return true
 	else
@@ -195,6 +191,10 @@ end
 
 function exit(...)
 	log.info("App "..app_name.." closed.")
+	if cancel_ping_timer then
+		cancel_ping_timer()
+		cancel_ping_timer = nil
+	end
 	local r, err = on_close(...)
 	if not r then
 		log.error(err)

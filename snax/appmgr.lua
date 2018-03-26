@@ -127,6 +127,13 @@ function accept.app_create(inst, opts)
 	end
 end
 
+function accept.app_heartbeat(inst, time)
+	log.debug("Application heartbeat received from", inst, time)
+	if applist[inst] then
+		applist[inst].last = time
+	end
+end
+
 function init(...)
 	log.info("AppMgr service starting...")
 
@@ -166,7 +173,7 @@ function init(...)
 end
 
 function exit(...)
-	for k,v in applist do
+	for k,v in pairs(applist) do
 		if v.inst then
 			snax.kill(v.inst, "force")
 			v.inst = nil
@@ -177,7 +184,7 @@ function exit(...)
 	dc.set("MC", "APP", "COMM", nil)
 	dc.set("MC", "APP", "STAT", nil)
 	dc.set("MC", "APP", "EVENT", nil)
-	for k,v in mc_map do
+	for k,v in pairs(mc_map) do
 		v:delete()
 	end
 	log.info("AppMgr service closed!")
