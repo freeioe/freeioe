@@ -6,6 +6,7 @@ local dc = require 'skynet.datacenter'
 
 local applist = {}
 local mc_map = {}
+local reg_map = {}
 
 ---
 -- Return instance id
@@ -31,6 +32,10 @@ function response.start(name, conf)
 	app.inst = inst
 	app.last = skynet.time()
 
+	for handle, srv in pairs(reg_map) do
+		srv.post.app_started(name, inst.handle)
+	end
+
 	return inst
 end
 
@@ -43,6 +48,10 @@ function response.stop(name, reason)
 	if app.inst then
 		snax.kill(app.inst, reason)
 		app.inst = nil
+	end
+
+	for handle, srv in pairs(reg_map) do
+		srv.post.app_stoped(name)
 	end
 
 	return true
@@ -135,6 +144,18 @@ function accept.app_heartbeat(inst, time)
 	end
 end
 
+function accept.reg_snax(handle, type)
+	local snax_inst = snax.bind(handle, type)
+	reg_map[handle] = snax_inst
+	snax_inst.post.app_list(applist)
+	return true
+end
+
+function accept.unreg_snax(handle)
+	reg_map[handle] = nil
+	return true
+end
+
 function init(...)
 	log.info("AppMgr service starting...")
 
@@ -180,6 +201,7 @@ function exit(...)
 			v.inst = nil
 		end
 	end
+	applist = {}
 	dc.set("MC", "APP", "DATA", nil)
 	dc.set("MC", "APP", "CTRL", nil)
 	dc.set("MC", "APP", "COMM", nil)
@@ -188,5 +210,7 @@ function exit(...)
 	for k,v in pairs(mc_map) do
 		v:delete()
 	end
+	mc_map = {}
+	reg_map = {}
 	log.info("AppMgr service closed!")
 end

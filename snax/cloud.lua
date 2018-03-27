@@ -713,12 +713,19 @@ end
 function accept.app_query_log(id, args)
 	local log_reader = require 'log_reader'
 	local app = args.name
+	--[[
 	local max_count = tonumber(args.max_count) or 60
 	local log, err = log_reader.by_app(app, max_count) 
+	]]--
+	local buffer = snax.uniqueservice('buffer')
+	local logs, err = buffer.req.get_log(app)
 	snax.self().post.action_result('app', id, r, err or "Done")
-	if log then
-		if mqtt_client then
-			mqtt_client:publish(mqtt_id.."/app_log", cjson.encode({name=app, log=log}), 1, false)
+	if logs then
+		for _, log in ipairs(logs) do
+			if mqtt_client then
+				mqtt_client:publish(mqtt_id.."/app_log", cjson.encode({name=app, log=log}), 1, false)
+			end
+			skynet.sleep(0)
 		end
 	end
 end

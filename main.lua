@@ -15,7 +15,7 @@ skynet.start(function()
 	local cloud = snax.uniqueservice("cloud")
 	local appmgr = snax.uniqueservice("appmgr")
 	-- This is one comm data buffer service for get one snapshot
-	local commlog = snax.uniqueservice("commlog")
+	local commlog = snax.uniqueservice("buffer")
 
 	pcall(skynet.newservice, "debug_console", 7000)
 	pcall(skynet.newservice, "lwf", 8808)
