@@ -15,8 +15,9 @@ return {
 		else
 			local buffer = snax.uniqueservice("buffer")
 			logs, err = buffer.req.get_log(app)
-			for _, log in ipairs(logs) do
-				log.time = os.date("%D %T ", math.floor(log.timestamp)) .. math.floor((log.timestamp % 1) * 1000)
+			for _, log in ipairs(logs or {}) do
+				local ms = string.format("%03d", math.floor((log.timestamp % 1) * 1000))
+				log.time = os.date("%D %T "..ms, math.floor(log.timestamp))
 			end
 		end
 

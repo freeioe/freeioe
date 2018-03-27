@@ -59,7 +59,6 @@ function response.get_log(app)
 	if not handle then
 		return nil, "Application is not running"
 	end
-	print(handle)
 	local process = handle_to_process(handle)
 	return log_buffer[process]
 end
