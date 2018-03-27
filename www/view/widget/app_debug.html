@@ -173,7 +173,7 @@ function debug_init() {
 	});
 	log_table = $('#log_table').DataTable({
 		"ajax": {
-			"url": "/sys/log",
+			"url": "/app/log?app=" + "{{app.inst}}",
 			"dataSrc": ""
 		},
 		"columns": [

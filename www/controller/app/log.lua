@@ -1,3 +1,4 @@
+local snax = require 'skynet.snax'
 local cjson = require 'cjson.safe'
 local log_reader = require 'log_reader'
 
@@ -7,20 +8,24 @@ return {
 		local app = get['app']
 		local max_line = get.max_line or 256
 
-		local log, err = log_reader.by_app(app, max_line)
-		local accept_json = string.match(ngx.var.header.accept, 'application/json')
-		if log and accept_json and typ ~= 'dmesg' then
-			ngx.header.content_type = "application/json; charset=utf-8"
-			ngx.print(cjson.encode(log))
+		local logs = {}
+		local err = nil
+		if get.from_file then
+			logs, err = log_reader.by_app(app, max_line)
 		else
-			local s = nil
-			if log then
-				s = table.concat(log.sys, '\n')
-				s = s..'\n========================================================\n'
-				s = s..table.concat(log.log, '\n')
+			local buffer = snax.uniqueservice("buffer")
+			logs, err = buffer.req.get_log(app)
+			for _, log in ipairs(logs) do
+				log.time = os.date("%D %T ", math.floor(log.timestamp)) .. math.floor((log.timestamp % 1) * 1000)
 			end
-			ngx.header.content_type = "text/plain; charset=utf-8"
-			ngx.print(s or err)
+		end
+
+		local accept_json = string.match(ngx.var.header.accept, 'application/json')
+		if logs then
+			ngx.header.content_type = "application/json; charset=utf-8"
+			ngx.print(cjson.encode(logs))
+		else
+			ngx.print(err)
 		end
 	end,
 }
