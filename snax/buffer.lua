@@ -108,11 +108,11 @@ local function connect_log_server(enable)
 	local obj = snax.self()
 	if enable then
 		logger.post.reg_snax(obj.handle, obj.type)
-		skynet.call(".logger", "lua", "reg_snax", obj.handle, obj.type)
+		--skynet.call(".logger", "lua", "reg_snax", obj.handle, obj.type)
 		appmgr.post.reg_snax(obj.handle, obj.type)
 	else
 		logger.post.unreg_snax(obj.handle)
-		skynet.call(".logger", "lua", "unreg_snax", obj.handle)
+		--skynet.call(".logger", "lua", "unreg_snax", obj.handle)
 		appmgr.post.unreg_snax(obj.handle)
 	end
 end
