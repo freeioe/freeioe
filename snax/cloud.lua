@@ -513,7 +513,7 @@ end
 function accept.enable_log(sec)
 	local sec = tonumber(sec)
 	if sec and sec > 0 and sec < max_enable_log_upload then
-		enable_log_upload = os.time() + sec
+		enable_log_upload = math.floor(skynet.time()) + sec
 	else
 		enable_log_upload = nil
 	end
@@ -523,7 +523,7 @@ end
 function accept.enable_comm(sec)
 	local sec = tonumber(sec)
 	if sec and sec > 0 and sec < max_enable_comm_upload then
-		enable_comm_upload = os.time() + sec
+		enable_comm_upload = math.floor(skynet.time()) + sec
 	else
 		enable_comm_upload = nil
 	end
