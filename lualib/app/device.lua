@@ -145,7 +145,7 @@ function device:dump_comm(dir, ...)
 end
 
 function device:fire_event(level, data, timestamp)
-	return self._event_chn:publish(self._app_name, self._sn, level, data, timestamp)
+	return self._event_chn:publish(self._app_name, self._sn, level, data, timestamp or skynet.time())
 end
 
 function device:stat(name)

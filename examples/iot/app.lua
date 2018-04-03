@@ -155,6 +155,19 @@ function app:run(tms)
 	self._dev:set_input_prop('log_upload', 'value', enable_log_upload or 0)
 	self._dev:set_input_prop('enable_beta', 'value', enable_beta and 1 or 0)
 
+	if math.abs(os.time() - self._sys:time()) > 2 then
+		self._log:error("Time diff found, system will be rebooted in five seconds. ", os.time(), self._sys:time())
+		local level = 0
+		local data = {
+			['type'] = "EEE",
+			info = "Time diff found!"
+		}
+		self._dev:fire_event(level, data)
+		self._sys:timeout(500, function()
+			self._sys:abort()
+		end)
+	end
+
 	return 1000 * 5
 end
 
