@@ -61,7 +61,7 @@ return {
 		local arch = sysinfo.cpu_arch()
 		local os_id = sysinfo.os_id()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
-		local iot_sn = sysinfo.iot_sn()
+		local iot_sn = dc.get('CLOUD', 'ID') or sysinfo.iot_sn()
 		
 		local cloud = snax.uniqueservice('cloud')
 		local cloud_status, cloud_last = cloud.req.get_status()
