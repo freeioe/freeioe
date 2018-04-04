@@ -166,6 +166,8 @@ function app:run(tms)
 		self._sys:timeout(500, function()
 			self._sys:abort()
 		end)
+	else
+		--print(os.time() - self._sys:time())
 	end
 
 	return 1000 * 5

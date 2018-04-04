@@ -1,4 +1,4 @@
-local skynet = require 'skynet'
+local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
 local log = require 'utils.log'
