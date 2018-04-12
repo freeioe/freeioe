@@ -1,9 +1,11 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
+local socket = require 'skynet.socket'
 local crypt = require 'skynet.crypt'
 local log = require 'utils.log'
 local app_api = require 'app.api'
 local cyclebuffer = require 'cyclebuffer'
+local cjson = require 'cjson.safe'
 
 local api = nil
 
@@ -18,6 +20,10 @@ local max_log_buf_size = 256
 local handle_to_process = function(handle)
 	return string.format("%08x", handle)
 end
+
+-- UDP Forwarder
+local udp = nil
+local udp_target = nil
 
 --[[
 -- Api Handler
@@ -37,6 +43,12 @@ local Handler = {
 			table.remove(list, 1)
 		end
 		comm_buffer[app] = list
+		if udp and udp_target then
+			socket.sendto(udp, udp_target, cjson.encode({
+				['type'] = 'comm',
+				data = list[#list]
+			}))
+		end
 	end,
 }
 
@@ -63,6 +75,31 @@ function response.get_log(app)
 	return log_buffer[process]
 end
 
+local function close_udp()
+	if udp then
+		socket.close(udp)
+		udp = nil
+		udp_target = nil
+	end
+end
+
+function response.start_forward()
+	close_udp()
+	log.notice("UDP Forward is starting...")
+	udp = socket.udp(function(str, from) 
+		print(str, from)
+		if str == 'WHOISYOURDADDY' then
+			udp_target = from
+		else
+			socket.sendto(udp, from, str)
+		end
+	end, '0.0.0.0', 7788)
+end
+
+function response.stop_forward()
+	close_udp()
+end
+
 function accept.log(ts, lvl, content, ...)
 	local process, data = string.match(content, '^%[(.+)%]: (.+)$')
 	local list = log_buffer[process] or {}
@@ -76,6 +113,13 @@ function accept.log(ts, lvl, content, ...)
 		table.remove(list, 1)
 	end
 	log_buffer[process] = list
+
+	if udp and udp_target then
+		socket.sendto(udp, udp_target, cjson.encode({
+			['type'] = 'log',
+			data = list[#list]
+		}))
+	end
 end
 
 function accept.app_started(name, handle)
@@ -85,6 +129,7 @@ function accept.app_started(name, handle)
 	end
 	nh_map[name] = handle
 end
+
 function accept.app_stoped(name)
 	local handle = nh_map[name]
 	if not handle then
@@ -94,6 +139,7 @@ function accept.app_stoped(name)
 	log_buffer[process] = nil
 	nh_map[name] = nil
 end
+
 function accept.app_list(list)
 	for k, v in pairs(list) do
 		if v.inst then

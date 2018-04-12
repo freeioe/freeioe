@@ -1,4 +1,5 @@
 local skynet = require 'skynet'
+local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
 
 return {
@@ -36,6 +37,22 @@ return {
 			end
 			dc.set('CLOUD', string.upper(option), value)
 			ngx.print(_('PKG option is changed!'))
+		end
+		if action == 'debugger' then
+			local using_beta = dc.get('CLOUD', 'USING_BETA')
+			if not using_beta then
+				return
+			end
+			local option = post.option
+			local value = post.value
+			local buffer = snax.uniqueservice('buffer')
+			if option == 'forward' then
+				if value == true or value == 'true' then
+					buffer.req.start_forward()
+				else
+					buffer.req.stop_forward()
+				end
+			end
 		end
 	end
 }

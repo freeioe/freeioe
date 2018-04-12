@@ -199,7 +199,7 @@ function api:add_device(sn, meta, inputs, outputs, commands)
 	assert(sn, "Device Serial Number is required")
 	valid_device_meta(meta or default_meta())
 	meta.app = self._app_name
-	meta.inst = meta.inst or meta.name
+	meta.inst = meta.inst or meta.name -- 实际设备实例名称, 如:BMS #2,PLC #2
 	local dev = self._devices[sn]
 	if dev then
 		return dev

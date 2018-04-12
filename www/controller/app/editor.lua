@@ -1,6 +1,6 @@
 local snax = require 'skynet.snax'
 local lfs = require 'lfs'
-
+local dc = require 'skynet.datacenter'
 
 local function get_file_ext(filename)
 	local ext = string.match(filename, '%.(%w-)$')
@@ -197,6 +197,10 @@ return {
 	post = function(self)
 		if lwf.auth.user == 'Guest' then
 			self:redirect('/user/login')
+			return
+		end
+		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		if not using_beta then
 			return
 		end
 
