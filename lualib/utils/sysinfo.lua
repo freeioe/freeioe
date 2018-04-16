@@ -191,7 +191,7 @@ local arch_short_names = {
 	['arm_cortex-a9_neon'] = 'arm', -- openwrt imx6
 	armv5tejl = 'arm', --mx0
 	armv7l = 'arm', --imx6
-	x86_64 = 'amd64',
+	x86_64 = 'x86_64',
 	mips = 'mips',
 }
 
@@ -269,7 +269,7 @@ end
 local device_types_names = {
 	armv5tejl = 'mx0',
 	armv7l = 'q102',
-	x86_64 = 'amd64',
+	x86_64 = 'x86_64',
 	mips = 'tp-720n',
 }
 
