@@ -107,6 +107,9 @@ local msg_handler = {
 		if action == 'query_log' then
 			snax.self().post.app_query_log(args.id, args.data)
 		end
+		if action == 'option' then
+			snax.self().post.app_option(args.id, args.data)
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		--log.trace('MSG.SYS', topic, data, qos, retained)
@@ -712,7 +715,7 @@ end
 
 function accept.app_query_log(id, args)
 	local log_reader = require 'log_reader'
-	local app = args.name
+	local app = args.inst
 	--[[
 	local max_count = tonumber(args.max_count) or 60
 	local log, err = log_reader.by_app(app, max_count) 
@@ -728,6 +731,10 @@ function accept.app_query_log(id, args)
 			skynet.sleep(0)
 		end
 	end
+end
+
+function accept.app_option(id, args)
+	appmgr.post.app_option(args.inst, args.option, args.value)
 end
 
 function accept.sys_upgrade(id, args)
