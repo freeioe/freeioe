@@ -722,7 +722,7 @@ function accept.app_query_log(id, args)
 	]]--
 	local buffer = snax.uniqueservice('buffer')
 	local logs, err = buffer.req.get_log(app)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.action_result('app', id, logs, err or "Done")
 	if logs then
 		for _, log in ipairs(logs) do
 			if mqtt_client then
@@ -734,6 +734,7 @@ function accept.app_query_log(id, args)
 end
 
 function accept.app_option(id, args)
+	local appmgr = snax.uniqueservice('appmgr')
 	appmgr.post.app_option(args.inst, args.option, args.value)
 	snax.self().post.action_result('app', id, true, "Done")
 end
