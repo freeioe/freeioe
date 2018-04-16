@@ -735,6 +735,7 @@ end
 
 function accept.app_option(id, args)
 	appmgr.post.app_option(args.inst, args.option, args.value)
+	snax.self().post.action_result('app', id, true, "Done")
 end
 
 function accept.sys_upgrade(id, args)
