@@ -17,7 +17,11 @@ log:debug("this is a log content")
 
 * sys:dump_comm(sn, dir, ...)
 
-记录应用报文。 sn是应用创建的设备序列号，参考api:create_device()函数。 dir是报文方向： IN, OUT。
+记录应用报文。 sn是应用创建的设备序列号/为空时代表设备无关报文。参考api:create_device()函数。 dir是报文方向： IN, OUT。
+
+* sys:fire_event(sn, level, data, timestamp)
+
+记录应用事件。 sn是应用创建的设备序列号/为空时代表应用时间。level是事件等级的数字，data最少包含一个type的字段的table
 
 * sys:fork(func, ...)
 

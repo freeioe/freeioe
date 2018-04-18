@@ -24,6 +24,10 @@ function sys:dump_comm(sn, dir, ...)
 	return self._data_api:_dump_comm(sn, dir, ...)
 end
 
+function sys:fire_event(sn, level, data, timestamp)
+	return self._data_api:_fire_event(sn or self:app_sn(), level, data, timestamp)
+end
+
 function sys:fork(func, ...)
 	skynet.fork(func, ...)
 end
