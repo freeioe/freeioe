@@ -236,18 +236,9 @@ function api:_dump_comm(sn, dir, ...)
 	return self._comm_chn:publish(self._app_name, sn, dir, skynet.time(), ...)
 end
 
---[[
--- Get application configuration 
---]]
-function api:get_conf(sn)
-	return dc.get('APPS', self._app_name, 'conf')
-end
-
---[[
--- Set application configuration
---]]
-function api:set_conf(sn, conf)
-	return dc.set('APPS', self._app_name, 'conf')
+function api:_fire_event(sn, level, data, timestamp)
+	assert(sn)
+	return self._event_chn:publish(self._app_name, sn, level, data, timestamp or skynet.time())
 end
 
 return api

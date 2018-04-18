@@ -57,10 +57,6 @@ commands：设备控制项
 
 内部接口
 
-* api:get_conf(sn)
-
-内部接口
-
-* api:set_conf(sn)
+* api:_fire_event(sn, level, data, timestamp)
 
 内部接口
