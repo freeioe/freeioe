@@ -145,6 +145,8 @@ function device:dump_comm(dir, ...)
 end
 
 function device:fire_event(level, type_, info, data, timestamp)
+	assert(level and type_ and info)
+	local type_ = app_event.type_to_string(type_)
 	return self._event_chn:publish(self._app_name, self._sn, level, type_, info, data or {}, timestamp or skynet.time())
 end
 

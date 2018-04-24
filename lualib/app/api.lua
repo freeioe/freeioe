@@ -5,6 +5,7 @@ local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local dev_api = require 'app.device'
+local app_event = require 'app.event'
 
 local api = class("APP_MGR_API")
 
@@ -238,6 +239,7 @@ end
 
 function api:_fire_event(sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)
+	local type_ = app_event.type_to_string(type_)
 	return self._event_chn:publish(self._app_name, sn, level, type_, info, data or {}, timestamp or skynet.time())
 end
 
