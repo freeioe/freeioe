@@ -8,7 +8,7 @@ local _M = {}
 --- Get output of shell command
 --
 _M.exec = function(cmd)
-	local cmd = cmd..' 2>&1'
+	local cmd = cmd..' 2>/dev/null'
 	local f, err = io.popen(cmd)
 	if not f then
 		return nil, err
