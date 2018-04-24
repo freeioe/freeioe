@@ -236,9 +236,9 @@ function api:_dump_comm(sn, dir, ...)
 	return self._comm_chn:publish(self._app_name, sn, dir, skynet.time(), ...)
 end
 
-function api:_fire_event(sn, level, data, timestamp)
-	assert(sn)
-	return self._event_chn:publish(self._app_name, sn, level, data, timestamp or skynet.time())
+function api:_fire_event(sn, level, type_, info, data, timestamp)
+	assert(sn and level and type_ and info)
+	return self._event_chn:publish(self._app_name, sn, level, type_, info, data or {}, timestamp or skynet.time())
 end
 
 return api

@@ -19,9 +19,9 @@ log:debug("this is a log content")
 
 记录应用报文。 sn是应用创建的设备序列号/为空时代表设备无关报文。参考api:create_device()函数。 dir是报文方向： IN, OUT。
 
-* sys:fire_event(sn, level, data, timestamp)
+* sys:fire_event(sn, level, type, info, data, timestamp)
 
-记录应用事件。 sn是应用创建的设备序列号/为空时代表应用时间。level是事件等级的数字，data最少包含一个type的字段的table
+记录应用事件。 sn是应用创建的设备序列号。level是事件等级的整数,type是事件类型(如果是字符串类型则是自定义类型),info是事件描述字符串,data是时间附带数据,timestamp是时间戳。
 
 * sys:fork(func, ...)
 

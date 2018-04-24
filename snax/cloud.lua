@@ -294,15 +294,16 @@ local Handler = {
 			return mqtt_client:publish(key, cjson.encode(msg), 1, false)
 		end
 	end,
-	on_event = function(app, sn, level, data, timestamp)
+	on_event = function(app, sn, level, type_, info, data, timestamp)
 		if enable_event_upload >= 0 and (tonumber(level) >= enable_event_upload)  then
 			return
 		end
-		event_buffer:handle(function(sn, level, data, timestamp)
+		event_buffer:handle(function(sn, level, type_, info, data, timestamp)
+			local event = { level = level, ['type'] = type_, info = info, data = data }
 			if mqtt_client then
-				return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, level, data, timestamp}), 1, false)
+				return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, event, timestamp}), 1, false)
 			end
-		end, sn, level, data, timestamp)
+		end, sn, level, type_, info, data, timestamp)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
