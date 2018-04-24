@@ -1,6 +1,7 @@
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local datacenter = require 'skynet.datacenter'
+local event = require 'app.event'
 
 local app = class("IOT_SYS_APP_CLASS")
 app.API_VER = 1
@@ -125,17 +126,11 @@ function app:run(tms)
 		end
 		calc_uptime()
 
-		--[[
 		self._sys:timeout(100, function()
 			self._log:debug("Fire event")
-			local data = {
-				['type'] = "EEE",
-				info = "System Started!"
-			}
-			local level = 0
-			self._dev:fire_event(level, data, self._sys:time())
+			local sys_id = self._sys:id()
+			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
 		end)
-		]]--
 	end
 
 	local loadavg = sysinfo.loadavg()
@@ -157,12 +152,7 @@ function app:run(tms)
 
 	if math.abs(os.time() - self._sys:time()) > 2 then
 		self._log:error("Time diff found, system will be rebooted in five seconds. ", os.time(), self._sys:time())
-		local level = 0
-		local data = {
-			['type'] = "EEE",
-			info = "Time diff found!"
-		}
-		self._dev:fire_event(level, data)
+		self._dev:fire_event(event.LEVEL_FATAL, event.EVENT_SYS, "Time diff found!", {os_time = os.time(), time=self._sys:time()}, os.time())
 		self._sys:timeout(500, function()
 			self._sys:abort()
 		end)

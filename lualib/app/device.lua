@@ -4,6 +4,7 @@ local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local stat_api = require 'app.stat'
+local app_event = require 'app.event'
 
 local device = class("APP_MGR_DEV_API")
 
