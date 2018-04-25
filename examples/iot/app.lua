@@ -2,6 +2,7 @@ local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local datacenter = require 'skynet.datacenter'
 local event = require 'app.event'
+local disk = require 'disk'
 
 local app = class("IOT_SYS_APP_CLASS")
 app.API_VER = 1
@@ -84,6 +85,10 @@ function app:start()
 			name = "enable_beta",
 			desc = "Device using beta enable flag",
 			vt = "int",
+		},
+		{
+			name = 'disk_tmp_used',
+			desc = "Disk /tmp used percent",
 		}
 	}
 	local meta = self._api:default_meta()
@@ -119,18 +124,36 @@ function app:run(tms)
 		self._dev:set_input_prop('skynet_version', "git_version", sgv)
 		self._dev:set_input_prop('platform', "value", plat)
 
+		--- Calculate uptime for earch 60 seconds
 		local calc_uptime = nil
 		calc_uptime = function()
 			self._dev:set_input_prop('uptime', "value", self._sys:now())
+
+			local r, err = disk.df('/tmp')
+			if r then
+				self._dev:set_input_prop('disk_tmp_used', 'value', r.used_percent)
+
+				-- Check used percent limitation
+				if not self._tmp_event_fired and r.used_percent > 98 then
+					local info = "/tmp disk is nearly full!!!"
+					self._log:error(info)
+					self._dev:fire_event(event.LEVEL_ERROR, event.EVENT_SYS, info, r)
+					self._tmp_event_fired = true
+				end
+			end
+
+			-- Reset timer
 			self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
 		end
 		calc_uptime()
 
+		--[[
 		self._sys:timeout(100, function()
 			self._log:debug("Fire event")
 			local sys_id = self._sys:id()
 			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
 		end)
+		]]--
 	end
 
 	local loadavg = sysinfo.loadavg()

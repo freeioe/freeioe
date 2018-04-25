@@ -98,7 +98,7 @@ end
 
 function device:set_input_prop(input, prop, value, timestamp, quality)
 	assert(not self._readonly, "This is not created device")
-	assert(input and prop and value)
+	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
