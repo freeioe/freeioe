@@ -25,7 +25,7 @@ local EVENT_NAMES = {
 
 local function type_to_string(type_)
 	if type(type_) == 'number' then
-		assert(type_ > 0 and type_ < #EVENTS)
+		assert(type_ > 0 and type_ <= #EVENTS)
 		return EVENT_NAMES[type_]
 	else
 		return type_

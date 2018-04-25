@@ -20,7 +20,7 @@ function response.start(name, conf)
 	applist[name] = app
 
 	local s = snax.self()
-	local inst = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
+	local inst, err = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
 
 	local r, err = inst.req.start()
 	if not r then
@@ -154,6 +154,16 @@ end
 function accept.unreg_snax(handle)
 	reg_map[handle] = nil
 	return true
+end
+
+function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
+	assert(sn and level and type_ and info)
+	local event_chn = mc_map.EVENT
+	if event_chn then
+		skynet.timeout(200, function()
+			event_chn:publish(app_name, sn, level, type_, info, data or {}, timestamp or skynet.time())
+		end)
+	end
 end
 
 function init(...)

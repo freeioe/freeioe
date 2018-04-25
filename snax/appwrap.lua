@@ -1,13 +1,15 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
-local log = require 'utils.log'
-local app_sys = require 'app.sys'
 local cache = require "skynet.codecache"
+local app_sys = require 'app.sys'
+local event = require 'app.event'
+local log = require 'utils.log'
 
 local app = nil
 local app_name = "UNKNOWN"
 local mgr_snax = nil
 local sys_api = nil
+local sys_id = nil
 
 local cancel_ping_timer = nil
 local cancel_ping_timeout = 5000 -- ms
@@ -132,11 +134,25 @@ function accept.app_post(msg, ...)
 	return nil, "no handler for post message "..msg
 end
 
+function fire_exception_event(info, data)
+	if not mgr_snax then
+		return
+	end
+	local data = data or {}
+	data.app = app_name
+
+	local type_ = event.type_to_string(event.EVENT_APP)
+	return mgr_snax.post.fire_event(app_name, sys_id, event.LEVEL_ERROR, event.EVENT_APP, info, data)
+end
+
 function init(name, conf, mgr_handle, mgr_type)
 	-- Disable Skynet Code Cache!!
 	cache.mode('EXIST')
 
 	app_name = name
+	mgr_snax = snax.bind(mgr_handle, mgr_type)
+	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
+	sys_id = sys_api:id()
 
 	log.info("App "..app_name.." starting")
 	package.path = package.path..";./iot/apps/"..name.."/?.lua;./iot/apps/"..name.."/?.luac"
@@ -153,17 +169,23 @@ function init(name, conf, mgr_handle, mgr_type)
 	local r, err = skynet.call("IOT_EXT", "lua", "install_depends", name)
 	if not r then
 		log.error("Failed to install depends for ", name, "error:", err)
-		return nil, "Failed to start app. install depends failed"
+		local info = "Failed to start app. install depends failed"
+		fire_exception_event(info, {ext=name, err=err})
+		return nil, info
 	end
 
 	local lf, err = loadfile("./iot/apps/"..name.."/app.lua")
 	if not lf then
-		log.error("Loading app failed "..err)
+		local info = "Loading app failed."
+		log.error(info, err)
+		fire_exception_event(info, {err=err})
 		return nil, err
 	end
 	local r, m = xpcall(lf, debug.traceback)
 	if not r then
-		log.error("Loading app failed "..m)
+		local info = "Loading app failed."
+		log.error(info, m)
+		fire_exception_event(err, {err=m})
 		return nil, m
 	end
 
@@ -171,6 +193,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		local s = string.format("API Version required is too old. Required: %d. Current %d-%d",
 								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
 		log.error(s)
+		fire_exception_event(s)
 		return nil, s
 	else
 		if not m.API_VER then
@@ -178,12 +201,10 @@ function init(name, conf, mgr_handle, mgr_type)
 		end
 	end
 
-	mgr_snax = snax.bind(mgr_handle, mgr_type)
-	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
-
 	r, err = xpcall(m.new, debug.traceback, m, app_name, sys_api, conf)
 	if not r then
-		log.error("Create App instance failed. ", err)
+		log.error("Create App instance failed.", err)
+		fire_exception_event("Create App instance failed.", {err=err})
 		return nil, err
 	end
 	app = err
@@ -198,5 +219,6 @@ function exit(...)
 	local r, err = on_close(...)
 	if not r then
 		log.error(err)
+		fire_exception_event("App closed failure.", {err=err})
 	end
 end
