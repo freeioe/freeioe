@@ -123,7 +123,9 @@ end
 
 function accept.app_start(inst)
 	local v = dc.get("APPS", inst)
-	snax.self().req.start(inst, v.conf or {})
+	skynet.fork(function()
+		snax.self().req.start(inst, v.conf or {})
+	end)
 end
 
 function accept.app_option(inst, option, value)

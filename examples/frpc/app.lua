@@ -164,17 +164,6 @@ function app:start()
 	meta.series = "X"
 	self._dev = self._api:add_device(dev_sn, meta, inputs, outputs, cmds)
 
-	self._sys:timeout(100, function()
-		self._pm:stop()
-		self._pm:cleanup()
-		--self._sys:sleep(500)
-
-		if self._conf.auto_start then
-			self._pm:start()
-			self:on_frpc_start()
-		end
-	end)
-
 	return true
 end
 
@@ -212,6 +201,18 @@ function app:on_frpc_stop()
 end
 
 function app:run(tms)
+	if not self._first_start then
+		self._pm:stop()
+		self._pm:cleanup()
+		--self._sys:sleep(500)
+
+		if self._conf.auto_start then
+			self._pm:start()
+			self:on_frpc_start()
+		end
+		self._first_start = true
+	end
+
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', 'value', tonumber(loadavg.lavg_15))
 
