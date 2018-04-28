@@ -2,6 +2,7 @@
 -- Using process-monitor to start/stop 3rd binary process
 --
 
+local skynet = require 'skynet'
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local log = require 'utils.log'
@@ -47,7 +48,7 @@ end
 function pm:get_pid()
 	local f, err = io.open(self._pid, 'r')
 	if not f then
-		return nil, 'pid file not found'
+		return nil, 'pid file not found'..err
 	end
 	local id = f:read('*a')
 	f:close()
@@ -63,7 +64,9 @@ function pm:stop()
 	if not pid then
 		return nil, err
 	end
-	return os.execute('kill '..pid)
+	local r = {os.execute('kill '..pid)}
+	skynet.sleep(100)
+	return table.unpack(r)
 end
 
 function pm:status()
