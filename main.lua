@@ -17,7 +17,7 @@ skynet.start(function()
 	-- This is one comm data buffer service for get one snapshot
 	local commlog = snax.uniqueservice("buffer")
 
-	pcall(skynet.newservice, "debug_console", 7000)
+	-- pcall(skynet.newservice, "debug_console", 7000)
 	pcall(skynet.newservice, "lwf", 8808)
 
 	skynet.exit()
