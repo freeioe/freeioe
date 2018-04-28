@@ -18,6 +18,8 @@ skynet.start(function()
 	local commlog = snax.uniqueservice("buffer")
 
 	pcall(skynet.newservice, "debug_console", 6606)
+
+	skynet.sleep(300)
 	pcall(skynet.newservice, "lwf", 8808)
 
 	skynet.exit()
