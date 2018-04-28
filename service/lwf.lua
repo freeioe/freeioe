@@ -31,7 +31,12 @@ skynet.start(function()
 	--local lwf_root = "/home/cch/mycode/lwf/example"
 	local lwf = require('lwf').new(lwf_root, lwf_skynet, lwf_skynet_assets, co_m)
 
+	local processing = nil
 	skynet.dispatch("lua", function (_,_,id)
+		while processing do
+			skynet.sleep(1)
+		end
+		processing = id
 		socket.start(id)
 
 		-- limit request body size to 8192 (you can pass nil to unlimit)
@@ -54,6 +59,7 @@ skynet.start(function()
 			end
 		end
 		socket.close(id)
+		processing = nil
 	end)
 end)
 
@@ -66,7 +72,7 @@ skynet.start(function()
 	local port = tonumber(arg[arg.n] or 8080)
 
 	local agent = {}
-	for i= 1, 8 do
+	for i= 1, 2 do
 		agent[i] = skynet.newservice(SERVICE_NAME, "agent")
 	end
 	local balance = 1
