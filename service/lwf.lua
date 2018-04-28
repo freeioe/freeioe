@@ -23,7 +23,7 @@ local function response(id, ...)
 end
 
 skynet.start(function()
-	cache.mode('EXIST')
+	--cache.mode('EXIST')
 
 	local lwf_skynet = require 'lwf.skynet.init'
 	local lwf_skynet_assets = require 'lwf.skynet.assets'
@@ -63,10 +63,10 @@ assert(arg.n <= 2)
 
 skynet.start(function()
 	local ip = (arg.n == 2 and arg[1] or "0.0.0.0")
-	local port = tonumber(arg[arg.n] or 8090)
+	local port = tonumber(arg[arg.n] or 8080)
 
 	local agent = {}
-	for i= 1, 4 do
+	for i= 1, 8 do
 		agent[i] = skynet.newservice(SERVICE_NAME, "agent")
 	end
 	local balance = 1
