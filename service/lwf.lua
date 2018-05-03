@@ -33,10 +33,13 @@ skynet.start(function()
 
 	local processing = nil
 	skynet.dispatch("lua", function (_,_,id)
-		while processing do
-			skynet.sleep(1)
+		if processing then
+			local ts = skynet.now() - processing - 500
+			if ts > 0 then
+				skynet.sleep(ts)
+			end
 		end
-		processing = id
+		processing = skynet.now()
 		socket.start(id)
 
 		-- limit request body size to 8192 (you can pass nil to unlimit)
