@@ -155,7 +155,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	sys_id = sys_api:id()
 
 	log.info("App "..app_name.." starting")
-	package.path = package.path..";./iot/apps/"..name.."/?.lua;./iot/apps/"..name.."/?.luac"
+	package.path = package.path..";./iot/apps/"..name.."/?.lua;./iot/apps/"..name.."/?.luac"..";./iot/apps/"..name.."/lualib/?.lua;./iot/apps/"..name.."/lualib/?.luac"
 	package.cpath = package.cpath..";./iot/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
 	local f, err = io.open("./iot/apps/"..name.."/app.lua", "r")

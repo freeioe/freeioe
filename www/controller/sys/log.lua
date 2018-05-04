@@ -3,6 +3,9 @@ local log_reader = require 'log_reader'
 
 return {
 	get = function(self)
+		if lwf.auth.user == 'Guest' then
+			return
+		end
 		local get = ngx.req.get_uri_args()
 		local typ = get['type']
 		local max_line = get.max_line or 64

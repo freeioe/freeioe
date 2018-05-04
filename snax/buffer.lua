@@ -21,6 +21,10 @@ local handle_to_process = function(handle)
 	return string.format("%08x", handle)
 end
 
+-- Event Data
+local event_buffer = {}
+local max_event_buf_size = 256
+
 -- UDP Forwarder
 local udp = nil
 local udp_target = nil
@@ -50,6 +54,26 @@ local Handler = {
 			}))
 		end
 	end,
+	on_event = function(app, sn, level, type_, info, data, timestamp)
+		event_buffer[#event_buffer + 1] = {
+			app = app,
+			sn = sn,
+			level = level,
+			['type'] = type_,
+			info = info,
+			data = data,
+			timestamp = timestamp,
+		}
+		if #event_buffer > max_event_buf_size then
+			table.remove(event_buffer, 1)
+		end
+		if udp and udp_target then
+			socket.sendto(udp, udp_target, cjson.encode({
+				['type'] = 'event',
+				data = event_buffer[#event_buffer]
+			}))
+		end
+	end,
 }
 
 function response.ping()
@@ -73,6 +97,10 @@ function response.get_log(app)
 	end
 	local process = handle_to_process(handle)
 	return log_buffer[process]
+end
+
+function response.get_event()
+	return event_buffer
 end
 
 local function close_udp()

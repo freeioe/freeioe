@@ -1,0 +1,77 @@
+{% layout="base.html" %}
+
+{-title-}
+	{{_("Event List")}}
+{-title-}
+
+{-base_header-}
+<script type="text/javascript" src="/assets/library/vue.min.js"></script>
+{-base_header-}
+
+{-main_header-}
+{-main_header-}
+
+{-main-}
+<h1 class="header"> {{_("Event List")}} </h1>
+
+<h3 class="ui dividing header">{{_("Events")}} </h3>
+
+<div id="event_list">
+	{-raw-}
+	<div class="ui feed">
+		<div v-for="event in events" class="event">
+			<div class="label">
+				<i class="red bell icon"></i>
+			</div>
+			<div class="content">
+				<div class="date">
+					<a class="app">
+						{{event.app}}
+					</a> - {{event.time}}
+				</div>
+				<div class="summary">
+					[{{event.type}}]: {{event.info}}
+				</div>
+				<div class="extra text">
+					<i>{{event.data}} </i>
+				</div>
+				<div class="meta">
+					<a class="level">
+						<i class="bell icon"></i> Level: {{event.level}}
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	{-raw-}
+	<div class="ui teal button" v-on:click="load_data">{{_("Refresh")}}</div>
+</div>
+
+{-main-}
+
+{-script-}
+<script>
+	const dev_list = new Vue({
+		el: '#event_list',
+		data: {
+			events: [],
+		},
+		created () {
+			fetch('/sys/event', {credentials: 'include'})
+				.then(response => response.json())
+				.then(json => {
+					this.events = json
+				})
+		},
+		methods: {
+			load_data: function (event) {
+				fetch('/sys/event', {credentials: 'include'})
+					.then(response => response.json())
+					.then(json => {
+						this.events = json
+					})
+			}
+		}
+	});
+</script>
+{-script-}

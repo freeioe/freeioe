@@ -84,6 +84,7 @@ end
 local function install_depends_to_app(ext_inst, app_inst)
 	log.debug("Try to install "..ext_inst.." to "..app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'luaclib')
+	install_depends_to_app_ext(ext_inst, app_inst, 'lualib')
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
 
