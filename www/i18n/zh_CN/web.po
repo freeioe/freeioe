@@ -166,8 +166,14 @@ msgstr "文档"
 msgid "Enable Cloud Web Mapping"
 msgstr "开启Web映射"
 
+msgid "Event List"
+msgstr "事件列表"
+
 msgid "Event Upload"
 msgstr "事件上传"
+
+msgid "Events"
+msgstr "事件"
 
 msgid "Extension List"
 msgstr "扩展列表"
@@ -372,6 +378,9 @@ msgstr "检查扩展更新"
 
 msgid "Re-Type"
 msgstr "重新输入"
+
+msgid "Refresh"
+msgstr "刷新"
 
 msgid "Reinstall From Store"
 msgstr "重新安装"

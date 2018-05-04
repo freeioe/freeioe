@@ -1,7 +1,7 @@
 <h3 class="ui dividing header">{{_("Devices List")}} </h3>
 
 <div id="dev_list">
-	<div class="ui teal button" v-on:click="load_data">Load Data</div>
+	<div class="ui teal button" v-on:click="load_data">{{_("Refresh")}}</div>
 	<div class="ui styled fluid accordion">
 {-raw-}
 	<div v-for="dev in devices">

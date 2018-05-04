@@ -222,7 +222,15 @@ msgid "Enable Cloud Web Mapping"
 msgstr ""
 
 
+msgid "Event List"
+msgstr ""
+
+
 msgid "Event Upload"
+msgstr ""
+
+
+msgid "Events"
 msgstr ""
 
 
@@ -495,6 +503,10 @@ msgstr ""
 
 
 msgid "Re-Type"
+msgstr ""
+
+
+msgid "Refresh"
 msgstr ""
 
 
