@@ -50,11 +50,23 @@ msgid "Application List"
 msgstr ""
 
 
+msgid "Application Name"
+msgstr ""
+
+
+msgid "Application option changed!"
+msgstr ""
+
+
 msgid "Application started!"
 msgstr ""
 
 
 msgid "Application stoped!"
+msgstr ""
+
+
+msgid "Auto Start"
 msgstr ""
 
 
@@ -130,7 +142,15 @@ msgid "Control"
 msgstr ""
 
 
+msgid "Create"
+msgstr ""
+
+
 msgid "Create Applicatoin"
+msgstr ""
+
+
+msgid "Create an new application"
 msgstr ""
 
 
@@ -178,6 +198,10 @@ msgid "Device will be reboot after five seconds!"
 msgstr ""
 
 
+msgid "Devices"
+msgstr ""
+
+
 msgid "Devices List"
 msgstr ""
 
@@ -191,6 +215,18 @@ msgstr ""
 
 
 msgid "Documents"
+msgstr ""
+
+
+msgid "Enable Cloud Web Mapping"
+msgstr ""
+
+
+msgid "Event Upload"
+msgstr ""
+
+
+msgid "Extension List"
 msgstr ""
 
 
@@ -278,15 +314,15 @@ msgid "INI Parser"
 msgstr ""
 
 
+msgid "IOT"
+msgstr ""
+
+
 msgid "IOT Network"
 msgstr ""
 
 
 msgid "IOT System API"
-msgstr ""
-
-
-msgid "IOT System DashBoard"
 msgstr ""
 
 
@@ -303,6 +339,14 @@ msgstr ""
 
 
 msgid "Installed Application List"
+msgstr ""
+
+
+msgid "Installed Extensions"
+msgstr ""
+
+
+msgid "Instance Name"
 msgstr ""
 
 
@@ -358,6 +402,14 @@ msgid "Name"
 msgstr ""
 
 
+msgid "New Application"
+msgstr ""
+
+
+msgid "New application"
+msgstr ""
+
+
 msgid "No"
 msgstr ""
 
@@ -387,6 +439,10 @@ msgstr ""
 
 
 msgid "Oooops! Sorry The Page Not Found :("
+msgstr ""
+
+
+msgid "Option is invalid!"
 msgstr ""
 
 
@@ -426,7 +482,15 @@ msgid "Profile"
 msgstr ""
 
 
+msgid "Quality"
+msgstr ""
+
+
 msgid "Query application updates"
+msgstr ""
+
+
+msgid "Query extension updates"
 msgstr ""
 
 
@@ -439,6 +503,10 @@ msgstr ""
 
 
 msgid "Remember Me"
+msgstr ""
+
+
+msgid "Remove Cloud Web Mapping"
 msgstr ""
 
 
@@ -467,6 +535,14 @@ msgstr ""
 
 
 msgid "SYS"
+msgstr ""
+
+
+msgid "Script"
+msgstr ""
+
+
+msgid "Script is running!"
 msgstr ""
 
 
@@ -574,6 +650,10 @@ msgid "Tiemout"
 msgstr ""
 
 
+msgid "Timestamp"
+msgstr ""
+
+
 msgid "Total Memory"
 msgstr ""
 
@@ -651,6 +731,10 @@ msgstr ""
 
 
 msgid "Yes"
+msgstr ""
+
+
+msgid "You are not logined!"
 msgstr ""
 
 

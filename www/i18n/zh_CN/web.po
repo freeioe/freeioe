@@ -37,11 +37,20 @@ msgstr "应用文档"
 msgid "Application List"
 msgstr "应用列表"
 
+msgid "Application Name"
+msgstr "应用名称"
+
+msgid "Application option changed!"
+msgstr "应用设定已修改!"
+
 msgid "Application started!"
 msgstr "应用已启动!"
 
 msgid "Application stoped!"
 msgstr "应用已停止!"
+
+msgid "Auto Start"
+msgstr "开机启动"
 
 msgid "Beta Usage Warning"
 msgstr "Beta版本使用警告"
@@ -97,8 +106,14 @@ msgstr "共享"
 msgid "Control"
 msgstr "控制项"
 
+msgid "Create"
+msgstr "创建"
+
 msgid "Create Applicatoin"
 msgstr "创建应用"
+
+msgid "Create an new application"
+msgstr "创建新应用"
 
 msgid "Cycle Buffer"
 msgstr "循环缓存"
@@ -133,6 +148,9 @@ msgstr "设备模板"
 msgid "Device will be reboot after five seconds!"
 msgstr "设备将在5秒钟后重启"
 
+msgid "Devices"
+msgstr "设备"
+
 msgid "Devices List"
 msgstr "设备列表"
 
@@ -144,6 +162,15 @@ msgstr "文档索引"
 
 msgid "Documents"
 msgstr "文档"
+
+msgid "Enable Cloud Web Mapping"
+msgstr "开启Web映射"
+
+msgid "Event Upload"
+msgstr "事件上传"
+
+msgid "Extension List"
+msgstr "扩展列表"
 
 msgid "FT CSV Parser"
 msgstr "FT CSV解析器"
@@ -208,14 +235,14 @@ msgstr "序列号"
 msgid "INI Parser"
 msgstr "INI解析器"
 
+msgid "IOT"
+msgstr ""
+
 msgid "IOT Network"
 msgstr "IOT网络"
 
 msgid "IOT System API"
 msgstr "IOT系统接口"
-
-msgid "IOT System DashBoard"
-msgstr "IOT系统仪表盘"
 
 msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
 msgstr "IOT 是一个开源的物联网系统。敬请关注我们的GitHub账户"
@@ -228,6 +255,12 @@ msgstr "输入项"
 
 msgid "Installed Application List"
 msgstr "安装应用列表"
+
+msgid "Installed Extensions"
+msgstr "已安装的扩展"
+
+msgid "Instance Name"
+msgstr "实例名"
 
 msgid "Introduction"
 msgstr "介绍"
@@ -268,6 +301,12 @@ msgstr "更多信息"
 msgid "Name"
 msgstr "名称"
 
+msgid "New Application"
+msgstr "新应用"
+
+msgid "New application"
+msgstr "新应用"
+
 msgid "No"
 msgstr "否"
 
@@ -291,6 +330,9 @@ msgstr ""
 
 msgid "Oooops! Sorry The Page Not Found :("
 msgstr ""
+
+msgid "Option is invalid!"
+msgstr "非法选项"
 
 msgid "Outputs"
 msgstr "输出项"
@@ -319,8 +361,14 @@ msgstr "端口"
 msgid "Profile"
 msgstr "资料"
 
+msgid "Quality"
+msgstr "质量戳"
+
 msgid "Query application updates"
 msgstr "在线检测应用更新"
+
+msgid "Query extension updates"
+msgstr "检查扩展更新"
 
 msgid "Re-Type"
 msgstr "重新输入"
@@ -330,6 +378,9 @@ msgstr "重新安装"
 
 msgid "Remember Me"
 msgstr "记住我"
+
+msgid "Remove Cloud Web Mapping"
+msgstr "关闭Web映射"
 
 msgid "Restart"
 msgstr "重启"
@@ -351,6 +402,12 @@ msgstr "分析数据"
 
 msgid "SYS"
 msgstr "系统接口"
+
+msgid "Script"
+msgstr "脚本"
+
+msgid "Script is running!"
+msgstr "脚本正在运行！"
 
 msgid "Select a file from the tree."
 msgstr "从文件树中选择一个文件进行编辑"
@@ -430,6 +487,9 @@ msgstr "删除本地所有的改动，是否确认?"
 msgid "Tiemout"
 msgstr "超时"
 
+msgid "Timestamp"
+msgstr "时间戳"
+
 msgid "Total Memory"
 msgstr "全部内存"
 
@@ -490,11 +550,17 @@ msgstr "同步升级Skynet"
 msgid "Yes"
 msgstr "是"
 
+msgid "You are not logined!"
+msgstr "您还未登录！"
+
 msgid "dmesg"
 msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "IOT System DashBoard"
+#~ msgstr "IOT系统仪表盘"
 
 #~ msgid "Messages"
 #~ msgstr "消息"
