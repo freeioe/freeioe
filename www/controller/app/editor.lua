@@ -8,11 +8,15 @@ local function get_file_ext(filename)
 end
 
 local function path_join(...)
-	return table.concat({...}, '/')
+	local path = table.concat({...}, '/')
+	assert(not string.match(path, '%.%.'), "Cannot have .. in node id")
+	return path
 end
 
 local function get_app_path(app, ...)
-	return path_join("./iot/apps", app, ...)
+	local path = path_join("./iot/apps", app, ...)
+	path = string.gsub(path, "\\", "/")
+	return path
 end
 
 local function basename(path)
@@ -167,6 +171,24 @@ local post_ops = {
 		local content = opt.text
 		local path = get_app_path(app, node)
 		local f = assert(io.open(path, 'w'))
+		f:write(content)
+		f:close()
+		local appmgr = snax.uniqueservice("appmgr")
+		appmgr.post.app_modified(app, 'web_editor')
+		return { status = 'OK' }
+	end,
+	set_content_ex = function(app, node, opt)
+		local content = opt.text
+		local path = get_app_path(app, node)
+		local f, err = io.open(path, 'w')
+		if not f then
+			local folder = string.match(path, "(.+)[/]")
+			if not folder then
+				return { status = 'Failed' }
+			end
+			os.execute('mkdir -p '..folder)
+			f, err = io.open(path, 'w')
+		end
 		f:write(content)
 		f:close()
 		local appmgr = snax.uniqueservice("appmgr")
