@@ -18,10 +18,20 @@ _M.exec = function(cmd)
 	return s
 end
 
+_M.cat_file = function(path)
+	local f, err = io.open(path, 'r')
+	if not f then
+		return nil, err
+	end
+	local s = f:read('*a')
+	f:close()
+	return s
+end
+
 --- Get the cpu model
 -- @treturn string CPU Model 
 _M.cpu_model = function()
-	local s, err = _M.exec('cat /proc/cpuinfo')
+	local s, err = _M.cat_file('/proc/cpuinfo')
 	--return s:match("Hardware%s+:%s+([^%c]+)")
 	return s:match("model%s+name%s*:%s*([^%c]+)") or s:match("system%s+type%s*:%s*([^%c]+)") or 'Unknown'
 end
@@ -42,7 +52,7 @@ _M.uname = function(arg)
 end
 
 local function proc_mem_info()
-	local s, err = _M.exec('cat /proc/meminfo')
+	local s, err = _M.cat_file('/proc/meminfo')
 	if not s then
 		return nil, err
 	end
@@ -76,7 +86,7 @@ end
 -- output the loadavg as one table, includes: lavg_1, lavg_5, lavg_15, nr_running, nr_threads, last_pid
 -- @treturn table Refer to description
 _M.loadavg = function()
-	local s, err = _M.exec('cat /proc/loadavg')
+	local s, err = _M.cat_file('/proc/loadavg')
 	if not s then
 		return nil, err
 	end
@@ -131,7 +141,7 @@ _M.network = function()
 		patt = '[^%s:]'
 	end
 
-	local s, err = _M.exec('cat /proc/net/dev')
+	local s, err = _M.cat_file('/proc/net/dev')
 	if not s then
 		return nil, err
 	end

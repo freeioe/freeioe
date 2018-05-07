@@ -12,7 +12,7 @@ return {
 		local os_id = sysinfo.os_id()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
 		local iot_sn = dc.get('CLOUD', 'ID') or sysinfo.iot_sn()
-		local uptime = string.match(sysinfo.exec('cat /proc/uptime') or "", "%d+")
+		local uptime = string.match(sysinfo.cat_file('/proc/uptime') or "", "%d+")
 		local uptime_str = sysinfo.exec('uptime -s')
 		lwf.json(self, {
 			version = version, 
