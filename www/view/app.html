@@ -194,8 +194,10 @@ function check_app_version(inst, app, version) {
 }
 function check_for_update() {
 	{% for k, v in pairs(apps) do %}
+	{% if v.version ~= 0 then %}
 	check_app_version('{{k}}', '{{v.name}}', {{v.version}});
 	check_app_update('{{k}}', '{{v.name}}', {{v.version}});
+	{% end %}
 	{% end %}
 	print_message("{{_('Check updates done!')}}");
 }

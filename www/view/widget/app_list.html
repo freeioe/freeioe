@@ -18,7 +18,11 @@
 			<td>{{k}} </td>
 			<td>{{v.name}} </td>
 			<td>{{v.sn}} </td>
-			<td id="{{k}}_version_col"> {{v.version}} </td>
+			<td id="{{k}}_version_col"> {{v.version}}
+				{% if v.islocal and v.version == 0 then %}
+				<i class="blue write square icon"></i>
+				{% end %}
+			</td>
 			<td>
 				{% if v.auto == 0 then %}
 				<div class="ui toggle checkbox auto_start">
