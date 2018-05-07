@@ -115,7 +115,7 @@ function response.start_forward()
 	close_udp()
 	log.notice("UDP Forward is starting...")
 	udp = socket.udp(function(str, from) 
-		print(str, from)
+		--print(str, from)
 		if str == 'WHOISYOURDADDY' then
 			udp_target = from
 		else
