@@ -37,6 +37,18 @@ function app:start()
 			desc = 'System CPU Load'
 		},
 		{
+			name = 'total',
+			desc = 'System memory total size',
+		},
+		{
+			name = 'used',
+			desc = 'System memory used size',
+		},
+		{
+			name = 'free',
+			desc = 'System memory free size',
+		},
+		{
 			name = "uptime",
 			desc = "System uptime",
 			vt = "int",
@@ -158,6 +170,11 @@ function app:run(tms)
 
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))
+
+	local mem = sysinfo.meminfo()
+	self._dev:set_input_prop('total', 'value', tonumber(mem.total))
+	self._dev:set_input_prop('used', 'value', tonumber(mem.used))
+	self._dev:set_input_prop('free', 'value', tonumber(mem.free))
 	
 	-- cloud flags
 	--
