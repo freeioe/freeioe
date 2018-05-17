@@ -21,6 +21,8 @@ fi
 DAEMON_OPTS="-d -p $PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
+export IOT_RUN_AS_DAEMON=1
+
 if [ -x $DAEMON ]; then
 	echo "Starting..." $DESC
 	$DAEMON $DAEMON_OPTS -S "$STARTUP_OPTS" $SKYNET_BIN iot/config > /dev/null

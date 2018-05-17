@@ -24,6 +24,7 @@ fi
 
 start_service () {
 	procd_open_instance
+	procd_set_param env IOT_RUN_AS_DAEMON=1
 	procd_set_param command "$PM_BIN" -M 2 -D "$SKYNET_DIR" -S "sh $STARTUP_SH $BASE_DIR" $SKYNET_BIN iot/config
 	procd_set_param respawn
 	procd_close_instance

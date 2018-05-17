@@ -23,6 +23,7 @@ STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
 
 DAEMON=$SKYNET_DIR/skynet
 DAEMON_OPTS="iot/config"
+export IOT_RUN_AS_DAEMON=1
 
 
 if [ -r /etc/default/skynet ]; then
