@@ -117,7 +117,7 @@ local function list_installed()
 end
 
 local function list_depends()
-	local app_list = datacenter.get("APPS")
+	local app_list = datacenter.get("APPS") or {}
 	local depends = {}
 	for app_inst, v in pairs(app_list) do
 		local exts = get_app_depends(app_inst)
