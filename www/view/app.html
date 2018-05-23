@@ -58,6 +58,24 @@
 	</div>
 </div>
 
+<div class="ui small app_conf modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("Application Configruation")}}
+	</div>
+	<div class="content">
+		<form class="ui app_conf form" action="/app/conf" method="post" accept-charset="utf-8">
+			<input type="hidden" name="inst" type="text" value="">
+			<input type="hidden" name="conf" type="text" value="">
+			<div class="field">
+				<label>{{_("Configuration")}}</label>
+				<div id="json_editor" style="width: 400px;height: 300px;"></div>
+			</div>
+			<div class="ui primary submit button">{{_("Change")}}</div>
+		</form>
+	</div>
+</div>
+
 <div class="ui basic msg_print form">
 	<div class="ui success message"></div>
 	<div class="ui error message"></div>
@@ -66,6 +84,8 @@
 {-main-}
 
 {-script-}
+<script type="text/javascript" src="/assets/ace/ace.js" charset="utf-8"></script>
+
 <script>
 var msg_form = null;
 function reset_message() {
@@ -139,6 +159,25 @@ function stop_app(inst) {
 	});
 }
 
+function conf_app(inst, editor) {
+	$.get("/app/conf", {from_web:true, inst:inst}, function(data) {
+		$('.ui.app_conf.form input[name="inst"]').val(inst);
+		$('.ui.app_conf.form input[name="conf"]').val(JSON.stringify(data));
+		editor.session.setValue(JSON.stringify(data, null, 4));
+		$('.ui.app_conf.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	})
+	.done(function() {
+	})
+	.fail(function() {
+		print_err_message('<i>{{_("Failed to get application configuration")}}</i>');
+	});
+}
+
 function option_app(inst, option, value) {
 	$.post("/app/option", {from_web:true, inst:inst, option:option, value:value}, function(data) {
 		print_message('<i>' + data + '</i>');
@@ -203,6 +242,9 @@ function check_for_update() {
 }
 
 $(document).ready(function(){
+	var editor = ace.edit("json_editor");
+	editor.session.setMode("ace/mode/json");
+
 	//setTimeout('check_for_updates()', 1000);
 	msg_form = $('.ui.msg_print.form');
 	{% if not force_upgrade then %}
@@ -216,6 +258,9 @@ $(document).ready(function(){
 	});
 	$('.ui.button.stop').click(function() {
 		stop_app($(this).data('inst'));
+	});
+	$('.ui.button.conf').click(function() {
+		conf_app($(this).data('inst'), editor);
 	});
 	$('.ui.button.uninstall').click(function() {
 		uninstall_app($(this).data('inst'));
@@ -266,6 +311,23 @@ $(document).ready(function(){
 	$('.ui.new_app.form').ajaxForm({
 		beforeSend: function () {
 			$('.ui.new_app.modal').modal('hide');
+			reset_message();
+		},
+		success: function (response) {
+			print_message(response)
+			setTimeout(refresh_page, 5000);
+		},
+		error: function(xhr) {
+			print_err_message(xhr.responseText);
+		}
+	});
+	$('.ui.app_conf.form').ajaxForm({
+		beforeSerialize: function($form, options) {
+			var input = $('.ui.app_conf.form input[name="conf"]');
+			input.val(editor.session.getValue());
+			$('.ui.app_conf.modal').modal('hide');
+		},
+		beforeSend: function () {
 			reset_message();
 		},
 		success: function (response) {
