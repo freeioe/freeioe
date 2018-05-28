@@ -65,6 +65,7 @@ function response.restart(name, reason)
 		snax.self().req.stop(name, reason)
 		snax.self().req.start(name)
 	end)
+	return true
 end
 
 function response.list()

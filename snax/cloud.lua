@@ -104,6 +104,9 @@ local msg_handler = {
 		if action == 'stop' then
 			snax.self().post.app_stop(args.id, args.data)
 		end
+		if action == 'restart' then
+			snax.self().post.app_restart(args.id, args.data)
+		end
 		if action == 'query_log' then
 			snax.self().post.app_query_log(args.id, args.data)
 		end
@@ -152,6 +155,9 @@ local msg_handler = {
 		end
 		if action == 'batch_script' then
 			snax.self().post.batch_script(args.id, args.data)
+		end
+		if action == 'reboot' then
+			snax.self().post.sys_reboot(args.id, args.data)
 		end
 	end,
 	output = function(topic, data, qos, retained)
@@ -680,6 +686,14 @@ function accept.app_stop(id, args)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
 
+function accept.app_restart(id, args)
+	local inst = args.inst
+	local reason = args.reason
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.restart(inst, reason)
+	snax.self().post.action_result('app', id, r, err or "Done")
+end
+
 function accept.app_conf(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.set_conf(args.inst, args.conf)
@@ -767,6 +781,14 @@ function accept.batch_script(id, script)
 	datacenter.set("BATCH", id, "script", script)
 	local runner = skynet.newservice("run_batch", id)
 	datacenter.set("BATCH", id, "inst", runner)
+end
+
+function accept.sys_quit(id, args)
+	skynet.call("UPGRADER", "lua", "system_quit", id, args)
+end
+
+function accept.sys_reboot(id, args)
+	skynet.call("UPGRADER", "lua", "system_reboot", id, args)
 end
 
 function accept.output_to_app(id, info)
