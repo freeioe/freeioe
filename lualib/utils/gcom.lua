@@ -48,13 +48,13 @@ end
 _M.auto_port_exec = function(script, at_cmd)
 	local port, err = _M.detect_device()
 	local script_path = '/etc/gcom/'..script
-	if 'file' ~= lfs.mode(script_path, 'mode') then
+	if 'file' ~= lfs.attributes(script_path, 'mode') then
 		script_path, err = _M.create_gcom_script(script, at_cmd)
 		if not script_path then
 			return nil, err
 		end
 	end
-	local s, err = _M.exec(port, script_path)
+	return _M.exec(port, script_path)
 end
 
 --- CCID sim card id
@@ -97,7 +97,7 @@ _M.get_cpsi = function(script_dir)
 		patt = '[^%s]'
 	end
 
-	local val = string.match(s, '+CPSI:%s-('..path..'+)')
+	local val = string.match(s, '+CPSI:%s-('..patt..'+)')
 	if not val then
 		return nil, s
 	end

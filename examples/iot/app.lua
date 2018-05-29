@@ -194,10 +194,10 @@ function app:run(tms)
 				end
 				local csq, err = gcom.get_csq()
 				if csq then
-					self._dev:set_input_prop('csq', "value", tonumber(cpu_temp))
+					self._dev:set_input_prop('csq', "value", tonumber(csq))
 				end
-				local cpsi, err = gcom.get_csq()
-				if cqsi then
+				local cpsi, err = gcom.get_cpsi()
+				if cpsi then
 					self._dev:set_input_prop('cpsi', "value", cpsi)
 				end
 			end
