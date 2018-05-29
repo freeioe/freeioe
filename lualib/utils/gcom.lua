@@ -103,3 +103,5 @@ _M.get_cpsi = function(script_dir)
 	end
 	return val	
 end
+
+return _M
