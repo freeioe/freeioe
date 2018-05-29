@@ -1,5 +1,6 @@
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
+local gcom = require 'utils.gcom'
 local datacenter = require 'skynet.datacenter'
 local event = require 'app.event'
 local disk = require 'disk'
@@ -35,6 +36,10 @@ function app:start()
 		{
 			name = 'cpuload',
 			desc = 'System CPU Load'
+		},
+		{
+			name = 'cpu_temp',
+			desc = 'System CPU Temperature'
 		},
 		{
 			name = 'mem_total',
@@ -103,6 +108,31 @@ function app:start()
 			desc = "Disk /tmp used percent",
 		}
 	}
+	if string.sub(sys_id, 1, 8) == '2-30002-' then
+		self._gcom = true
+		local gcom_inputs = {
+			{
+				name = 'ccid',
+				desc = 'SIM card ID',
+				vt = "string",
+			},
+			{
+				name = 'csq',
+				desc = 'GPRS/LTE sginal strength',
+				vt = "int",
+			},
+			{
+				name = 'cpsi',
+				desc = 'GPRS/LTE work mode and so on',
+				vt = "string",
+			}
+		}
+
+		for _,v in ipairs(gcom_inputs) do
+			inputs[#inputs + 1] = v
+		end
+	end
+
 	local meta = self._api:default_meta()
 	meta.name = "Bamboo IOT"
 	meta.description = "Bamboo IOT Device"
@@ -136,11 +166,13 @@ function app:run(tms)
 		self._dev:set_input_prop('skynet_version', "git_version", sgv)
 		self._dev:set_input_prop('platform', "value", plat)
 
+
 		--- Calculate uptime for earch 60 seconds
 		local calc_uptime = nil
 		calc_uptime = function()
 			self._dev:set_input_prop('uptime', "value", self._sys:now())
 
+			-- temp disk usage
 			local r, err = disk.df('/tmp')
 			if r then
 				self._dev:set_input_prop('disk_tmp_used', 'value', r.used_percent)
@@ -151,6 +183,22 @@ function app:run(tms)
 					self._log:error(info)
 					self._dev:fire_event(event.LEVEL_ERROR, event.EVENT_SYS, info, r)
 					self._tmp_event_fired = true
+				end
+			end
+
+			-- gcom
+			if self._gcom then
+				local ccid, err = gcom.get_ccid()
+				if ccid then
+					self._dev:set_input_prop('ccid', "value", ccid)
+				end
+				local csq, err = gcom.get_csq()
+				if csq then
+					self._dev:set_input_prop('csq', "value", tonumber(cpu_temp))
+				end
+				local cpsi, err = gcom.get_csq()
+				if cqsi then
+					self._dev:set_input_prop('cpsi', "value", cpsi)
 				end
 			end
 
@@ -170,6 +218,10 @@ function app:run(tms)
 
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))
+	local cpu_temp = sysinfo.cpu_temperature()
+	if cpu_temp then
+		self._dev:set_input_prop('cpu_temp', "value", tonumber(cpu_temp))
+	end
 
 	local mem = sysinfo.meminfo()
 	self._dev:set_input_prop('mem_total', 'value', tonumber(mem.total))

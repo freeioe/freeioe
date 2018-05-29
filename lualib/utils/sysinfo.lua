@@ -42,6 +42,23 @@ _M.cpu_model = function()
 	return s:match("model%s+name%s*:%s*([^%c]+)") or s:match("system%s+type%s*:%s*([^%c]+)") or 'Unknown'
 end
 
+local try_read_cpu_temp_by_sysinfo = function()
+	local s, err = _M.exec('sysinfo temp', true)
+	if s and string.len(s) > 0 then
+		return tonumber(string.match(s, 'current:%s-(%d)'))
+	end
+end
+
+--- Get the cpu temperature
+-- @treturn number CPU Temperature
+_M.cpu_temperature = function()
+	local temp = try_read_cpu_temp_by_sysinfo()
+	if temp then
+		return temp
+	end
+	return nil, "Cannot read cpu temperature"
+end
+
 --- Get the output for uname
 -- @tparam string arg The args for uname command. e.g. -a -A -u
 -- @treturn string the output from uname
