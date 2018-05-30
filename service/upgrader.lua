@@ -536,9 +536,9 @@ skynet.start(function()
 	skynet.register "UPGRADER"
 	skynet.fork(function()
 		if check_rollback() then
-			log.notice("Rollback will be applied in 60 seconds")
-			rollback_time = skynet.time() + 60
-			skynet.timeout(60 * 100, function()
+			log.notice("Rollback will be applied in five minutes")
+			rollback_time = skynet.time() + 5 * 60
+			skynet.timeout(5 * 60 * 100, function()
 				if check_rollback() then
 					log.error("System will be rollback now!")
 					skynet.sleep(100)
