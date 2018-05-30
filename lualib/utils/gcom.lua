@@ -40,7 +40,7 @@ _M.create_gcom_script = function(script, at_cmd)
 	if not f then
 		return nil, err
 	end
-	f:write(_M.get_gcom_script(at_cmd))
+	f:write(_M.gen_gcom_script(at_cmd))
 	f:close()
 	return path
 end
