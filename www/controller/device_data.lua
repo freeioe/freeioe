@@ -9,6 +9,10 @@ local function load_device_data()
 			local inputs = dc.get('INPUT', sn) or {}
 			for _, input in ipairs(props.inputs) do
 				input.value = inputs[input.name] and inputs[input.name].value or {}
+				if input.value.timestamp then
+					local ms = math.floor((input.value.timestamp % 1) * 1000)
+					input.value.timestamp = os.date('%F %T', math.floor(input.value.timestamp)) .. ' ' .. ms
+				end
 			end
 		end
 		if props.outputs then

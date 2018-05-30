@@ -33,6 +33,7 @@ local enable_data_upload = nil -- true
 local enable_stat_upload = nil
 local enable_event_upload = nil
 local enable_comm_upload = nil
+local enable_comm_upload_apps = {}
 local max_enable_comm_upload = 60 * 10
 local enable_log_upload = nil
 local max_enable_log_upload = 60 * 10
@@ -109,6 +110,12 @@ local msg_handler = {
 		end
 		if action == 'query_log' then
 			snax.self().post.app_query_log(args.id, args.data)
+		end
+		if action == 'query_comm' then
+			snax.self().post.app_query_comm(args.id, args.data)
+		end
+		if action == 'upload_comm' then
+			snax.self().post.app_upload_comm(args.id, args.data)
 		end
 		if action == 'option' then
 			snax.self().post.app_option(args.id, args.data)
@@ -265,6 +272,18 @@ local function load_conf()
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
 	enable_event_upload = datacenter.get("CLOUD", "EVENT_UPLOAD")
 
+	enable_comm_upload_apps = datacenter.get("CLOUD", "COMM_UPLOAD_APPS") or {}
+	local changed = false
+	for k,v in pairs(enable_comm_upload_apps) do
+		if v < skynet.time() then
+			enable_comm_upload_apps[k] = nil
+			changed = true
+		end
+	end
+	if changed then
+		datacenter.set('CLOUD', 'COMM_UPLOAD_APPS', enable_comm_upload_apps)
+	end
+
 	load_cov_conf()
 end
 
@@ -279,15 +298,25 @@ local Handler = {
 		--log.trace('on_comm', app, sn, dir, ts, hex)
 		local id = mqtt_id
 		local content = crypt.base64encode(table.concat({...}, '\t'))
+
 		comm_buffer:handle(function(app, sn, dir, ts, content)
-			if mqtt_client and (enable_comm_upload and ts < enable_comm_upload) then
-				local key = id.."/comm"
-				local msg = {
-					(sn or app).."/"..dir, ts, content
-				}
-				--log.trace('publish comm', key, table.concat(msg))
+			if not mqtt_client then
+				return
+			end
+
+			local key = id.."/comm"
+			local msg = { (sn or app).."/"..dir, ts, content }
+			--log.trace('publish comm', key, table.concat(msg))
+
+			if enable_comm_upload and ts < enable_comm_upload then
 				return mqtt_client:publish(key, cjson.encode(msg), 1, false)
 			end
+
+			if enable_comm_upload_apps[app] and ts < enable_comm_upload_apps[app] then
+				return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+			end
+
+			return true
 		end, app, sn, dir, ts, content)
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
@@ -466,6 +495,7 @@ function response.list_cfg_keys()
 		"DATA_UPLOAD",
 		"LOG_UPLOAD",
 		"COMM_UPLOAD",
+		"COMM_UPLOAD_APPS",
 		"STAT_UPLOAD",
 		"COV",
 		"COV_TTL",
@@ -746,6 +776,37 @@ function accept.app_query_log(id, args)
 			skynet.sleep(0)
 		end
 	end
+end
+
+function accept.app_query_comm(id, args)
+	local log_reader = require 'log_reader'
+	local app = args.inst
+	local buffer = snax.uniqueservice('buffer')
+	local comms, err = buffer.req.get_comm(app)
+	snax.self().post.action_result('app', id, comms, err or "Done")
+	if comms then
+		for _, comm in ipairs(comms) do
+			if mqtt_client then
+				mqtt_client:publish(mqtt_id.."/app_comm", cjson.encode({name=app, comm=comm}), 1, false)
+			end
+			skynet.sleep(0)
+		end
+	end
+end
+
+function accept.app_upload_comm(id, args)
+	local app = args.inst
+	local sec = tonumber(args.sec)
+	if not app then
+		return snax.self().post.action_result('app', id, false, "Applicaiton instance missing!")
+	end
+	if sec and sec > 0 and sec < max_enable_comm_upload then
+		enable_comm_upload_apps[app] = math.floor(skynet.time()) + sec
+	else
+		enable_comm_upload_apps[app] = nil
+	end
+	datacenter.set("CLOUD", "COMM_UPLOAD_APPS", enable_comm_upload_apps)
+	snax.self().post.action_result('app', id, true, "Done")
 end
 
 function accept.app_option(id, args)

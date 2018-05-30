@@ -11,7 +11,7 @@ app.API_VER = 1
 function app:initialize(name, sys, conf)
 	self._name = name
 	self._sys = sys
-	self._conf = conf
+	self._conf = conf or {}
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
 	self._cancel_timers = {}
@@ -170,6 +170,7 @@ function app:run(tms)
 
 		--- Calculate uptime for earch 60 seconds
 		local calc_tmp_disk = nil
+		local tmp_disk_frep = self._conf.tmp_disk_frep or (1000 * 60)
 		calc_tmp_disk = function()
 			self._dev:set_input_prop('uptime', "value", self._sys:now())
 
@@ -188,13 +189,13 @@ function app:run(tms)
 			end
 
 			-- Reset timer
-			local tmp_disk_frep = self._conf.tmp_disk_frep or (1000 * 60)
 			self._cancel_timers['tmp_disk'] = self._sys:cancelable_timeout(tmp_disk_frep, calc_tmp_disk)
 		end
 		calc_tmp_disk()
 
 		if self._gcom then
 			local calc_gcom = nil
+			local gcom_frep = self._conf.gcom_frep or (1000 * 60 * 5)
 			calc_gcom = function()
 				local ccid, err = gcom.get_ccid()
 				if ccid then
@@ -210,7 +211,6 @@ function app:run(tms)
 				end
 
 				-- Reset timer
-				local gcom_frep = self._conf.gcom_frep or (1000 * 60 * 5)
 				self._cancel_timers['gcom'] = self._sys:cancelable_timeout(gcom_frep, calc_gcom)
 			end
 			calc_gcom()
