@@ -34,14 +34,15 @@ local udp_target = nil
 --]]
 local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
-		local hex = crypt.hexencode(table.concat({...}, '\t'))
-		hex = string.gsub(hex, "%w%w", "%1 ")
+		--local hex = crypt.hexencode(table.concat({...}, '\t'))
+		--hex = string.gsub(hex, "%w%w", "%1 ")
+		local content = crypt.base64encode(table.concat({...}, '\t'))
 		local list  = comm_buffer[app] or {}
 		list[#list + 1] = {
 			sn = sn,
 			dir = dir,
 			ts = ts,
-			data = hex
+			data = content
 		}
 		if #list > max_comm_buf_size then
 			table.remove(list, 1)
