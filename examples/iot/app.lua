@@ -14,6 +14,7 @@ function app:initialize(name, sys, conf)
 	self._conf = conf
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
+	self._cancel_timers = {}
 end
 
 function app:start()
@@ -144,10 +145,10 @@ end
 
 function app:close(reason)
 	--print(self._name, reason)
-	if self._cancel_uptime_timer then
-		self._cancel_uptime_timer()
-		self._cancel_uptime_timer = nil
+	for name, cancel_timer in pairs(self._cancel_timers) do
+		cancel_timer()
 	end
+	self._cancel_timers = {}
 end
 
 function app:run(tms)
@@ -168,8 +169,8 @@ function app:run(tms)
 
 
 		--- Calculate uptime for earch 60 seconds
-		local calc_uptime = nil
-		calc_uptime = function()
+		local calc_tmp_disk = nil
+		calc_tmp_disk = function()
 			self._dev:set_input_prop('uptime', "value", self._sys:now())
 
 			-- temp disk usage
@@ -186,8 +187,15 @@ function app:run(tms)
 				end
 			end
 
-			-- gcom
-			if self._gcom then
+			-- Reset timer
+			local tmp_disk_frep = self._conf.tmp_disk_frep or (1000 * 60)
+			self._cancel_timers['tmp_disk'] = self._sys:cancelable_timeout(tmp_disk_frep, calc_tmp_disk)
+		end
+		calc_tmp_disk()
+
+		if self._gcom then
+			local calc_gcom = nil
+			calc_gcom = function()
 				local ccid, err = gcom.get_ccid()
 				if ccid then
 					self._dev:set_input_prop('ccid', "value", ccid)
@@ -200,12 +208,13 @@ function app:run(tms)
 				if cpsi then
 					self._dev:set_input_prop('cpsi', "value", cpsi)
 				end
-			end
 
-			-- Reset timer
-			self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
+				-- Reset timer
+				local gcom_frep = self._conf.gcom_frep or (1000 * 60 * 5)
+				self._cancel_timers['gcom'] = self._sys:cancelable_timeout(gcom_frep, calc_gcom)
+			end
+			calc_gcom()
 		end
-		calc_uptime()
 
 		--[[
 		self._sys:timeout(100, function()
