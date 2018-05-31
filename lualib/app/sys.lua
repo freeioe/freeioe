@@ -12,7 +12,7 @@ sys.API_VER = 1
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)
-	return self._logger(level, ...)
+	return self._logger:log(level, ...)
 end
 
 function sys:logger()
