@@ -1,32 +1,60 @@
 local skynet = require "skynet"
 local service = require "skynet.service"
 local class = require 'middleclass'
+local uuid = require 'uuid'
+local log = require 'utils.log'
 
 local app_port = class('IOT_APP_PORT_CLASS')
 
 local function agent_service(...)
 	local skynet = require "skynet"
+	local socketchannel = require "skynet.socketchannel"
+	local log = require 'utils.log'
 
 	--skynet.error(...)	-- (...) passed from service.new
 	local args = table.pack(...)
-	local name = args[1]
+	local name = assert(args[1])
 	local conf = args[2] or {}
 
 	local command = {}
+	local chn = socketchannel.channel(conf)
 
-	function command.open()
-		print('open', name, conf)
-		return true
+	function command.request(request, response, padding)
+		local resp, err = assert(load(response))
+		if not resp then
+			return false, 'Response code loading failed'
+		end
+
+		local r, data, err = skynet.pcall(function()
+			return chn:request(request, function(sock)
+				local r, data, info = skynet.pcall(resp, sock)
+				if not r then
+					log.trace(data)
+					return false, data
+				end
+				return data, info
+			end, padding)
+		end)
+		if not r then
+			log.trace(data)
+			return false, data
+		end
+		return data, err
 	end
 
-	function command.request(request, padding)
-		print('request', request, padding)
-		return request, padding
+	function command.connect(only_once)
+		return chn:connect(only_once)
+	end
+
+	function command.reopen(new_conf)
+		log.trace('reopen channel')
+		conf = new_conf or conf
+		chn:close()
+		chn = socketchannel.channel(conf)
 	end
 
 	function command.close()
-		print('close')
-		return true
+		return chn:close()
 	end
 
 	skynet.start(function()
@@ -35,6 +63,14 @@ local function agent_service(...)
 		end)
 	end)
 end
+
+local function check(func)
+	local info = debug.getinfo(func, "u")
+	assert(info.nups == 1)
+	assert(debug.getupvalue(func,1) == "_ENV")
+end
+
+local timeout_error = setmetatable({}, {__tostring = function() return "[Error: timeout]" end })	-- alias for error object
 
 local function timeout_call(ti, ...)
 	local token = {}
@@ -48,41 +84,64 @@ local function timeout_call(ti, ...)
 	skynet.sleep(ti, token)
 	if ret then
 		if ret[1] then
-			return table.unpack(ret, 1, ret.n)
+			return table.unpack(ret, 2, ret.n)
 		else
 			error(ret[2])
 		end
 	else
 		-- timeout
-		return false
+		log.trace('timeout error')
+		return false, timeout_error
 	end
 end
 
-function app_port:initialize(name, conf)
-	assert(name)
-	local conf = conf or {}
-
-	conf.timeout = conf.timeout or 60 * 100
-	self._name = name
+function app_port:initialize(conf, share_name)
+	assert(conf)
+	self._name = share_name or uuid()
 	self._conf = conf
-	self._agent = service.new("APP.PORT."..name, agent_service, self._name, self._conf)
+	self._agent = service.new("APP.PORT."..self._name, agent_service, self._name, self._conf)
 end
 
-function app_port:__gc()
-	self:close()
+function app_port:get_name()
+	return self._name
 end
 
-function app_port:open()
-	timeout_call(self._conf.timeout, self._agent, "lua", "open")
+function app_port:get_conf()
+	return self._conf
 end
 
-function app_port:close()
-	timeout_call(self._conf.timeout, self._agent, "lua", "close")
+function app_port:connect(only_once, timeout)
+	if timeout then
+		return self:timeout_call(timeout, "connect", only_once)
+	else
+		return skynet.call(self._agent, "lua", "connect", only_once)
+	end
+end
+
+function app_port:timeout_call(timeout, func, ...)
+	local r, err = timeout_call(timeout, self._agent, "lua", func, ...)
+	if not r and err == timeout_error then
+		self:reopen()
+	end
+	return r, err
 end
 
 function app_port:request(request, response, padding, timeout)
-	timeout_call(timeout or self._conf.timeout, self._agent, "lua", "request", request, padding)
+	check(response)
+	local code = string.dump(response)
+	if timeout then
+		return self:timeout_call(timeout / 10, "request", request, code, padding)
+	else
+		return skynet.call(self._agent, "lua", "request", request, code, padding)
+	end
 end
 
+function app_port:reopen(conf)
+	return skynet.call(self._agent, "lua", "reopen", conf)
+end
+
+function app_port:close()
+	return skynet.call(self._agent, "lua", "close", conf)
+end
 
 return app_port

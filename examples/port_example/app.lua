@@ -55,27 +55,36 @@ function app:start()
 	meta.description = "Example Device Meta"
 
 	self._dev = self._api:add_device(sn, meta, inputs)
-	self._port = app_port:new('TestPort', {
+	self._port = app_port:new({
 		host = "127.0.0.1",
 		port = 16000,
 		nodelay = true
 	})
-	local r, err = self._port:open()
-	print(r, err)
 
 	return true
 end
 
 --- 应用退出函数
 function app:close(reason)
-	self._port:close()
+	if self._port then
+		self._port:destroy(reason)
+	end
 end
 
 --- 应用运行入口
 function app:run(tms)
-	self._port:request('DDDDD', function(sock)
-		print('EEEEEEEEEEEEEEEE')
-	end)
+	local r, err = self._port:request('DDDDD', function(sock)
+		local data, err = sock:read(4)
+		if not data then
+			return false, err
+		end
+
+		if string.len(data) > 1 then
+			return true, data
+		end
+		return false, "eee"
+	end, false, 1000)
+	self._log:debug('Request returns:', r, err)
 
 	return 10000 --下一采集周期为10秒
 end
