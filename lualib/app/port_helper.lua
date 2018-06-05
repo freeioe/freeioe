@@ -1,10 +1,11 @@
 
 local _M = {}
 
-function _M.set_dump(func)
-	_M._dump_func = func
-end
-
+---
+-- Read specified length data from socket
+-- @tparam sock TCP socket channel object
+-- @tparam len Required length
+-- @tparam dump Stream dump function. e.g. function(str) print(str) end
 function _M.read_socket(sock, len, dump)
 	local log = require 'utils.log'
 	log.trace('Start reading from socket stream. required len:', len)
@@ -25,6 +26,12 @@ function _M.read_socket(sock, len, dump)
 	return nil, "The length of socket data is less than "..len
 end
 
+---
+-- Read specified length data from serial 
+-- @tparam serial Serial port channel object
+-- @tparam len Required length
+-- @tparam dump Stream dump function. e.g. function(str) print(str) end
+-- @tparam timeout Reading timeout in ms. Default is 3000 ms
 function _M.read_serial(serial, len, dump, timeout)
 	local log = require 'utils.log'
 	log.trace('Start reading from serial port. required len:', len)
