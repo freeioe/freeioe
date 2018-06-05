@@ -1,5 +1,6 @@
 local class = require 'middleclass'
-local app_port = require 'app.port'
+local app_socket = require 'app.socket'
+local app_serial = require 'app.serial'
 
 --- 注册对象(请尽量使用唯一的标识字符串)
 local app = class("PORT_EXAMPLE_APP")
@@ -55,10 +56,15 @@ function app:start()
 	meta.description = "Example Device Meta"
 
 	self._dev = self._api:add_device(sn, meta, inputs)
-	self._port = app_port:new({
+	self._port = app_socket:new({
 		host = "127.0.0.1",
 		port = 16000,
 		nodelay = true
+	})
+	self._serial = app_serial:new({
+		--port = "/dev/ttymxc1",
+		port = "/tmp/ttyS10",
+		baudrate = 115200
 	})
 
 	return true
@@ -67,7 +73,8 @@ end
 --- 应用退出函数
 function app:close(reason)
 	if self._port then
-		self._port:destroy(reason)
+		self._port:close(reason)
+		self._serial:close(reason)
 	end
 end
 
@@ -84,7 +91,19 @@ function app:run(tms)
 		end
 		return false, "eee"
 	end, false, 1000)
-	self._log:debug('Request returns:', r, err)
+	self._log:debug('[SOCKET] Request returns:', r, err)
+
+	local r, err = self._serial:request('EEEEE', function(serial)
+		local data, err = serial:read(4)
+		if not data then
+			return false, err
+		end
+		if string.len(data) > 1 then
+			return true, data
+		end
+		return false, "Response Timeout"
+	end, false, 1000)
+	self._log:debug('[SERIAL] Request returns:', r, err)
 
 	return 10000 --下一采集周期为10秒
 end

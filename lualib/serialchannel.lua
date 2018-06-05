@@ -188,7 +188,7 @@ local function dispatch_by_order(self)
 			wakeup_all(self, "channel_closed")
 			break
 		end
-		local ok, result_ok, result_data = pcall(get_response, func, self.__sock)
+		local ok, result_ok, result_data = pcall(get_response, func, self.__serial)
 		if ok then
 			self.__result[co] = result_ok
 			if result_ok and self.__result_data[co] then
@@ -318,7 +318,7 @@ end
 local function check_connection(self)
 	if self.__serial then
 		--[[
-		if socket.disconnected(self.__sock[1]) then
+		if socket.disconnected(self.__serial[1]) then
 			-- closed by peer
 			skynet.error("socket: disconnect detected ", self.__host, self.__port)
 			close_channel_socket(self)

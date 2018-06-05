@@ -4,11 +4,11 @@ local class = require 'middleclass'
 local uuid = require 'uuid'
 local log = require 'utils.log'
 
-local app_port = class('IOT_APP_PORT_CLASS')
+local app_port = class('IOT_APP_SERIAL_PORT_CLASS')
 
 local function agent_service(...)
 	local skynet = require "skynet"
-	local socketchannel = require "skynet.socketchannel"
+	local serialchannel = require "serialchannel"
 	local log = require 'utils.log'
 
 	--skynet.error(...)	-- (...) passed from service.new
@@ -17,12 +17,12 @@ local function agent_service(...)
 	local conf = args[2] or {}
 
 	local command = {}
-	local chn = socketchannel.channel(conf)
+	local chn = serialchannel.channel(conf)
 
 	function command.request(request, response, padding)
 		local resp, err = assert(load(response))
 		if not resp then
-			return false, 'Response code loading failed'
+			return false, 'Response function code loading failed'
 		end
 
 		local r, data, err = skynet.pcall(function()
@@ -47,10 +47,10 @@ local function agent_service(...)
 	end
 
 	function command.reopen(new_conf)
-		log.trace('reopen channel')
+		log.trace('reopen socket channel')
 		conf = new_conf or conf
 		chn:close()
-		chn = socketchannel.channel(conf)
+		chn = serialchannel.channel(conf)
 	end
 
 	function command.close()
@@ -70,7 +70,7 @@ local function check(func)
 	assert(debug.getupvalue(func,1) == "_ENV")
 end
 
-local timeout_error = setmetatable({}, {__tostring = function() return "[Error: timeout]" end })	-- alias for error object
+local timeout_error = setmetatable({}, {__tostring = function() return "[Error: serial timeout]" end })	-- alias for error object
 
 local function timeout_call(ti, ...)
 	local token = {}
@@ -99,7 +99,7 @@ function app_port:initialize(conf, share_name)
 	assert(conf)
 	self._name = share_name or uuid()
 	self._conf = conf
-	self._agent = service.new("APP.PORT."..self._name, agent_service, self._name, self._conf)
+	self._agent = service.new("APP.SERIAL_PORT."..self._name, agent_service, self._name, self._conf)
 end
 
 function app_port:get_name()
