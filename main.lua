@@ -13,15 +13,13 @@ skynet.start(function()
 	skynet.newservice("upgrader")
 	skynet.newservice("iot_ext")
 
+	pcall(skynet.newservice, "debug_console", 6606)
+	pcall(skynet.newservice, "lwf", 8808)
+
 	local cloud = snax.uniqueservice("cloud")
 	local appmgr = snax.uniqueservice("appmgr")
 	-- This is one comm data buffer service for get one snapshot
 	local commlog = snax.uniqueservice("buffer")
-
-	pcall(skynet.newservice, "debug_console", 6606)
-
-	skynet.sleep(300)
-	pcall(skynet.newservice, "lwf", 8808)
 
 	skynet.exit()
 end)
