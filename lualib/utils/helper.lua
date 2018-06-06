@@ -54,7 +54,7 @@ end
 local function check_exists(exec)
 	local lfs = require 'lfs'
 	local plat = sysinfo.platform()
-	local path = lfs.currentdir().."/iot/linux/"..plat.."/"..exec
+	local path = lfs.currentdir().."/ioe/linux/"..plat.."/"..exec
 	local f, err = io.open(path, "r")
 	if f then
 		f:close()

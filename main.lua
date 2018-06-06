@@ -4,14 +4,14 @@ local snax = require "skynet.snax"
 local is_windows = package.config:sub(1,1) == '\\'
 
 skynet.start(function()
-	skynet.error("IOT@Skynet Starting")
+	skynet.error("FreeIOE@Skynet Starting")
 	--skynet.newservice("exec_sal")
-	if not is_windows and not os.getenv("IOT_RUN_AS_DAEMON") then
+	if not is_windows and not os.getenv("IOE_RUN_AS_DAEMON") then
 		local console = skynet.newservice("console")
 	end
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
-	skynet.newservice("iot_ext")
+	skynet.newservice("ioe_ext")
 
 	pcall(skynet.newservice, "debug_console", 6606)
 	pcall(skynet.newservice, "lwf", 8808)

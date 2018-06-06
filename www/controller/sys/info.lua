@@ -11,7 +11,7 @@ return {
 		local arch = sysinfo.cpu_arch()
 		local os_id = sysinfo.os_id()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
-		local iot_sn = dc.get('CLOUD', 'ID') or sysinfo.iot_sn()
+		local ioe_sn = dc.get('CLOUD', 'ID') or sysinfo.ioe_sn()
 		local uptime = string.match(sysinfo.cat_file('/proc/uptime') or "", "%d+")
 		local uptime_str = sysinfo.exec('uptime -s')
 		lwf.json(self, {
@@ -20,7 +20,7 @@ return {
 			uname = uname,
 			cpu_arch = arch,
 			os_id = os_id,
-			iot_sn = iot_sn,
+			ioe_sn = ioe_sn,
 			using_beta = using_beta,
 			uptime = uptime,
 			uptime_str = uptime_str,

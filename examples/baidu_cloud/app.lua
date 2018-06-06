@@ -31,7 +31,7 @@ function app:initialize(name, sys, conf)
 	self._log = sys:logger()
 	self._nodes = {}
 
-	self._mqtt_id = conf.mqtt_it or sys:id() -- using system iot id
+	self._mqtt_id = conf.mqtt_it or sys:id() -- using system id
 	self._username = conf.username or "symlinkdemo/demo"
 	self._password = conf.password or "qWZ/lxXqz2W33NZir6MW13RpCPAFELSiirVvGDfaaQw="
 	self._mqtt_host = conf.server or "symlinkdemo.mqtt.iot.bj.baidubce.com"

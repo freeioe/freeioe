@@ -16,7 +16,7 @@
 			{% if blocks.title then %}
 			{* blocks.title *} | {{lwf.auth.user}}
 			{% else %}
-			IOT Platform | {{lwf.auth.user}}
+			FreeIOE Platform | {{lwf.auth.user}}
 			{% end %}
 		</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
@@ -38,7 +38,7 @@
 		<div class="ui fixed top menu">
 			<a href="javascript:void(0)" class="icon active item" id="hideToggle"><h3><i class="chevron left icon"></i></h3></a>
 			<a href="javascript:void(0)" class="icon active item" id="showToggle"><h3><i class="chevron right icon"></i></h3></a>
-			<a href="/" data-toggle="slide" class="item"><h3>IOT</h3></a>
+			<a href="/" data-toggle="slide" class="item"><h3>FreeIOE</h3></a>
 			<div class="menu right">
 				<div tabindex="0" class="ui icon dropdown item" data-content="Select Language">
 					<i class="large world icon"></i>
@@ -51,7 +51,7 @@
 				<a href="/user/login" class="icon item" data-content="Login">
 					<i class="large sign in icon"></i>
 				</a>
-				<a href="http://www.symgrid.com" class="icon item">
+				<a href="http://www.freeioe.org" class="icon item">
 					<img src="/assets/img/logo.png" class="ui avatar image" alt="logo">
 				</a>
 				{% else %}
@@ -64,9 +64,9 @@
 						<div class="item">
 							<img src="{{avatar_path}}" class="ui avatar image">
 							<div class="content">
-								<a class="header">IOT</a>
+								<a class="header">FreeIOE</a>
 								<div class="description">
-									Welcome to <a>IOT Platform</a>...
+									Welcome to <a>FreeIOE Platform</a>...
 								</div>
 							</div>
 						</div>
@@ -128,8 +128,8 @@
 							<a href="/cloud" class="item"><i class="cloud icon"></i> <span>{{_('Cloud')}}</span></a>
 							<a href="/settings" class="item"><i class="setting icon"></i> <span>{{_('Settings')}}</span></a>
 							<a href="/docs" class="item"><i class="file icon"></i> <span>{{_('Document')}}</span></a>
-							<a href="http://forum.symgrid.com" class="item"><i class="users icon"></i> <span>{{_('Forum')}}</span></a>
-							<a href="http://help.symgrid.com" class="item"><i class="help icon"></i> <span>{{_('Help')}}</span></a>
+							<a href="http://forum.freeioe.org" class="item"><i class="users icon"></i> <span>{{_('Forum')}}</span></a>
+							<a href="http://help.freeioe.org" class="item"><i class="help icon"></i> <span>{{_('Help')}}</span></a>
 						</div>
 					</div>
 					{% else %}
@@ -137,14 +137,14 @@
 						<div align="center" class="profile">
 							<br>
 							<a href=""><img src="/assets/img/logo.png" alt="logo" class="ui circular image" width="150px"></a>
-							<div class="ui white header">IOT</div>
+							<div class="ui white header">FreeIOE</div>
 							<div class="ui divider"></div>
 						</div>
 						<div class="ui fluid vertical menu" id="verticalMenu">
 							<a href="/user/login" class="item"><i class="sign in icon"></i> <span>{{_('Login')}}</span></a>
 							<a href="/docs" class="item"><i class="file icon"></i> <span>{{_('Documents')}}</span></a>
-							<a href="http://forum.symgrid.com" class="item"><i class="users icon"></i> <span>{{_('Forum')}}</span></a>
-							<a href="http://help.symgrid.com" class="item"><i class="help icon"></i> <span>{{_('Help')}}</span></a>
+							<a href="http://forum.freeioe.org" class="item"><i class="users icon"></i> <span>{{_('Forum')}}</span></a>
+							<a href="http://help.freeioe.org" class="item"><i class="help icon"></i> <span>{{_('Help')}}</span></a>
 						</div>
 					</div>
 					{% end %}
@@ -168,24 +168,24 @@
 						<div align="center">
 							<div class="ui stackable divided relaxed grid">
 								<div class="eight wide column">
-									<h3 class="ui header">{{_('Help Make IOT Better')}}</h3>
-									<p>{{_('IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!')}}</p>
-									<span class="github-btn" data-user="symgrid" data-repo="skynet_iot" data-type="follow" data-count="1"></span>
+									<h3 class="ui header">{{_('Help Make FreeIOE Better')}}</h3>
+									<p>{{_('FreeIOE is an open source platform for internet of everythings. Please follow us on GitHub!!!')}}</p>
+									<span class="github-btn" data-user="freeioe" data-repo="freeioe" data-type="follow" data-count="1"></span>
 								</div>
 								<div class="four wide column">
 									<h5 class="ui teal header">{{_('Contribute')}}</h5>
 									<div class="ui link list">
-										<a class="item" href="https://www.transifex.com/organization/tipsydate/" target="_blank">{{_('Translation Hub')}}</a>
-										<a class="item" href="http://tipsydate.symgrid.com/core" target="_blank">{{_('Issue Tracker')}}</a>
-										<a class="item" href="http://tipsydate.symgrid.com/core/cla.html" target="_blank">{{_('CLA')}}</a>
-										<a class="item" href="http://tipsydate.symgrid.com/core/app.html" target="_blank">{{_('Create Applicatoin')}}</a>
+										<a class="item" href="https://www.transifex.com/organization/freeioe/" target="_blank">{{_('Translation Hub')}}</a>
+										<a class="item" href="http://freeioe.freeioe.org/core" target="_blank">{{_('Issue Tracker')}}</a>
+										<a class="item" href="http://freeioe.freeioe.org/core/cla.html" target="_blank">{{_('CLA')}}</a>
+										<a class="item" href="http://freeioe.freeioe.org/core/app.html" target="_blank">{{_('Create Applicatoin')}}</a>
 									</div>
 								</div>
 								<div class="four wide column">
-									<h5 class="ui teal header">{{_('IOT Network')}}</h5>
+									<h5 class="ui teal header">{{_('IOE Network')}}</h5>
 									<div class="ui link list">
-										<a class="item" href="http://tipsydate.symgrid.com/" target="_blank">{{_('User Documents')}}</a>
-										<a class="item" href="http://tipsydate.symgrid.com/" target="_blank">{{_('Development Reference')}}</a>
+										<a class="item" href="http://freeioe.freeioe.org/" target="_blank">{{_('User Documents')}}</a>
+										<a class="item" href="http://freeioe.freeioe.org/" target="_blank">{{_('Development Reference')}}</a>
 										<a class="disabled item">{{_('Application')}}</a>
 										<a class="disabled item">{{_('Device Template')}}</a>
 									</div>

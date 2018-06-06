@@ -3,7 +3,7 @@
 {-main_header-}
 
 {-main-}
-<h1 class="header"> {{_("IOT")}} - {{iot_sn}} </h1>
+<h1 class="header"> {{_("FreeIOE")}} - {{ioe_sn}} </h1>
 
 <h3 class="ui top attached header">
 	{{_("Information")}}
@@ -11,7 +11,7 @@
 <div class="ui attached basic segment">
 	<div class="ui teal statistic">
 		<div class="version value">
-			{{version.iot.ver}}
+			{{version.ioe.ver}}
 		</div>
 		<div class="label">
 			{{_("Version")}}
@@ -147,11 +147,11 @@
 			<tbody>
 				<tr>
 					<td>{{_("SN")}} </td>
-					<td>{{iot_sn}}</td>
+					<td>{{ioe_sn}}</td>
 				</tr>
 				<tr>
 					<td>{{_("Git Version")}} </td>
-					<td>{{version.iot.git_ver}}</td>
+					<td>{{version.ioe.git_ver}}</td>
 				</tr>
 				<tr>
 					<td>{{_("Skynet Git Version")}} </td>
@@ -224,17 +224,17 @@ function sys_control(action, timeout) {
 	});
 
 };
-function check_iot_version() {
-	var iot_label = $('.version.value');
+function check_ioe_version() {
+	var ioe_label = $('.version.value');
 	var skynet_label = $('.skynet_version.value');
-	$.get("/sys/check_version", {from_web:true, version:{{version.iot.ver}}, skynet_version:{{version.skynet.ver}} }, function(data) {
-		if (data && data.iot) {
-			if (data.iot == "release") {
-				iot_label.html('{{version.iot.ver}} <i class="mini green check icon"></i>');
-			} else if (data.iot == "beta") {
-				iot_label.html('{{version.iot.ver}} <i class="mini yellow warning sign icon"></i>');
+	$.get("/sys/check_version", {from_web:true, version:{{version.ioe.ver}}, skynet_version:{{version.skynet.ver}} }, function(data) {
+		if (data && data.ioe) {
+			if (data.ioe == "release") {
+				ioe_label.html('{{version.ioe.ver}} <i class="mini green check icon"></i>');
+			} else if (data.ioe == "beta") {
+				ioe_label.html('{{version.ioe.ver}} <i class="mini yellow warning sign icon"></i>');
 			} else {
-				iot_label.html('{{version.iot.ver}} <i class="mini red close icon"></i>');
+				ioe_label.html('{{version.ioe.ver}} <i class="mini red close icon"></i>');
 			}
 		};
 		if (data && data.skynet) {
@@ -266,18 +266,18 @@ function check_for_update(btn) {
 	var cf = $('.ui.control.form');
 	reset_message(cf);
 
-	check_iot_version();
+	check_ioe_version();
 
 {% if using_beta then %}
 	var beta = cf.find('.check_beta').checkbox('is checked');
 {% else %}
 	var beta = false;
 {% end %}
-	var version = {{version.iot.ver}};
+	var version = {{version.ioe.ver}};
 	var skynet_version = {{version.skynet.ver}};
 	$.get("/sys/check_update", {from_web:true, beta:beta}, function(data) {
-		if (data && data.iot) {
-			if (data.iot.version > version) {
+		if (data && data.ioe) {
+			if (data.ioe.version > version) {
 				$('.ui.upgrade.segment').show();
 			} else {
 {% if not force_upgrade then %}
@@ -286,8 +286,8 @@ function check_for_update(btn) {
 				print_ok_message($('.ui.sys_upgrade.form'), '<i>{{_("There is no new system updates")}} </i>');
 {% end %}
 			}
-			upgrade_version = data.iot.version;
-			if (data.iot.beta) {
+			upgrade_version = data.ioe.version;
+			if (data.ioe.beta) {
 				upgrade_version = "beta." + upgrade_version
 			}
 			$('.ui.sys_upgrade.form .primary.button .label').html(upgrade_version);

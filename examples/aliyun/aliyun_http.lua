@@ -11,9 +11,6 @@ function api:initialize(sys, host, product_key)
 	self._sys = sys
 	self._host = host
 	self._product_key = product_key
-
-	self._iot_id = nil
-	self._iot_token = nil
 end
 
 function api:gen_sign(device_name, device_secret, client_id, timestamp)

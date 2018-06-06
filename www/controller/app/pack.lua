@@ -3,14 +3,14 @@ local dc = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
 local uuid = require 'uuid'
 
-local pack_target_path = "/tmp/iot/"
+local pack_target_path = "/tmp/ioe/"
 
 local function path_join(...)
 	return table.concat({...}, '/')
 end
 
 local function get_app_path(app, ...)
-	return path_join("./iot/apps", app, ...)
+	return path_join("./ioe/apps", app, ...)
 end
 
 local function pack_app(inst, version)

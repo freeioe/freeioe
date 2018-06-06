@@ -8,7 +8,7 @@ return {
 		local ext = get.ext
 		local version = get.version
 
-		local tp, err = skynet.call("IOT_EXT", "lua", "pkg_check_version", ext, version)
+		local tp, err = skynet.call("IOE_EXT", "lua", "pkg_check_version", ext, version)
 		local ret = {}
 		if tp then
 			ret['type'] = tp

@@ -201,8 +201,8 @@ function init(...)
 				applist[k] = { conf = v.conf }
 			end
 		end
-		if not apps['iot'] then
-			snax.self().req.start('iot')
+		if not apps['ioe'] then
+			snax.self().req.start('ioe')
 		end
 	end)
 end

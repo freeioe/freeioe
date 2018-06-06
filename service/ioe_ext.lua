@@ -280,7 +280,7 @@ skynet.start(function()
 			error(string.format("Unknown command %s", tostring(cmd)))
 		end
 	end)
-	skynet.register "IOT_EXT"
+	skynet.register "IOE_EXT"
 	installed = list_installed()
 
 	skynet.fork(function()

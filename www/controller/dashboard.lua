@@ -45,7 +45,7 @@ return {
 		local ver, git_ver = sysinfo.version()
 		local sver, git_sver = sysinfo.skynet_version()
 		local version = {
-			iot = {
+			ioe = {
 				ver = ver,
 				git_ver = git_ver,
 			},
@@ -61,7 +61,7 @@ return {
 		local arch = sysinfo.cpu_arch()
 		local os_id = sysinfo.os_id()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
-		local iot_sn = dc.get('CLOUD', 'ID') or sysinfo.iot_sn()
+		local ioe_sn = dc.get('CLOUD', 'ID') or sysinfo.ioe_sn()
 		
 		local cloud = snax.uniqueservice('cloud')
 		local cloud_status, cloud_last = cloud.req.get_status()
@@ -82,7 +82,7 @@ return {
 			rollback_time = rollback_time,
 			cpu_arch = arch,
 			os_id = os_id,
-			iot_sn = iot_sn,
+			ioe_sn = ioe_sn,
 			using_beta = using_beta,
 			force_upgrade = get.force_upgrade,
 			cloud_status = cloud_status,

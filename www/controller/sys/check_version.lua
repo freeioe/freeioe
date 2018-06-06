@@ -9,9 +9,9 @@ return {
 		local skynet_version = get.skynet_version
 		local plat = sysinfo.platform()
 
-		local iot_type, err = skynet.call("UPGRADER", "lua", "pkg_check_version", "skynet_iot", version)
+		local ioe_type, err = skynet.call("UPGRADER", "lua", "pkg_check_version", "freeioe", version)
 		local skynet_type, err = skynet.call("UPGRADER", "lua", "pkg_check_version", plat.."_skynet", skynet_version)
 		
-		lwf.json(self, {iot=iot_type, skynet=skynet_type})
+		lwf.json(self, {ioe=ioe_type, skynet=skynet_type})
 	end,
 }

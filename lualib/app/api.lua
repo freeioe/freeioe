@@ -190,9 +190,9 @@ function api:default_meta()
 	return {
 		name = "Unknown",
 		description = "Unknown device",
-		manufacturer = "Bamboo IOT",
+		manufacturer = "BambooShoots IOE",
 		series = "Unknown",
-		link = "http://iot.symgrid.com/device?name=",
+		link = "http://device.freeioe.org/device?name=",
 	}
 end
 

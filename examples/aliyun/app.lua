@@ -32,7 +32,7 @@ function app:initialize(name, sys, conf)
 	self._log = sys:logger()
 	self._nodes = {}
 
-	self._mqtt_id = conf.mqtt_id or sys:id() -- using system iot id
+	self._mqtt_id = conf.mqtt_id or sys:id() -- using system device id
 	self._product_key = conf.product_key or "5NjhcjHuFPS"
 	self._device_name = conf.device_name or "demo1"
 	self._device_secret = conf.device_secret or "QnINbT0Oze4YHCe83lsVvM6RQH66BnLA"

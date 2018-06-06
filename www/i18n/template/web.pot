@@ -38,6 +38,10 @@ msgid "Application API"
 msgstr ""
 
 
+msgid "Application Configruation"
+msgstr ""
+
+
 msgid "Application Debuger"
 msgstr ""
 
@@ -51,6 +55,14 @@ msgstr ""
 
 
 msgid "Application Name"
+msgstr ""
+
+
+msgid "Application configuration changed!"
+msgstr ""
+
+
+msgid "Application does not exist! Instance: "
 msgstr ""
 
 
@@ -131,6 +143,10 @@ msgstr ""
 
 
 msgid "Comms"
+msgstr ""
+
+
+msgid "Configuration"
 msgstr ""
 
 
@@ -238,6 +254,10 @@ msgid "Extension List"
 msgstr ""
 
 
+msgid "Extensions"
+msgstr ""
+
+
 msgid "FT CSV Parser"
 msgstr ""
 
@@ -247,6 +267,10 @@ msgstr ""
 
 
 msgid "Failed to check system version"
+msgstr ""
+
+
+msgid "Failed to get application configuration"
 msgstr ""
 
 
@@ -290,6 +314,18 @@ msgid "Forum"
 msgstr ""
 
 
+msgid "FreeIOE"
+msgstr ""
+
+
+msgid "FreeIOE System API"
+msgstr ""
+
+
+msgid "FreeIOE is an open source platform for internet of everythings. Please follow us on GitHub!!!"
+msgstr ""
+
+
 msgid "Getting Started"
 msgstr ""
 
@@ -302,7 +338,7 @@ msgid "Help"
 msgstr ""
 
 
-msgid "Help Make IOT Better"
+msgid "Help Make FreeIOE Better"
 msgstr ""
 
 
@@ -322,19 +358,7 @@ msgid "INI Parser"
 msgstr ""
 
 
-msgid "IOT"
-msgstr ""
-
-
-msgid "IOT Network"
-msgstr ""
-
-
-msgid "IOT System API"
-msgstr ""
-
-
-msgid "IOT is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
+msgid "IOE Network"
 msgstr ""
 
 
@@ -734,7 +758,7 @@ msgid "Welcome %s"
 msgstr ""
 
 
-msgid "Welcome in IOT"
+msgid "Welcome in FreeIOE"
 msgstr ""
 
 

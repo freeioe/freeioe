@@ -31,15 +31,15 @@ local function get_cfg_str()
 end
 
 local function cfg_defaults()
-	local iot_sn = sysinfo.iot_sn()
+	local ioe_sn = sysinfo.ioe_sn()
 	return {
-		ID = iot_sn,
-		HOST = "iot.symgrid.com",
+		ID = ioe_sn,
+		HOST = "ioe.symgrid.com",
 		PORT = 1883,
 		KEEPALIVE = 60,
 		DATA_UPLOAD = true,
 		EVENT_UPLOAD = 0,
-		PKG_HOST_URL = "iot.symgrid.com",
+		PKG_HOST_URL = "ioe.symgrid.com",
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
 end
@@ -49,7 +49,7 @@ local function set_cfg_defaults(data)
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
 	end
-	if defaults.ID ~= sysinfo.unknown_iot_sn then
+	if defaults.ID ~= sysinfo.unknown_ioe_sn then
 		data.ID = defaults.ID
 	end
 	return data
@@ -123,7 +123,7 @@ end
 local function save_cfg_cloud(content, content_md5sum)
 	local id = dc.get("CLOUD", "ID")
 	if id and db_restful then
-		local url = "iot_device_conf/"..id
+		local url = "ioe_device_conf/"..id
 		local c = {
 			timestamp = db_modification,
 			data = content,
@@ -139,7 +139,7 @@ end
 local function load_cfg_cloud()
 	local id = dc.get("CLOUD", "ID")
 	if id and db_restful then
-		local status, body = db_restful:get("iot_device_conf/"..id.."/timestamp")
+		local status, body = db_restful:get("ioe_device_conf/"..id.."/timestamp")
 		if status ~= 200 then
 			log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			return
@@ -147,11 +147,11 @@ local function load_cfg_cloud()
 		tm = tonumber(body)
 		if tm and tm > db_modification then
 			log.notice("::CFG:: Configuration in cloud is newer")
-			local status, content = db_restful:get("iot_device_conf/"..id.."/content")
+			local status, content = db_restful:get("ioe_device_conf/"..id.."/content")
 			if status ~= 200 then
 				log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			end
-			local status, md5sum = db_restful:get("iot_device_conf/"..id.."/md5")
+			local status, md5sum = db_restful:get("ioe_device_conf/"..id.."/md5")
 			if status ~= 200 then
 				log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			end

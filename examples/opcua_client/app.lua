@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 local opcua = require 'opcua'
 
-local app = class("IOT_OPCUA_CLIENT_APP")
+local app = class("FREEIOE_OPCUA_CLIENT_APP")
 app.API_VER = 1
 
 function app:initialize(name, sys, conf)
@@ -74,7 +74,7 @@ function app:create_device_node(sn, props)
 
 	-- 
 	local objects = client:getObjectsNode()
-	local namespace = self._conf.namespace or "http://iot.symid.com"
+	local namespace = self._conf.namespace or "http://freeioe.org"
 	local idx, err = client:getNamespaceIndex(namespace)
 	if not idx then
 		log:warning("Cannot find namespace", err)

@@ -824,7 +824,7 @@ function accept.sys_upgrade_ack(id, args)
 end
 
 function accept.ext_list(id, args)
-	local r, err = skynet.call("IOT_EXT", "lua", "list")
+	local r, err = skynet.call("IOE_EXT", "lua", "list")
 	snax.self().post.action_result('app', id, r, err or "Done")
 	if r then
 		if mqtt_client then
@@ -834,7 +834,7 @@ function accept.ext_list(id, args)
 end
 
 function accept.ext_upgrade(id, args)
-	skynet.call("IOT_EXT", "lua", "upgrade_ext", id, args)
+	skynet.call("IOE_EXT", "lua", "upgrade_ext", id, args)
 end
 
 function accept.batch_script(id, script)

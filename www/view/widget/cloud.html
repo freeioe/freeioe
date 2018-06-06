@@ -10,13 +10,13 @@
 			<td>
 				<div class="ui action input">
 					{% if edit_enable then %}
-					<input id="iot_id" value="{{cfg.ID}}" type="text">
-					<button id="iot_id_btn" class="ui yellow right labeled icon button">
+					<input id="ioe_id" value="{{cfg.ID}}" type="text">
+					<button id="ioe_id_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
 					{% else %}
-					<input id="iot_id" value="{{cfg.ID}}" type="text" readonly="true">
+					<input id="ioe_id" value="{{cfg.ID}}" type="text" readonly="true">
 					{% end %}
 				</div>
 			</td>

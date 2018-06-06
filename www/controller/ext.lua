@@ -8,7 +8,7 @@ return {
 			self:redirect('/user/login')
 			return
 		else
-			local exts = skynet.call("IOT_EXT", "lua", "list")
+			local exts = skynet.call("IOE_EXT", "lua", "list")
 			local pkg_host_url = dc.get('PKG_HOST_URL')
 			local using_beta = dc.get('CLOUD', 'USING_BETA')
 			lwf.render('ext.html', {exts=exts, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta})

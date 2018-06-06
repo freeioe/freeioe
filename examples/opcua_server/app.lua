@@ -2,7 +2,7 @@ local class = require 'middleclass'
 local opcua = require 'opcua'
 
 --- 注册对象(请尽量使用唯一的标识字符串)
-local app = class("IOT_OPCUA_SERVER_APP")
+local app = class("FREEIOE_OPCUA_SERVER_APP")
 --- 设定应用最小运行接口版本(目前版本为1,为了以后的接口兼容性)
 app.API_VER = 1
 
@@ -196,7 +196,7 @@ function app:start()
 
 	--- 添加命名空间
 	local id = self._sys:id()
-	local idx = server:addNamespace("http://iot.symid.com/"..id)
+	local idx = server:addNamespace("http://freeioe.org/"..id)
 
 	self._server = server
 	self._idx = idx
@@ -231,7 +231,7 @@ function app:run(tms)
 	--- OPCUA模块运行入口
 	while self._server.running do
 		local ms = self._server:run_once(false)
-		--- 暂停OPCUA模块运行，处理IOT系统消息
+		--- 暂停OPCUA模块运行，处理FREEIOE系统消息
 		self._sys:sleep(ms % 10)
 	end
 	print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')

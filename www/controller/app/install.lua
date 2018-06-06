@@ -2,7 +2,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 
 local default_conf = {
-	iot_frpc = {
+	ioe_frpc = {
 		auto_start = true,
 		enable_web = true,
 		privilege_token = "BWYJVj2HYhVtdGZL",

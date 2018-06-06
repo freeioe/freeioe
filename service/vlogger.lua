@@ -6,7 +6,7 @@ local LOG = nil
 local reg_map = {}
 
 local function create_log()
-	local max_lvl = os.getenv('IOT_LOG_LEVEL') or 'info'
+	local max_lvl = os.getenv('IOE_LOG_LEVEL') or 'info'
 	LOG = log.new(
 		max_lvl, -- maximum log level
 

@@ -22,7 +22,7 @@ fi
 ./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
 
 echo "--------------------------------------------"
-echo "IOT System IN:" $PWD
+echo "FreeIOE System IN:" $PWD
 
 ### Get the version by count the commits
 VERSION=`git log --oneline | wc -l | tr -d ' '`
@@ -38,7 +38,7 @@ echo 'Revision:'$REVISION
 
 #rm __release/* -rf
 # Make the release folder
-mkdir -p __release/skynet_iot
+mkdir -p __release/freeioe
 
 # Clean up the cramfs folder
 #sudo rm -rf __install
@@ -66,8 +66,8 @@ cp -rL lualib/resty __install/lualib/resty
 # ./scripts/compile_lua.sh 
 
 # Release example (modbus)
-# Release iot
-./scripts/release_app.sh iot $VERSION $REVISION
+# Release ioe
+./scripts/release_app.sh ioe $VERSION $REVISION
 ./scripts/release_app.sh bms $VERSION $REVISION
 ./scripts/release_app.sh modbus_lua $VERSION $REVISION
 ./scripts/release_app.sh frpc $VERSION $REVISION
@@ -88,9 +88,9 @@ done
 
 # For pre-installed applications
 mkdir __install/apps
-./scripts/pre_inst.sh iot iot $VERSION
+./scripts/pre_inst.sh ioe ioe $VERSION
 
-# For iot extensions
+# For ioe extensions
 mkdir __install/ext
 
 #################################
@@ -102,14 +102,14 @@ du __install -sh
 ##
 ##################
 cd __install
-tar czvf ../__release/skynet_iot/$VERSION.tar.gz * > /dev/null
-md5sum -b ../__release/skynet_iot/$VERSION.tar.gz > ../__release/skynet_iot/$VERSION.tar.gz.md5
-du ../__release/skynet_iot/$VERSION.tar.gz -sh
-cat ../__release/skynet_iot/$VERSION.tar.gz.md5
+tar czvf ../__release/freeioe/$VERSION.tar.gz * > /dev/null
+md5sum -b ../__release/freeioe/$VERSION.tar.gz > ../__release/freeioe/$VERSION.tar.gz.md5
+du ../__release/freeioe/$VERSION.tar.gz -sh
+cat ../__release/freeioe/$VERSION.tar.gz.md5
 ## Copy to latest
-cp -f ../__release/skynet_iot/$VERSION.tar.gz ../__release/skynet_iot/latest.tar.gz
-cp -f ../__release/skynet_iot/$VERSION.tar.gz.md5 ../__release/skynet_iot/latest.tar.gz.md5
-echo $VERSION > ../__release/skynet_iot/latest.version
+cp -f ../__release/freeioe/$VERSION.tar.gz ../__release/freeioe/latest.tar.gz
+cp -f ../__release/freeioe/$VERSION.tar.gz.md5 ../__release/freeioe/latest.tar.gz.md5
+echo $VERSION > ../__release/freeioe/latest.version
 cd - > /dev/null
 
 # Clean up the rootfs files

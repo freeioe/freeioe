@@ -16,13 +16,13 @@
 			<div class="ui teal icon button check_update" data-content="{{_('Query application updates')}}"><i class="ui refresh icon"></i>{{_("Check Updates")}}</div>
 			<a class="ui green icon button" href="/ext"> <i class="ui cubes icon"></i> {{_("Extensions")}}</a>
 		</div>
-		{% if not apps['iot_frpc'] then %}
+		{% if not apps['ioe_frpc'] then %}
 		<div class="column">
 			<form class="ui app_frpc form" action="/app/install" method="post">
 				<input type="hidden" name="from_web" value="1">
 				<input type="hidden" name="version" value="latest">
 				<input type="hidden" name="app" value="frpc">
-				<input type="hidden" name="inst" value="iot_frpc">
+				<input type="hidden" name="inst" value="ioe_frpc">
 				<div class="ui green submit button"> {{_("Enable Cloud Web Mapping")}}</div>
 			</form>
 		</div>
@@ -30,7 +30,7 @@
 		<div class="column">
 			<form class="ui app_frpc form" action="/app/uninstall" method="post">
 				<input type="hidden" name="from_web" value="1">
-				<input type="hidden" name="inst" value="iot_frpc">
+				<input type="hidden" name="inst" value="ioe_frpc">
 				<div class="ui orange submit button"> {{_("Remove Cloud Web Mapping")}}</div>
 			</form>
 		</div>

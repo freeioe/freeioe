@@ -6,7 +6,7 @@ return {
 		local get = ngx.req.get_uri_args()
 		local inst = get.inst
 		local ext = get.ext
-		local version, beta = skynet.call("IOT_EXT", "lua", "pkg_check_update", ext, true)
+		local version, beta = skynet.call("IOE_EXT", "lua", "pkg_check_update", ext, true)
 		lwf.json(self, {version=version, beta=beta})
 	end,
 }

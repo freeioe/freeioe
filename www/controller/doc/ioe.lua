@@ -5,30 +5,30 @@ return {
 		local docs = {
 			{
 				title = _("SerialChannel"),
-				filename = "iot/serialchannel.md",
+				filename = "ioe/serialchannel.md",
 			},
 			{
 				title = _("SocketChannel"),
-				filename = "iot/socketchannel.md",
+				filename = "ioe/socketchannel.md",
 			},
 			{
 				title = _("FT CSV Parser"),
-				filename = "iot/ftcsv.md",
+				filename = "ioe/ftcsv.md",
 			},
 			{
 				title = _("INI Parser"),
-				filename = "iot/inifile.md",
+				filename = "ioe/inifile.md",
 			},
 			{
 				title = _("Cycle Buffer"),
-				filename = "iot/cyclebuffer.md",
+				filename = "ioe/cyclebuffer.md",
 			},
 			{
 				title = _("UUID Module"),
-				filename = "iot/uuid.md",
+				filename = "ioe/uuid.md",
 			},
 		}
 
-		lwf.render("doc.html", {doc=filename, docs=docs, docs_title=_("IOT System API")})
+		lwf.render("doc.html", {doc=filename, docs=docs, docs_title=_("FreeIOE System API")})
 	end
 }

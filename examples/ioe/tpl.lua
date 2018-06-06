@@ -1,12 +1,12 @@
 local class = require 'middleclass'
 local cjson = require 'cjson.safe'
 
-local tpl = class("IOT_SYS_TPL_CLASS")
+local tpl = class("FREEIOE_SYS_TPL_CLASS")
 
 local tpls = {
 	{
 		-- if name start with * (e.g. *device) then option is required for configuration to have multiple device for this template
-		name = "iot", 
+		name = "ioe", 
 		desc = "System Information Statistics",
 		input = {
 			cpuload = "Upload device cpu-load every minutes",
@@ -38,7 +38,7 @@ function tpl:option()
 end
 
 function tpl:enable_input(name, input, enable)
-	if name ~= 'iot' then
+	if name ~= 'ioe' then
 		return nil, "No such device"
 	end
 	self._disabled[input] = enable and true or nil
@@ -49,7 +49,7 @@ function tpl:enable_output(name, output, enable)
 end
 
 function tpl:enable_command(name, command, enable)
-	if name ~= 'iot' or command ~= 'reboot' then
+	if name ~= 'ioe' or command ~= 'reboot' then
 		return nil, "No such device"
 	end
 	self._disable_reboot = enable and true or nil

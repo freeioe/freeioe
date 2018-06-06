@@ -14,8 +14,8 @@ local get_target_folder = pkg_api.get_app_folder
 local parse_version_string = pkg_api.parse_version_string
 local get_app_version = pkg_api.get_app_version
 
-local function get_iot_dir()
-	return os.getenv('IOT_DIR') or lfs.currentdir().."/.."
+local function get_ioe_dir()
+	return os.getenv('IOE_DIR') or lfs.currentdir().."/.."
 end
 
 local function create_task(func, task_name, task_desc, ...)
@@ -112,7 +112,7 @@ function command.install_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
-	if (id and id ~= 'from_web') and (inst_name == 'iot' or inst_name == 'iot_frpc') then
+	if (id and id ~= 'from_web') and (inst_name == 'ioe' or inst_name == 'ioe_frpc') then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -169,7 +169,7 @@ function command.create_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf or {}
 
-	if (id and id ~= 'from_web') and (inst_name == 'iot' or inst_name == 'iot_frpc') then
+	if (id and id ~= 'from_web') and (inst_name == 'ioe' or inst_name == 'ioe_frpc') then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -187,7 +187,7 @@ function command.create_app(id, args)
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 	local target_folder_escape = string.gsub(target_folder, ' ', '\\ ')
-	os.execute('cp ./iot/doc/app/example_app.lua '..target_folder_escape..'/app.lua')
+	os.execute('cp ./ioe/doc/app/example_app.lua '..target_folder_escape..'/app.lua')
 	os.execute('echo 0 > '..target_folder.."/version")
 	os.execute('echo editor >> '..target_folder.."/version")
 
@@ -250,7 +250,7 @@ function command.pkg_check_version(app, version)
 end
 
 function command.pkg_enable_beta()
-	local fn = get_iot_dir()..'/ipt/using_beta'
+	local fn = get_ioe_dir()..'/ipt/using_beta'
 	local f, err = io.open(fn, 'r')
 	if f then
 		f:close()
@@ -302,17 +302,17 @@ end
 local upgrade_sh_str = [[
 #!/bin/sh
 
-IOT_DIR=%s
+IOE_DIR=%s
 SKYNET_FILE=%s
 SKYNET_PATH=%s
-SKYNET_IOT_FILE=%s
-SKYNET_IOT_PATH=%s
+FREEIOE_FILE=%s
+FREEIOE_PATH=%s
 
-date > $IOT_DIR/ipt/rollback
-cp -f $SKYNET_PATH/cfg.json $IOT_DIR/ipt/cfg.json.bak
-cp -f $SKYNET_PATH/cfg.json.md5 $IOT_DIR/ipt/cfg.json.md5.bak
+date > $IOE_DIR/ipt/rollback
+cp -f $SKYNET_PATH/cfg.json $IOE_DIR/ipt/cfg.json.bak
+cp -f $SKYNET_PATH/cfg.json.md5 $IOE_DIR/ipt/cfg.json.md5.bak
 
-cd $IOT_DIR
+cd $IOE_DIR
 if [ -f $SKYNET_FILE ]
 then
 	cd $SKYNET_PATH
@@ -320,41 +320,41 @@ then
 
 	if [ $? -eq 0 ]
 	then
-		mv -f $SKYNET_FILE $IOT_DIR/ipt/skynet.tar.gz.new
+		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz.new
 	else
 		echo "tar got error!"
-		sh $IOT_DIR/ipt/rollback.sh
+		sh $IOE_DIR/ipt/rollback.sh
 		exit $?
 	fi
 fi
 
-cd "$IOT_DIR"
-if [ -f $SKYNET_IOT_FILE ]
+cd "$IOE_DIR"
+if [ -f $FREEIOE_FILE ]
 then
-	cd $SKYNET_IOT_PATH
-	tar xzf $SKYNET_IOT_FILE
+	cd $FREEIOE_PATH
+	tar xzf $FREEIOE_FILE
 
 	if [ $? -eq 0 ]
 	then
-		mv -f $SKYNET_IOT_FILE $IOT_DIR/ipt/skynet_iot.tar.gz.new
+		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz.new
 	else
 		echo "tar got error!"
-		sh $IOT_DIR/ipt/rollback.sh
+		sh $IOE_DIR/ipt/rollback.sh
 		exit $?
 	fi
 fi
 
-if [ -f $IOT_DIR/ipt/upgrade_no_ack ]
+if [ -f $IOE_DIR/ipt/upgrade_no_ack ]
 then
-	rm -f $IOT_DIR/ipt/rollback
-	rm -f $IOT_DIR/ipt/upgrade_no_ack
+	rm -f $IOE_DIR/ipt/rollback
+	rm -f $IOE_DIR/ipt/upgrade_no_ack
 
-	mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
-	if [ -f $IOT_DIR/ipt/skynet.tar.gz.new ] 
+	mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+	if [ -f $IOE_DIR/ipt/skynet.tar.gz.new ] 
 	then
-		mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
+		mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
 	fi
-	mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
+	mv -f $IOE_DIR/ipt/freeioe.tar.gz.new $IOE_DIR/ipt/freeioe.tar.gz
 fi
 
 sync
@@ -364,22 +364,22 @@ sync
 local rollback_sh_str = [[
 #!/bin/sh
 
-IOT_DIR=%s
+IOE_DIR=%s
 SKYNET_PATH=%s
-SKYNET_IOT_PATH=%s
+FREEIOE_PATH=%s
 
-cd $IOT_DIR
+cd $IOE_DIR
 cd $SKYNET_PATH
-tar xzf $IOT_DIR/ipt/skynet.tar.gz
+tar xzf $IOE_DIR/ipt/skynet.tar.gz
 
-cd $IOT_DIR
-cd $SKYNET_IOT_PATH
-tar xzf $IOT_DIR/ipt/skynet_iot.tar.gz
+cd $IOE_DIR
+cd $FREEIOE_PATH
+tar xzf $IOE_DIR/ipt/freeioe.tar.gz
 
-if [ -f $IOT_DIR/ipt/cfg.json.bak ]
+if [ -f $IOE_DIR/ipt/cfg.json.bak ]
 then
-	cp -f $IOT_DIR/ipt/cfg.json.bak $SKYNET_PATH/cfg.json
-	cp -f $IOT_DIR/ipt/cfg.json.md5.bak $SKYNET_PATH/cfg.json.md5
+	cp -f $IOE_DIR/ipt/cfg.json.bak $SKYNET_PATH/cfg.json
+	cp -f $IOE_DIR/ipt/cfg.json.md5.bak $SKYNET_PATH/cfg.json.md5
 fi
 
 sync
@@ -388,12 +388,12 @@ sync
 local upgrade_ack_sh_str = [[
 #!/bin/sh
 
-IOT_DIR=%s
+IOE_DIR=%s
 
-mv -f $IOT_DIR/ipt/skynet.tar.gz.new $IOT_DIR/ipt/skynet.tar.gz
-mv -f $IOT_DIR/ipt/skynet_iot.tar.gz.new $IOT_DIR/ipt/skynet_iot.tar.gz
-mv -f $IOT_DIR/ipt/rollback.sh.new $IOT_DIR/ipt/rollback.sh
-rm -f $IOT_DIR/ipt/rollback
+mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
+mv -f $IOE_DIR/ipt/freeioe.tar.gz.new $IOE_DIR/ipt/freeioe.tar.gz
+mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+rm -f $IOE_DIR/ipt/rollback
 
 sync
 
@@ -409,16 +409,16 @@ local function write_script(fn, str)
 	return true
 end
 
-local function start_upgrade_proc(iot_path, skynet_path)
-	assert(iot_path)
+local function start_upgrade_proc(ioe_path, skynet_path)
+	assert(ioe_path)
 	local skynet_path = skynet_path or '/IamNotExits.unknown'
 	log.warning("Core System Upgrade....")
-	log.trace(iot_path, skynet_path)
+	log.trace(ioe_path, skynet_path)
 	--local ps_e = get_ps_e()
 
-	local base_dir = get_iot_dir()
+	local base_dir = get_ioe_dir()
 	lfs.mkdir(base_dir.."/ipt")
-	local str = string.format(rollback_sh_str, base_dir, "skynet", "skynet_iot")
+	local str = string.format(rollback_sh_str, base_dir, "skynet", "freeioe")
 	local r, err = write_script(base_dir.."/ipt/rollback.sh.new", str)
 	if not r then
 		return false, err
@@ -430,7 +430,7 @@ local function start_upgrade_proc(iot_path, skynet_path)
 		return false, err
 	end
 
-	local str = string.format(upgrade_sh_str, base_dir, skynet_path, "skynet", iot_path, "skynet_iot")
+	local str = string.format(upgrade_sh_str, base_dir, skynet_path, "skynet", ioe_path, "freeioe")
 	local r, err = write_script(base_dir.."/ipt/upgrade.sh", str)
 	if not r then
 		return false, err
@@ -451,7 +451,7 @@ function command.upgrade_core(id, args)
 	local skynet_args = args.skynet
 
 	if args.no_ack then
-		local base_dir = get_iot_dir()
+		local base_dir = get_ioe_dir()
 		lfs.mkdir(base_dir.."/ipt")
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
@@ -460,7 +460,7 @@ function command.upgrade_core(id, args)
 		end
 	end
 
-	create_download('__SKYNET_IOT__', 'skynet_iot', version, function(r, info)
+	create_download('__FREEIOE__', 'freeioe', version, function(r, info)
 		if r then
 			if skynet_args then
 				download_upgrade_skynet(id, skynet_args, function(path) 
@@ -479,7 +479,7 @@ end
 
 local rollback_time = nil
 function command.upgrade_core_ack(id, args)
-	local base_dir = get_iot_dir()
+	local base_dir = get_ioe_dir()
 	local upgrade_ack_sh = base_dir.."/ipt/upgrade_ack.sh"
 	local r, status, code = os.execute("sh "..upgrade_ack_sh)
 	if not r then
@@ -516,7 +516,7 @@ function command.system_quit(id, args)
 end
 
 local function check_rollback()
-	local fn = get_iot_dir()..'/ipt/rollback'
+	local fn = get_ioe_dir()..'/ipt/rollback'
 	local f, err = io.open(fn, 'r')
 	if f then
 		f:close()

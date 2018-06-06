@@ -7,15 +7,15 @@ local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local log = require 'utils.log'
 
-local pm = class("IOT_PROCESS_MONITOR_WRAP")
+local pm = class("FREEIOE_PROCESS_MONITOR_WRAP")
 
 function pm:initialize(name, cmd, args, options)
 	assert(name and cmd)
 	self._name = name
 	self._cmd = cmd
 	local pn = cmd:match("([^/]+)$") or cmd
-	self._pid = "/tmp/iot_pm_"..self._name.."_"..pn..".pid"
-	self._log = "/tmp/iot_pm_"..self._name.."_"..pn..".log"
+	self._pid = "/tmp/ioe_pm_"..self._name.."_"..pn..".pid"
+	self._log = "/tmp/ioe_pm_"..self._name.."_"..pn..".log"
 	if args then
 		self._cmd = cmd .. ' ' .. table.concat(args, ' ')
 		if not string.find(self._cmd, '-L') then
@@ -29,7 +29,7 @@ function pm:start()
 	local os_id = sysinfo.os_id()
 	local arch = sysinfo.cpu_arch()
 	assert(os_id, arch)
-	local pm_file = './iot/'..os_id..'/'..arch..'/process-monitor'
+	local pm_file = './ioe/'..os_id..'/'..arch..'/process-monitor'
 	local cmd = { pm_file, "-z", "-d", "-p", self._pid }
 	--local cmd = { pm_file, "-p", self._pid }
 	if self._options.user then

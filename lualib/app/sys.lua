@@ -107,8 +107,8 @@ function sys:wakeup(co)
 end
 
 function sys:app_dir()
-	return lfs.currentdir().."/iot/apps/"..self._app_name.."/"
-	--return os.getenv("PWD").."/iot/apps/"..self._app_name.."/"
+	return lfs.currentdir().."/ioe/apps/"..self._app_name.."/"
+	--return os.getenv("PWD").."/ioe/apps/"..self._app_name.."/"
 end
 
 -- Application SN

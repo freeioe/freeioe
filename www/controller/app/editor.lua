@@ -14,7 +14,7 @@ local function path_join(...)
 end
 
 local function get_app_path(app, ...)
-	local path = path_join("./iot/apps", app, ...)
+	local path = path_join("./ioe/apps", app, ...)
 	path = string.gsub(path, "\\", "/")
 	return path
 end

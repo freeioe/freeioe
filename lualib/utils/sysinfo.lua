@@ -212,7 +212,7 @@ local function get_versions(fn)
 end
 
 _M.version = function()
-	local v, gv = get_versions("./iot/version")
+	local v, gv = get_versions("./ioe/version")
 	return v, gv
 end
 
@@ -243,7 +243,7 @@ _M.cpu_arch = function(os_id)
 		return _M.openwrt_cpu_arch()
 	end
 	local matchine_arch = _M.uname('-m')
-	return assert(os.getenv("IOT_CPU_ARCH") or matchine_arch)
+	return assert(os.getenv("IOE_CPU_ARCH") or matchine_arch)
 end
 
 local function read_openwrt_arch()
@@ -263,7 +263,7 @@ local function read_openwrt_arch()
 end
 
 _M.openwrt_cpu_arch = function()
-	return assert(os.getenv("IOT_CPU_ARCH") or read_openwrt_arch())
+	return assert(os.getenv("IOE_CPU_ARCH") or read_openwrt_arch())
 end
 
 local function read_os_id()
@@ -291,7 +291,7 @@ local os_id_names = {
 _M.os_id = function()
 	local os_id = read_os_id()
 	os_id = os_id_names[os_id] or os_id
-	return assert(os.getenv("IOT_OS_ID") or os_id)
+	return assert(os.getenv("IOE_OS_ID") or os_id)
 end
 
 _M.platform = function()
@@ -309,15 +309,15 @@ local device_types_names = {
 
 _M.device_type = function()
 	local uname = _M.uname('-m')
-	return assert(os.getenv("IOT_DEVICE_TYPE") or device_types_names[uname])
+	return assert(os.getenv("IOE_DEVICE_TYPE") or device_types_names[uname])
 end
 
-local try_read_iot_sn_from_config = function()
+local try_read_ioe_sn_from_config = function()
 	local f, err = io.open("/sbin/uci", "r")
 	if f then
 		--- This is openwrt system
 		f:close()
-		local s, err = _M.exec('uci get iot.@system[0].sn', true)
+		local s, err = _M.exec('uci get ioe.@system[0].sn', true)
 		if s and string.len(s) > 0 then
 			if string.sub(s, -1) == "\n" then
 				return string.sub(s, 1, -2)
@@ -325,10 +325,10 @@ local try_read_iot_sn_from_config = function()
 			return s
 		end
 	else
-		local f, err = io.open("/etc/iot.ini")
+		local f, err = io.open("/etc/ioe.ini")
 		if f then
 			local inifile = require 'inifile'
-			local data, err = inifile.parse("/etc/iot.ini")
+			local data, err = inifile.parse("/etc/ioe.ini")
 			f:close()
 			if data and data.system then
 				return data.system.sn
@@ -337,14 +337,14 @@ local try_read_iot_sn_from_config = function()
 	end
 end
 
-local try_gen_iot_sn_by_mac_addr = function()
+local try_gen_ioe_sn_by_mac_addr = function()
 	local ndi = network_if('eth0') or network_if('br-lan') or network_if('wan')
 	if ndi and ndi.hwaddr then
 		return string.upper(string.gsub(ndi.hwaddr, ':', ''))
 	end
 end
 
-local try_read_iot_sn_by_sysinfo = function()
+local try_read_ioe_sn_by_sysinfo = function()
 	local s, err = _M.exec('sysinfo psn', true)
 	if s and string.len(s) > 0 then
 		local patt = '%g'
@@ -356,22 +356,22 @@ local try_read_iot_sn_by_sysinfo = function()
 end
 
 --- Buffer the sn
-local _iot_sn = nil
-local read_iot_sn = function()
-	if _iot_sn then
-		return _iot_sn
+local _ioe_sn = nil
+local read_ioe_sn = function()
+	if _ioe_sn then
+		return _ioe_sn
 	end
 	-- TODO: for device sn api
-	_iot_sn = try_read_iot_sn_from_config() or try_read_iot_sn_by_sysinfo()
-	if not _iot_sn then
-		_iot_sn = try_gen_iot_sn_by_mac_addr() or _M.unknown_iot_sn
+	_ioe_sn = try_read_ioe_sn_from_config() or try_read_ioe_sn_by_sysinfo()
+	if not _ioe_sn then
+		_ioe_sn = try_gen_ioe_sn_by_mac_addr() or _M.unknown_ioe_sn
 	end
-	return _iot_sn
+	return _ioe_sn
 end
 
-_M.unknown_iot_sn = "UNKNOWN_ID"
-_M.iot_sn = function()
-	return assert(os.getenv("IOT_SN") or read_iot_sn())
+_M.unknown_ioe_sn = "UNKNOWN_ID"
+_M.ioe_sn = function()
+	return assert(os.getenv("IOE_SN") or read_ioe_sn())
 end
 
 return _M

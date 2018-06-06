@@ -4,7 +4,7 @@ local class = require 'middleclass'
 local uuid = require 'uuid'
 local log = require 'utils.log'
 
-local app_port = class('IOT_APP_SERIAL_PORT_CLASS')
+local app_port = class('FREEIOE_APP_SERIAL_PORT_CLASS')
 
 local function agent_service(...)
 	local skynet = require "skynet"

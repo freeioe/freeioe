@@ -155,10 +155,10 @@ function init(name, conf, mgr_handle, mgr_type)
 	sys_id = sys_api:id()
 
 	log.info("App "..app_name.." starting")
-	package.path = package.path..";./iot/apps/"..name.."/?.lua;./iot/apps/"..name.."/?.luac"..";./iot/apps/"..name.."/lualib/?.lua;./iot/apps/"..name.."/lualib/?.luac"
-	package.cpath = package.cpath..";./iot/apps/"..name.."/luaclib/?.so"
+	package.path = package.path..";./ioe/apps/"..name.."/?.lua;./ioe/apps/"..name.."/?.luac"..";./ioe/apps/"..name.."/lualib/?.lua;./ioe/apps/"..name.."/lualib/?.luac"
+	package.cpath = package.cpath..";./ioe/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
-	local f, err = io.open("./iot/apps/"..name.."/app.lua", "r")
+	local f, err = io.open("./ioe/apps/"..name.."/app.lua", "r")
 	if not f then
 		log.warning("Application does not exits!, Try to install it")	
 		skynet.call("UPGRADER", "lua", "install_missing_app", name)
@@ -166,7 +166,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	end
 	f:close()
 
-	local r, err = skynet.call("IOT_EXT", "lua", "install_depends", name)
+	local r, err = skynet.call("IOE_EXT", "lua", "install_depends", name)
 	if not r then
 		log.error("Failed to install depends for ", name, "error:", err)
 		local info = "Failed to start app. install depends failed"
@@ -174,7 +174,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, info
 	end
 
-	local lf, err = loadfile("./iot/apps/"..name.."/app.lua")
+	local lf, err = loadfile("./ioe/apps/"..name.."/app.lua")
 	if not lf then
 		local info = "Loading app failed."
 		log.error(info, err)

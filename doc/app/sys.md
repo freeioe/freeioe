@@ -51,7 +51,7 @@ timer_cancel()
 
 * sys:abort()
 
-系统退出接口，调用此接口会导致IOT系统退出。 请谨慎调用。 
+系统退出接口，调用此接口会导致FreeIOE系统退出。 请谨慎调用。 
 
 * sys:now()
 
@@ -115,7 +115,7 @@ timer_cancel()
 
 * sys:id()
 
-获取IOT设备学列号
+获取FreeIOE设备序列号
 
 * sys:cleanup()
 

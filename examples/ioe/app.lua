@@ -5,7 +5,7 @@ local datacenter = require 'skynet.datacenter'
 local event = require 'app.event'
 local disk = require 'disk'
 
-local app = class("IOT_SYS_APP_CLASS")
+local app = class("FREEIOE_SYS_APP_CLASS")
 app.API_VER = 1
 
 function app:initialize(name, sys, conf)
@@ -135,8 +135,8 @@ function app:start()
 	end
 
 	local meta = self._api:default_meta()
-	meta.name = "Bamboo IOT"
-	meta.description = "Bamboo IOT Device"
+	meta.name = "BambooShoots IOE"
+	meta.description = "BambooShoots IOE Device"
 	meta.series = "Q102" -- TODO:
 	self._dev = self._api:add_device(sys_id, meta, inputs)
 

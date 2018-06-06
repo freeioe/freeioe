@@ -1,18 +1,18 @@
 #!/bin/sh
 
-NAME="Skynet/IOT"
-DESC="IOT based on skynet"
+NAME="FreeIOE"
+DESC="FreeIOE based on skynet"
 
-BASE_DIR=/usr/iot
+BASE_DIR=/usr/ioe
 SKYNET_DIR=$BASE_DIR/skynet
-SKYNET_IOT_DIR=$SKYNET_DIR/iot
+FREEIOE_DIR=$SKYNET_DIR/ioe
 
 SKYNET_BIN=$SKYNET_DIR/skynet
-STARTUP_SH=$SKYNET_IOT_DIR/startup.sh
+STARTUP_SH=$FREEIOE_DIR/startup.sh
 
 ARCH=`arch`
 PID=/var/run/skynet.pid
-DAEMON=$SKYNET_IOT_DIR/linux/$ARCH/process-monitor
+DAEMON=$FREEIOE_DIR/linux/$ARCH/process-monitor
 
 if [ -f /etc/default/skynet ]; then
         . /etc/default/skynet
@@ -21,11 +21,11 @@ fi
 DAEMON_OPTS="-d -p $PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
-export IOT_RUN_AS_DAEMON=1
+export IOE_RUN_AS_DAEMON=1
 
 if [ -x $DAEMON ]; then
 	echo "Starting..." $DESC
-	$DAEMON $DAEMON_OPTS -S "$STARTUP_OPTS" $SKYNET_BIN iot/config > /dev/null
+	$DAEMON $DAEMON_OPTS -S "$STARTUP_OPTS" $SKYNET_BIN ioe/config > /dev/null
 else
 	echo $DAEMON "is missing"
 fi
