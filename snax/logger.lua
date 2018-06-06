@@ -28,7 +28,7 @@ end
 function init(...)
 	local log = require 'log'
 
-	local lname = 'skynet'
+	local lname = 'freeioe'
 	local max_lvl = os.getenv('IOE_LOG_LEVEL') or 'info'
 
 	LOG = log.new(

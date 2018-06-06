@@ -13,7 +13,7 @@ local function create_log()
 		-- Writer
 		require 'log.writer.list'.new(               -- multi writers:
 			require "log.writer.console.color".new(),  -- * console color
-			require 'log.writer.file.roll'.new('./logs', "skynet_sys.log", 4, 1*1024*1024)
+			require 'log.writer.file.roll'.new('./logs', "freeioe_sys.log", 4, 1*1024*1024)
 		),
 
 		-- Formatter

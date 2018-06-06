@@ -60,8 +60,8 @@ function _M.by_app(app_name, count)
 	local log_inst = string.format("%08x", app_inst.handle)
 	local filter = "%["..log_inst.."%]"
 
-	local sys_log = filter_log_file('skynet_sys.log', count, filter)
-	local log = filter_log_file('skynet.log', count, filter)
+	local sys_log = filter_log_file('freeioe_sys.log', count, filter)
+	local log = filter_log_file('freeioe.log', count, filter)
 
 	return {
 		sys = sys_log,
@@ -80,9 +80,9 @@ end
 function _M.by_type(typ, count)
 	local s = nil
 	if typ == 'sys' then
-		s = tail_log_file('skynet_sys.log', count)
+		s = tail_log_file('freeioe_sys.log', count)
 	else
-		s = tail_log_file('skynet.log', count)
+		s = tail_log_file('freeioe.log', count)
 	end
 	return s
 end
