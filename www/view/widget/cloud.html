@@ -9,7 +9,7 @@
 		<tr>
 			<td>
 				<div class="ui action input">
-					{% if edit_enable then %}
+					{% if edit_enable or edit_sn then %}
 					<input id="ioe_id" value="{{cfg.ID}}" type="text">
 					<button id="ioe_id_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>

@@ -1,6 +1,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
+local lfs = require 'lfs'
 
 return {
 	get = function(self)
@@ -10,7 +11,8 @@ return {
 			local get = ngx.req.get_uri_args()
 			--local cloud = snax.uniqueservice('cloud')
 			local cfg = dc.get('CLOUD')
-			lwf.render('cloud.html', {cfg=cfg, nowtime=skynet.time(), edit_enable=get.edit_enable})
+			local edit_sn = lfs.attributes("/etc/profile.d/echo_sn.sh", "mode") == 'file'
+			lwf.render('cloud.html', {cfg=cfg, nowtime=skynet.time(), edit_enable=get.edit_enable, edit_sn=edit_sn})
 		end
 	end,
 	post = function(self)
