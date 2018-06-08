@@ -7,10 +7,12 @@ local datacenter = require 'skynet.datacenter'
 local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
 local cyclebuffer = require 'cyclebuffer'
+local periodbuffer = require 'periodbuffer'
 local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
+local zlib = require 'zlib'
 
 --- Connection options
 local mqtt_id = nil --"UNKNOWN_ID"
@@ -40,6 +42,7 @@ local max_enable_log_upload = 60 * 10
 
 local api = nil
 local cov = nil
+local pb = nil
 local log_buffer = nil
 local event_buffer = nil
 
@@ -217,17 +220,45 @@ local function connect_log_server(enable)
 end
 
 local function publish_data(key, value, timestamp, quality)
-	if mqtt_client and enable_data_upload then
-		--log.trace("Publish data", key, value, timestamp, quality)
-
-		local val = cjson.encode({ key, timestamp, value, quality}) or value
-		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+	if not mqtt_client then
+		return
 	end
-	if not enable_data_upload then
+
+	if enable_data_upload then
+		--log.trace("Publish data", key, value, timestamp, quality)
+		local val = cjson.encode({ key, timestamp, value, quality}) or value
+		if not pb then
+			return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+		else
+			pb:handle(key, timestamp, value, quality)
+		end
+	else
 		local sn = string.match(key, '^([^/]+)/')
 		if sn == mqtt_id then
 			local val = cjson.encode({ key, timestamp, value, quality}) or value
-			return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+			if not pb then
+				return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+			else
+				pb:handle(key, timestamp, value, quality)
+			end
+		end
+	end
+end
+
+local function publish_data_list(val_list)
+	if not mqtt_client then
+		return
+	end
+
+	local val, err = cjson.encode(val_list)
+	if not val then
+		log.error('JSON Encoding Error:', err)
+	else
+		local deflate = zlib.deflate()
+		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
+		if mqtt_client then
+			--return true
+			return mqtt_client:publish(mqtt_id.."/data_gz", deflated, 1, false)
 		end
 	end
 end
@@ -249,11 +280,29 @@ local function load_cov_conf()
 	skynet.fork(function()
 		while true do
 			if enable_data_upload then
-				local gap = cov:timer(skynet.time(), publish_data)
+				local list = {}
+				local gap = cov:timer(skynet.time(), function(...) 
+					list[#list+1] = {...}
+				end)
+				publish_data_list(list)
 				skynet.sleep(gap * 100)
 			end
 		end
 	end)
+end
+
+local function load_pb_conf()
+	local period = tonumber(datacenter.get("CLOUD", "UPLOAD_PERIOD")  or 0)-- period in seconds
+	log.notice('Loading period buffer, period:', period)
+	if period >= 1000 then
+		pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
+		pb:start(publish_data_list)
+	else
+		if pb then
+			pb:stop()
+			pb = nil
+		end
+	end
 end
 
 --
@@ -284,6 +333,7 @@ local function load_conf()
 		datacenter.set('CLOUD', 'COMM_UPLOAD_APPS', enable_comm_upload_apps)
 	end
 
+	load_pb_conf()
 	load_cov_conf()
 end
 
@@ -493,6 +543,7 @@ function response.list_cfg_keys()
 		"PORT",
 		"TIMEOUT",
 		"DATA_UPLOAD",
+		"UPLOAD_PERIOD",
 		"LOG_UPLOAD",
 		"COMM_UPLOAD",
 		"COMM_UPLOAD_APPS",
@@ -606,12 +657,17 @@ end
 ---
 function accept.fire_data_snapshot()
 	local now = skynet.time()
+	local val_list = {}
 	cov:fire_snapshot(function(key, value, timestamp, quality)
+		--[[
 		if mqtt_client then
 			local val = cjson.encode({ key, timestamp or now, value, quality or 0 })
 			mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 		end
+		]]--
+		val_list[#val_list + 1] = {key, timestamp or now, value, quality or 0}
 	end)
+	publish_data_list(val_list)
 end
 
 local fire_device_timer = nil

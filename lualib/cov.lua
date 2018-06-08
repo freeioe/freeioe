@@ -1,4 +1,5 @@
 local class = require 'middleclass'
+local coroutine = require 'skynet.coroutine'
 
 local cov = class("_ChangeOnValue_LIB")
 
@@ -118,6 +119,23 @@ function cov:timer(now, cb)
 		end
 	end
 	return math.floor(next_loop)
+end
+
+function cov:start(cb)
+	self._stop = nil
+	skynet.fork(function()
+		while not self._stop do
+			local gap = self:timer(skynet.time(), cb)
+			skynet.sleep(gap, self)
+		end
+	end)
+end
+
+function cov:stop()
+	if not self._stop then
+		self._stop = true
+		skynet.wakeup(self)
+	end
 end
 
 return cov

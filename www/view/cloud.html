@@ -58,6 +58,17 @@ function mqtt_option(option, value) {
 		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
 	});
 };
+function cloud_option(option, value) {
+	$.post("/cloud", {from_web:true, action:'cloud', option:option, value:value}, function(data) {
+		$('#message_ui').html('<i>' + data + '</i>');
+	})
+	.done(function() {
+		setTimeout('refresh_page()', 500);
+	})
+	.fail(function() {
+		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
+	});
+};
 function sys_quit() {
 	$.post("/sys/control", {from_web:true, action:'quit'}, function(data) {
 		$('#message_ui').html('<i>' + data + '</i>');
@@ -99,6 +110,10 @@ $(document).ready(function(){
 			enable_option('log', 0);
 		}
 	});
+	$("#data_cov").change(function() {
+		var enable = $('#data_cov').is(':checked');
+		enable_option('cov', enable);
+	});
 	$("#mqtt_host_btn").click(function() {
 		var value = $('#mqtt_host').val();
 		mqtt_option('host', value);
@@ -114,6 +129,14 @@ $(document).ready(function(){
 	$("#ioe_id_btn").click(function() {
 		var value = $('#ioe_id').val();
 		mqtt_option('id', value);
+	});
+	$("#cov_ttl_btn").click(function() {
+		var value = $('#cov_ttl').val();
+		cloud_option('cov_ttl', value);
+	});
+	$("#upload_period_btn").click(function() {
+		var value = $('#upload_period').val();
+		cloud_option('upload_period', value);
 	});
 });
 </script>

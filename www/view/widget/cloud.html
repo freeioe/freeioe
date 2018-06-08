@@ -79,15 +79,16 @@
 	</tbody>
 </table>
 
-<h3 class="ui dividing header">{{_("Upload Settings")}} </h3>
+<h3 class="ui dividing header">{{_("Data Upload Options")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
 			<th>{{_("Data Upload")}}</th>
-			<th>{{_("Stat Upload")}}</th>
-			<th>{{_("Comm Upload")}}</th>
-			<th>{{_("Log Upload")}}</th>
-			<th>{{_("Event Upload")}}</th>
+			{% if cfg.DATA_UPLOAD then %}
+			<th>{{_("COV")}}</th>
+			<th>{{_("TTL (seconds)")}}</th>
+			<th>{{_("Upload Period (ms)")}}</th>
+			{% end %}
 		</tr>
 	</thead>
 	<tbody>
@@ -105,6 +106,55 @@
 				</div>
 				{% end %}
 			</td>
+			{% if cfg.DATA_UPLOAD then %}
+			<td>
+				{% if cfg.COV ~= false then %}
+				<div class="ui fitted toggle checked checkbox">
+					<input id="data_cov" type="checkbox" checked="true">
+					<label></label>
+				</div>
+				{% else %}
+				<div class="ui fitted toggle checkbox">
+					<input id="data_cov" type="checkbox">
+					<label></label>
+				</div>
+				{% end %}
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="cov_ttl" value="{{cfg.COV_TTL or 60}}" type="number">
+					<button id="cov_ttl_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="upload_period" value="{{cfg.UPLOAD_PERIOD or 0}}" type="number">
+					<button id="upload_period_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
+			{% end %}
+		</tr>
+	</tbody>
+</table>
+
+<h3 class="ui dividing header">{{_("Upload Settings")}} </h3>
+<table class="ui celled basic table">
+	<thead>
+		<tr>
+			<th>{{_("Stat Upload")}}</th>
+			<th>{{_("Comm Upload")}}</th>
+			<th>{{_("Log Upload")}}</th>
+			<th>{{_("Event Upload")}}</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
 			<td>
 				{% if cfg.STAT_UPLOAD then %}
 				<div class="ui fitted toggle checked checkbox">

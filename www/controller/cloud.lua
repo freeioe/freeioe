@@ -47,10 +47,20 @@ return {
 			end
 			ngx.print(info)
 		end
-		if action == 'mqtt' then
+		if action == 'cloud' or action == 'mqtt' then
 			local option = post.option
 			local value = post.value
-			print(option, value)
+			if string.upper(option) == 'UPLOAD_PERIOD' then
+				if tonumber(value) > 0 and tonumber(value) < 1000 then
+					ngx.print(_('The upload period cannot be less than 1000 ms (one second)'))
+				end
+			end
+			if string.upper(option) == 'COV_TTL' then
+				if tonumber(value) < 60 then
+					ngx.print(_('The upload period cannot be less than 60 seconds'))
+				end
+			end
+			--print(option, value)
 			dc.set('CLOUD', string.upper(option), value)
 			ngx.print(_('Cloud option is changed, you need restart system to apply changes!'))
 		end
