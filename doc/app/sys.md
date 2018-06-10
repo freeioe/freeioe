@@ -117,6 +117,10 @@ timer_cancel()
 
 获取FreeIOE设备序列号
 
+* sys:cloud_id()
+
+获取FreeIOE连接云平台所用的序列号(此ID可不同与设备序列号)
+
 * sys:cleanup()
 
 应用清理接口

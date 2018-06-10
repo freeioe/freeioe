@@ -321,7 +321,7 @@ end
 -- loading configruation from datacenter
 --]]
 local function load_conf()
-	mqtt_id = datacenter.get("CLOUD", "ID")
+	mqtt_id = datacenter.get("CLOUD", "CLOUD_ID") or datacenter.get("CLOUD", "ID")
 	mqtt_host = datacenter.get("CLOUD", "HOST")
 	mqtt_port = datacenter.get("CLOUD", "PORT")
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
@@ -550,6 +550,7 @@ end
 function response.list_cfg_keys()
 	return {
 		"ID",
+		"CLOUD_ID",
 		"HOST",
 		"PORT",
 		"TIMEOUT",

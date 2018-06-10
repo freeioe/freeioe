@@ -61,7 +61,8 @@ return {
 		local arch = sysinfo.cpu_arch()
 		local os_id = sysinfo.os_id()
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
-		local ioe_sn = dc.get('CLOUD', 'ID') or sysinfo.ioe_sn()
+		local ioe_sn = dc.get('CLOUD', 'ID') -- sysinfo.ioe_sn()
+		local ioe_cloud_sn = dc.get('CLOUD', 'CLOUD_ID')
 		
 		local cloud = snax.uniqueservice('cloud')
 		local cloud_status, cloud_last = cloud.req.get_status()
@@ -83,6 +84,7 @@ return {
 			cpu_arch = arch,
 			os_id = os_id,
 			ioe_sn = ioe_sn,
+			ioe_cloud_sn = ioe_cloud_sn,
 			using_beta = using_beta,
 			force_upgrade = get.force_upgrade,
 			cloud_status = cloud_status,

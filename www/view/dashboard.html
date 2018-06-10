@@ -3,7 +3,11 @@
 {-main_header-}
 
 {-main-}
+{% if not ioe_cloud_sn then %}
 <h1 class="header"> {{_("FreeIOE")}} - {{ioe_sn}} </h1>
+{% else %}
+<h1 class="header"> {{_("FreeIOE")}} - {{ioe_sn}} - {{ioe_cloud_sn}} </h1>
+{% end %}
 
 <h3 class="ui top attached header">
 	{{_("Information")}}

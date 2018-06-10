@@ -3,20 +3,24 @@
 	<thead>
 		<tr>
 			<th>{{_("ID")}}</th>
+			<th>{{_("Cloud ID")}}</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
 			<td>
+				{{cfg.ID}}
+			</td>
+			<td>
 				<div class="ui action input">
 					{% if edit_enable or edit_sn then %}
-					<input id="ioe_id" value="{{cfg.ID}}" type="text">
-					<button id="ioe_id_btn" class="ui yellow right labeled icon button">
+					<input id="ioe_cloud_id" value="{{cfg.CLOUD_ID}}" type="text">
+					<button id="ioe_cloud_id_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
 					{% else %}
-					<input id="ioe_id" value="{{cfg.ID}}" type="text" readonly="true">
+						{{cfg.CLOUD_ID}}
 					{% end %}
 				</div>
 			</td>
@@ -44,7 +48,7 @@
 						{{_("Change")}}
 					</button>
 					{% else %}
-					<input id="mqtt_host" value="{{cfg.HOST}}" type="text" readonly="true">
+						{{cfg.HOST}}
 					{% end %}
 				</div>
 			</td>
@@ -57,7 +61,7 @@
 						{{_("Change")}}
 					</button>
 					{% else %}
-					<input id="mqtt_port" value="{{cfg.PORT}}" type="number" readonly="true">
+						{{cfg.PORT}}
 					{% end %}
 				</div>
 			</td>
@@ -71,7 +75,7 @@
 						{{_("Change")}}
 					</button>
 					{% else %}
-					<input id="mqtt_keepalive" value="{{cfg.KEEPALIVE}}" type="number" readonly="true">
+						{{cfg.KEEPALIVE}}
 					{% end %}
 				</div>
 			</td>
@@ -197,15 +201,11 @@
 			</td>
 			<td>
 				<div class="ui action input">
-					{% if edit_enable then %}
 					<input id="event_upload" value="{{cfg.EVENT_UPLOAD}}" type="number">
 					<button id="event_upload_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
-					{% else %}
-					<input id="event_upload" value="{{cfg.EVENT_UPLOAD}}" type="number" readonly="true">
-					{% end %}
 				</div>
 			</td>
 		</tr>

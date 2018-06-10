@@ -60,6 +60,11 @@ return {
 					ngx.print(_('The COV TTL cannot be less than 60 seconds'))
 				end
 			end
+			if string.upper(option) == 'CLOUD_ID' then
+				if string.len(tostring(value) or '') == 0 then
+					value = nil
+				end
+			end
 			--print(option, value)
 			dc.set('CLOUD', string.upper(option), value)
 			ngx.print(_('Cloud option is changed, you need restart system to apply changes!'))
