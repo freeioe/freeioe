@@ -256,6 +256,7 @@ local function publish_data_list(val_list)
 
 	if not zlib_loaded then
 		for _, v in ipairs(val_list) do
+			-- TODO: 
 			publish_data(table.unpack(v))
 		end
 		return
@@ -975,6 +976,9 @@ end
 
 function init()
 	zlib_loaded, zlib = pcall(require, 'zlib')
+	if not zlib_loaded then
+		log.warning("Cannot load zlib module, data compressing cannot be performed on this device")
+	end
 
 	mqtt_client_last = skynet.time()
 	mosq.init()
