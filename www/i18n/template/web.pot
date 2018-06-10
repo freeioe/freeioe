@@ -90,6 +90,10 @@ msgid "CLA"
 msgstr ""
 
 
+msgid "COV"
+msgstr ""
+
+
 msgid "CPU Arch"
 msgstr ""
 
@@ -183,6 +187,10 @@ msgstr ""
 
 
 msgid "Data Upload"
+msgstr ""
+
+
+msgid "Data Upload Options"
 msgstr ""
 
 
@@ -670,7 +678,19 @@ msgid "System will be restart after five seconds!"
 msgstr ""
 
 
+msgid "TTL (seconds)"
+msgstr ""
+
+
 msgid "Test View Page"
+msgstr ""
+
+
+msgid "The COV TTL cannot be less than 60 seconds"
+msgstr ""
+
+
+msgid "The upload period cannot be less than 1000 ms (one second)"
 msgstr ""
 
 
@@ -719,6 +739,10 @@ msgstr ""
 
 
 msgid "Upgrade To"
+msgstr ""
+
+
+msgid "Upload Period (ms)"
 msgstr ""
 
 

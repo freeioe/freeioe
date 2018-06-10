@@ -11,6 +11,7 @@ function cov:initialize(opt)
 	if opt.ttl then
 		assert(opt.ttl > 0)
 	end
+	opt.min_ttl_gap = opt.min_ttl_gap or 10  -- 0.1 seconds
 
 	self._opt = opt
 	self._retained_map = {}
@@ -98,14 +99,21 @@ function cov:fire_snapshot(cb)
 	end
 end
 
+--- Call this timer function manually if you won't using start/stop method
+-- @tparam now number Skynet time in seconds ( float )
+-- @tparam cb function  Callback function for fire data out
+-- @treturn number Skynet time in seconds ( float )
 function cov:timer(now, cb)
 	local opt = self._opt
 	local opt_ttl = opt.ttl
 	local next_loop = opt_ttl
+	-- Loop all inputs
 	for key, v in pairs(self._retained_map) do
+		-- Get current input next ttl fire time gap
 		local tv = v[2]
 		local quality = v[3] or 0
 		local gap = opt_ttl - math.abs(now - tv)
+		-- Fire data if reached the ttl
 		if quality == 0 and gap <= 0 then
 			v[2] = now
 			local r = cb(key, table.unpack(v))	
@@ -114,19 +122,26 @@ function cov:timer(now, cb)
 			end
 			self._retained_map[key] = v
 		end
+		-- return min next time gap
 		if quality == 0 and gap > 0 and next_loop > gap then
 			next_loop = gap
 		end
 	end
-	return math.floor(next_loop)
+	--return math.floor(next_loop)
+	return next_loop
 end
 
 function cov:start(cb)
 	self._stop = nil
+	local min_ttl_gap = self._opt.min_ttl_gap
 	skynet.fork(function()
 		while not self._stop do
 			local gap = self:timer(skynet.time(), cb)
-			skynet.sleep(gap, self)
+			gap = math.floor(gap * 100)
+			if gap < min_ttl_gap then
+				gap = min_ttl_gap
+			end
+			skynet.sleep(gap)
 		end
 	end)
 end

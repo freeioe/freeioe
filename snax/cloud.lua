@@ -42,6 +42,7 @@ local max_enable_log_upload = 60 * 10
 
 local api = nil
 local cov = nil
+local cov_min_timer_gap = 10
 local pb = nil
 local log_buffer = nil
 local event_buffer = nil
@@ -245,8 +246,10 @@ local function publish_data(key, value, timestamp, quality)
 	end
 end
 
+local total_compressed = 0
+local total_uncompressed = 0
 local function publish_data_list(val_list)
-	if not mqtt_client then
+	if not mqtt_client or #val_list == 0 then
 		return
 	end
 
@@ -258,6 +261,9 @@ local function publish_data_list(val_list)
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
 		if mqtt_client then
+			total_compressed = total_compressed + bytes_out
+			total_uncompressed = total_uncompressed + bytes_in
+			log.trace('Compressed size '..bytes_out..' Original size '..bytes_in, (total_compressed/total_uncompressed) * 100)
 			--return true
 			return mqtt_client:publish(mqtt_id.."/data_gz", deflated, 1, false)
 		end
@@ -286,7 +292,10 @@ local function load_cov_conf()
 					list[#list+1] = {...}
 				end)
 				publish_data_list(list)
-				skynet.sleep(gap * 100)
+				if gap < cov_min_timer_gap then
+					gap = cov_min_timer_gap
+				end
+				skynet.sleep(math.floor(gap * 100))
 			end
 		end
 	end)
@@ -296,6 +305,7 @@ local function load_pb_conf()
 	local period = tonumber(datacenter.get("CLOUD", "UPLOAD_PERIOD")  or 0)-- period in seconds
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
+		cov_min_timer_gap = math.floor(period / 10)
 		pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
 		pb:start(publish_data_list)
 	else

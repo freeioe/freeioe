@@ -57,7 +57,7 @@ return {
 			end
 			if string.upper(option) == 'COV_TTL' then
 				if tonumber(value) < 60 then
-					ngx.print(_('The upload period cannot be less than 60 seconds'))
+					ngx.print(_('The COV TTL cannot be less than 60 seconds'))
 				end
 			end
 			--print(option, value)

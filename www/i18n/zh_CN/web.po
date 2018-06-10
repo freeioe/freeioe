@@ -29,7 +29,7 @@ msgid "Application API"
 msgstr "应用接口"
 
 msgid "Application Configruation"
-msgstr ""
+msgstr "应用配置"
 
 msgid "Application Debuger"
 msgstr "应用调试器"
@@ -44,10 +44,10 @@ msgid "Application Name"
 msgstr "应用名称"
 
 msgid "Application configuration changed!"
-msgstr ""
+msgstr "应用配置已更改!"
 
 msgid "Application does not exist! Instance: "
-msgstr ""
+msgstr "应用不存在!实例名:"
 
 msgid "Application option changed!"
 msgstr "应用设定已修改!"
@@ -66,6 +66,9 @@ msgstr "Beta版本使用警告"
 
 msgid "CLA"
 msgstr ""
+
+msgid "COV"
+msgstr "变化传输"
 
 msgid "CPU Arch"
 msgstr "CPU架构"
@@ -110,7 +113,7 @@ msgid "Comms"
 msgstr "通讯报文"
 
 msgid "Configuration"
-msgstr ""
+msgstr "配置"
 
 msgid "Contribute"
 msgstr "共享"
@@ -138,6 +141,9 @@ msgstr "仪表盘"
 
 msgid "Data Upload"
 msgstr "数据上送"
+
+msgid "Data Upload Options"
+msgstr "数据传输选项"
 
 msgid "Description"
 msgstr "描述"
@@ -191,7 +197,7 @@ msgid "Extension List"
 msgstr "扩展列表"
 
 msgid "Extensions"
-msgstr ""
+msgstr "扩展库"
 
 msgid "FT CSV Parser"
 msgstr "FT CSV解析器"
@@ -203,7 +209,7 @@ msgid "Failed to check system version"
 msgstr "发送检测系统版本请求失败"
 
 msgid "Failed to get application configuration"
-msgstr ""
+msgstr "获取应用配置失败"
 
 msgid "Failed to send request"
 msgstr "发送请求失败"
@@ -242,7 +248,7 @@ msgid "FreeIOE System API"
 msgstr "FreeIOE系统接口"
 
 msgid "FreeIOE is an open source platform for internet of everythings. Please follow us on GitHub!!!"
-msgstr ""
+msgstr "FreeIOE -- 为万物互联而生的开源平台。敬请关注我们的GitHub账户"
 
 msgid "Getting Started"
 msgstr "如何入门"
@@ -269,7 +275,7 @@ msgid "INI Parser"
 msgstr "INI解析器"
 
 msgid "IOE Network"
-msgstr ""
+msgstr "IOE生态圈"
 
 msgid "Information"
 msgstr "信息"
@@ -502,8 +508,17 @@ msgstr "系统更新成功！系统需要离线一些时间!"
 msgid "System will be restart after five seconds!"
 msgstr "系统将在5秒钟后重启"
 
+msgid "TTL (seconds)"
+msgstr "TTL(秒)"
+
 msgid "Test View Page"
 msgstr "测试浏览页面"
+
+msgid "The COV TTL cannot be less than 60 seconds"
+msgstr "COV TTL不能低于60秒"
+
+msgid "The upload period cannot be less than 1000 ms (one second)"
+msgstr "周期上送的时间不能低于1000毫秒"
 
 msgid "There is no new system updates"
 msgstr "未检测到系统更新"
@@ -540,6 +555,9 @@ msgstr "升级确认"
 
 msgid "Upgrade To"
 msgstr "升级到"
+
+msgid "Upload Period (ms)"
+msgstr "周期上送间隔"
 
 msgid "Upload Settings"
 msgstr "上送配置"
