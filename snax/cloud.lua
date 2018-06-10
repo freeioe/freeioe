@@ -12,7 +12,8 @@ local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
-local zlib_loaded, zlib = pcall(require, 'zlib')
+
+local zlib_loaded, zlib
 
 --- Connection options
 local mqtt_id = nil --"UNKNOWN_ID"
@@ -973,6 +974,8 @@ function accept.action_result(action, id, result, message)
 end
 
 function init()
+	zlib_loaded, zlib = pcall(require, 'zlib')
+
 	mqtt_client_last = skynet.time()
 	mosq.init()
 
