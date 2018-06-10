@@ -1,4 +1,4 @@
-<h3 class="ui dividing header">{{_("System")}} </h3>
+<h3 class="ui header">{{_("System")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
@@ -24,7 +24,7 @@
 	</tbody>
 </table>
 
-<h3 class="ui dividing header">{{_("MQTT")}} </h3>
+<h3 class="ui header">{{_("MQTT")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
@@ -79,15 +79,15 @@
 	</tbody>
 </table>
 
-<h3 class="ui dividing header">{{_("Data Upload Options")}} </h3>
+<h3 class="ui header">{{_("Data Upload Options")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
 			<th>{{_("Data Upload")}}</th>
 			{% if cfg.DATA_UPLOAD then %}
-			<th>{{_("COV")}}</th>
-			<th>{{_("TTL (seconds)")}}</th>
-			<th>{{_("Upload Period (ms)")}}</th>
+			<th>{{_("COV")}} (readonly)</th>
+			<th>{{_("COV TTL")}} (seconds)</th>
+			<th>{{_("Upload Period")}} (ms)</th>
 			{% end %}
 		</tr>
 	</thead>
@@ -109,12 +109,12 @@
 			{% if cfg.DATA_UPLOAD then %}
 			<td>
 				{% if cfg.COV ~= false then %}
-				<div class="ui fitted toggle checked checkbox">
+				<div class="ui fitted toggle checked checkbox disabled">
 					<input id="data_cov" type="checkbox" checked="true">
 					<label></label>
 				</div>
 				{% else %}
-				<div class="ui fitted toggle checkbox">
+				<div class="ui fitted toggle checkbox disabled">
 					<input id="data_cov" type="checkbox">
 					<label></label>
 				</div>
@@ -143,7 +143,7 @@
 	</tbody>
 </table>
 
-<h3 class="ui dividing header">{{_("Upload Settings")}} </h3>
+<h3 class="ui header">{{_("Upload Settings")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>

@@ -94,6 +94,10 @@ msgid "COV"
 msgstr ""
 
 
+msgid "COV TTL"
+msgstr ""
+
+
 msgid "CPU Arch"
 msgstr ""
 
@@ -678,10 +682,6 @@ msgid "System will be restart after five seconds!"
 msgstr ""
 
 
-msgid "TTL (seconds)"
-msgstr ""
-
-
 msgid "Test View Page"
 msgstr ""
 
@@ -742,7 +742,7 @@ msgid "Upgrade To"
 msgstr ""
 
 
-msgid "Upload Period (ms)"
+msgid "Upload Period"
 msgstr ""
 
 

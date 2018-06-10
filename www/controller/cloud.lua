@@ -43,7 +43,7 @@ return {
 			elseif option == 'event' then
 				cloud.post.enable_event(tonumber(post.enable) or -1)
 			else
-				info = string.format(_("Action %s is not allowed"), option)
+				info = _("Action %s is not allowed", option)
 			end
 			ngx.print(info)
 		end

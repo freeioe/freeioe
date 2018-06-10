@@ -70,6 +70,9 @@ msgstr ""
 msgid "COV"
 msgstr "变化传输"
 
+msgid "COV TTL"
+msgstr "变化传输快照间隔"
+
 msgid "CPU Arch"
 msgstr "CPU架构"
 
@@ -508,14 +511,11 @@ msgstr "系统更新成功！系统需要离线一些时间!"
 msgid "System will be restart after five seconds!"
 msgstr "系统将在5秒钟后重启"
 
-msgid "TTL (seconds)"
-msgstr "TTL(秒)"
-
 msgid "Test View Page"
 msgstr "测试浏览页面"
 
 msgid "The COV TTL cannot be less than 60 seconds"
-msgstr "COV TTL不能低于60秒"
+msgstr "变化传输的快照间隔不能低于60秒"
 
 msgid "The upload period cannot be less than 1000 ms (one second)"
 msgstr "周期上送的时间不能低于1000毫秒"
@@ -556,7 +556,7 @@ msgstr "升级确认"
 msgid "Upgrade To"
 msgstr "升级到"
 
-msgid "Upload Period (ms)"
+msgid "Upload Period"
 msgstr "周期上送间隔"
 
 msgid "Upload Settings"
@@ -604,11 +604,8 @@ msgstr "内核日志"
 msgid "seconds"
 msgstr "秒"
 
-#~ msgid "FreeIOE Network"
-#~ msgstr "FreeIOE网络"
-
-#~ msgid "FreeIOE is an open source platform for internet of things stuff. Please follow us on GitHub!!!"
-#~ msgstr "FreeIOE 是一个开源的物联网系统。敬请关注我们的GitHub账户"
+#~ msgid "ms"
+#~ msgstr "毫秒"
 
 #~ msgid "FreeIOE System DashBoard"
 #~ msgstr "FreeIOE系统仪表盘"
