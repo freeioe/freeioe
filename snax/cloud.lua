@@ -12,7 +12,7 @@ local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
-local zlib = require 'zlib'
+local zlib_loaded, zlib = pcall(require, 'zlib')
 
 --- Connection options
 local mqtt_id = nil --"UNKNOWN_ID"
@@ -253,6 +253,13 @@ local function publish_data_list(val_list)
 		return
 	end
 
+	if not zlib_loaded then
+		for _, v in ipairs(val_list) do
+			publish_data(table.unpack(v))
+		end
+		return
+	end
+
 	local val, err = cjson.encode(val_list)
 	if not val then
 		log.error('JSON Encoding Error:', err)
@@ -302,6 +309,10 @@ local function load_cov_conf()
 end
 
 local function load_pb_conf()
+	if not zlib_loaded then
+		return
+	end
+
 	local period = tonumber(datacenter.get("CLOUD", "UPLOAD_PERIOD")  or 0)-- period in seconds
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
