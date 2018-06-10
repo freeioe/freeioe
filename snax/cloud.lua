@@ -288,8 +288,8 @@ local function load_cov_conf()
 		while true do
 			if enable_data_upload then
 				local list = {}
-				local gap = cov:timer(skynet.time(), function(...) 
-					list[#list+1] = {...}
+				local gap = cov:timer(skynet.time(), function(key, value, timestamp, quality) 
+					list[#list+1] = {key, timestamp, value, quality}
 				end)
 				publish_data_list(list)
 				if gap < cov_min_timer_gap then
