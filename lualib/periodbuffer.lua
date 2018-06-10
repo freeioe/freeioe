@@ -15,7 +15,7 @@ end
 
 function pb:handle(...)
 	self._buf[#self._buf + 1] = {...}
-	print('pb size', self:size())
+	--print('pb size', self:size())
 
 	if not self._max_size then
 		return
@@ -49,7 +49,7 @@ function pb:start(cb)
 	skynet.fork(function()
 		while not self._stop do
 			self:fire_all(cb)
-			print(math.floor(self._period / 10))
+			--print(math.floor(self._period / 10))
 			skynet.sleep(math.floor(self._period / 10), self)
 		end
 	end)

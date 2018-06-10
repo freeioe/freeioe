@@ -254,6 +254,7 @@ local function publish_data_list(val_list)
 	if not val then
 		log.error('JSON Encoding Error:', err)
 	else
+		--log.trace('Publish data in array and compress the json')
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
 		if mqtt_client then
