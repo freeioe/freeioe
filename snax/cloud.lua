@@ -315,7 +315,7 @@ local function load_pb_conf()
 		return
 	end
 
-	local period = tonumber(datacenter.get("CLOUD", "UPLOAD_PERIOD")  or 0)-- period in seconds
+	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 0)-- period in seconds
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
 		cov_min_timer_gap = math.floor(period / 10)
@@ -568,7 +568,7 @@ function response.list_cfg_keys()
 		"PORT",
 		"TIMEOUT",
 		"DATA_UPLOAD",
-		"UPLOAD_PERIOD",
+		"DATA_UPLOAD_PERIOD",
 		"LOG_UPLOAD",
 		"COMM_UPLOAD",
 		"COMM_UPLOAD_APPS",
@@ -704,7 +704,13 @@ function accept.fire_devices(timeout)
 	fire_device_timer = function()
 		local value = cjson.encode(datacenter.get('DEVICES'))
 		if mqtt_client then
-			mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
+			if not zlib_loaded then
+				mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
+			else
+				local deflate = zlib.deflate()
+				local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
+				mqtt_client:publish(mqtt_id.."/devices_gz", deflated, 1, true)
+			end
 		else
 			-- If mqtt connection is offline, retry after five seconds.
 			snax.self().post.fire_devices(500)
@@ -834,7 +840,14 @@ function accept.app_list(id, args)
 		end
 
 		if mqtt_client then
-			mqtt_client:publish(mqtt_id.."/apps", cjson.encode(r), 1, true)
+			local value = cjson.encode(r)
+			if not zlib_loaded then
+				mqtt_client:publish(mqtt_id.."/apps", value, 1, true)
+			else
+				local deflate = zlib.deflate()
+				local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
+				mqtt_client:publish(mqtt_id.."/apps_gz", deflated, 1, true)
+			end
 		end
 	end	
 end
@@ -909,7 +922,14 @@ function accept.ext_list(id, args)
 	snax.self().post.action_result('app', id, r, err or "Done")
 	if r then
 		if mqtt_client then
-			mqtt_client:publish(mqtt_id.."/exts", cjson.encode(r), 1, true)
+			local value = cjson.encode(r)
+			if not zlib_loaded then
+				mqtt_client:publish(mqtt_id.."/exts", value, 1, true)
+			else
+				local deflate = zlib.deflate()
+				local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
+				mqtt_client:publish(mqtt_id.."/exts_gz", deflated, 1, true)
+			end
 		end
 	end
 end
