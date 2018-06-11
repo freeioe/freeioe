@@ -807,6 +807,7 @@ function accept.app_start(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.start(inst, conf)
 	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.fire_apps()
 end
 
 function accept.app_stop(id, args)
@@ -815,6 +816,7 @@ function accept.app_stop(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.stop(inst, reason)
 	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.fire_apps()
 end
 
 function accept.app_restart(id, args)
@@ -823,6 +825,7 @@ function accept.app_restart(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.restart(inst, reason)
 	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.fire_apps()
 end
 
 function accept.app_conf(id, args)
