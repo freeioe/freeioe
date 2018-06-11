@@ -303,22 +303,23 @@ local function load_cov_conf()
 
 	skynet.fork(function()
 		while true do
-			if enable_data_upload then
-				local gap = nil
-				if zlib_loaded then
-					local list = {}
-					gap = cov:timer(skynet.time(), function(key, value, timestamp, quality) 
-						list[#list+1] = {key, timestamp, value, quality}
-					end)
-					publish_data_list(list)
-				else
-					gap = cov:timer(skynet.time(), publish_data)
-				end
-				if gap < cov_min_timer_gap then
-					gap = cov_min_timer_gap
-				end
-				skynet.sleep(math.floor(gap * 100))
+			--- Trigger cov timer
+			local gap = nil
+			if zlib_loaded then
+				local list = {}
+				gap = cov:timer(skynet.time(), function(key, value, timestamp, quality) 
+					list[#list+1] = {key, timestamp, value, quality}
+				end)
+				publish_data_list(list)
+			else
+				gap = cov:timer(skynet.time(), publish_data)
 			end
+
+			--- Make sure sleep not less than min gap
+			if gap < cov_min_timer_gap then
+				gap = cov_min_timer_gap
+			end
+			skynet.sleep(math.floor(gap * 100))
 		end
 	end)
 end
@@ -442,6 +443,8 @@ local Handler = {
 	on_input = function(app, sn, input, prop, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
 		--local key = table.concat({app, sn, intput, prop}, '/')
+
+		--- disable data upload from the very begining here.
 		if not enable_data_upload and sn ~= mqtt_id then
 			-- Skip data
 			return
