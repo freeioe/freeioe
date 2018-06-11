@@ -110,10 +110,6 @@ $(document).ready(function(){
 			enable_option('log', 0);
 		}
 	});
-	$("#data_cov").change(function() {
-		var enable = $('#data_cov').is(':checked');
-		enable_option('cov', enable);
-	});
 	$("#mqtt_host_btn").click(function() {
 		var value = $('#mqtt_host').val();
 		mqtt_option('host', value);

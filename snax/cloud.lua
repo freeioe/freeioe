@@ -13,7 +13,7 @@ local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
 
-local zlib_loaded, zlib
+local zlib_loaded, zlib -- will be initialized in init(...)
 
 --- Connection options
 local mqtt_id = nil --"UNKNOWN_ID"
@@ -221,29 +221,45 @@ local function connect_log_server(enable)
 	end
 end
 
+local function mqtt_publish(topic, data, qos, retained)
+	local value, err = cjson.encode(data)
+	if not value then
+		return nil, err
+	end
+
+	if not zlib_loaded then
+		if mqtt_client then
+			return mqtt_client:publish(topic, value, qos, retained)
+		else
+			return nil, "MQTT connection lost!"
+		end
+	else
+		-- Compresss data
+		local deflate = zlib.deflate()
+		local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
+		if not deflated then
+			return nil, eof, bytes_in, bytes_out
+		end
+
+		if mqtt_client then
+			mqtt_client:publish(topic.."_gz", deflated, qos, retained)
+		else
+			return nil, "MQTT connection lost!"
+		end
+	end
+end
+
 local function publish_data(key, value, timestamp, quality)
 	if not mqtt_client then
 		return
 	end
 
-	if enable_data_upload then
-		--log.trace("Publish data", key, value, timestamp, quality)
-		local val = cjson.encode({ key, timestamp, value, quality}) or value
-		if not pb then
-			return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-		else
-			pb:handle(key, timestamp, value, quality)
-		end
+	--log.trace("Publish data", key, value, timestamp, quality)
+	local val = cjson.encode({ key, timestamp, value, quality}) or value
+	if not pb then
+		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 	else
-		local sn = string.match(key, '^([^/]+)/')
-		if sn == mqtt_id then
-			local val = cjson.encode({ key, timestamp, value, quality}) or value
-			if not pb then
-				return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-			else
-				pb:handle(key, timestamp, value, quality)
-			end
-		end
+		pb:handle(key, timestamp, value, quality)
 	end
 end
 
@@ -251,14 +267,6 @@ local total_compressed = 0
 local total_uncompressed = 0
 local function publish_data_list(val_list)
 	if not mqtt_client or #val_list == 0 then
-		return
-	end
-
-	if not zlib_loaded then
-		for _, v in ipairs(val_list) do
-			-- TODO: 
-			publish_data(table.unpack(v))
-		end
 		return
 	end
 
@@ -296,11 +304,16 @@ local function load_cov_conf()
 	skynet.fork(function()
 		while true do
 			if enable_data_upload then
-				local list = {}
-				local gap = cov:timer(skynet.time(), function(key, value, timestamp, quality) 
-					list[#list+1] = {key, timestamp, value, quality}
-				end)
-				publish_data_list(list)
+				local gap = nil
+				if zlib_loaded then
+					local list = {}
+					gap = cov:timer(skynet.time(), function(key, value, timestamp, quality) 
+						list[#list+1] = {key, timestamp, value, quality}
+					end)
+					publish_data_list(list)
+				else
+					gap = cov:timer(skynet.time(), publish_data)
+				end
 				if gap < cov_min_timer_gap then
 					gap = cov_min_timer_gap
 				end
@@ -429,6 +442,11 @@ local Handler = {
 	on_input = function(app, sn, input, prop, value, timestamp, quality)
 		--log.trace('on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
 		--local key = table.concat({app, sn, intput, prop}, '/')
+		if not enable_data_upload and sn ~= mqtt_id then
+			-- Skip data
+			return
+		end
+
 		local key = table.concat({sn, input, prop}, '/')
 		local timestamp = timestamp or skynet.time()
 		local quality = quality or 0
@@ -613,10 +631,10 @@ end
 function accept.enable_data(enable)
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
-	if enable then
-		log.debug("Cloud data enabled, fire snapshot")
-		snax.self().post.fire_data_snapshot()
-	else
+	if not enable then
+		if cov then
+			cov:clean()
+		end
 		log.debug("Cloud data upload disabled!", enable)
 	end
 end
@@ -682,17 +700,17 @@ end
 ---
 function accept.fire_data_snapshot()
 	local now = skynet.time()
-	local val_list = {}
-	cov:fire_snapshot(function(key, value, timestamp, quality)
-		--[[
-		if mqtt_client then
-			local val = cjson.encode({ key, timestamp or now, value, quality or 0 })
-			mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-		end
-		]]--
-		val_list[#val_list + 1] = {key, timestamp or now, value, quality or 0}
-	end)
-	publish_data_list(val_list)
+	if zlib_loaded then
+		local val_list = {}
+		cov:fire_snapshot(function(key, value, timestamp, quality)
+			val_list[#val_list + 1] = {key, timestamp or now, value, quality or 0}
+		end)
+		publish_data_list(val_list)
+	else
+		cov:fire_snapshot(function(key, value, timestamp, quality)
+			publish_data(key, value, timestamp or now, quality or 0)
+		end)
+	end
 end
 
 local fire_device_timer = nil
@@ -702,16 +720,9 @@ function accept.fire_devices(timeout)
 		return
 	end
 	fire_device_timer = function()
-		local value = cjson.encode(datacenter.get('DEVICES'))
-		if mqtt_client then
-			if not zlib_loaded then
-				mqtt_client:publish(mqtt_id.."/devices", value, 1, true)
-			else
-				local deflate = zlib.deflate()
-				local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
-				mqtt_client:publish(mqtt_id.."/devices_gz", deflated, 1, true)
-			end
-		else
+		local devs = datacenter.get('DEVICES')
+		local r, err = mqtt_publish(mqtt_id.."/devices", devs, 1, true)
+		if not r then
 			-- If mqtt connection is offline, retry after five seconds.
 			snax.self().post.fire_devices(500)
 		end
@@ -819,17 +830,17 @@ function accept.app_conf(id, args)
 end
 
 function accept.app_list(id, args)
-	local r, err = skynet.call("UPGRADER", "lua", "list_app")
+	local apps, err = skynet.call("UPGRADER", "lua", "list_app")
 	-- Fire action result if id is not empty
 	if id then
-		snax.self().post.action_result('app', id, r, err or "Done")
+		snax.self().post.action_result('app', id, apps, err or "Done")
 	end
 
-	if r then
+	if apps then
 		local appmgr = snax.uniqueservice('appmgr')
 		local app_list = appmgr.req.list()
 		local now_time = skynet.time()
-		for k, v in pairs(r) do
+		for k, v in pairs(apps) do
 			local app = app_list[k]
 			if app and app.inst then
 				v.running = now_time
@@ -839,16 +850,7 @@ function accept.app_list(id, args)
 			end
 		end
 
-		if mqtt_client then
-			local value = cjson.encode(r)
-			if not zlib_loaded then
-				mqtt_client:publish(mqtt_id.."/apps", value, 1, true)
-			else
-				local deflate = zlib.deflate()
-				local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
-				mqtt_client:publish(mqtt_id.."/apps_gz", deflated, 1, true)
-			end
-		end
+		mqtt_publish(mqtt_id.."/apps", apps, 1, true)
 	end	
 end
 
@@ -918,19 +920,10 @@ function accept.sys_upgrade_ack(id, args)
 end
 
 function accept.ext_list(id, args)
-	local r, err = skynet.call("IOE_EXT", "lua", "list")
-	snax.self().post.action_result('app', id, r, err or "Done")
-	if r then
-		if mqtt_client then
-			local value = cjson.encode(r)
-			if not zlib_loaded then
-				mqtt_client:publish(mqtt_id.."/exts", value, 1, true)
-			else
-				local deflate = zlib.deflate()
-				local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
-				mqtt_client:publish(mqtt_id.."/exts_gz", deflated, 1, true)
-			end
-		end
+	local exts, err = skynet.call("IOE_EXT", "lua", "list")
+	snax.self().post.action_result('app', id, exts, err or "Done")
+	if exts then
+		mqtt_publish(mqtt_id.."/exts", exts, 1, true)
 	end
 end
 

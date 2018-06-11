@@ -32,7 +32,6 @@ function app:start()
 		end,
 	})
 
-	local sys_id = self._sys:id()
 	local inputs = {
 		{
 			name = 'cpuload',
@@ -109,6 +108,8 @@ function app:start()
 			desc = "Disk /tmp used percent",
 		}
 	}
+	local sys_id = self._sys:id()
+	local cloud_id = self._sys:cloud_id()
 	if string.sub(sys_id, 1, 8) == '2-30002-' then
 		self._gcom = true
 		local gcom_inputs = {
@@ -138,7 +139,7 @@ function app:start()
 	meta.name = "BambooShoots IOE"
 	meta.description = "BambooShoots IOE Device"
 	meta.series = "Q102" -- TODO:
-	self._dev = self._api:add_device(sys_id, meta, inputs)
+	self._dev = self._api:add_device(cloud_id, meta, inputs)
 
 	return true
 end
@@ -219,7 +220,7 @@ function app:run(tms)
 		--[[
 		self._sys:timeout(100, function()
 			self._log:debug("Fire event")
-			local sys_id = self._sys:id()
+			local sys_id = self._sys:cloud_id()
 			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
 		end)
 		]]--

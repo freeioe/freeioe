@@ -89,7 +89,6 @@
 		<tr>
 			<th>{{_("Data Upload")}}</th>
 			{% if cfg.DATA_UPLOAD then %}
-			<th>{{_("COV")}} (readonly)</th>
 			<th>{{_("COV TTL")}} (seconds)</th>
 			<th>{{_("Upload Period")}} (ms)</th>
 			{% end %}
@@ -111,19 +110,6 @@
 				{% end %}
 			</td>
 			{% if cfg.DATA_UPLOAD then %}
-			<td>
-				{% if cfg.COV ~= false then %}
-				<div class="ui fitted toggle checked checkbox disabled">
-					<input id="data_cov" type="checkbox" checked="true">
-					<label></label>
-				</div>
-				{% else %}
-				<div class="ui fitted toggle checkbox disabled">
-					<input id="data_cov" type="checkbox">
-					<label></label>
-				</div>
-				{% end %}
-			</td>
 			<td>
 				<div class="ui action input">
 					<input id="cov_ttl" value="{{cfg.COV_TTL or 60}}" type="number">
