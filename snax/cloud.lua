@@ -912,6 +912,7 @@ function accept.app_option(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	appmgr.post.app_option(args.inst, args.option, args.value)
 	snax.self().post.action_result('app', id, true, "Done")
+	snax.self().post.fire_apps()
 end
 
 function accept.sys_upgrade(id, args)
