@@ -497,6 +497,10 @@ function command.list()
 	return tasks
 end
 
+function command.is_upgrading()
+	return tasks['__FREEIOE__'] or tasks['__SKYNET__']
+end
+
 function command.bind_cloud(handle, type)
 	cloud = snax.bind(handle, type)
 end

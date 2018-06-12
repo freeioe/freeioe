@@ -324,6 +324,10 @@ function check_for_update(btn) {
 	});
 };
 $(document).ready(function(){
+	{% if is_upgrading then %}
+	loader_test();
+	{% end %}
+
 	var sf = $('.ui.sys_upgrade.form');
 	sf.ajaxForm({
 		beforeSend: function () {
