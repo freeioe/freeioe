@@ -14,15 +14,16 @@ function pm:initialize(name, cmd, args, options)
 	self._name = name
 	self._cmd = cmd
 	local pn = cmd:match("([^/]+)$") or cmd
-	self._pid = "/tmp/ioe_pm_"..self._name.."_"..pn..".pid"
-	self._log = "/tmp/ioe_pm_"..self._name.."_"..pn..".log"
+	self._pid = "/tmp/ioe_pm_"..pn.."_"..self._name..".pid"
 	if args then
 		self._cmd = cmd .. ' ' .. table.concat(args, ' ')
-		if not string.find(self._cmd, '-L') then
-			self._cmd = self._cmd .. ' -L ' .. self._log
-		end
 	end
 	self._options = options or {}
+end
+
+function pm:get_tmp_path(filename)
+	local pn = cmd:match("([^/]+)$") or cmd
+	return "/tmp/ioe_pm_"..self._pn.."_"..filename
 end
 
 function pm:start()
@@ -85,7 +86,6 @@ end
 
 function pm:cleanup()
 	os.execute('rm -f '..self._pid)
-	os.execute('rm -f '..self._log)
 end
 
 return pm

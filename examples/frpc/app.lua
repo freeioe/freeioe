@@ -16,6 +16,10 @@ local function get_default_conf(sys, conf)
 		server_port = conf.server_port or '5443',
 		privilege_token = conf.privilege_token or 'IOT1@SYMGRID.COM',
 		protocol = conf.protocol or 'kcp',
+		log_file = '/tmp/ioe_frpc_'..sys._app_name..'.log',
+		log_level = 'info',
+		log_max_days = 1,
+		login_fail_exit = false,
 	}
 
 	if conf.enable_web then
