@@ -90,7 +90,7 @@ function app:start()
 				self._heartbeat_timeout = self._sys:time() + 60
 				return true
 			end
-			if output == 'heartbeat_timeout' then
+			if output == 'heartbeat' then
 				local timeout = tonumber(value) or 60
 				self._heartbeat_timeout = self._sys:time() + timeout
 				return true
@@ -170,6 +170,10 @@ function app:start()
 			name = "enable_heartbeat",
 			desc = "Change frpc process keep running with heartbeat",
 			vt = "int",
+		},
+		{
+			name = "heartbeat",
+			desc = "Heartbeat output",
 		},
 	}
 	local cmds = {
