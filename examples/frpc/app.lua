@@ -14,7 +14,7 @@ local function get_default_conf(sys, conf)
 	ini_conf.common = {
 		server_addr = conf.server_addr or 'frp.symgrid.com',
 		server_port = conf.server_port or '5443',
-		privilege_token = conf.privilege_token or 'IOT1@SYMGRID.COM',
+		token = conf.token or 'IOT1@SYMGRID.COM',
 		protocol = conf.protocol or 'kcp',
 		log_file = '/tmp/ioe_frpc_'..sys._app_name..'.log',
 		log_level = 'info',
