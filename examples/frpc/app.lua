@@ -69,16 +69,26 @@ end
 function app:start()
 	self._api:set_handler({
 		on_output = function(app, sn, output, prop, value)
-			print('on_output', app, sn, output, prop, value)
+			self._log:trace('on_output', app, sn, output, prop, value)
 			if sn ~= self._dev_sn then
 				self._log:error('device sn incorrect', sn)
 				return false, 'device sn incorrect'
 			end
-			if output == 'frpc_config' then
+			if output == 'config' then
 				self._conf = cjson.decode(value)
 				inifile.save(self._ini_file, get_default_conf(self._sys, self._conf))
 
 				self._sys:post('pm_ctrl', 'restart')
+				return true
+			end
+			if output == 'enable_heartbeat' then
+				self._conf.enable_heartbeat = value
+				self._heartbeat_timeout = self._sys:time() + 60
+				return true
+			end
+			if output == 'heartbeat_timeout' then
+				local timeout = tonumber(value) or 60
+				self._heartbeat_timeout = self._sys:time() + timeout
 				return true
 			end
 			return true, "done"
@@ -88,13 +98,14 @@ function app:start()
 				self._log:error('device sn incorrect', sn)
 				return false, 'device sn incorrect'
 			end
+			-- command: start, stop, restart
 			local f = self._pm[command]
 			if f then
 				local r, err = f(self._pm)
 				if not r then
 					self._log:error(err)
 				end
-				if command ~= 'stop' then
+				if command == 'start' or command == 'restart' then
 					self:on_frpc_start()
 				end
 				return r, err
@@ -104,24 +115,20 @@ function app:start()
 			end
 		end,
 		on_ctrl = function(app, command, param, ...)
-			print('on_ctrl', app, command, param, ...)
+			self._log:trace('on_ctrl', app, command, param, ...)
 		end,
 	})
 
 	local dev_sn = self._sys:id()..'.'..self._name
 	local inputs = {
 		{
-			name = 'cpuload',
-			desc = 'System CPU Load'
+			name = "starttime",
+			desc = "frpc start time in UTC",
+			vt = "int",
 		},
 		{
 			name = "uptime",
 			desc = "frpc process uptime",
-			vt = "int",
-		},
-		{
-			name = "starttime",
-			desc = "frpc start time in UTC",
 			vt = "int",
 		},
 		{
@@ -130,16 +137,35 @@ function app:start()
 			vt = "int",
 		},
 		{
+			name = "frpc_visitors",
+			desc = "current enabled frpc visitors",
+			vt = "string"
+		},
+		{
+			name = "enable_heartbeat",
+			desc = "frpc process keep running with heartbeat",
+			vt = "int",
+		},
+		{
+			name = "heartbeat_timeout",
+			desc = "Running heartbeat timeout",
+		},
+		{
 			name = "config",
-			desc = "frpc configuration",
+			desc = "frpc configuration (json)",
 			vt = "string",
 		},
 	}
 	local outputs = {
 		{
 			name = "config",
-			desc = "frpc configuration",
+			desc = "frpc configuration (json)",
 			vt = "string",
+		},
+		{
+			name = "enable_heartbeat",
+			desc = "Change frpc process keep running with heartbeat",
+			vt = "int",
 		},
 	}
 	local cmds = {
@@ -181,12 +207,21 @@ function app:on_frpc_start()
 	self._start_time = self._sys:time()
 	self._uptime_start = self._sys:now()
 	self._dev:set_input_prop('starttime', 'value', self._start_time)
-	self._dev:set_input_prop('frpc_config', 'value', cjson.encode(self._conf))
+	self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
+
+	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
+	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
 
 	local calc_uptime = nil
 	calc_uptime = function()
 		self._dev:set_input_prop('uptime', 'value', self._sys:now() - self._uptime_start)
 		self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
+		if self._conf.enable_heartbeat then
+			if self._sys:time() > (self._heartbeat_timeout + 10) then
+				self._log:warning('Frpc running heartbeat rearched, close frpc')
+				self._sys:post('pm_ctrl', 'stop')
+			end
+		end
 	end
 	calc_uptime()
 end
@@ -198,6 +233,7 @@ function app:on_frpc_stop()
 		self._start_time = nil
 		self._uptime_start = nil
 	end
+	self._pm:cleanup()
 end
 
 function app:run(tms)
@@ -213,14 +249,13 @@ function app:run(tms)
 		self._first_start = true
 	end
 
-	local loadavg = sysinfo.loadavg()
-	self._dev:set_input_prop('cpuload', 'value', tonumber(loadavg.lavg_15))
-
 	local status = self._pm:status()
-	if not status then
-		self:on_frpc_stop()
-	end
 	self._dev:set_input_prop('frpc_run', 'value', status and 1 or 0)
+
+	-- for heartbeat stuff
+	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
+	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
+
 	return 1000 * 5
 end
 
@@ -228,10 +263,17 @@ function app:on_post_pm_ctrl(action)
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
 		local r, err = self._pm:restart()
+		--[[
 		if r then
 			self._sys:set_conf(self._conf)
-			self._dev:set_input_prop('frpc_config', 'value', cjson.encode(self._conf))
+			self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
 		end
+		]]--
+	end
+	if action == 'stop' then
+		self._log:debug("Stop frpc(process-monitor)")
+		self._pm:stop()
+		self:on_frpc_stop()
 	end
 end
 return app
