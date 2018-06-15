@@ -52,7 +52,14 @@ local function get_default_conf(sys, conf)
 		ini_conf[id..'_'..k] = v
 	end
 
-	return ini_conf
+	local visitors = {}
+	for k,v in pairs(ini_conf) do
+		if k ~= 'common' then
+			visitors[#visitors + 1] = k
+		end
+	end
+
+	return ini_conf, visitors
 end
 
 
@@ -64,7 +71,9 @@ function app:initialize(name, sys, conf)
 	self._log = sys:logger()
 	self._ini_file = sys:app_dir()..".frpc.ini"
 
-	inifile.save(self._ini_file, get_default_conf(sys, self._conf))
+	local conf, visitors = get_default_conf(sys, self._conf)
+	inifile.save(self._ini_file, conf)
+	self._visitors = cjson.encode(visitors)
 
 	local frpc_bin = sys:app_dir().."/bin/frpc"
 	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
@@ -80,7 +89,10 @@ function app:start()
 			end
 			if output == 'config' then
 				self._conf = cjson.decode(value)
-				inifile.save(self._ini_file, get_default_conf(self._sys, self._conf))
+
+				local conf, visitors = get_default_conf(self._sys, self._conf)
+				inifile.save(self._ini_file, conf)
+				self._visitors = cjson.encode(visitors)
 
 				self._sys:post('pm_ctrl', 'restart')
 				return true
@@ -220,6 +232,8 @@ function app:on_frpc_start()
 	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
 	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
 
+	self._dev:set_input_prop('frpc_visitors', 'value', self._visitors)
+
 	local calc_uptime = nil
 	calc_uptime = function()
 		self._dev:set_input_prop('uptime', 'value', self._sys:now() - self._uptime_start)
@@ -271,12 +285,12 @@ function app:on_post_pm_ctrl(action)
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
 		local r, err = self._pm:restart()
-		--[[
 		if r then
+			self:on_frpc_start()
+		--[[
 			self._sys:set_conf(self._conf)
-			self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
-		end
 		]]--
+		end
 	end
 	if action == 'stop' then
 		self._log:debug("Stop frpc(process-monitor)")
