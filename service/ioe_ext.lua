@@ -152,6 +152,10 @@ function command.tasks()
 	return tasks
 end
 
+---
+-- Application wrapper will call this method for install needed extensions and then start
+-- @tparam app_inst string application instance name
+-- @treturn bool, string
 function command.install_depends(app_inst)
 	local exts = get_app_depends(app_inst)
 	local wait_list = {}
@@ -225,6 +229,11 @@ end
 
 function command.upgrade_ext(id, args)
 	local inst = args.inst or args.name..".latest"
+	if not installed[inst] then
+		log.error("Extension does not exists! inst:", inst)
+		return
+	end
+
 	local name = args.name
 	local version, beta, editor = parse_version_string(args.version)
 
@@ -247,6 +256,10 @@ function command.upgrade_ext(id, args)
 			local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 			os.execute("rm -rf "..path)
 			log.notice("Install Extension finished", name, version, r, status)
+			installed[inst] = {
+				name = name,
+				version = version
+			}
 
 			for _,app_inst in ipairs(applist) do
 				local r, err = appmgr.req.start(app_inst)
