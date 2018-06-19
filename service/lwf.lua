@@ -33,11 +33,13 @@ skynet.start(function()
 
 	local processing = nil
 	skynet.dispatch("lua", function (_,_,id)
-		if processing then
-			local ts = skynet.now() - processing - 500
-			if ts > 0 then
-				skynet.sleep(ts)
+		while processing do
+			local ts = skynet.now() - processing
+			if ts > 500 then
+				log.trace('Web process timeout', processing, skynet.now())
+				break
 			end
+			skynet.sleep(20)
 		end
 		processing = skynet.now()
 		socket.start(id)
@@ -62,6 +64,7 @@ skynet.start(function()
 			end
 		end
 		socket.close(id)
+		skynet.sleep(0)
 		processing = nil
 	end)
 end)
