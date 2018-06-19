@@ -37,7 +37,7 @@ local function cfg_defaults()
 		HOST = "ioe.symgrid.com",
 		PORT = 1883,
 		KEEPALIVE = 60,
-		DATA_UPLOAD = true,
+		DATA_UPLOAD = false,
 		DATA_UPLOAD_PERIOD = 1000,
 		EVENT_UPLOAD = 0,
 		PKG_HOST_URL = "ioe.symgrid.com",
