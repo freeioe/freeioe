@@ -94,7 +94,11 @@ function app:start()
 				inifile.save(self._ini_file, conf)
 				self._visitors = cjson.encode(visitors)
 
-				self._sys:post('pm_ctrl', 'restart')
+				if conf.auto_start then
+					self._sys:post('pm_ctrl', 'restart')
+				else
+					self._sys:post('pm_ctrl', 'stop')
+				end
 				return true
 			end
 			if output == 'enable_heartbeat' then
