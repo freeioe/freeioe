@@ -42,6 +42,10 @@ end
 function response.stop(name, reason)
 	local app = applist[name]
 	if not app then
+		-- For some hacks that applicaiton exists but not loaded.
+		if dc.get("APPS", name) then
+			return true
+		end
 		return nil, "App instance "..name.." does not exits!"
 	end
 
