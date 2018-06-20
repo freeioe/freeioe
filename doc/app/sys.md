@@ -113,11 +113,11 @@ timer_cancel()
 
 生成独立的设备序列号，dev_name为设备名称，必须指定。
 
-* sys:id()
+* sys:hw_id()
 
 获取FreeIOE设备序列号
 
-* sys:cloud_id()
+* sys:id()
 
 获取FreeIOE连接云平台所用的序列号(此ID可不同与设备序列号)
 

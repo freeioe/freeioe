@@ -9,7 +9,7 @@ app.API_VER = 1
 
 local function get_default_conf(sys, conf)
 	local ini_conf = {}
-	local id = sys:cloud_id()
+	local id = sys:id()
 
 	ini_conf.common = {
 		server_addr = conf.server_addr or 'frp.symgrid.com',
@@ -135,7 +135,7 @@ function app:start()
 		end,
 	})
 
-	local dev_sn = self._sys:cloud_id()..'.'..self._name
+	local dev_sn = self._sys:id()..'.'..self._name
 	local inputs = {
 		{
 			name = "starttime",

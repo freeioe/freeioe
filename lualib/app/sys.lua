@@ -164,11 +164,11 @@ end
 
 -- System ID
 function sys:id()
-	return dc.wait("CLOUD", "ID")
+	return dc.get("CLOUD", "CLOUD_ID") or dc.wait("CLOUD", "ID")
 end
 
-function sys:cloud_id()
-	return dc.get("CLOUD", "CLOUD_ID") or dc.wait("CLOUD", "ID")
+function sys:hw_id()
+	return dc.wait("CLOUD", "ID")
 end
 
 -- Fire request to app self, which will call your app.response or on_req_<msg> if on_post does not exists

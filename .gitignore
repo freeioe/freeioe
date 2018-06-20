@@ -50,3 +50,4 @@ __install
 __release
 prebuild
 *.ini
+bin
