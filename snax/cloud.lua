@@ -913,8 +913,8 @@ end
 
 function accept.app_option(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
-	appmgr.post.app_option(args.inst, args.option, args.value)
-	snax.self().post.action_result('app', id, true, "Done")
+	local r, err = appmgr.post.app_option(args.inst, args.option, args.value)
+	snax.self().post.action_result('app', id, r, err or "Done")
 	snax.self().post.fire_apps()
 end
 

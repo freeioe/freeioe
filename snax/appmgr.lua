@@ -130,8 +130,12 @@ function accept.app_start(inst)
 end
 
 function accept.app_option(inst, option, value)
-	dc.set("APPS", inst, option, value)
-	return true
+	if dc.get("APPS", inst) then
+		dc.set("APPS", inst, option, value)
+		return true
+	else
+		return nil, "Application instance does not exits!"
+	end
 end
 
 function accept.app_create(inst, opts)
