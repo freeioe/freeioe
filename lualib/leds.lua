@@ -9,12 +9,12 @@ local function list_leds()
 	local list = {}
 	local os_id = sysinfo.os_id()
 	if os_id == 'openwrt' then
-		self._mode = 'openwrt'
 		local leds_path = '/sys/devices/platform/leds/leds'
 		for filename in lfs.dir(leds_path) do
 			local id, color, short_name = string.match(filename, '^([^:]+):([^:]+):([^:]+)$')
 			list[filename] = {
 				name = filename,
+				brightness_path = leds_path.."/"..filename.."/brightness",
 				id = id,
 				color = color,
 				short_name = short_name,
@@ -39,7 +39,7 @@ end
 local led_class = {}
 
 function led_class:brightness(value)
-	local f, err = io.open(leds_path.."/"..self.name.."/brightness")
+	local f, err = io.open(self.brightness_path)
 	if not f then
 		return nil, err
 	end
