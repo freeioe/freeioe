@@ -14,10 +14,56 @@
 {-main-}
 <h1 class="header"> {{_("Device List")}} </h1>
 
+<div class="ui basic msg_print form">
+	<div class="ui success message"></div>
+	<div class="ui error message"></div>
+</div>
+
 {(widget/dev_list_vue.html)}
+
+<div class="ui small device_output modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("Send output to device")}}
+	</div>
+	<div class="content">
+		<form class="ui device_output form" action="/device/output" method="post" accept-charset="utf-8">
+			<input type="hidden" name="device" type="text" value="">
+			<input type="hidden" name="output" type="text" value="">
+			<input type="hidden" name="value" type="text" value="">
+			<div class="field">
+				<label>{{_("Value")}}</label>
+				<div id="json_editor_output" style="width: 600px;height: 300px;"></div>
+			</div>
+			<div class="ui primary submit button">{{_("Send Output")}}</div>
+		</form>
+	</div>
+</div>
+
+<div class="ui small device_command modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("Send command to device")}}
+	</div>
+	<div class="content">
+		<form class="ui device_command form" action="/device/command" method="post" accept-charset="utf-8">
+			<input type="hidden" name="device" type="text" value="">
+			<input type="hidden" name="command" type="text" value="">
+			<input type="hidden" name="param" type="text" value="">
+			<div class="field">
+				<label>{{_("Value")}}</label>
+				<div id="json_editor_command" style="width: 600px;height: 300px;"></div>
+			</div>
+			<div class="ui primary submit button">{{_("Send Command")}}</div>
+		</form>
+	</div>
+</div>
+
 {-main-}
 
 {-script-}
+<script type="text/javascript" src="/assets/ace/ace.js" charset="utf-8"></script>
+
 <script>
 	const dev_list = new Vue({
 		el: '#dev_list',
@@ -25,7 +71,7 @@
 			devices: [],
 		},
 		created () {
-			fetch('/device_data', {credentials: 'include'})
+			fetch('/device/data', {credentials: 'include'})
 				.then(response => response.json())
 				.then(json => {
 					this.devices = json.devices
@@ -33,13 +79,107 @@
 		},
 		methods: {
 			load_data: function (event) {
-				fetch('/device_data', {credentials: 'include'})
+				fetch('/device/data', {credentials: 'include'})
 					.then(response => response.json())
 					.then(json => {
 						this.devices = json.devices
 					})
 			}
 		}
+	});
+	var msg_form = null;
+	var output_editor = null;
+	var command_editor = null;
+	function reset_message() {
+		msg_form.removeClass('success').removeClass('error');
+	};
+	function print_err_message(msg) {
+		reset_message();
+		console.log('Exception:' + msg);
+		msg_form.find('.ui.error.message').html(msg);
+		msg_form.addClass('error');
+	};
+	function print_message(msg) {
+		reset_message();
+		console.log('OK:' + msg);
+		msg_form.find('.ui.success.message').html(msg);
+		msg_form.addClass('success');
+	};
+	function refresh_page() {
+		reset_message();
+	}
+	function output_to_device(device, output) {
+		$('.ui.device_output.form input[name="device"]').val(device);
+		$('.ui.device_output.form input[name="output"]').val(output);
+		$('.ui.device_output.form input[name="value"]').val("");
+		output_editor.session.setValue("");
+		$('.ui.device_output.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	};
+	function command_to_device(device, command) {
+		$('.ui.device_command.form input[name="device"]').val(device);
+		$('.ui.device_command.form input[name="command"]').val(command);
+		$('.ui.device_command.form input[name="param"]').val("");
+		command_editor.session.setValue("");
+		$('.ui.device_command.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	};
+
+	$(document).ready(function(){
+		msg_form = $('.ui.msg_print.form');
+		output_editor = ace.edit("json_editor_output");
+		output_editor.session.setMode("ace/mode/json");
+		command_editor = ace.edit("json_editor_command");
+		command_editor.session.setMode("ace/mode/json");
+
+		$('.ui.button.output').click(function() {
+			output_to_device($(this).data('device'), $(this).data('output'));
+		});
+		$('.ui.button.command').click(function() {
+			command_to_device($(this).data('device'), $(this).data('command'));
+		});
+		$('.ui.device_output.form').ajaxForm({
+			beforeSerialize: function($form, options) {
+				var input = $('.ui.device_output.form input[name="value"]');
+				input.val(output_editor.session.getValue());
+				$('.ui.device_output.modal').modal('hide');
+			},
+			beforeSend: function () {
+				reset_message();
+			},
+			success: function (response) {
+				print_message(response)
+				setTimeout(refresh_page, 5000);
+			},
+			error: function(xhr) {
+				print_err_message(xhr.responseText);
+			}
+		});
+		$('.ui.device_command.form').ajaxForm({
+			beforeSerialize: function($form, options) {
+				var input = $('.ui.device_command.form input[name="param"]');
+				input.val(command_editor.session.getValue());
+				$('.ui.device_command.modal').modal('hide');
+			},
+			beforeSend: function () {
+				reset_message();
+			},
+			success: function (response) {
+				print_message(response)
+				setTimeout(refresh_page, 5000);
+			},
+			error: function(xhr) {
+				print_err_message(xhr.responseText);
+			}
+		});
 	});
 </script>
 {-script-}

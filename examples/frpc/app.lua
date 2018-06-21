@@ -88,7 +88,6 @@ function app:start()
 				return false, 'device sn incorrect'
 			end
 			if output == 'config' then
-				self._log:notice('Try to change FRPC configuration, value:', value)
 				if type(value) ~= 'table' then
 					local conf, err = cjson.decode(value)
 					if not conf then
@@ -99,11 +98,13 @@ function app:start()
 				end
 				self._conf = value
 
+				self._log:notice('Try to change FRPC configuration, value:', cjson.encode(value))
+
 				local conf, visitors = get_default_conf(self._sys, self._conf)
 				inifile.save(self._ini_file, conf)
 				self._visitors = cjson.encode(visitors)
 
-				if conf.auto_start then
+				if self._conf.auto_start then
 					self._sys:post('pm_ctrl', 'restart')
 				else
 					self._sys:post('pm_ctrl', 'stop')
@@ -130,16 +131,11 @@ function app:start()
 				return false, 'device sn incorrect'
 			end
 			-- command: start, stop, restart
-			local f = self._pm[command]
+			local commands = { start = 1, stop = 1, restart = 1 }
+			local f = commands[command]
 			if f then
-				local r, err = f(self._pm)
-				if not r then
-					self._log:error(err)
-				end
-				if command == 'start' or command == 'restart' then
-					self:on_frpc_start()
-				end
-				return r, err
+				self._sys:post('pm_ctrl', command)
+				return true
 			else
 				self._log:error('device command not exists!', command)
 				return false, 'device command not exists!'
@@ -299,18 +295,34 @@ end
 function app:on_post_pm_ctrl(action)
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
-		local r, err = self._pm:restart()
+		local r, err = self._pm:stop()
+		if not r then
+			self._log:warning("Stop frpc failed. ", err)
+		end
+		self:on_frpc_stop()
+		local r, err = self._pm:start()
 		if r then
 			self:on_frpc_start()
-		--[[
-			self._sys:set_conf(self._conf)
-		]]--
+		else
+			self._log:error("Start frpc failed. ", err)
 		end
 	end
 	if action == 'stop' then
 		self._log:debug("Stop frpc(process-monitor)")
-		self._pm:stop()
+		local r, err = self._pm:stop()
+		if not r then
+			self._log:warning("Stop frpc failed. ", err)
+		end
 		self:on_frpc_stop()
+	end
+	if action == 'start' then
+		self._log:debug("Start frpc(process-monitor)")
+		local r, err = self._pm:start()
+		if r then
+			self:on_frpc_start()
+		else
+			self._log:error("Start frpc failed. ", err)
+		end
 	end
 end
 return app

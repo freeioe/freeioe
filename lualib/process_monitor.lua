@@ -27,6 +27,10 @@ function pm:get_tmp_path(filename)
 end
 
 function pm:start()
+	if self._started then
+		return nil, "Process-monitor already started!"
+	end
+
 	local os_id = sysinfo.os_id()
 	local arch = sysinfo.cpu_arch()
 	assert(os_id, arch)
@@ -63,10 +67,14 @@ end
 function pm:stop()
 	local pid, err = self:get_pid()
 	if not pid then
+		if self._started then
+			log.error("Process-monitor started but pid missing!!!")
+		end
 		return nil, err
 	end
 	local r = {os.execute('kill '..pid)}
 	skynet.sleep(100)
+	self._started = nil
 	return table.unpack(r)
 end
 
@@ -78,14 +86,17 @@ function pm:status()
 	return os.execute('kill -0 '..pid)
 end
 
+--[[
 function pm:restart()
 	self:stop()
 	self:cleanup()
 	return self:start()
 end
+]]--
 
 function pm:cleanup()
 	os.execute('rm -f '..self._pid)
+	skynet.sleep(100)
 end
 
 return pm

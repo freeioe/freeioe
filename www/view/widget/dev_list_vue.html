@@ -58,7 +58,7 @@
 								<tr>
 									<th>{{_("Name")}}</th>
 									<th>{{_("Description")}}</th>
-									<th>{{_("Value")}}</th>
+									<th>{{_("Action")}}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -66,7 +66,14 @@
 								<tr v-for="output in dev.props.outputs">
 									<td>{{output.name}} </td>
 									<td>{{output.desc}} </td>
-									<td>{{output.value}} </td>
+									<td>
+								{-raw-}
+										<div class="ui olive icon button output" data-content="{{_('Write output')}}"
+								{-raw-}
+																				 v-bind:data-output="output.name" v-bind:data-device="dev.sn">
+											<i class="fire icon"></i>
+										</div>
+									</td>
 								</tr>
 								{-raw-}
 							</tbody>
@@ -84,6 +91,7 @@
 								<tr>
 									<th>{{_("Name")}}</th>
 									<th>{{_("Description")}}</th>
+									<th>{{_("Action")}}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -91,6 +99,15 @@
 								<tr v-for="command in dev.props.commands">
 									<td>{{command.name}} </td>
 									<td>{{command.desc}} </td>
+									<td>
+										{-raw-}
+										<div class="ui olive icon button command" data-content="{{_('Send command')}}"
+										{-raw-}
+																				 v-bind:data-command="command.name" v-bind:data-device="dev.sn">
+											<i class="fire icon"></i>
+										</div>
+									</td>
+
 								</tr>
 								{-raw-}
 							</tbody>

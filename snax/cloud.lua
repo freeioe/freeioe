@@ -176,7 +176,7 @@ local msg_handler = {
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
 		local oi = cjson.decode(data)
 		if oi and oi.id then
-			snax.self().post.output_to_app(oi.id, oi.data)
+			snax.self().post.output_to_device(oi.id, oi.data)
 		end
 	end,
 	input = function(topic, data, qos, retained)
@@ -189,7 +189,7 @@ local msg_handler = {
 	command = function(topic, data, qos, retained)
 		local cmd = cjson.decode(data)
 		if cmd and cmd.id then
-			snax.self().post.command_to_app(cmd.id, cmd.data)
+			snax.self().post.command_to_device(cmd.id, cmd.data)
 		end
 	end,
 }
@@ -953,7 +953,7 @@ function accept.sys_reboot(id, args)
 	skynet.call("UPGRADER", "lua", "system_reboot", id, args)
 end
 
-function accept.output_to_app(id, info)
+function accept.output_to_device(id, info)
 	local device = info.device
 	if not device then
 		log.warning("device is missing in data")
@@ -961,18 +961,24 @@ function accept.output_to_app(id, info)
 	end
 	local dev, err = api:get_device(device)
 	if not dev then
-		return snax.self().post.action_result('command', id, false, err)
+		return snax.self().post.action_result('ouput', id, false, err)
+	end
+	if type(info.value) == 'table' then
+		info.value = cjson.encode(info.value)
 	end
 	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
 	snax.self().post.action_result('output', id, r, err or "Done")
 end
 
-function accept.command_to_app(id, cmd)
+function accept.command_to_device(id, cmd)
 	local device = cmd.device
 	if device then
 		local dev, err = api:get_device(device)
 		if not dev then
 			return snax.self().post.action_result('command', id, false, err)
+		end
+		if type(info.param) == 'table' then
+			info.param = cjson.encode(info.param)
 		end
 		local r, err = dev:send_command(cmd.cmd, cmd.param)
 		snax.self().post.action_result('command', id, r, err or "OK")
