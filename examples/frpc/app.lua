@@ -88,7 +88,7 @@ function app:start()
 				return false, 'device sn incorrect'
 			end
 			if output == 'config' then
-				self._log:notice('Try to change FRPC configuration', value)
+				self._log:notice('Try to change FRPC configuration, value:', value)
 				self._conf = cjson.decode(value)
 
 				local conf, visitors = get_default_conf(self._sys, self._conf)
@@ -103,11 +103,13 @@ function app:start()
 				return true
 			end
 			if output == 'enable_heartbeat' then
+				self._log:notice('Enable hearbeat for keeping FRPC running, value:', value)
 				self._conf.enable_heartbeat = value
 				self._heartbeat_timeout = self._sys:time() + 60
 				return true
 			end
 			if output == 'heartbeat' then
+				self._log:trace('Hearbeat for keeping FRPC running, value:', value)
 				local timeout = tonumber(value) or 60
 				self._heartbeat_timeout = self._sys:time() + timeout
 				return true
