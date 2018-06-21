@@ -89,7 +89,15 @@ function app:start()
 			end
 			if output == 'config' then
 				self._log:notice('Try to change FRPC configuration, value:', value)
-				self._conf = cjson.decode(value)
+				if type(value) ~= 'table' then
+					local conf, err = cjson.decode(value)
+					if not conf then
+						self._log:error('Incorrect configuration value found, value:', value)
+						return false, "Incorrect configuration value found"
+					end
+					value = conf
+				end
+				self._conf = value
 
 				local conf, visitors = get_default_conf(self._sys, self._conf)
 				inifile.save(self._ini_file, conf)
