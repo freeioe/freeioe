@@ -977,8 +977,8 @@ function accept.command_to_device(id, cmd)
 		if not dev then
 			return snax.self().post.action_result('command', id, false, err)
 		end
-		if type(info.param) == 'table' then
-			info.param = cjson.encode(info.param)
+		if type(cmd.param) == 'table' then
+			cmd.param = cjson.encode(cmd.param)
 		end
 		local r, err = dev:send_command(cmd.cmd, cmd.param)
 		snax.self().post.action_result('command', id, r, err or "OK")

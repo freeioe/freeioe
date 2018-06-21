@@ -79,6 +79,9 @@ function pm:stop()
 end
 
 function pm:status()
+	if not self._started then
+		return nil, 'Process-monitor is not started'
+	end
 	local pid, err = self:get_pid()
 	if not pid then
 		return nil, err

@@ -225,9 +225,8 @@ function app:start()
 end
 
 function app:close(reason)
-	self._pm:stop()
+	self.on_post_pm_ctrl('stop')
 	--print(self._name, reason)
-	self:on_frpc_stop()
 end
 
 function app:on_frpc_start()
@@ -271,13 +270,10 @@ end
 
 function app:run(tms)
 	if not self._first_start then
-		self._pm:stop()
-		self._pm:cleanup()
-		--self._sys:sleep(500)
+		self.on_post_pm_ctrl('stop')
 
 		if self._conf.auto_start then
-			self._pm:start()
-			self:on_frpc_start()
+			self.on_post_pm_ctrl('start')
 		end
 		self._first_start = true
 	end
@@ -293,6 +289,11 @@ function app:run(tms)
 end
 
 function app:on_post_pm_ctrl(action)
+	if self._in_pm_ctrl then
+		self._log:warning("Operation for frpc(process-monitor) is processing, please wait for it completed")
+		return
+	end
+	self._in_pm_ctrl = true
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
 		local r, err = self._pm:stop()
@@ -324,5 +325,6 @@ function app:on_post_pm_ctrl(action)
 			self._log:error("Start frpc failed. ", err)
 		end
 	end
+	self._in_pm_ctrl = nil
 end
 return app
