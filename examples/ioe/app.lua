@@ -219,11 +219,6 @@ function app:run(tms)
 			calc_gcom()
 		end
 
-		-- Cloud LED blink first
-		if leds.cloud then
-			leds.cloud:blink(1)
-		end
-
 		--[[
 		self._sys:timeout(100, function()
 			self._log:debug("Fire event")

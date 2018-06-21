@@ -39,16 +39,14 @@ end
 local led_class = {}
 
 function led_class:brightness(value)
-	local f, err = io.open(self.brightness_path)
-	if not f then
-		return nil, err
-	end
-
 	if value then
-		f:write(tostring(value))
-		f:close()
+		os.execute("echo "..tostring(value).." > "..self.brightness_path)
 		return value
 	else
+		local f, err = io.open(self.brightness_path)
+		if not f then
+			return nil, err
+		end
 		local value = f:read("*a")
 		f:close()
 		return value
