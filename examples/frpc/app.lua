@@ -225,7 +225,7 @@ function app:start()
 end
 
 function app:close(reason)
-	self.on_post_pm_ctrl('stop')
+	self:on_post_pm_ctrl('stop', true)
 	--print(self._name, reason)
 end
 
@@ -270,10 +270,10 @@ end
 
 function app:run(tms)
 	if not self._first_start then
-		self.on_post_pm_ctrl('stop')
+		self:on_post_pm_ctrl('stop', true)
 
 		if self._conf.auto_start then
-			self.on_post_pm_ctrl('start')
+			self:on_post_pm_ctrl('start')
 		end
 		self._first_start = true
 	end
@@ -288,7 +288,7 @@ function app:run(tms)
 	return 1000 * 5
 end
 
-function app:on_post_pm_ctrl(action)
+function app:on_post_pm_ctrl(action, force)
 	if self._in_pm_ctrl then
 		self._log:warning("Operation for frpc(process-monitor) is processing, please wait for it completed")
 		return
@@ -296,11 +296,17 @@ function app:on_post_pm_ctrl(action)
 	self._in_pm_ctrl = true
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
-		local r, err = self._pm:stop()
-		if not r then
-			self._log:warning("Stop frpc failed. ", err)
+
+		--- Try to stop pm(frpc)
+		if self._start_time then
+			local r, err = self._pm:stop()
+			if not r then
+				self._log:warning("Stop frpc failed. ", err)
+			end
+			self:on_frpc_stop()
 		end
-		self:on_frpc_stop()
+
+		--- Try to start pm(frpc)
 		local r, err = self._pm:start()
 		if r then
 			self:on_frpc_start()
@@ -309,14 +315,29 @@ function app:on_post_pm_ctrl(action)
 		end
 	end
 	if action == 'stop' then
+		--- check whether it start or not
+		if not force and not self._start_time then
+			self._log:error("Frpc already stoped!")
+			self._in_pm_ctrl = nil
+			return
+		end
+
 		self._log:debug("Stop frpc(process-monitor)")
 		local r, err = self._pm:stop()
 		if not r then
 			self._log:warning("Stop frpc failed. ", err)
 		end
+		--- stop cleanup always
 		self:on_frpc_stop()
 	end
 	if action == 'start' then
+		--- check whether it start or not
+		if not force and self._start_time then
+			self._log:error("Frpc already started!")
+			self._in_pm_ctrl = nil
+			return
+		end
+
 		self._log:debug("Start frpc(process-monitor)")
 		local r, err = self._pm:start()
 		if r then
@@ -327,4 +348,5 @@ function app:on_post_pm_ctrl(action)
 	end
 	self._in_pm_ctrl = nil
 end
+
 return app
