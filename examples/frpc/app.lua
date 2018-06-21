@@ -88,6 +88,7 @@ function app:start()
 				return false, 'device sn incorrect'
 			end
 			if output == 'config' then
+				self._log:notice('Try to change FRPC configuration', value)
 				self._conf = cjson.decode(value)
 
 				local conf, visitors = get_default_conf(self._sys, self._conf)
