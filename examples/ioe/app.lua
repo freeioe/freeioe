@@ -1,9 +1,11 @@
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local gcom = require 'utils.gcom'
+local snax = require 'skynet.snax'
 local datacenter = require 'skynet.datacenter'
 local event = require 'app.event'
 local disk = require 'disk'
+local leds = require 'leds'
 
 local app = class("FREEIOE_SYS_APP_CLASS")
 app.API_VER = 1
@@ -217,6 +219,11 @@ function app:run(tms)
 			calc_gcom()
 		end
 
+		-- Cloud LED blink first
+		if leds.cloud then
+			leds.cloud:blink(1)
+		end
+
 		--[[
 		self._sys:timeout(100, function()
 			self._log:debug("Fire event")
@@ -260,6 +267,17 @@ function app:run(tms)
 		end)
 	else
 		--print(os.time() - self._sys:time())
+	end
+
+	-- Cloud LED
+	if leds.cloud then
+		local cloud = snax.uniqueservice('cloud')
+		local cloud_status, cloud_status_last = cloud.req.get_status()
+		if cloud_status then
+			leds.cloud:brightness(1)
+		else
+			leds.cloud:brightness(0)
+		end
 	end
 
 	return 1000 * 5
