@@ -143,6 +143,10 @@ function app:start()
 	meta.series = "Q102" -- TODO:
 	self._dev = self._api:add_device(id, meta, inputs)
 
+	if leds.cloud then
+		leds.cloud:brightness(0)
+	end
+
 	return true
 end
 
