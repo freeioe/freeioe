@@ -13,7 +13,11 @@ return {
 		local inst = post.inst
 		local app = post.app
 		local version = post.version
+
 		assert(inst and app)
+		assert(string.len(inst) > 0)
+		assert(string.len(app) > 0)
+
 		local id = "from_web"
 		local args = {
 			version = version,

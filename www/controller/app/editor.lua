@@ -169,6 +169,9 @@ local get_ops = {
 local post_ops = {
 	set_content = function(app, node, opt)
 		local content = opt.text
+		if string.len(content) > 4 * 1024 * 1024 then
+			return { status = 'Failed' }
+		end
 		local path = get_app_path(app, node)
 		local f = assert(io.open(path, 'w'))
 		f:write(content)
@@ -201,6 +204,10 @@ return {
 	get = function(self)
 		if lwf.auth.user == 'Guest' then
 			self:redirect('/user/login')
+			return
+		end
+		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		if not using_beta then
 			return
 		end
 

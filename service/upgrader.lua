@@ -198,6 +198,42 @@ function command.create_app(id, args)
 	return true
 end
 
+function command.install_local_app(id, args)
+	local name = args.name
+	local inst_name = args.inst
+	local sn = args.sn or cloud.req.gen_sn(inst_name)
+	local conf = args.conf or {}
+	local file_path = args.file
+
+	if inst_name == 'ioe' or inst_name == 'ioe_frpc' then
+		return nil, "Application instance name is reserved"
+	end
+	if datacenter.get("APPS", inst_name) and not args.force then
+		return nil, "Application already installed"
+	end
+	if not datacenter.get('CLOUD', 'USING_BETA') then
+		return nil, "Device is not in beta mode! Cannot install beta version"
+	end
+
+	-- Reserve app instance name
+	datacenter.set("APPS", inst_name, {name=name, version=0, sn=sn, conf=conf, islocal=1, auto=0})
+	local target_folder = get_target_folder(inst_name)
+	log.notice("Install local application package", file_path)
+	os.execute("unzip -oq "..file_path.." -d "..target_folder)
+	os.execute("rm -rf "..file_path)
+
+	local version = get_app_version(inst_name)
+	datacenter.set("APPS", inst_name, "version", version)
+	--datacenter.set("APPS", inst_name, "auto", 1)
+
+	--[[
+	log.notice("Try to start application", inst_name)
+	appmgr.post.app_start(inst_name)
+	]]--
+
+	return true
+end
+
 function command.install_missing_app(inst_name)
 	skynet.timeout(100, function()
 		local appmgr = snax.uniqueservice("appmgr")

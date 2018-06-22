@@ -12,6 +12,7 @@
 		<div class="column">
 			{% if using_beta then %}
 			<div class="ui olive icon button new_app" data-content="{{_('Create an new application')}}"><i class="ui add icon"></i>{{_("New Application")}}</div>
+			<div class="ui orange icon button upload_app" data-content="{{_('Upload an new application package')}}"><i class="ui upload icon"></i>{{_("Upload Application")}}</div>
 			{% end %}
 			<div class="ui teal icon button check_update" data-content="{{_('Query application updates')}}"><i class="ui refresh icon"></i>{{_("Check Updates")}}</div>
 			<a class="ui green icon button" href="/ext"> <i class="ui cubes icon"></i> {{_("Extensions")}}</a>
@@ -38,26 +39,6 @@
 	</div>
 </div>
 
-<div class="ui mini new_app modal">
-	<i class="close icon"></i>
-	<div class="header">
-		{{_("New application")}}
-	</div>
-	<div class="content">
-		<form class="ui new_app form" action="/app/new" method="post" accept-charset="utf-8">
-			<div class="field">
-				<label>{{_("Instance Name")}}</label>
-				<input value="" name="inst" type="text">
-			</div>
-			<div class="field">
-				<label>{{_("Application Name")}}</label>
-				<input value="" name="app" type="text">
-			</div>
-			<div class="ui primary submit button">{{_("Create")}}</div>
-		</form>
-	</div>
-</div>
-
 <div class="ui small app_conf modal">
 	<i class="close icon"></i>
 	<div class="header">
@@ -76,6 +57,60 @@
 	</div>
 </div>
 
+{% if using_beta then %}
+<div class="ui mini new_app modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("New application")}}
+	</div>
+	<div class="content">
+		<form class="ui new_app form" action="/app/new" method="post" accept-charset="utf-8">
+			<div class="field">
+				<label>{{_("Instance Name")}}</label>
+				<input value="" name="inst" type="text">
+			</div>
+			<div class="field">
+				<label>{{_("Application ID")}}</label>
+				<input value="" name="app" type="text">
+			</div>
+			<div class="ui primary submit button">{{_("Create")}}</div>
+			<div class="ui success message"></div>
+			<div class="ui error message"></div>
+		</form>
+	</div>
+</div>
+
+<div class="ui small upload_app modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("New application")}}
+	</div>
+	<div class="content">
+		<form class="ui upload_app form" action="/app/upload" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+			<div class="inline field">
+				<label>{{_("Instance Name")}}</label>
+				<input value="" name="inst" type="text">
+			</div>
+			<div class="inline field">
+				<label>{{_("Application ID")}}</label>
+				<input value="" name="app" type="text">
+			</div>
+			<div class="field">
+				<label>{{_("Package File")}} </label>
+				<input type="file" name="app_file"/>
+			</div>
+			<div class="ui tiny teal progress">
+				<div class="bar"></div>
+			</div>
+
+			<div class="ui primary submit button">{{_("Upload")}}</div>
+			<div class="ui success message"></div>
+			<div class="ui error message"></div>
+		</form>
+	</div>
+</div>
+{% end %}
+
 <div class="ui basic msg_print form">
 	<div class="ui success message"></div>
 	<div class="ui error message"></div>
@@ -85,6 +120,7 @@
 
 {-script-}
 <script type="text/javascript" src="/assets/ace/ace.js" charset="utf-8"></script>
+<script type="text/javascript" src="/assets/library/tablesort.min.js" charset="utf-8"></script>
 
 <script>
 var msg_form = null;
@@ -134,7 +170,7 @@ function start_app(inst) {
 		print_message('<i>' + data + '</i>');
 	})
 	.done(function() {
-		//setTimeout('refresh_page()', 3000);
+		setTimeout('refresh_page()', 3000);
 		var filter = '#'+ inst + '_actions_col ';
 		$(filter + '.ui.button.start').hide();
 		$(filter + '.ui.button.stop').show();
@@ -149,7 +185,7 @@ function stop_app(inst) {
 		print_message('<i>' + data + '</i>');
 	})
 	.done(function() {
-		//setTimeout('refresh_page()', 3000);
+		setTimeout('refresh_page()', 3000);
 		var filter = '#'+ inst + '_actions_col ';
 		$(filter + '.ui.button.stop').hide();
 		$(filter + '.ui.button.start').show();
@@ -245,6 +281,8 @@ $(document).ready(function(){
 	var editor = ace.edit("json_editor");
 	editor.session.setMode("ace/mode/json");
 
+	$('.ui.sortable.table').tablesort().data('tablesort').sort($("th.default-sort"));
+
 	//setTimeout('check_for_updates()', 1000);
 	msg_form = $('.ui.msg_print.form');
 	{% if not force_upgrade then %}
@@ -300,27 +338,7 @@ $(document).ready(function(){
 			print_err_message(xhr.responseText);
 		}
 	});
-	$('.ui.segment .ui.button.new_app').click(function() {
-		$('.ui.new_app.modal')
-			.modal({
-				closable  : true
-			})
-			.modal('show')
-		;
-	});
-	$('.ui.new_app.form').ajaxForm({
-		beforeSend: function () {
-			$('.ui.new_app.modal').modal('hide');
-			reset_message();
-		},
-		success: function (response) {
-			print_message(response)
-			setTimeout(refresh_page, 5000);
-		},
-		error: function(xhr) {
-			print_err_message(xhr.responseText);
-		}
-	});
+	
 	$('.ui.app_conf.form').ajaxForm({
 		beforeSerialize: function($form, options) {
 			var input = $('.ui.app_conf.form input[name="conf"]');
@@ -338,6 +356,79 @@ $(document).ready(function(){
 			print_err_message(xhr.responseText);
 		}
 	});
+
+{% if using_beta then %}
+	$('.ui.segment .ui.button.new_app').click(function() {
+		$('.ui.new_app.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	});
+	var new_app_form = $('.ui.new_app.form');
+	new_app_form.form({
+		fields: {
+			app: ['minLength[3]', 'empty'],
+			inst: ['minLength[3]', 'empty']
+		}
+	});
+	new_app_form.ajaxForm({
+		beforeSend: function () {
+			$('.ui.new_app.modal').modal('hide');
+			reset_message();
+		},
+		success: function (response) {
+			print_message(response)
+			setTimeout(refresh_page, 5000);
+		},
+		error: function(xhr) {
+			print_err_message(xhr.responseText);
+		}
+	});
+
+	$('.ui.segment .ui.button.upload_app').click(function() {
+		$('.ui.upload_app.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	});
+	var upload_form = $('.ui.upload_app.form');
+	var upload_bar = upload_form.find('.bar');
+
+	upload_form.form({
+		fields: {
+			inst: ['minLength[3]', 'empty'],
+			app: ['minLength[3]', 'empty'],
+			app_file: 'empty'
+		}
+	});
+
+	upload_form.ajaxForm({
+		beforeSend: function() {
+			upload_form.removeClass('success').removeClass('error');
+		},
+		uploadProgress: function(event, position, total, percentComplete) {
+			var percentVal = percentComplete + '%';
+			upload_bar.width(percentVal);
+		},
+		success: function(response) {
+			upload_form.find('.ui.success.message').html(response);
+			upload_form.addClass('success');
+			setTimeout(refresh_page, 2000);
+		},
+		complete: function(xhr) {
+		},
+		error: function(xhr) {
+			console.log('Upload Exception:' + xhr.responseText);
+			upload_form.addClass('error');
+			upload_form.find('.ui.error.message').html(xhr.responseText);
+		}
+	});
+{% end %}
+
 });
 </script>
 {-script-}

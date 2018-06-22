@@ -37,12 +37,18 @@ return {
 			ngx.print(_('You are not logined!'))
 			return
 		end
+		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		if not using_beta then
+			ngx.print(_('FreeIOE device in not in beta mode!'))
+			return
+		end
 
 		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 		local inst = post.app
-		local version = post.version or uuid.new()
+		local version = tonumber(post.version) or uuid.new()
 		assert(inst and version)
+		assert(string.len(inst) > 0)
 		local r, err = pack_app(inst, version)
 
 		if r then

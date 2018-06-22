@@ -23,6 +23,7 @@ return {
 		local app = post.app
 		local version = post.version or 'latest'
 		assert(inst and app)
+		assert(string.len(inst) > 0 and string.len(app) > 0)
 
 		local conf = post.conf or default_conf[inst] or {}
 		if type(conf) == 'string' then

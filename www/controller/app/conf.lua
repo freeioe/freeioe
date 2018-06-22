@@ -30,8 +30,14 @@ return {
 		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 		assert(post.inst and post.conf)
+		assert(string.len(post.inst) > 0)
+
 		if type(post.conf) ~= 'table' then
-			post.conf = cjson.decode(post.conf)
+			if string.len(post.conf) > 0 then
+				post.conf = cjson.decode(post.conf) or {}
+			else
+				post.conf = {}
+			end
 		end
 		local appmgr = snax.uniqueservice('appmgr')
 		local inst = appmgr.req.app_inst(post.inst)

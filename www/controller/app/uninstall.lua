@@ -12,7 +12,7 @@ return {
 		local post = ngx.req.get_post_args()
 		local cjson = require 'cjson'
 		local inst = post.inst
-		assert(inst)
+		assert(inst and string.len(inst) > 0)
 
 		local id = "from_web"
 		local args = {

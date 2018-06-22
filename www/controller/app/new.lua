@@ -1,10 +1,16 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
+local dc = require 'skynet.datacenter'
 
 return {
 	post = function(self)
 		if lwf.auth.user == 'Guest' then
 			ngx.print(_('You are not logined!'))
+			return
+		end
+		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		if not using_beta then
+			ngx.print(_('FreeIOE device in not in beta mode!'))
 			return
 		end
 
@@ -13,6 +19,10 @@ return {
 		local inst = post.inst
 		local app = post.app
 		assert(inst and app)
+		if string.len(inst) < 3 or string.len(app) < 3 then
+			ngx.print("Application name or inst cannot be empty!")
+			return
+		end
 
 		local id = "from_web"
 		local args = {

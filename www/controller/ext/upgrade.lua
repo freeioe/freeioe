@@ -14,6 +14,9 @@ return {
 		local ext = post.ext
 		local version = post.version
 		assert(inst and ext)
+		assert(string.len(inst) > 0)
+		assert(string.len(ext) > 0)
+
 		local id = "from_web"
 		local args = {
 			version = version,
