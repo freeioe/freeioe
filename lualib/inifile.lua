@@ -36,7 +36,7 @@ local defaultBackend = "io"
 local backends = {
 	io = {
 		lines = function(name) return assert(io.open(name)):lines() end,
-		write = function(name, contents) assert(io.open(name, "w")):write(contents) end,
+		write = function(name, contents) assert(io.open(name, "w")):write(contents):close():flush() end,
 	},
 	memory = {
 		lines = function(text) return text:gmatch("([^\r\n]+)\r?\n") end,

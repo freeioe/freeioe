@@ -324,7 +324,7 @@ function app:on_post_pm_ctrl(action, force)
 
 		self._log:debug("Stop frpc(process-monitor)")
 		local r, err = self._pm:stop()
-		if not r then
+		if not r and not force then
 			self._log:warning("Stop frpc failed. ", err)
 		end
 		--- stop cleanup always
