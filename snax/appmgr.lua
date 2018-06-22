@@ -24,9 +24,10 @@ function response.start(name, conf)
 
 	local r, err = inst.req.start()
 	if not r then
-		log.error("Failed to start app. Error: "..err)
+		local info = "Failed to start app "..name..". Error: "..err
+		log.error(info)
 		snax.kill(inst, "Start failed!")
-		return nil, "Failed to start app. Error: "..err
+		return nil, info
 	end
 
 	app.inst = inst
