@@ -5,7 +5,7 @@ local default_conf = {
 	ioe_frpc = {
 		auto_start = true,
 		enable_web = true,
-		privilege_token = "BWYJVj2HYhVtdGZL",
+		token = "BWYJVj2HYhVtdGZL",
 	},
 }
 
