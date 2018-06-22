@@ -10,15 +10,17 @@ local function list_leds()
 	local os_id = sysinfo.os_id()
 	if os_id == 'openwrt' then
 		local leds_path = '/sys/devices/platform/leds/leds'
-		for filename in lfs.dir(leds_path) do
-			local id, color, short_name = string.match(filename, '^([^:]+):([^:]+):([^:]+)$')
-			list[filename] = {
-				name = filename,
-				brightness_path = leds_path.."/"..filename.."/brightness",
-				id = id,
-				color = color,
-				short_name = short_name,
-			}
+		if lfs.attributes(leds_path, 'mode') == 'folder' then
+			for filename in lfs.dir(leds_path) do
+				local id, color, short_name = string.match(filename, '^([^:]+):([^:]+):([^:]+)$')
+				list[filename] = {
+					name = filename,
+					brightness_path = leds_path.."/"..filename.."/brightness",
+					id = id,
+					color = color,
+					short_name = short_name,
+				}
+			end
 		end
 	end
 	return list

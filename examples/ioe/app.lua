@@ -1,11 +1,11 @@
 local class = require 'middleclass'
-local sysinfo = require 'utils.sysinfo'
-local gcom = require 'utils.gcom'
 local snax = require 'skynet.snax'
 local datacenter = require 'skynet.datacenter'
+local sysinfo = require 'utils.sysinfo'
+local gcom = require 'utils.gcom'
+local leds = require 'utils.leds'
 local event = require 'app.event'
 local disk = require 'disk'
-local leds = require 'leds'
 
 local app = class("FREEIOE_SYS_APP_CLASS")
 app.API_VER = 1
