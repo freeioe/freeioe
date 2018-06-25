@@ -1,6 +1,6 @@
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
-local pm = require 'process_monitor'
+local services = require 'utils.services'
 local inifile = require 'inifile'
 local cjson = require 'cjson'
 
@@ -76,7 +76,7 @@ function app:initialize(name, sys, conf)
 	self._visitors = cjson.encode(visitors)
 
 	local frpc_bin = sys:app_dir().."/bin/frpc"
-	self._pm = pm:new(self._name, frpc_bin, {'-c', self._ini_file})
+	self._service = services:new(self._name, frpc_bin, {'-c', self._ini_file})
 end
 
 function app:start()
@@ -105,9 +105,9 @@ function app:start()
 				self._visitors = cjson.encode(visitors)
 
 				if self._conf.auto_start then
-					self._sys:post('pm_ctrl', 'restart')
+					self._sys:post('service_ctrl', 'restart')
 				else
-					self._sys:post('pm_ctrl', 'stop')
+					self._sys:post('service_ctrl', 'stop')
 				end
 				return true
 			end
@@ -134,7 +134,7 @@ function app:start()
 			local commands = { start = 1, stop = 1, restart = 1 }
 			local f = commands[command]
 			if f then
-				self._sys:post('pm_ctrl', command)
+				self._sys:post('service_ctrl', command)
 				return true
 			else
 				self._log:error('device command not exists!', command)
@@ -221,11 +221,18 @@ function app:start()
 	meta.series = "X"
 	self._dev = self._api:add_device(dev_sn, meta, inputs, outputs, cmds)
 
+	local r, err = self._service:create()
+	if not r then
+		self._log:error("Service create failure. Error", err)
+		return nil, "Service create failure. Error"..err
+	end
+
 	return true
 end
 
 function app:close(reason)
-	self:on_post_pm_ctrl('stop', true)
+	self:on_post_service_ctrl('stop', true)
+	self._service:remove()
 	--print(self._name, reason)
 end
 
@@ -251,7 +258,7 @@ function app:on_frpc_start()
 		if self._conf.enable_heartbeat then
 			if self._sys:time() > (self._heartbeat_timeout + 10) then
 				self._log:warning('Frpc running heartbeat rearched, close frpc')
-				self._sys:post('pm_ctrl', 'stop')
+				self._sys:post('service_ctrl', 'stop')
 			end
 		end
 	end
@@ -265,20 +272,20 @@ function app:on_frpc_stop()
 		self._start_time = nil
 		self._uptime_start = nil
 	end
-	self._pm:cleanup()
+	self._service:cleanup()
 end
 
 function app:run(tms)
 	if not self._first_start then
-		self:on_post_pm_ctrl('stop', true)
+		self:on_post_service_ctrl('stop', true)
 
 		if self._conf.auto_start then
-			self:on_post_pm_ctrl('start')
+			self:on_post_service_ctrl('start')
 		end
 		self._first_start = true
 	end
 
-	local status = self._pm:status()
+	local status = self._service:status()
 	self._dev:set_input_prop('frpc_run', 'value', status and 1 or 0)
 
 	-- for heartbeat stuff
@@ -288,26 +295,26 @@ function app:run(tms)
 	return 1000 * 5
 end
 
-function app:on_post_pm_ctrl(action, force)
-	if self._in_pm_ctrl then
+function app:on_post_service_ctrl(action, force)
+	if self._in_service_ctrl then
 		self._log:warning("Operation for frpc(process-monitor) is processing, please wait for it completed")
 		return
 	end
-	self._in_pm_ctrl = true
+	self._in_service_ctrl = true
 	if action == 'restart' then
 		self._log:debug("Restart frpc(process-monitor)")
 
-		--- Try to stop pm(frpc)
+		--- Try to stop service(frpc)
 		if self._start_time then
-			local r, err = self._pm:stop()
+			local r, err = self._service:stop()
 			if not r then
 				self._log:warning("Stop frpc failed. ", err)
 			end
 			self:on_frpc_stop()
 		end
 
-		--- Try to start pm(frpc)
-		local r, err = self._pm:start()
+		--- Try to start service(frpc)
+		local r, err = self._service:start()
 		if r then
 			self:on_frpc_start()
 		else
@@ -318,12 +325,12 @@ function app:on_post_pm_ctrl(action, force)
 		--- check whether it start or not
 		if not force and not self._start_time then
 			self._log:error("Frpc already stoped!")
-			self._in_pm_ctrl = nil
+			self._in_service_ctrl = nil
 			return
 		end
 
 		self._log:debug("Stop frpc(process-monitor)")
-		local r, err = self._pm:stop()
+		local r, err = self._service:stop()
 		if not r and not force then
 			self._log:warning("Stop frpc failed. ", err)
 		end
@@ -334,19 +341,19 @@ function app:on_post_pm_ctrl(action, force)
 		--- check whether it start or not
 		if not force and self._start_time then
 			self._log:error("Frpc already started!")
-			self._in_pm_ctrl = nil
+			self._in_service_ctrl = nil
 			return
 		end
 
 		self._log:debug("Start frpc(process-monitor)")
-		local r, err = self._pm:start()
+		local r, err = self._service:start()
 		if r then
 			self:on_frpc_start()
 		else
 			self._log:error("Start frpc failed. ", err)
 		end
 	end
-	self._in_pm_ctrl = nil
+	self._in_service_ctrl = nil
 end
 
 return app

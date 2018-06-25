@@ -1,56 +1,116 @@
 ---
 -- Services Control Utils 
 --
-
+local lfs = require 'lfs'
 local skynet = require 'skynet'
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
-local log = require 'utils.log'
+local pm = require 'utils.process_monitor'
 
 local services = class("FREEIOE_SERVICES_CONTRL_API")
 
-function services:initialize(name, cmd)
+function services:initialize(name, cmd, args, options)
 	assert(name and cmd)
 	self._name = name
 	self._cmd = cmd
-	local pn = cmd:match("([^/]+)$") or cmd
-	self._pid = "/tmp/ioe_services_"..pn.."_"..self._name..".pid"
 	if args then
 		self._cmd = cmd .. ' ' .. table.concat(args, ' ')
+	end
+
+	self._pid = "/tmp/ioe_services_"..self._name..".pid"
+	-- self._file = "/etc/init.d/"..self._name
+	self._file = "/tmp/"..self._name
+
+	local os_id = sysinfo.os_id()
+	if string.lower(os_id) ~= 'openwrt' then
+		self._pm = pm:new(name, cmd, args, options)
 	end
 	self._options = options or {}
 end
 
-function services:get_tmp_path(filename)
-	local pn = cmd:match("([^/]+)$") or cmd
-	return "/tmp/ioe_services_"..self._pn.."_"..filename
+local procd_file = [[
+#!/bin/sh /etc/rc.common
+START=99
+USE_PROCD=1
+start_service () {
+	procd_open_instance
+	procd_set_param command %s
+	procd_set_param pidfile %s
+	procd_set_param respawn
+	procd_close_instance
+}
+]]
+
+function services:create()
+	if self._pm then
+		return true
+	end
+	local s = string.format(procd_file, self._cmd, self._pid)
+	if lfs.attributes(path, "mode") == file then
+		return nil, "Service already exits"
+	end
+
+	local f, err = io.open(self._file, "w+")
+	if not f then
+		return nil, err
+	end
+
+	f:write(s)
+	f:close()
+	return os.execute("service "..self._name.." enable")
+end
+
+function services:cleanup()
+	if self._pm then
+		return self._pm:cleanup()
+	end
+end
+
+function services:remove()
+	if self._pm then
+		return true
+	end
+	os.execute("service "..self._name.." disable")
+	os.execute('rm -f '..self._file)
+end
+
+function services:__gc()
+	self:stop()
+	self:remove()
 end
 
 function services:start()
-	if self._started then
-		return nil, "Process-monitor already started!"
+	if self._pm then
+		return self._pm:start()
 	end
+	return os.execute("service "..self._name.." start")
+end
 
-	local os_id = sysinfo.os_id()
-	local arch = sysinfo.cpu_arch()
-	assert(os_id, arch)
-	local services_file = './ioe/'..os_id..'/'..arch..'/process-monitor'
-	local cmd = { services_file, "-z", "-d", "-p", self._pid }
-	--local cmd = { services_file, "-p", self._pid }
-	if self._options.user then
-		cmd[#cmd + 1] = "-u"
-		cmd[#cmd + 1] = self._options.user
+function services:stop()
+	if self._pm then
+		return self._pm:stop()
 	end
-	cmd[#cmd + 1] = "--"
-	cmd[#cmd + 1] = self._cmd
-	--cmd[#cmd + 1] = "> /dev/null &"
+	return os.execute("service "..self._name.." stop")
+end
 
-	local cmd_str = table.concat(cmd, ' ') 
-	log.info('start process-monitor', cmd_str)
-	return os.execute(cmd_str)
+function services:reload()
+	if self._pm then
+		return nil, "Not support"
+	end
+	return os.execute("service "..self._name.." reload")
+end
+
+function services:restart()
+	if self._pm then
+		return nil, "Not support"
+	end
+	return os.execute("service "..self._name.." restart")
 end
 
 function services:get_pid()
+	if self._pm then
+		return self._pm:get_pid()
+	end
 	local f, err = io.open(self._pid, 'r')
 	if not f then
 		return nil, 'pid file not found'..err
@@ -64,42 +124,16 @@ function services:get_pid()
 	return pid
 end
 
-function services:stop()
-	local pid, err = self:get_pid()
-	if not pid then
-		if self._started then
-			log.error("Process-monitor started but pid missing!!!")
-		end
-		return nil, err
-	end
-	local r = {os.execute('kill '..pid)}
-	skynet.sleep(100)
-	self._started = nil
-	return table.unpack(r)
-end
-
 function services:status()
-	if not self._started then
-		return nil, 'Process-monitor is not started'
+	if self._pm then
+		return self._pm:status()
 	end
+
 	local pid, err = self:get_pid()
 	if not pid then
 		return nil, err
 	end
 	return os.execute('kill -0 '..pid)
-end
-
---[[
-function services:restart()
-	self:stop()
-	self:cleanup()
-	return self:start()
-end
-]]--
-
-function services:cleanup()
-	os.execute('rm -f '..self._pid)
-	skynet.sleep(100)
 end
 
 return services
