@@ -42,7 +42,7 @@ start_service () {
 ]]
 
 function services:_ctrl(action)
-	return os.execute(self._file.." "..self._name.." enable")
+	return os.execute(self._file.." "..action)
 end
 
 function services:create()
@@ -81,6 +81,9 @@ function services:remove()
 end
 
 function services:__gc()
+	if self._pm then
+		return self._pm:stop()
+	end
 	self:stop()
 	self:remove()
 end
