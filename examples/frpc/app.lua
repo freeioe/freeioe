@@ -221,7 +221,7 @@ function app:start()
 	meta.series = "X"
 	self._dev = self._api:add_device(dev_sn, meta, inputs, outputs, cmds)
 
-	local r, err = self._service:create(true)
+	local r, err = self._service:create()
 	if not r then
 		self._log:error("Service create failure. Error:", err)
 		return nil, "Service create failure. Error: "..err
