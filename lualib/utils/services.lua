@@ -18,8 +18,8 @@ function services:initialize(name, cmd, args, options)
 	end
 
 	self._pid = "/tmp/service_"..self._name..".pid"
-	-- self._file = "/etc/init.d/"..self._name
-	self._file = "/tmp/"..self._name
+	self._file = "/etc/init.d/"..self._name
+	--self._file = "/tmp/"..self._name
 
 	local os_id = sysinfo.os_id()
 	if string.lower(os_id) ~= 'openwrt' then

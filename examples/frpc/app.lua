@@ -223,8 +223,8 @@ function app:start()
 
 	local r, err = self._service:create()
 	if not r then
-		self._log:error("Service create failure. Error", err)
-		return nil, "Service create failure. Error"..err
+		self._log:error("Service create failure. Error:", err)
+		return nil, "Service create failure. Error: "..err
 	end
 
 	return true
