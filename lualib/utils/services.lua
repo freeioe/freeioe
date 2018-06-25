@@ -11,13 +11,13 @@ local services = class("FREEIOE_SERVICES_CONTRL_API")
 
 function services:initialize(name, cmd, args, options)
 	assert(name and cmd)
-	self._name = name
+	self._name = "ioe_"..name
 	self._cmd = cmd
 	if args then
 		self._cmd = cmd .. ' ' .. table.concat(args, ' ')
 	end
 
-	self._pid = "/tmp/ioe_services_"..self._name..".pid"
+	self._pid = "/tmp/service_"..self._name..".pid"
 	-- self._file = "/etc/init.d/"..self._name
 	self._file = "/tmp/"..self._name
 
@@ -46,7 +46,7 @@ function services:create()
 		return true
 	end
 	local s = string.format(procd_file, self._cmd, self._pid)
-	if lfs.attributes(path, "mode") == file then
+	if lfs.attributes(self._file, "mode") == file then
 		return nil, "Service already exits"
 	end
 
