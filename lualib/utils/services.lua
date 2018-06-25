@@ -41,6 +41,10 @@ start_service () {
 }
 ]]
 
+function services:_ctrl(action)
+	return os.execute(self._file.." "..self._name.." enable")
+end
+
 function services:create()
 	if self._pm then
 		return true
@@ -57,7 +61,9 @@ function services:create()
 
 	f:write(s)
 	f:close()
-	return os.execute("service "..self._name.." enable")
+	os.execute("chmod a+x "..self._file)
+	--return self:_ctrl("enable")
+	return true
 end
 
 function services:cleanup()
@@ -70,7 +76,7 @@ function services:remove()
 	if self._pm then
 		return true
 	end
-	os.execute("service "..self._name.." disable")
+	self:_ctrl("disable")
 	os.execute('rm -f '..self._file)
 end
 
@@ -83,28 +89,28 @@ function services:start()
 	if self._pm then
 		return self._pm:start()
 	end
-	return os.execute("service "..self._name.." start")
+	return self:_ctrl("start")
 end
 
 function services:stop()
 	if self._pm then
 		return self._pm:stop()
 	end
-	return os.execute("service "..self._name.." stop")
+	return self:_ctrl("stop")
 end
 
 function services:reload()
 	if self._pm then
 		return nil, "Not support"
 	end
-	return os.execute("service "..self._name.." reload")
+	return self:_ctrl("reload")
 end
 
 function services:restart()
 	if self._pm then
 		return nil, "Not support"
 	end
-	return os.execute("service "..self._name.." restart")
+	return self:_ctrl("restart")
 end
 
 function services:get_pid()
