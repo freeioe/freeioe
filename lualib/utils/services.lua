@@ -51,8 +51,13 @@ function services:create(check_exits)
 	end
 	local s = string.format(procd_file, self._cmd, self._pid)
 
-	if check_exits and lfs.attributes(self._file, "mode") == 'file' then
-		return nil, "Service already exits!"
+	if lfs.attributes(self._file, "mode") == 'file' then
+		if check_exits then
+			return nil, "Service already exits!"
+		else
+			self:_ctrl('stop')
+			self:_ctrl('disable')
+		end
 	end
 
 	local f, err = io.open(self._file, "w+")
