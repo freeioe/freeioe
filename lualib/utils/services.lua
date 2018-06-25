@@ -45,13 +45,13 @@ function services:_ctrl(action)
 	return os.execute(self._file.." "..action)
 end
 
-function services:create(over_write)
+function services:create(check_exits)
 	if self._pm then
 		return true
 	end
 	local s = string.format(procd_file, self._cmd, self._pid)
 
-	if not over_write and lfs.attributes(self._file, "mode") == 'file' then
+	if check_exits and lfs.attributes(self._file, "mode") == 'file' then
 		return nil, "Service already exits!"
 	end
 
