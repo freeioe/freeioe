@@ -104,6 +104,15 @@ function response.get_conf(inst)
 	return app.conf
 end
 
+function response.app_option(inst, option, value)
+	if dc.get("APPS", inst) then
+		dc.set("APPS", inst, option, value)
+		return true
+	else
+		return nil, "Application instance does not exits!"
+	end
+end
+
 function response.get_channel(name)
 	local c = mc_map[string.upper(name)]
 	if c then
@@ -132,15 +141,6 @@ function accept.app_start(inst)
 	skynet.fork(function()
 		snax.self().req.start(inst, v.conf or {})
 	end)
-end
-
-function accept.app_option(inst, option, value)
-	if dc.get("APPS", inst) then
-		dc.set("APPS", inst, option, value)
-		return true
-	else
-		return nil, "Application instance does not exits!"
-	end
 end
 
 function accept.app_create(inst, opts)
