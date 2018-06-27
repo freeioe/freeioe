@@ -243,6 +243,7 @@ function app:on_frpc_start()
 
 	self._start_time = self._sys:time()
 	self._uptime_start = self._sys:now()
+	self._heartbeat_timeout = 0
 	self._dev:set_input_prop('starttime', 'value', self._start_time)
 	self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
 
@@ -259,6 +260,9 @@ function app:on_frpc_start()
 			if self._sys:time() > (self._heartbeat_timeout + 10) then
 				self._log:warning('Frpc running heartbeat rearched, close frpc')
 				self._sys:post('service_ctrl', 'stop')
+				-- Clear heartbeat
+				self._conf.enable_heartbeat = 0
+				self._heartbeat_timeout = 0
 			end
 		end
 	end
