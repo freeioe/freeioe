@@ -56,6 +56,38 @@ local function set_cfg_defaults(data)
 	return data
 end
 
+local on_cfg_crash_sh = [[
+CFG_JSON=%s
+BACKUP_DIR=./__crash_backup
+BACKUP_TIME="%s"
+rm -rf $BACKUP_DIR
+mkdir $BACKUP_DIR
+cp ./logs/freeioe.log $BACKUP_DIR/
+cp ./logs/freeioe_sys.log $BACKUP_DIR/
+mv $CFG_JSON $BACKUP_DIR/
+mv $CFG_JSON.md5 $BACKUP_DIR/
+echo $BACKUP_TIME > $BACKUP_DIR/backup_time
+touch $CFG_JSON.crash
+sync
+]]
+
+local function on_cfg_failure()
+	local sh_file = "/tmp/on_cfg_crash.sh"
+	local f, err = io.open(sh_file, "w+")
+	if f then
+		local content = string.format(on_cfg_crash_sh, db_file, os.date("%F %T"))
+		f:write(content)
+		f:close()
+		os.execute('sh '..sh_file)
+		log.info("::CFG:: Finished crash backup")
+	else
+		log.error("::CFG:: Cannot create crash backup script file. ", err)
+	end
+	skynet.sleep(100)
+	skynet.abort()
+end
+
+
 local function load_cfg(path)
 	log.info("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
@@ -77,8 +109,7 @@ local function load_cfg(path)
 		if md5s ~= sum then
 			log.error("::CFG:: File md5 checksum error", md5s, sum)
 			log.error("::CFG:: System is aborting, please correct this error manually!")
-			skynet.sleep(100)
-			skynet.abort()
+			on_cfg_failure()
 		end
 	else
 		log.warning("::CFG:: Config File md5 file is missing, try create new one")
@@ -164,6 +195,7 @@ local function load_cfg_cloud()
 			if not r  then
 				log.warning("::CFG:: Saving configurtaion failed", err)
 			end
+			log.warning("::CFG:: FreeIOE reboot now!!")
 			-- Quit skynet
 			skynet.abort()
 		end

@@ -26,6 +26,9 @@ function app:start()
 			return true, "done"
 		end,
 		on_command = function(app, sn, command, param)
+			if command == 'cfg_crash_ack' then
+				return self:cfg_crash_ack()
+			end
 			print('on_command', app, sn, command, param)
 			return true, "eee"
 		end,
@@ -136,12 +139,18 @@ function app:start()
 			inputs[#inputs + 1] = v
 		end
 	end
+	local cmds = {
+		{
+			name = "cfg_crash_ack",
+			desc = "Configuration file crash acknowledgement",
+		},
+	}
 
 	local meta = self._api:default_meta()
 	meta.name = "BambooShoots IOE"
 	meta.description = "BambooShoots IOE Device"
 	meta.series = "Q102" -- TODO:
-	self._dev = self._api:add_device(id, meta, inputs)
+	self._dev = self._api:add_device(id, meta, inputs, nil, cmds)
 
 	if leds.cloud then
 		leds.cloud:brightness(0)
@@ -156,6 +165,32 @@ function app:close(reason)
 		cancel_timer()
 	end
 	self._cancel_timers = {}
+end
+
+function app:cfg_crash_check()
+	if 'file' == lfs.attributes("cfg.json.crash", 'mode') then
+		local err = "System configuration file error found!"
+		self._log:error(err)
+
+		local report_crash = nil
+		report_crash = function()
+			self._log:debug("Fire cfg crash event")
+			local sys_id = self._sys:id()
+			self._dev:fire_event(event.LEVEL_FATAL, event.EVENT_SYS, err, {sn=sys_id})
+			-- Reset timer
+			self._cancel_timers['cfg_crash'] = self._sys:cancelable_timeout(60 * 60 * 1000, report_crash)
+		end
+		report_crash()
+	end
+end
+
+function app:cfg_crash_ack()
+	os.execute("rm cfg.json.crash")
+	if self._cancel_timers.cfg_crash then
+		self._cancel_timers.cfg_crash()
+		self._cancel_timers.cfg_crash = nil
+	end
+	return true
 end
 
 function app:run(tms)
@@ -226,10 +261,12 @@ function app:run(tms)
 		--[[
 		self._sys:timeout(100, function()
 			self._log:debug("Fire event")
-			local sys_id = self._sys:cloud_id()
+			local sys_id = self._sys:id()
 			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
 		end)
 		]]--
+
+		self:cfg_crash_check()
 	end
 
 	local loadavg = sysinfo.loadavg()
