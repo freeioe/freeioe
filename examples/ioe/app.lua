@@ -295,7 +295,9 @@ function app:run(tms)
 		end)
 		]]--
 
-		self:cfg_crash_check()
+		self._sys:timeout(100, function()
+			self:cfg_crash_check()
+		end)
 	end
 
 	local loadavg = sysinfo.loadavg()
