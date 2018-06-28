@@ -51,7 +51,8 @@ return {
 			local option = post.option
 			local value = post.value
 			if string.upper(option) == 'DATA_UPLOAD_PERIOD' then
-				if tonumber(value) > 0 and tonumber(value) < 1000 then
+				value = math.floor(tonumber(value))
+				if value > 0 and value < 1000 then
 					ngx.print(_('The upload period cannot be less than 1000 ms (one second)'))
 				end
 			end
