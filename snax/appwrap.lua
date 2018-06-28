@@ -12,7 +12,7 @@ local sys_api = nil
 local sys_id = nil
 
 local cancel_ping_timer = nil
-local cancel_ping_timeout = 5000 -- ms
+local app_ping_timeout = 5000 -- ms
 
 local function protect_call(app, func, ...)
 	assert(app and func)
@@ -79,9 +79,9 @@ function response.start()
 		local ping_mgr = nil
 		ping_mgr = function()
 			mgr_snax.post.app_heartbeat(app_name, skynet.time())
-			cancel_ping_timer = app_sys:cancelable_timeout(cancel_ping_timeout, ping_mgr)
+			cancel_ping_timer = app_sys:cancelable_timeout(app_ping_timeout, ping_mgr)
 		end
-		cancel_ping_timer = app_sys:cancelable_timeout(cancel_ping_timeout, ping_mgr)
+		cancel_ping_timer = app_sys:cancelable_timeout(app_ping_timeout, ping_mgr)
 
 		return true
 	else

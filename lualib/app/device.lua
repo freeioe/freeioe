@@ -8,6 +8,7 @@ local app_event = require 'app.event'
 
 local device = class("APP_MGR_DEV_API")
 
+--- Do not call this directly, but throw the api.lua
 function device:initialize(api, sn, props, readonly)
 	self._api = api
 	self._sn = sn
@@ -24,7 +25,7 @@ function device:initialize(api, sn, props, readonly)
 	self._readonly = readonly
 
 	self._inputs_map = {}
-	for _, t in ipairs(props.inputs) do
+	for _, t in ipairs(props.inputs or {}) do
 		self._inputs_map[t.name] = true
 	end
 	self._stats = {}
@@ -72,21 +73,35 @@ end
 
 function device:mod(inputs, outputs, commands)
 	assert(not self._readonly, "This is not created device")
-	self._props = {
-		meta = meta,
-		inputs = inputs,
-		outputs = outputs,
-		commands = commands,
-	}
+	self._props.inputs = inputs
+	self._props.outputs = outputs
+	self._props.comands = commands
 
 	self._inputs_map = {}
-	for _, t in ipairs(inputs) do
+	for _, t in ipairs(inputs or {}) do
 		self._inputs_map[t.name] = true
 	end
-	dc.set('DEVICES', sn, props)
+	dc.set('DEVICES', self._sn, self._props)
 
-	self._data_chn:publish('mod_device', self._app_name, self._sn, props)
+	self._data_chn:publish('mod_device', self._app_name, self._sn, self._props)
 	return true
+end
+
+function device:add(inputs, outputs, commands)
+	assert(not self._readonly, "This is not created device")
+	local org_inputs = self._props.inputs
+	for _, v in ipairs(inputs or {}) do
+		org_inputs[#org_inputs] = v
+	end
+	local org_outputs = self._props.outputs
+	for _, v in ipairs(outputs or {}) do
+		org_outputs[#org_outputs] = v
+	end
+	local org_commands = self._props.commands
+	for _, v in ipairs(commands or {}) do
+		org_commands[#org_commands] = v
+	end
+	self:mod(org_inputs, org_outputs, org_commands)
 end
 
 function device:get_input_prop(input, prop)

@@ -17,6 +17,7 @@ function app:initialize(name, sys, conf)
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
 	self._cancel_timers = {}
+	self._apps_cache = {}
 end
 
 function app:start()
@@ -139,6 +140,27 @@ function app:start()
 			inputs[#inputs + 1] = v
 		end
 	end
+	-- for apps
+	local apps = datacenter.get("APPS")
+	for k, v in pairs(apps) do
+		self._apps_cache[k] = {
+			name = v.name,
+			version = v.version,
+			sn = v.sn,
+			auto = v.auto
+		}
+		inputs[#inputs + 1] = {
+			name = 'app_run_'..k,
+			desc = 'Application status for '..k,
+			vt = "int",
+		}
+	end
+	if not self._apps_cache['ioe'] then
+		self._apps_cache['ioe'] = {
+			name = 'freeioe',
+		}
+	end
+
 	local cmds = {
 		{
 			name = "cfg_crash_ack",
@@ -313,6 +335,32 @@ function app:run(tms)
 			leds.cloud:brightness(1)
 		else
 			leds.cloud:brightness(0)
+		end
+	end
+
+	-- Application run status
+	local appmgr = snax.uniqueservice('appmgr')
+	local applist = appmgr.req.list()
+	for k, v in pairs(applist) do
+		if not self._apps_cache[k] then
+			local app = datacenter.get("APPS", k)
+			self._apps_cache[k] = {
+				name = app.name,
+				version = app.version,
+				sn = app.sn,
+				auto = app.auto
+			}
+			self._dev:add({name = "app_run_"..k, desc = 'Application status for '..k})
+		end
+		local run = 0
+		if v.inst and (self._sys:time() - v.last < 10) then
+			run = 1
+		end
+		self._dev:set_input_prop('app_run_'..k, 'value', run)
+	end
+	for k, v in pairs(self._apps_cache) do
+		if not applist[k] then
+			self._dev:set_input_prop('app_run_'..k, 'value', 0)
 		end
 	end
 

@@ -47,7 +47,7 @@ local try_read_cpu_temp_by_sysinfo = function()
 	if s and string.len(s) > 0 then
 		local temp = tonumber(string.match(s, 'current:%s-(%d+)'))
 		if temp then
-			return temp / 10000
+			return temp / 1000
 		end
 	end
 end

@@ -13,6 +13,7 @@ return {
 			local applist = appmgr.req.list()
 			for k, v in pairs(apps) do
 				v.running = applist[k] and applist[k].inst or nil
+				v.last = applist[k] and applist[k].last or nil
 				v.version = math.floor(tonumber(v.version) or 0)
 				v.auto = math.floor(tonumber(v.auto or 1))
 			end
