@@ -303,6 +303,8 @@ function app:run(tms)
 	local cpu_temp = sysinfo.cpu_temperature()
 	if cpu_temp then
 		self._dev:set_input_prop('cpu_temp', "value", tonumber(cpu_temp))
+	else
+		self._dev:set_input_prop('cpu_temp', "value", 0, nil, 1)
 	end
 
 	local mem = sysinfo.meminfo()
