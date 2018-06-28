@@ -153,6 +153,12 @@
 					<td>{{_("SN")}} </td>
 					<td>{{ioe_sn}}</td>
 				</tr>
+				{% if ioe_cloud_sn then %}
+				<tr>
+					<td>{{_("Cloud SN")}} </td>
+					<td>{{ioe_cloud_sn}}</td>
+				</tr>
+				{% end %}
 				<tr>
 					<td>{{_("Git Version")}} </td>
 					<td>{{version.ioe.git_ver}}</td>
@@ -180,6 +186,10 @@
 				<tr>
 					<td>{{_("UPTIME")}} </td>
 					<td class="uptime value"></td>
+				</tr>
+				<tr>
+					<td>{{_("System Time")}} </td>
+					<td class="sys_time value">{{sys_time_str}}</td>
 				</tr>
 			</tbody>
 		</table>
@@ -357,6 +367,7 @@ $(document).ready(function(){
 		sys_control('reboot', 20000);
 	});
 
+	// Show count down time
 	var set_short_format = function() {
 		countdown.setLabels(
 			'|s|m|h|d|w|m|y|de|ce|mi',
