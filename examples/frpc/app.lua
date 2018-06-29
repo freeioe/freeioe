@@ -113,7 +113,12 @@ function app:start()
 			end
 			if output == 'enable_heartbeat' then
 				self._log:notice('Enable hearbeat for keeping FRPC running, value:', value)
-				self._conf.enable_heartbeat = value
+				local value = tonumber(value)
+				if not value or value == 0 then
+					self._conf.enable_heartbeat = nil
+				else
+					self._conf.enable_heartbeat = true 
+				end
 				self._heartbeat_timeout = self._sys:time() + 60
 				return true
 			end
