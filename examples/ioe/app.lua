@@ -287,13 +287,10 @@ function app:run(tms)
 			calc_gcom()
 		end
 
-		--[[
 		self._sys:timeout(100, function()
-			self._log:debug("Fire event")
 			local sys_id = self._sys:id()
 			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
 		end)
-		]]--
 
 		self._sys:timeout(100, function()
 			self:cfg_crash_check()
