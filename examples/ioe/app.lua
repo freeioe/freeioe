@@ -288,6 +288,7 @@ function app:run(tms)
 		end
 
 		self._sys:timeout(100, function()
+			self._log:debug("Fire system started event")
 			local sys_id = self._sys:id()
 			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
 		end)
