@@ -258,10 +258,13 @@ function app:connect_proc()
 			sys:sleep(50)
 		end
 	end
-	if self._mqtt_client then
-		self._mqtt_client:disconnect()
+	if self._close_connection then
 		self._mqtt_client = nil
+	end
+	if client then
+		client:disconnect()
 		log:notice("Cloud Connection Closed!")
+		client:destroy()
 	end
 end
 
