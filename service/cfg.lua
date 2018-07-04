@@ -75,7 +75,8 @@ local function on_cfg_failure()
 	local sh_file = "/tmp/on_cfg_crash.sh"
 	local f, err = io.open(sh_file, "w+")
 	if f then
-		local content = string.format(on_cfg_crash_sh, db_file, os.date("%F %T"))
+		--local content = string.format(on_cfg_crash_sh, db_file, os.date("%F %T"))
+		local content = string.format(on_cfg_crash_sh, db_file, os.date("%F %H:%M:%S"))
 		f:write(content)
 		f:close()
 		os.execute('sh '..sh_file)

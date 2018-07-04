@@ -17,7 +17,8 @@ return {
 			logs, err = buffer.req.get_log(app)
 			for _, log in ipairs(logs or {}) do
 				local ms = string.format("%03d", math.floor((log.timestamp % 1) * 1000))
-				log.time = os.date("%D %T "..ms, math.floor(log.timestamp))
+				--log.time = os.date("%D %T "..ms, math.floor(log.timestamp))
+				log.time = os.date("%D %H:%M:%S "..ms, math.floor(log.timestamp))
 			end
 		end
 

@@ -14,7 +14,8 @@ return {
 		local list, err = buffer.req.get_event()
 		for _, v in ipairs(list or {}) do
 			local ms = string.format("%03d", math.floor((v.timestamp % 1) * 1000))
-			v.time = os.date("%D %T "..ms, math.floor(v.timestamp))
+			--v.time = os.date("%D %T "..ms, math.floor(v.timestamp))
+			v.time = os.date("%D %H:%M:%S "..ms, math.floor(v.timestamp))
 		end
 		if app then
 			local ol = list

@@ -38,6 +38,9 @@ end
 -- @treturn string CPU Model 
 _M.cpu_model = function()
 	local s, err = _M.cat_file('/proc/cpuinfo')
+	if not s then
+		return "Unknown"
+	end
 	--return s:match("Hardware%s+:%s+([^%c]+)")
 	return s:match("model%s+name%s*:%s*([^%c]+)") or s:match("system%s+type%s*:%s*([^%c]+)") or 'Unknown'
 end
