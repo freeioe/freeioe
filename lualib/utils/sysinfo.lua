@@ -249,7 +249,7 @@ _M.cpu_arch = function(os_id)
 		return _M.openwrt_cpu_arch()
 	end
 	local matchine_arch = _M.uname('-m')
-	return assert(os.getenv("IOE_CPU_ARCH") or matchine_arch)
+	return assert(matchine_arch or os.getenv("IOE_CPU_ARCH"))
 end
 
 local function read_openwrt_arch()
@@ -269,7 +269,7 @@ local function read_openwrt_arch()
 end
 
 _M.openwrt_cpu_arch = function()
-	return assert(os.getenv("IOE_CPU_ARCH") or read_openwrt_arch())
+	return assert(read_openwrt_arch() or os.getenv("IOE_CPU_ARCH"))
 end
 
 local function read_os_id()
@@ -297,7 +297,7 @@ local os_id_names = {
 _M.os_id = function()
 	local os_id = read_os_id()
 	os_id = os_id_names[os_id] or os_id
-	return assert(os.getenv("IOE_OS_ID") or os_id)
+	return assert(os_id or os.getenv("MSYSTEM"))
 end
 
 _M.platform = function()
@@ -315,7 +315,7 @@ local device_types_names = {
 
 _M.device_type = function()
 	local uname = _M.uname('-m')
-	return assert(os.getenv("IOE_DEVICE_TYPE") or device_types_names[uname])
+	return assert(device_types_names[uname] or os.getenv("IOE_DEVICE_TYPE"))
 end
 
 local try_read_ioe_sn_from_config = function()
@@ -377,7 +377,7 @@ end
 
 _M.unknown_ioe_sn = "UNKNOWN_ID"
 _M.ioe_sn = function()
-	return assert(os.getenv("IOE_SN") or read_ioe_sn())
+	return assert(read_ioe_sn() or os.getenv("IOE_SN"))
 end
 
 return _M
