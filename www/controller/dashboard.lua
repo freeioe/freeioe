@@ -55,7 +55,7 @@ return {
 			},
 		}
 		local cpu_model = sysinfo.cpu_model()
-		local meminfo =  sysinfo.meminfo()
+		local meminfo =  sysinfo.meminfo() or {}
 		local uname = sysinfo.uname("-a")
 		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
 		local is_upgrading = skynet.call("UPGRADER", "lua", "is_upgrading")
@@ -76,9 +76,9 @@ return {
 			version = version, 
 			cpu_model = cpu_model,
 			mem_info= {
-				total = pretty_memory(meminfo.total),
-				used = pretty_memory(meminfo.used),
-				free = pretty_memory(meminfo.free),
+				total = pretty_memory(meminfo.total or 0),
+				used = pretty_memory(meminfo.used or 0),
+				free = pretty_memory(meminfo.free or 0),
 			}, 
 			uname = uname,
 			rollback_time = rollback_time,
