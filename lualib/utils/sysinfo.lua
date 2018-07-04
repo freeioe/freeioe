@@ -148,7 +148,7 @@ local function network_if(ifname)
 		patt = '[^%s]'
 	end
 
-	local s, err = _M.exec('LANG=C ifconfig '..ifname, true)
+	local s, err = _M.exec('PATH=$PATH:/sbin LANG=C ifconfig '..ifname, true)
 	if not s then
 		return nil, err
 	end
@@ -161,6 +161,8 @@ local function network_if(ifname)
 	local ipv6 = s:match('inet6%s+addr:%s-('..patt..'+)') or s:match('inet6%s-('..patt..'+)')
 	return {hwaddr=hwaddr, ipv4 = ipv4, ipv6=ipv6}
 end
+
+_M.network_if = network_if
 
 --- List all network interfaces
 -- @treturn table Includes all network information

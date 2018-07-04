@@ -187,6 +187,16 @@ function app:start()
 			desc = "frpc configuration (json)",
 			vt = "string",
 		},
+		{
+			name = "br_lan_ipv4",
+			desc = "IP Address of br_lan interface",
+			vt = "string",
+		},
+		{
+			name = "br_lan_ipv6",
+			desc = "IPv6 Address of br_lan interface",
+			vt = "string",
+		},
 	}
 	local outputs = {
 		{
@@ -300,6 +310,16 @@ function app:run(tms)
 	-- for heartbeat stuff
 	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
 	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
+
+	local info = sysinfo.network_if('br-lan')
+	if info and info.ipv4 and self._br_lan_ipv4 ~= info.ipv4 then
+		self._br_lan_ipv4 = info.ipv4
+		self._dev:set_input_prop('br_lan_ipv4', 'value', info.ipv4)
+	end
+	if info and info.ipv6 and self._br_lan_ipv6 ~= info.ipv6 then
+		self._br_lan_ipv6 = info.ipv6
+		self._dev:set_input_prop('br_lan_ipv6', 'value', info.ipv6)
+	end
 
 	return 1000 * 5
 end
