@@ -76,6 +76,9 @@
 				.then(json => {
 					this.devices = json.devices
 				})
+				.then( val => {
+					bind_output_command()
+				})
 		},
 		methods: {
 			load_data: function (event) {
@@ -83,6 +86,9 @@
 					.then(response => response.json())
 					.then(json => {
 						this.devices = json.devices
+					})
+					.then( val => {
+						bind_output_command()
 					})
 			}
 		}
@@ -132,7 +138,15 @@
 			.modal('show')
 		;
 	};
+	function bind_output_command() {
+		$('.ui.button.output').click(function() {
+			output_to_device($(this).data('device'), $(this).data('output'));
+		});
+		$('.ui.button.command').click(function() {
+			command_to_device($(this).data('device'), $(this).data('command'));
+		});
 
+	};
 	$(document).ready(function(){
 		msg_form = $('.ui.msg_print.form');
 		output_editor = ace.edit("json_editor_output");
@@ -140,12 +154,6 @@
 		command_editor = ace.edit("json_editor_command");
 		command_editor.session.setMode("ace/mode/json");
 
-		$('.ui.button.output').click(function() {
-			output_to_device($(this).data('device'), $(this).data('output'));
-		});
-		$('.ui.button.command').click(function() {
-			command_to_device($(this).data('device'), $(this).data('command'));
-		});
 		$('.ui.device_output.form').ajaxForm({
 			beforeSerialize: function($form, options) {
 				var input = $('.ui.device_output.form input[name="value"]');
