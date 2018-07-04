@@ -93,7 +93,7 @@ return {
 			cloud_last = cloud_last,
 			sys_time = os.time(),
 			--sys_time_str = os.date("%F %T %Z"),
-			sys_time_str = os.date("%F %H:%M:%S %Z"),
+			sys_time_str = os.date("%Y-%m-%d %H:%M:%S %Z"),
 			uptime = uptime,
 			uptime_str = uptime_str,
 		})

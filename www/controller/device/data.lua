@@ -12,7 +12,7 @@ local function load_device_data()
 				if input.value.timestamp then
 					local ms = math.floor((input.value.timestamp % 1) * 1000)
 					--input.value.timestamp = os.date('%F %T', math.floor(input.value.timestamp)) .. ' ' .. ms
-					input.value.timestamp = os.date('%F %H:%M:%S', math.floor(input.value.timestamp)) .. ' ' .. ms
+					input.value.timestamp = os.date('%Y-%m-%d %H:%M:%S', math.floor(input.value.timestamp)) .. ' ' .. ms
 				end
 			end
 		end
