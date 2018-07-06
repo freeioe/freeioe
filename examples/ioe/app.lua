@@ -352,6 +352,7 @@ function app:run(tms)
 	-- Application run status
 	local appmgr = snax.uniqueservice('appmgr')
 	local applist = appmgr.req.list()
+	applist['ioe'] = nil
 	for k, v in pairs(applist) do
 		if not self._apps_cache[k] then
 			local app = datacenter.get("APPS", k)
@@ -361,7 +362,7 @@ function app:run(tms)
 				sn = app.sn,
 				auto = app.auto
 			}
-			self._dev:add({name = "app_run_"..k, desc = 'Application status for '..k})
+			self._dev:add({{name = "app_run_"..k, desc = 'Application status for '..k, vt="int"}})
 		end
 		local run = 0
 		if v.inst and (self._sys:time() - v.last < 10) then

@@ -226,6 +226,10 @@ function command.install_local_app(id, args)
 	datacenter.set("APPS", inst_name, "version", version)
 	--datacenter.set("APPS", inst_name, "auto", 1)
 
+	--- Post to appmgr for instance added
+	local appmgr = snax.uniqueservice("appmgr")
+	appmgr.post.app_create(inst_name)
+
 	--[[
 	log.notice("Try to start application", inst_name)
 	appmgr.post.app_start(inst_name)
