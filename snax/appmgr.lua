@@ -160,7 +160,7 @@ end
 function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
-			if v.last - skynet.time() > 10 then
+			if v.last - skynet.time() > 60 then
 				snax.self().req.restart(k, 'heartbeat timeout')
 			end
 		end
