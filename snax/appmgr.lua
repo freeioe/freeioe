@@ -7,6 +7,7 @@ local dc = require 'skynet.datacenter'
 local applist = {}
 local mc_map = {}
 local reg_map = {}
+local closing = false
 
 ---
 -- Return instance id
@@ -152,7 +153,17 @@ end
 function accept.app_heartbeat(inst, time)
 	--log.debug("Application heartbeat received from", inst, time)
 	if applist[inst] then
-		applist[inst].last = time
+		applist[inst].last = time or skynet.time()
+	end
+end
+
+function accept.app_heartbeat_check()
+	for k, v in pairs(applist) do
+		if v.inst then
+			if v.last - skynet.time() > 10 then
+				snax.self().req.restart(k, 'heartbeat timeout')
+			end
+		end
 	end
 end
 
@@ -214,9 +225,16 @@ function init(...)
 			snax.self().req.start('ioe')
 		end
 	end)
+	skynet.fork(function()
+		while not closing do
+			snax.self().post.app_heartbeat_check()
+			skynet.sleep(500) -- five seconds.
+		end
+	end)
 end
 
 function exit(...)
+	closing = true
 	for k,v in pairs(applist) do
 		if v.inst then
 			snax.kill(v.inst, "force")
