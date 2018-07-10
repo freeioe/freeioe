@@ -379,4 +379,10 @@ function app:run(tms)
 	return 1000 * 5
 end
 
+function app:on_post_fire_event(msg, lvl, tp, data)
+	assert(msg and lvl and tp and data)
+	data.time = data.time or self._sys:time()
+	self._dev:fire_event(lvl, tp, msg, data)
+end
+
 return app

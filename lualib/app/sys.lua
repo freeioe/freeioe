@@ -3,6 +3,7 @@ local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
 local log = require 'utils.log'
 local class = require 'middleclass'
+local ioe = require 'ioe'
 local api = require 'app.api'
 local logger = require 'app.logger'
 local lfs = require 'lfs'
@@ -164,11 +165,11 @@ end
 
 -- System ID
 function sys:id()
-	return dc.get("CLOUD", "CLOUD_ID") or dc.wait("CLOUD", "ID")
+	return ioe.id()
 end
 
 function sys:hw_id()
-	return dc.wait("CLOUD", "ID")
+	return ioe.hw_id()
 end
 
 -- Fire request to app self, which will call your app.response or on_req_<msg> if on_post does not exists

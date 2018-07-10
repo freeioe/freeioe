@@ -4,6 +4,7 @@ local crypt = require 'skynet.crypt'
 local mosq = require 'mosquitto'
 local log = require 'utils.log'
 local datacenter = require 'skynet.datacenter'
+local ioe = require 'ioe'
 local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
 local cyclebuffer = require 'cyclebuffer'
@@ -348,7 +349,7 @@ end
 -- loading configruation from datacenter
 --]]
 local function load_conf()
-	mqtt_id = datacenter.get("CLOUD", "CLOUD_ID") or datacenter.get("CLOUD", "ID")
+	mqtt_id = ioe.id() --datacenter.get("CLOUD", "CLOUD_ID") or datacenter.wait("CLOUD", "ID")
 	mqtt_host = datacenter.get("CLOUD", "HOST")
 	mqtt_port = datacenter.get("CLOUD", "PORT")
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")

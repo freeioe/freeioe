@@ -3,11 +3,14 @@ local snax = require 'skynet.snax'
 local log = require 'utils.log'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
+local ioe = require 'ioe'
+local event = require 'app.event'
 
 local applist = {}
 local mc_map = {}
 local reg_map = {}
 local closing = false
+local sys_app = 'ioe'
 
 ---
 -- Return instance id
@@ -161,6 +164,8 @@ function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
 			if v.last - skynet.time() > 60 then
+				local data = {app=k, inst=v.inst, last=v.last, time=skynet.time()}
+				snax.self().post.fire_event(sys_app, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, 'heartbeat timeout', data)
 				snax.self().req.restart(k, 'heartbeat timeout')
 			end
 		end
@@ -180,6 +185,7 @@ function accept.unreg_snax(handle)
 end
 
 function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
+	log.trace("AppMgr fire_event", app_name, sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)
 	local event_chn = mc_map.EVENT
 	if event_chn then
@@ -221,11 +227,12 @@ function init(...)
 				applist[k] = { conf = v.conf }
 			end
 		end
-		if not apps['ioe'] then
-			snax.self().req.start('ioe')
+		if not apps[sys_app] then
+			snax.self().req.start(sys_app)
 		end
 	end)
 	skynet.fork(function()
+		skynet.sleep(1000) -- ten seconds
 		while not closing do
 			snax.self().post.app_heartbeat_check()
 			skynet.sleep(500) -- five seconds.

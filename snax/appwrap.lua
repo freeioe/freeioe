@@ -121,17 +121,28 @@ end
 
 function accept.app_post(msg, ...)
 	if not app then
-		return nil, "app is nil"
+		log.warning("app is nil when fire event", msg)
+		return false
 	end
+
 	if app.accept then
-		return protect_call(app, 'accept', msg, ...)
+		local r, err = protect_call(app, 'accept', msg, ...)
+		if not r then
+			log.warning("Failed to call accept function in application for msg", msg)
+			log.trace(err)
+		end
 	else
 		local msg = 'on_post_'..msg
 		if app[msg] then
-			return protect_call(app, msg, ...)
+			local r, err = protect_call(app, msg, ...)
+			if not r then
+				log.warning("Failed to call accept function in application for msg", msg)
+				log.trace(err)
+			end
+		else
+			log.warning("no handler for post message "..msg)
 		end
 	end
-	return nil, "no handler for post message "..msg
 end
 
 function fire_exception_event(info, data)
