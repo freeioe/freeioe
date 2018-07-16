@@ -18,6 +18,12 @@ local function get_ioe_dir()
 	return os.getenv('IOE_DIR') or lfs.currentdir().."/.."
 end
 
+local function is_inst_name_reserved(inst)
+	if inst == 'ioe' or inst == 'ioe_frpc' or inst == 'ioe_symlink' then
+		return true
+	end
+end
+
 local function create_task(func, task_name, task_desc, ...)
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
@@ -112,7 +118,7 @@ function command.install_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
-	if (id and id ~= 'from_web') and (inst_name == 'ioe' or inst_name == 'ioe_frpc') then
+	if (id and id ~= 'from_web') and is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -169,7 +175,7 @@ function command.create_app(id, args)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf or {}
 
-	if (id and id ~= 'from_web') and (inst_name == 'ioe' or inst_name == 'ioe_frpc') then
+	if (id and id ~= 'from_web') and is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -205,7 +211,7 @@ function command.install_local_app(id, args)
 	local conf = args.conf or {}
 	local file_path = args.file
 
-	if inst_name == 'ioe' or inst_name == 'ioe_frpc' then
+	if is_inst_name_reserved(inst_name) then
 		return nil, "Application instance name is reserved"
 	end
 	if datacenter.get("APPS", inst_name) and not args.force then

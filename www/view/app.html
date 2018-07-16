@@ -17,25 +17,48 @@
 			<div class="ui teal icon button check_update" data-content="{{_('Query application updates')}}"><i class="ui refresh icon"></i>{{_("Check Updates")}}</div>
 			<a class="ui green icon button" href="/ext"> <i class="ui cubes icon"></i> {{_("Extensions")}}</a>
 		</div>
-		{% if not apps['ioe_frpc'] then %}
+
 		<div class="column">
-			<form class="ui app_frpc form" action="/app/install" method="post">
-				<input type="hidden" name="from_web" value="1">
-				<input type="hidden" name="version" value="latest">
-				<input type="hidden" name="app" value="frpc">
-				<input type="hidden" name="inst" value="ioe_frpc">
-				<div class="ui green submit button"> {{_("Enable Cloud Web Mapping")}}</div>
-			</form>
+			<div class="ui stackable two column grid">
+				<div class="column">
+					{% if using_beta then %}
+					{% if not apps['ioe_frpc'] then %}
+					<form class="ui app_frpc form" action="/app/install" method="post">
+						<input type="hidden" name="from_web" value="1">
+						<input type="hidden" name="version" value="latest">
+						<input type="hidden" name="app" value="frpc">
+						<input type="hidden" name="inst" value="ioe_frpc">
+						<div class="ui green submit button"> {{_("Enable Cloud Web Mapping")}}</div>
+					</form>
+					{% else %}
+					<form class="ui app_frpc form" action="/app/uninstall" method="post">
+						<input type="hidden" name="from_web" value="1">
+						<input type="hidden" name="inst" value="ioe_frpc">
+						<div class="ui orange submit button"> {{_("Remove Cloud Web Mapping")}}</div>
+					</form>
+					{% end %}
+					{% end %}
+				</div>
+
+				<div class="column">
+					{% if not apps['ioe_symlink'] then %}
+					<form class="ui app_frpc form" action="/app/install" method="post">
+						<input type="hidden" name="from_web" value="1">
+						<input type="hidden" name="version" value="latest">
+						<input type="hidden" name="app" value="symlink">
+						<input type="hidden" name="inst" value="ioe_symlink">
+						<div class="ui green submit button"> {{_("Enable SymLink Connect")}}</div>
+					</form>
+					{% else %}
+					<form class="ui app_frpc form" action="/app/uninstall" method="post">
+						<input type="hidden" name="from_web" value="1">
+						<input type="hidden" name="inst" value="ioe_symlink">
+						<div class="ui orange submit button"> {{_("Remove SymLink Connect")}}</div>
+					</form>
+					{% end %}
+				</div>
+			</div>
 		</div>
-		{% else %}
-		<div class="column">
-			<form class="ui app_frpc form" action="/app/uninstall" method="post">
-				<input type="hidden" name="from_web" value="1">
-				<input type="hidden" name="inst" value="ioe_frpc">
-				<div class="ui orange submit button"> {{_("Remove Cloud Web Mapping")}}</div>
-			</form>
-		</div>
-		{% end %}
 	</div>
 </div>
 
