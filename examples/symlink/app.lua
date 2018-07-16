@@ -249,9 +249,12 @@ function app:run(tms)
 		dev:set_input_prop(node.name, "value", dv:asDouble(), now, 0)
 
 		--[[
+		--- Test write value
 		local r = node.obj:setValue(opcua.Variant.new(10))
 		if r ~= 0 then
-			print(opcua.getStatusCodeName(r))
+			self._log:debug("Failed to write value", opcua.getStatusCodeName(r))
+		else
+			self._log.debug("Write Value OK!!!!!!!")
 		end
 		]]--
 	end
