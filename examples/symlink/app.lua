@@ -81,6 +81,9 @@ local function create_input(inputs, nodes, opcua_var)
 		name = opcua_var.id.index,
 		desc = opcua_var:getDescription().text
 	}
+	if string.sub(input.name, 1, 1) == '#' then
+		input.name = string.sub(input.name, 2)
+	end
 	--print("Variable", input.name, input.desc, opcua_var)
 
 	inputs[#inputs + 1] = input
