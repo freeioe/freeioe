@@ -154,7 +154,7 @@ end
 function accept.app_started(name, handle)
 	local org_handle = nh_map[name]
 	if org_handle then
-		accept.app_stoped(name)
+		snax.self().post.app_stoped(name)
 	end
 	nh_map[name] = handle
 end
