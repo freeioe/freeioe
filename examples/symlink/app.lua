@@ -117,7 +117,7 @@ function app:on_connected(client)
 	--- Get opcua object instance by namespace and browse name
 	-- 根据名字空间和节点名称获取OpcUa对象实体
 	local namespace = self._conf.namespace or "urn:unconfigured:application"
-	local obj_name = self._conf.root_object or "A" -- "Symlink"
+	local obj_name = self._conf.root_object or "SymLink"
 	local node, err = self:get_device_node(namespace, obj_name)
 	---
 	-- 获取设备对象节点下的变量节点
@@ -181,11 +181,22 @@ function app:start()
 
 	--- 设定接口处理函数
 	self._api:set_handler({
-		on_output = function(...)
+		on_output = function(app, sn, output, prop, value)
 			-- TODO: write value to symlink
-			print(...)
+			self._log:warning("Write value to symlink", output, prop, value)
+			for _, node in pairs(self._nodes) do
+				if node.name == output then
+					if prop == 'value' then
+						local r = node.obj:setValue(opcua.Variant.new(value))
+						if r ~= 0 then
+							self._log:error("Failed to write value", opcua.getStatusCodeName(r))
+							return nil, opcua.getStatusCodeName(r)
+						end
+					end
+				end
+			end
 		end,
-		on_ctrl = function(...)
+		on_ctrl = function(app, command, param, ...)
 			print(...)
 		end
 	})
@@ -236,6 +247,13 @@ function app:run(tms)
 		--- 设定当前值
 		--print(node.name, dv:asDouble(), now)
 		dev:set_input_prop(node.name, "value", dv:asDouble(), now, 0)
+
+		--[[
+		local r = node.obj:setValue(opcua.Variant.new(10))
+		if r ~= 0 then
+			print(opcua.getStatusCodeName(r))
+		end
+		]]--
 	end
 
 	--- 返回下一次调用run函数的间隔
