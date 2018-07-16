@@ -81,7 +81,7 @@ local function create_input(inputs, nodes, opcua_var)
 		name = opcua_var.id.index,
 		desc = opcua_var:getDescription().text
 	}
-	print("Variable", input.name, input.desc, opcua_var)
+	--print("Variable", input.name, input.desc, opcua_var)
 
 	inputs[#inputs + 1] = input
 	nodes[#nodes + 1] = {
@@ -223,10 +223,10 @@ function app:run(tms)
 	end
 	local dev = self._dev
 
-	print('-----------')
+	--print('-----------')
 	--- 获取节点当前值数据
 	for _, node in pairs(self._nodes) do
-		print(node.name, node.obj)
+		--print(node.name, node.obj)
 		local dv = node.obj:getValue()
 		--[[
 		print(dv, dv:isEmpty(), dv:isScalar())
