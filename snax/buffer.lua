@@ -28,6 +28,7 @@ local max_event_buf_size = 256
 -- UDP Forwarder
 local udp = nil
 local udp_target = nil
+local udp_heartbeat = 0
 
 --[[
 -- Api Handler
@@ -106,27 +107,47 @@ end
 
 local function close_udp()
 	if udp then
+		log.notice("UDP Forward is closing...")
 		socket.close(udp)
 		udp = nil
 		udp_target = nil
+		udp_heartbeat = 0
 	end
 end
 
 function response.start_forward()
 	close_udp()
 	log.notice("UDP Forward is starting...")
-	udp = socket.udp(function(str, from) 
+	local udp_socket = socket.udp(function(str, from)
 		--print(str, from)
 		if str == 'WHOISYOURDADDY' then
 			udp_target = from
+			udp_heartbeat = skynet.time() + 60
 		else
-			socket.sendto(udp, from, str)
+			if str then
+				socket.sendto(udp_socket, from, str)
+			end
 		end
 	end, '0.0.0.0', 7788)
+
+	skynet.fork(function()
+		local udp_ = udp
+		while udp_ == udp do
+			if udp_heartbeat - skynet.time() > 0 then
+				close_udp()
+				break
+			end
+			skynet.sleep(100)
+		end
+	end)
+	udp = upd_socket
+
+	return true
 end
 
 function response.stop_forward()
 	close_udp()
+	return true
 end
 
 function accept.log(ts, lvl, content, ...)
