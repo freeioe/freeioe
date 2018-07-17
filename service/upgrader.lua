@@ -55,6 +55,19 @@ local function install_result(id, result, ...)
 	return result, ...
 end
 
+local function sys_action_result(id, result, ...)
+	if result then
+		log.info(...)
+	else
+		log.error(...)
+	end
+
+	if cloud then
+		cloud.post.action_result("sys", id, result, ...)
+	end
+	return result, ...
+end
+
 function command.upgrade_app(id, args)
 	local inst_name = args.inst
 	local version, beta, editor = parse_version_string(args.version)
@@ -502,7 +515,7 @@ function command.upgrade_core(id, args)
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
 			log.error("Create upgrade_no_ack failed", status, code)
-			return install_result(id, false, "Failed to create upgrade_no_ack file!")
+			return sys_action_result(id, false, "Failed to create upgrade_no_ack file!")
 		end
 	end
 
@@ -511,14 +524,14 @@ function command.upgrade_core(id, args)
 			if skynet_args then
 				download_upgrade_skynet(id, skynet_args, function(path) 
 					local r, err = start_upgrade_proc(info, path) 
-					return install_result(id, r, err)
+					return sys_action_result(id, r, err)
 				end)
 			else
 				local r, err = start_upgrade_proc(info)
-				return install_result(id, r, err)
+				return sys_action_result(id, r, err)
 			end
 		else
-			return install_result(id, false, "Failed to download core system. Error: "..info)
+			return sys_action_result(id, false, "Failed to download core system. Error: "..info)
 		end
 	end, ".tar.gz")
 end
@@ -529,10 +542,10 @@ function command.upgrade_core_ack(id, args)
 	local upgrade_ack_sh = base_dir.."/ipt/upgrade_ack.sh"
 	local r, status, code = os.execute("sh "..upgrade_ack_sh)
 	if not r then
-		return install_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
+		return sys_action_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
 	end
 	rollback_time = nil
-	return install_result(id, true, "System upgradation ACK is done")
+	return sys_action_result(id, true, "System upgradation ACK is done")
 end
 
 function command.rollback_time()

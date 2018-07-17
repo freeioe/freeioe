@@ -133,26 +133,31 @@ local msg_handler = {
 		local action = args.action or topic
 
 		if action == 'enable/data' then
-			snax.self().post.enable_data(tonumber(args.data) == 1)
+			snax.self().post.enable_data(args.id, tonumber(args.data) == 1)
+		end
+		if action == 'enable/data/cov' then
+			snax.self().post.enable_data_cov(args.id, tonumber(args.data) == 1)
+		end
+		if action == 'enable/data/upload_peroid' then
+			snax.self().post.enable_data_upload_period(args.id, tonumber(args.data))
 		end
 		if action == 'enable/stat' then
-			snax.self().post.enable_stat(tonumber(args.data) == 1)
+			snax.self().post.enable_stat(args.id, tonumber(args.data) == 1)
 		end
 		if action == 'enable/log' then
-			snax.self().post.enable_log(tonumber(args.data))
+			snax.self().post.enable_log(args.id, tonumber(args.data))
 		end
 		if action == 'enable/comm' then
-			snax.self().post.enable_comm(tonumber(args.data))
+			snax.self().post.enable_comm(args.id, tonumber(args.data))
 		end
 		if action == 'enable/beta' then
-			snax.self().post.enable_beta(tonumber(args.data) == 1)
+			snax.self().post.enable_beta(args.id, tonumber(args.data) == 1)
 		end
 		if action == 'enable/event' then
-			snax.self().post.enable_event(tonumber(args.data))
+			snax.self().post.enable_event(args.id, tonumber(args.data))
 		end
 		if action == 'conf' then
-			local conf = args.data
-			snax.self().post.set_conf(conf)
+			snax.self().post.set_conf(args.id, args.data)
 		end
 		if action == 'upgrade' then
 			snax.self().post.sys_upgrade(args.id, args.data)
@@ -330,7 +335,7 @@ local function load_pb_conf()
 		return
 	end
 
-	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 0)-- period in seconds
+	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 0)-- period in ms 
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
 		cov_min_timer_gap = math.floor(period / 10)
@@ -627,12 +632,7 @@ function response.get_status()
 	return mqtt_client ~= nil, mqtt_client_last
 end
 
-function accept.enable_cov(enable)
-	datacenter.set("CLOUD", "COV", enable)
-	load_cov_conf()
-end
-
-function accept.enable_data(enable)
+function accept.enable_data(id, enable)
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
 	if not enable then
@@ -641,14 +641,27 @@ function accept.enable_data(enable)
 		end
 		log.debug("Cloud data upload disabled!", enable)
 	end
+	snax.self().post.action_result('sys', id, true, "Done")
 end
 
-function accept.enable_stat(enable)
+function accept.enable_data_cov(id, enable)
+	datacenter.set("CLOUD", "COV", enable)
+	--load_cov_conf()
+	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
+end
+
+function accept.enable_data_upload_period(id, period)
+	datacenter.set("CLOUD", "DATA_UPLOAD_PERIOD", period)-- period in ms
+	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
+end
+
+function accept.enable_stat(id, enable)
 	enable_stat_upload = enable
 	datacenter.set("CLOUD", "STAT_UPLOAD", enable)
+	snax.self().post.action_result('sys', id, true, "Done")
 end
 
-function accept.enable_log(sec)
+function accept.enable_log(id, sec)
 	local sec = tonumber(sec)
 	if sec and sec > 0 and sec < max_enable_log_upload then
 		enable_log_upload = math.floor(skynet.time()) + sec
@@ -656,9 +669,10 @@ function accept.enable_log(sec)
 		enable_log_upload = nil
 	end
 	datacenter.set("CLOUD", "LOG_UPLOAD", enable_log_upload)
+	snax.self().post.action_result('sys', id, true, "Done")
 end
 
-function accept.enable_comm(sec)
+function accept.enable_comm(id, sec)
 	local sec = tonumber(sec)
 	if sec and sec > 0 and sec < max_enable_comm_upload then
 		enable_comm_upload = math.floor(skynet.time()) + sec
@@ -666,9 +680,10 @@ function accept.enable_comm(sec)
 		enable_comm_upload = nil
 	end
 	datacenter.set("CLOUD", "COMM_UPLOAD", enable_comm_upload)
+	snax.self().post.action_result('sys', id, true, "Done")
 end
 
-function accept.enable_beta(enable)
+function accept.enable_beta(id, enable)
 	if not enable then
 		datacenter.set('CLOUD', 'USING_BETA', false)
 	else
@@ -678,13 +693,17 @@ function accept.enable_beta(enable)
 			datacenter.set('CLOUD', 'USING_BETA', true)
 		else
 			log.warning("Cannot enable beta", err)
+			snax.self().post.action_result('sys', id, false, err)
+			return
 		end
 	end
+	snax.self().post.action_result('sys', id, true, "Done")
 end
 
-function accept.enable_event(level)
+function accept.enable_event(id, level)
 	enable_event_upload = level
 	datacenter.set('CLOUD', 'EVENT_UPLOAD', enable_event_upload)
+	snax.self().post.action_result('sys', id, true, "Done")
 end
 
 ---
