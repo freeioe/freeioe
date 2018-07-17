@@ -27,7 +27,9 @@ end
 -- 检测连接可用性
 function app:is_connected()
 	if self._client then
-		return true
+		return 0 ~= self._client:getState()
+	else
+		return false
 	end
 end
 
@@ -153,12 +155,13 @@ function app:connect_proc()
 	--local username = self._conf.username or "user1"
 	--local password = self._conf.password or "password"
 	--local r, err = client:connect_username(username, password)
-	local r, err = client:connect()
-	if r then
+	local ret = client:connect()
+	if ret == 0 then
 		self._log:notice("OPC Client connect successfully!", self._sys:time())
 		self._connect_retry = 2000
 		self:on_connected(client)
 	else
+		local err = opcua.getStatusCodeName(ret)
 		self._log:error("OPC Client connect failure!", err, self._sys:time())
 		self:on_disconnect()
 	end
@@ -190,7 +193,8 @@ function app:start()
 			for _, node in pairs(self._nodes) do
 				if node.name == output then
 					if prop == 'value' then
-						local r = node.obj:setValue(opcua.Variant.new(value))
+						local val = opcua.Variant.new(value * 1.0)
+						local r = node.obj:setValue(val)
 						if r ~= 0 then
 							self._log:error("Failed to write value", opcua.getStatusCodeName(r))
 							return nil, opcua.getStatusCodeName(r)
@@ -237,6 +241,12 @@ function app:run(tms)
 	end
 	local dev = self._dev
 
+	if 0 == self._client:getState() then
+		self._sys:fork(function() self:connect_proc() end)
+		self._client = nil
+		return
+	end
+
 	--print('-----------')
 	--- 获取节点当前值数据
 	for _, node in pairs(self._nodes) do
@@ -253,11 +263,13 @@ function app:run(tms)
 
 		--[[
 		--- Test write value
-		local r = node.obj:setValue(opcua.Variant.new(10))
+		local value = 10
+		local val = opcua.Variant.new(value * 1.0)
+		local r = node.obj:setValue(val)
 		if r ~= 0 then
 			self._log:debug("Failed to write value", opcua.getStatusCodeName(r))
 		else
-			self._log.debug("Write Value OK!!!!!!!")
+			self._log:debug("Write Value OK!!!!!!!")
 		end
 		]]--
 	end
