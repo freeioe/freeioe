@@ -192,13 +192,22 @@ function app:start()
 			self._log:warning("Write value to symlink", output, prop, value)
 			for _, node in pairs(self._nodes) do
 				if node.name == output then
-					if prop == 'value' then
-						local val = opcua.Variant.new(value * 1.0)
-						local r = node.obj:setValue(val)
-						if r ~= 0 then
-							self._log:error("Failed to write value", opcua.getStatusCodeName(r))
-							return nil, opcua.getStatusCodeName(r)
+					local val = nil
+					if type(value) == 'number' then
+						if prop == 'int_value' then
+							val = opcua.Variant.int32(value)
+						else
+							val = opcua.Variant.new(value * 1.0)
 						end
+					else
+						-- boolean, string
+						val = opcua.Variant.new(value)
+					end
+
+					local r = node.obj:setValue(val)
+					if r ~= 0 then
+						self._log:error("Failed to write value", opcua.getStatusCodeName(r))
+						return nil, opcua.getStatusCodeName(r)
 					end
 				end
 			end
