@@ -5,7 +5,10 @@ local sysinfo = require 'utils.sysinfo'
 local gcom = require 'utils.gcom'
 local leds = require 'utils.leds'
 local event = require 'app.event'
+local sum = require 'summation'
+-- own libs
 local disk = require 'disk'
+local netinfo = require 'netinfo'
 
 local app = class("FREEIOE_SYS_APP_CLASS")
 app.API_VER = 1
@@ -123,7 +126,7 @@ function app:start()
 	}
 	local sys_id = self._sys:hw_id()
 	local id = self._sys:id()
-	if string.sub(sys_id, 1, 8) == '2-30002-' then
+	if true or string.sub(sys_id, 1, 8) == '2-30002-' then
 		self._gcom = true
 		local gcom_inputs = {
 			{
@@ -140,13 +143,31 @@ function app:start()
 				name = 'cpsi',
 				desc = 'GPRS/LTE work mode and so on',
 				vt = "string",
-			}
+			},
+			{
+				name = 'wan_s',
+				desc = 'GPRS/LET network send bytes',
+				vt = 'int',
+			},
+			{
+				name = 'wan_r',
+				desc = 'GPRS/LET network receive bytes',
+				vt = 'int',
+			},
 		}
 
 		for _,v in ipairs(gcom_inputs) do
 			inputs[#inputs + 1] = v
 		end
+		self._wan_sum = sum:new({
+			file = true,
+			save_span = 60 * 5, -- five minutes
+			key = 'wan',
+			span = 'hour',
+			path = '/tmp',
+		})
 	end
+
 	-- for apps
 	local apps = datacenter.get("APPS")
 	for k, v in pairs(apps) do
@@ -222,80 +243,108 @@ function app:cfg_crash_ack()
 	return true
 end
 
-function app:run(tms)
-	if not self._start_time then
-		self._start_time = self._sys:start_time()
-		local v, gv = sysinfo.version()
-		self._log:notice("System Version:", v, gv)
-		local sv, sgv = sysinfo.skynet_version()
-		self._log:notice("Skynet Platform Version:", sv, sgv)
-		local plat = sysinfo.platform() or "unknown"
+function app:first_run()
+	self._start_time = self._sys:start_time()
+	local v, gv = sysinfo.version()
+	self._log:notice("System Version:", v, gv)
+	local sv, sgv = sysinfo.skynet_version()
+	self._log:notice("Skynet Platform Version:", sv, sgv)
+	local plat = sysinfo.platform() or "unknown"
 
-		self._dev:set_input_prop('starttime', "value", self._start_time)
-		self._dev:set_input_prop('version', "value", v)
-		self._dev:set_input_prop('version', "git_version", gv)
-		self._dev:set_input_prop('skynet_version', "value", sv)
-		self._dev:set_input_prop('skynet_version', "git_version", sgv)
-		self._dev:set_input_prop('platform', "value", plat)
+	self._dev:set_input_prop('starttime', "value", self._start_time)
+	self._dev:set_input_prop('version', "value", v)
+	self._dev:set_input_prop('version', "git_version", gv)
+	self._dev:set_input_prop('skynet_version', "value", sv)
+	self._dev:set_input_prop('skynet_version', "git_version", sgv)
+	self._dev:set_input_prop('platform', "value", plat)
 
 
-		--- Calculate uptime for earch 60 seconds
-		local calc_tmp_disk = nil
-		local tmp_disk_frep = self._conf.tmp_disk_frep or (1000 * 60)
-		calc_tmp_disk = function()
-			self._dev:set_input_prop('uptime', "value", self._sys:now())
+	--- Calculate uptime for earch 60 seconds
+	local calc_tmp_disk = nil
+	local tmp_disk_frep = self._conf.tmp_disk_frep or (1000 * 60)
+	calc_tmp_disk = function()
+		self._dev:set_input_prop('uptime', "value", self._sys:now())
 
-			-- temp disk usage
-			local r, err = disk.df('/tmp')
-			if r then
-				self._dev:set_input_prop('disk_tmp_used', 'value', r.used_percent)
+		-- temp disk usage
+		local r, err = disk.df('/tmp')
+		if r then
+			self._dev:set_input_prop('disk_tmp_used', 'value', r.used_percent)
 
-				-- Check used percent limitation
-				if not self._tmp_event_fired and r.used_percent > 98 then
-					local info = "/tmp disk is nearly full!!!"
-					self._log:error(info)
-					self._dev:fire_event(event.LEVEL_ERROR, event.EVENT_SYS, info, r)
-					self._tmp_event_fired = true
-				end
+			-- Check used percent limitation
+			if not self._tmp_event_fired and r.used_percent > 98 then
+				local info = "/tmp disk is nearly full!!!"
+				self._log:error(info)
+				self._dev:fire_event(event.LEVEL_ERROR, event.EVENT_SYS, info, r)
+				self._tmp_event_fired = true
 			end
+		end
+
+		-- Reset timer
+		self._cancel_timers['tmp_disk'] = self._sys:cancelable_timeout(tmp_disk_frep, calc_tmp_disk)
+	end
+	calc_tmp_disk()
+
+	if self._gcom then
+		local calc_gcom = nil
+		local gcom_frep = self._conf.gcom_frep or (1000 * 60)
+		calc_gcom = function()
+			local ccid, err = gcom.get_ccid()
+			if ccid then
+				self._dev:set_input_prop('ccid', "value", ccid)
+			end
+			local csq, err = gcom.get_csq()
+			if csq then
+				self._dev:set_input_prop('csq', "value", tonumber(csq))
+			end
+			local cpsi, err = gcom.get_cpsi()
+			if cpsi then
+				self._dev:set_input_prop('cpsi', "value", cpsi)
+			end
+			self._dev:set_input_prop('wan_r', "value", self._wan_sum:get('recv'))
+			self._dev:set_input_prop('wan_s', "value", self._wan_sum:get('send'))
 
 			-- Reset timer
-			self._cancel_timers['tmp_disk'] = self._sys:cancelable_timeout(tmp_disk_frep, calc_tmp_disk)
+			self._cancel_timers['gcom'] = self._sys:cancelable_timeout(gcom_frep, calc_gcom)
 		end
-		calc_tmp_disk()
+		calc_gcom()
+	end
 
-		if self._gcom then
-			local calc_gcom = nil
-			local gcom_frep = self._conf.gcom_frep or (1000 * 60 * 5)
-			calc_gcom = function()
-				local ccid, err = gcom.get_ccid()
-				if ccid then
-					self._dev:set_input_prop('ccid', "value", ccid)
-				end
-				local csq, err = gcom.get_csq()
-				if csq then
-					self._dev:set_input_prop('csq', "value", tonumber(csq))
-				end
-				local cpsi, err = gcom.get_cpsi()
-				if cpsi then
-					self._dev:set_input_prop('cpsi', "value", cpsi)
-				end
+	self._sys:timeout(100, function()
+		self._log:debug("Fire system started event")
+		local sys_id = self._sys:id()
+		self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
+	end)
 
-				-- Reset timer
-				self._cancel_timers['gcom'] = self._sys:cancelable_timeout(gcom_frep, calc_gcom)
-			end
-			calc_gcom()
+	self._sys:timeout(100, function()
+		self:cfg_crash_check()
+	end)
+end
+
+function app:check_time_diff()
+	if math.abs(os.time() - self._sys:time()) > 2 then
+		self._log:error("Time diff found, system will be rebooted in five seconds. ", os.time(), self._sys:time())
+		self._dev:fire_event(event.LEVEL_FATAL, event.EVENT_SYS, "Time diff found!", {os_time = os.time(), time=self._sys:time()}, os.time())
+		self._sys:timeout(500, function()
+			self._sys:abort()
+		end)
+	else
+		--print(os.time() - self._sys:time())
+	end
+end
+
+function app:run(tms)
+	if not self._start_time then
+		self:first_run()
+	end
+	self:check_time_diff()
+
+	--- For wan statistics
+	if self._gcom then
+		local info, err = netinfo.proc_net_dev('lo')
+		if info and #info == 16 then
+			self._wan_sum:set('recv', math.floor(info[1] / 1000))
+			self._wan_sum:set('send', math.floor(info[9] / 1000))
 		end
-
-		self._sys:timeout(100, function()
-			self._log:debug("Fire system started event")
-			local sys_id = self._sys:id()
-			self._dev:fire_event(event.LEVEL_INFO, event.EVENT_SYS, "System Started!", {sn=sys_id})
-		end)
-
-		self._sys:timeout(100, function()
-			self:cfg_crash_check()
-		end)
 	end
 
 	local loadavg = sysinfo.loadavg()
@@ -327,16 +376,6 @@ function app:run(tms)
 	self._dev:set_input_prop('comm_upload', 'value', enable_comm_upload or 0)
 	self._dev:set_input_prop('log_upload', 'value', enable_log_upload or 0)
 	self._dev:set_input_prop('enable_beta', 'value', enable_beta and 1 or 0)
-
-	if math.abs(os.time() - self._sys:time()) > 2 then
-		self._log:error("Time diff found, system will be rebooted in five seconds. ", os.time(), self._sys:time())
-		self._dev:fire_event(event.LEVEL_FATAL, event.EVENT_SYS, "Time diff found!", {os_time = os.time(), time=self._sys:time()}, os.time())
-		self._sys:timeout(500, function()
-			self._sys:abort()
-		end)
-	else
-		--print(os.time() - self._sys:time())
-	end
 
 	-- Cloud LED
 	if leds.cloud then
@@ -376,6 +415,7 @@ function app:run(tms)
 		end
 	end
 
+	--- five seconds
 	return 1000 * 5
 end
 
