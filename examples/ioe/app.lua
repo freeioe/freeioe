@@ -197,9 +197,9 @@ function app:start()
 	}
 
 	local meta = self._api:default_meta()
-	meta.name = "BambooShoots IOE"
-	meta.description = "BambooShoots IOE Device"
-	meta.series = "Q102" -- TODO:
+	meta.name = "ThingsLink"
+	meta.description = "ThingsLink IOE Device"
+	meta.series = "FreeIOE" -- TODO:
 	self._dev = self._api:add_device(id, meta, inputs, nil, cmds)
 
 	if leds.cloud then
