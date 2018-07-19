@@ -56,7 +56,7 @@ function sum:__gc()
 	self:save()
 end
 
-function sun:check_save()
+function sum:check_save()
 	local now = os.time()
 	if now - self._last_save >= self._opt.save_span then
 		self:save()

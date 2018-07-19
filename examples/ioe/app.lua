@@ -163,7 +163,7 @@ function app:start()
 			file = true,
 			save_span = 60 * 5, -- five minutes
 			key = 'wan',
-			span = 'hour'
+			span = 'hour', -- 'month',
 			path = '/root',
 		})
 	end
