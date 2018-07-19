@@ -3,7 +3,7 @@ local class = require 'middleclass'
 local opcua = require 'opcua'
 
 --- 注册对象(请尽量使用唯一的标识字符串)
-local app = class("FREEIOE_OPCUA_CLIENT_APP")
+local app = class("FREEIOE_SYMLINK_OPCUA_APP")
 --- 设定应用最小运行接口版本(目前版本为1,为了以后的接口兼容性)
 app.API_VER = 1
 
