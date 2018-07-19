@@ -348,13 +348,10 @@ function app:run(tms)
 
 	--- For wan statistics
 	if self._gcom then
-		local info, err = netinfo.proc_net_dev('lo')
+		local info, err = netinfo.proc_net_dev('3g-wan')
 		if info and #info == 16 then
 			self._wan_sum:set('recv', math.floor(info[1] / 1000))
 			self._wan_sum:set('send', math.floor(info[9] / 1000))
-
-			self._dev:set_input_prop('wan_r', "value", self._wan_sum:get('recv'))
-			self._dev:set_input_prop('wan_s', "value", self._wan_sum:get('send'))
 		end
 	end
 
