@@ -146,12 +146,12 @@ function app:start()
 			},
 			{
 				name = 'wan_s',
-				desc = 'GPRS/LET network send bytes',
+				desc = 'GPRS/LET network send bytes (kB)',
 				vt = 'int',
 			},
 			{
 				name = 'wan_r',
-				desc = 'GPRS/LET network receive bytes',
+				desc = 'GPRS/LET network receive bytes (kB)',
 				vt = 'int',
 			},
 		}
