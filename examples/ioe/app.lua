@@ -126,7 +126,7 @@ function app:start()
 	}
 	local sys_id = self._sys:hw_id()
 	local id = self._sys:id()
-	if true or string.sub(sys_id, 1, 8) == '2-30002-' then
+	if string.sub(sys_id, 1, 8) == '2-30002-' then
 		self._gcom = true
 		local gcom_inputs = {
 			{
@@ -163,8 +163,8 @@ function app:start()
 			file = true,
 			save_span = 60 * 5, -- five minutes
 			key = 'wan',
-			span = 'hour',
-			path = '/tmp',
+			span = 'hour'
+			path = '/root',
 		})
 	end
 
@@ -300,8 +300,16 @@ function app:first_run()
 			if cpsi then
 				self._dev:set_input_prop('cpsi', "value", cpsi)
 			end
-			self._dev:set_input_prop('wan_r', "value", self._wan_sum:get('recv'))
-			self._dev:set_input_prop('wan_s', "value", self._wan_sum:get('send'))
+
+			local wan_r = (self._wan_sum:get('recv'))
+			if wan_r ~= 0 then
+				self._dev:set_input_prop('wan_r', "value", wan_r)
+			end
+
+			local wan_s = (self._wan_sum:get('send'))
+			if wan_s ~= 0 then
+				self._dev:set_input_prop('wan_s', "value", wan_s)
+			end
 
 			-- Reset timer
 			self._cancel_timers['gcom'] = self._sys:cancelable_timeout(gcom_frep, calc_gcom)
@@ -344,6 +352,9 @@ function app:run(tms)
 		if info and #info == 16 then
 			self._wan_sum:set('recv', math.floor(info[1] / 1000))
 			self._wan_sum:set('send', math.floor(info[9] / 1000))
+
+			self._dev:set_input_prop('wan_r', "value", self._wan_sum:get('recv'))
+			self._dev:set_input_prop('wan_s', "value", self._wan_sum:get('send'))
 		end
 	end
 
