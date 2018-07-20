@@ -85,8 +85,8 @@ function app:start()
 				return false, 'device sn incorrect'
 			end
 
-			-- command: start, stop, restart
-			local commands = { start = 1, stop = 1, restart = 1 }
+			-- command: refresh 
+			local commands = { refresh = 1, }
 			local f = commands[command]
 			if f then
 				self._sys:post('command', command)
@@ -128,16 +128,8 @@ function app:start()
 	}
 	local cmds = {
 		{
-			name = "start",
-			desc = "start frpc process",
-		},
-		{
-			name = "stop",
-			desc = "stop frpc process",
-		},
-		{
-			name = "restart",
-			desc = "restart frpc process",
+			name = "refresh",
+			desc = "Force uploading NTP/NETWORK information",
 		},
 	}
 
@@ -192,7 +184,10 @@ end
 
 
 function app:on_post_command(action, force)
-	--- TODO:
+	if action == 'refresh' then
+		self:read_ntp()
+		self:read_network_lan()
+	end
 end
 
 return app
