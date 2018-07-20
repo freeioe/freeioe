@@ -28,7 +28,7 @@ local function calc_save_time(now, save_span)
 	return save_time
 end
 
-function sum::migrate_from_v1(opt)
+function sum:migrate_from_v1(opt)
 	local path = (opt.path or '/var/run')..'/ioe_sum_'
 	local filename = path..opt.key..'_'..opt.span
 
