@@ -285,6 +285,7 @@ function app:first_run()
 	calc_tmp_disk()
 
 	if self._gcom then
+		self:read_wan_sr()
 		local calc_gcom = nil
 		local gcom_frep = self._conf.gcom_frep or (1000 * 60)
 		calc_gcom = function()
@@ -301,15 +302,8 @@ function app:first_run()
 				self._dev:set_input_prop('cpsi', "value", cpsi)
 			end
 
-			local wan_r = (self._wan_sum:get('recv'))
-			if wan_r ~= 0 then
-				self._dev:set_input_prop('wan_r', "value", wan_r)
-			end
-
-			local wan_s = (self._wan_sum:get('send'))
-			if wan_s ~= 0 then
-				self._dev:set_input_prop('wan_s', "value", wan_s)
-			end
+			self._dev:set_input_prop('wan_r', "value", self._wan_sum:get('recv'))
+			self._dev:set_input_prop('wan_s', "value", self._wan_sum:get('send'))
 
 			-- Reset timer
 			self._cancel_timers['gcom'] = self._sys:cancelable_timeout(gcom_frep, calc_gcom)
@@ -340,13 +334,8 @@ function app:check_time_diff()
 	end
 end
 
-function app:run(tms)
-	if not self._start_time then
-		self:first_run()
-	end
-	self:check_time_diff()
-
-	--- For wan statistics
+--- For wan statistics
+function app:read_wan_sr()
 	if self._gcom then
 		local info, err = netinfo.proc_net_dev('3g-wan')
 		if info and #info == 16 then
@@ -354,6 +343,14 @@ function app:run(tms)
 			self._wan_sum:set('send', math.floor(info[9] / 1000))
 		end
 	end
+end
+
+function app:run(tms)
+	if not self._start_time then
+		self:first_run()
+	end
+	self:check_time_diff()
+	self:read_wan_sr()
 
 	local loadavg = sysinfo.loadavg()
 	self._dev:set_input_prop('cpuload', "value", tonumber(loadavg.lavg_15))

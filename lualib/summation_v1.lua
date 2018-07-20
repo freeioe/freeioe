@@ -25,38 +25,15 @@ end
 local function calc_save_time(now, save_span)
 	assert(now and save_span)
 	local save_time = math.floor(math.floor(now / save_span) * save_span)
+	--print('calc_save_time', now, save_time)
 	return save_time
-end
-
-function sum::migrate_from_v1(opt)
-	local path = (opt.path or '/var/run')..'/ioe_sum_'
-	local filename = path..opt.key..'_'..opt.span
-
-	local f, err = io.open(filename, 'r')
-	if f then
-		local str = f:read('*a')
-		local value = cjson.decode(str)
-		f:close()
-
-		local new_value = {}
-		for k, v in pairs(value) do
-			if string.sub(k, 1, 2) ~= '__' then
-				new_value[k] = {
-					base = value['__'..k],
-					value = v,
-					delta = 0
-				}
-			end
-		end
-		return new_value
-	end
 end
 
 function sum:initialize(opt)
 	self._value = {}
 	if opt.file then
 		--- loading from file
-		local path = (opt.path or '/var/run')..'/ioe_sum_v2_'
+		local path = (opt.path or '/var/run')..'/ioe_sum_'
 		local filename = path..opt.key..'_'..opt.span
 		self._span_key = assert(get_span_key(opt.span))
 		self._filename = filename 
@@ -66,10 +43,10 @@ function sum:initialize(opt)
 		local f, err = io.open(filename, 'r')
 		if f then
 			local str = f:read('*a')
+			--print("CC:LOAD", str)
 			self._value = cjson.decode(str)
+			--print("CC:LOAD", str, cjson.encode(self._value))
 			f:close()
-		else
-			self._value = self:migrate_from_v1(opt) or {}
 		end
 	end
 	self._opt = opt
@@ -90,44 +67,64 @@ end
 function sum:add(key, value)
 	self:check_save()
 
-	local val = self._value[key] or { base = 0, value = 0, delta = 0 }
-	val.value = val.value + value
+	local org = self._value[key] or 0
+	self._value[key] = org  + value
 
-	self._value[key] = val
+	-- Reset __value
+	self._value['__'..key] = nil
 end
 
 function sum:set(key, value)
 	self:check_save()
 
-	local val = self._value[key] or { base = 0, value = 0, delta = 0 }
+	local org = self._value[key] or 0
+	local __value = self._value['__'..key]
+	--print("CC:SET", key, value, org, __value)
 
-	if value >= val.value then
-		val.value = value
+	if value >= org then
+		if __value and value <  __value + org then
+			--print("1 CC:Reset __Value", key, value, org, __value)
+			self._value['__'..key] = nil
+			__value = nil
+		end
+		--- 值持续增加中
+		if __value and value >= __value + org then
+			value = value - __value
+		end
+		self._value[key] = value
 	else
-		val.base = 0
-		val.delta = val.delta + val.value
-		val.value = value
+		--- 值被重置了
+		if __value and value < __value + org then
+			--print("2 CC:Reset __Value", key, value, org, __value)
+			self._value['__'..key] = nil
+		end
+		self._value[key] = org + value
 	end
-
-	self._value[key] = val
 end
 
 function sum:get(key)
-	local val = self._value[key] or { base = 0, value = 0, delta = 0 }
-	return val.value - val.base + val.delta
+	return self._value[key] or 0
 end
 
 function sum:reset()
+	local new_value = {}
 	for k, v in pairs(self._value) do
-		v.base = v.value
-		v.delta = 0
+		if string.sub(k, 1, 2) ~= '__' then
+			local __value = self._value['__'..k] or 0
+			--print('RESET', k, v, __value)
+			new_value['__'..k] = __value + v
+			new_value[k] = 0
+		end
 	end
+	self._value = new_value
+	--print('RESET Result', cjson.encode(new_value))
 end
 
 function sum:save()
 	if not self._filename then
 		return nil, "File open failure!!"
 	end
+	--print("CC:SAVE", cjson.encode(self._value))
 
 	local new_span_key = get_span_key(self._opt.span)
 	local value = self._value
