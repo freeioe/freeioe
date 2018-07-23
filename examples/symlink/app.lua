@@ -74,7 +74,7 @@ end
 ---
 -- 定义需要获取数据的输入项
 local inputs = {
-	{ name = "IoStatus", desc = "SymLink Status"},
+	{ name = "state", desc = "SymLink client connection state"},
 }
 
 local function create_input(inputs, nodes, opcua_var)
@@ -114,7 +114,7 @@ end
 -- 连接成功后的处理函数
 function app:on_connected(client)
 	-- Cleanup nodes buffer
-	self._inputs = {}
+	self._inputs = inputs
 	self._nodes = {}
 	-- Set client object
 	self._client = client
@@ -250,10 +250,13 @@ function app:run(tms)
 	end
 	local dev = self._dev
 
-	if 0 == self._client:getState() then
+	local state = self._client:getState()
+	dev:set_input_prop("client_state", "value", state)
+
+	if 0 == state then
 		self._sys:fork(function() self:connect_proc() end)
 		self._client = nil
-		return
+		return 1000
 	end
 
 	--print('-----------')
