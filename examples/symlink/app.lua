@@ -245,11 +245,12 @@ end
 
 --- 应用运行入口
 function app:run(tms)
+	local dev = self._dev
+
 	if not self._client then
 		dev:set_input_prop("client_state", "value", -1)
 		return 1000
 	end
-	local dev = self._dev
 
 	local state = self._client:getState()
 	dev:set_input_prop("client_state", "value", state)
