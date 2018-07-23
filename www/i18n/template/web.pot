@@ -50,11 +50,11 @@ msgid "Application Document"
 msgstr ""
 
 
-msgid "Application List"
+msgid "Application ID"
 msgstr ""
 
 
-msgid "Application Name"
+msgid "Application List"
 msgstr ""
 
 
@@ -67,6 +67,10 @@ msgstr ""
 
 
 msgid "Application option changed!"
+msgstr ""
+
+
+msgid "Application package must be zip file"
 msgstr ""
 
 
@@ -87,10 +91,6 @@ msgstr ""
 
 
 msgid "CLA"
-msgstr ""
-
-
-msgid "COV"
 msgstr ""
 
 
@@ -127,6 +127,10 @@ msgstr ""
 
 
 msgid "Cloud"
+msgstr ""
+
+
+msgid "Cloud ID"
 msgstr ""
 
 
@@ -222,6 +226,14 @@ msgid "Device Template"
 msgstr ""
 
 
+msgid "Device command fired!"
+msgstr ""
+
+
+msgid "Device output fired!"
+msgstr ""
+
+
 msgid "Device will be reboot after five seconds!"
 msgstr ""
 
@@ -247,6 +259,10 @@ msgstr ""
 
 
 msgid "Enable Cloud Web Mapping"
+msgstr ""
+
+
+msgid "Enable SymLink Connect"
 msgstr ""
 
 
@@ -331,6 +347,10 @@ msgstr ""
 
 
 msgid "FreeIOE System API"
+msgstr ""
+
+
+msgid "FreeIOE device in not in beta mode!"
 msgstr ""
 
 
@@ -506,6 +526,10 @@ msgid "PKG option is changed!"
 msgstr ""
 
 
+msgid "Package File"
+msgstr ""
+
+
 msgid "Password"
 msgstr ""
 
@@ -558,6 +582,10 @@ msgid "Remove Cloud Web Mapping"
 msgstr ""
 
 
+msgid "Remove SymLink Connect"
+msgstr ""
+
+
 msgid "Restart"
 msgstr ""
 
@@ -595,6 +623,26 @@ msgstr ""
 
 
 msgid "Select a file from the tree."
+msgstr ""
+
+
+msgid "Send Command"
+msgstr ""
+
+
+msgid "Send Output"
+msgstr ""
+
+
+msgid "Send command"
+msgstr ""
+
+
+msgid "Send command to device"
+msgstr ""
+
+
+msgid "Send output to device"
 msgstr ""
 
 
@@ -663,6 +711,10 @@ msgstr ""
 
 
 msgid "System Settings"
+msgstr ""
+
+
+msgid "System Time"
 msgstr ""
 
 
@@ -742,11 +794,23 @@ msgid "Upgrade To"
 msgstr ""
 
 
+msgid "Upload"
+msgstr ""
+
+
+msgid "Upload Application"
+msgstr ""
+
+
 msgid "Upload Period"
 msgstr ""
 
 
 msgid "Upload Settings"
+msgstr ""
+
+
+msgid "Upload an new application package"
 msgstr ""
 
 
@@ -787,6 +851,10 @@ msgstr ""
 
 
 msgid "With Skynet"
+msgstr ""
+
+
+msgid "Write output"
 msgstr ""
 
 

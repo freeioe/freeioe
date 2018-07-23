@@ -37,11 +37,11 @@ msgstr "应用调试器"
 msgid "Application Document"
 msgstr "应用文档"
 
+msgid "Application ID"
+msgstr "应用ID"
+
 msgid "Application List"
 msgstr "应用列表"
-
-msgid "Application Name"
-msgstr "应用名称"
 
 msgid "Application configuration changed!"
 msgstr "应用配置已更改!"
@@ -51,6 +51,9 @@ msgstr "应用不存在!实例名:"
 
 msgid "Application option changed!"
 msgstr "应用设定已修改!"
+
+msgid "Application package must be zip file"
+msgstr "应用软件包必须为zip文件"
 
 msgid "Application started!"
 msgstr "应用已启动!"
@@ -66,9 +69,6 @@ msgstr "Beta版本使用警告"
 
 msgid "CLA"
 msgstr ""
-
-msgid "COV"
-msgstr "变化传输"
 
 msgid "COV TTL"
 msgstr "变化传输快照间隔"
@@ -96,6 +96,9 @@ msgstr "检查更新完成！"
 
 msgid "Cloud"
 msgstr "云"
+
+msgid "Cloud ID"
+msgstr "云ID"
 
 msgid "Cloud Settings"
 msgstr "云平台配置"
@@ -166,6 +169,12 @@ msgstr "设备重启"
 msgid "Device Template"
 msgstr "设备模板"
 
+msgid "Device command fired!"
+msgstr "设备命令已发送"
+
+msgid "Device output fired!"
+msgstr "设备输出已发送"
+
 msgid "Device will be reboot after five seconds!"
 msgstr "设备将在5秒钟后重启"
 
@@ -186,6 +195,9 @@ msgstr "文档"
 
 msgid "Enable Cloud Web Mapping"
 msgstr "开启Web映射"
+
+msgid "Enable SymLink Connect"
+msgstr "开启SymLink连接"
 
 msgid "Event List"
 msgstr "事件列表"
@@ -249,6 +261,9 @@ msgstr ""
 
 msgid "FreeIOE System API"
 msgstr "FreeIOE系统接口"
+
+msgid "FreeIOE device in not in beta mode!"
+msgstr "FreeIOE设备并不是Beta模式!"
 
 msgid "FreeIOE is an open source platform for internet of everythings. Please follow us on GitHub!!!"
 msgstr "FreeIOE -- 为万物互联而生的开源平台。敬请关注我们的GitHub账户"
@@ -379,6 +394,9 @@ msgstr "软件包服务器地址"
 msgid "PKG option is changed!"
 msgstr "软件包配置项修改成功"
 
+msgid "Package File"
+msgstr "软件包"
+
 msgid "Password"
 msgstr "密码"
 
@@ -418,6 +436,9 @@ msgstr "记住我"
 msgid "Remove Cloud Web Mapping"
 msgstr "关闭Web映射"
 
+msgid "Remove SymLink Connect"
+msgstr "删除SymLink连接"
+
 msgid "Restart"
 msgstr "重启"
 
@@ -447,6 +468,21 @@ msgstr "脚本正在运行！"
 
 msgid "Select a file from the tree."
 msgstr "从文件树中选择一个文件进行编辑"
+
+msgid "Send Command"
+msgstr "发送指令"
+
+msgid "Send Output"
+msgstr "发送输出"
+
+msgid "Send command"
+msgstr "发送指令"
+
+msgid "Send command to device"
+msgstr "发送设备指令"
+
+msgid "Send output to device"
+msgstr "发送设备输出"
 
 msgid "SerialChannel"
 msgstr "串口通道"
@@ -498,6 +534,9 @@ msgstr "系统控制"
 
 msgid "System Settings"
 msgstr "系统配置"
+
+msgid "System Time"
+msgstr "系统时间"
 
 msgid "System Upgrade"
 msgstr "系统升级"
@@ -556,11 +595,20 @@ msgstr "升级确认"
 msgid "Upgrade To"
 msgstr "升级到"
 
+msgid "Upload"
+msgstr "上传"
+
+msgid "Upload Application"
+msgstr "上传应用"
+
 msgid "Upload Period"
 msgstr "周期上送间隔"
 
 msgid "Upload Settings"
 msgstr "上送配置"
+
+msgid "Upload an new application package"
+msgstr "上传应用包"
 
 msgid "User Documents"
 msgstr "用户文档"
@@ -592,6 +640,9 @@ msgstr "欢迎"
 msgid "With Skynet"
 msgstr "同步升级Skynet"
 
+msgid "Write output"
+msgstr "输出"
+
 msgid "Yes"
 msgstr "是"
 
@@ -603,6 +654,12 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "Application Name"
+#~ msgstr "应用名称"
+
+#~ msgid "COV"
+#~ msgstr "变化传输"
 
 #~ msgid "ms"
 #~ msgstr "毫秒"
