@@ -94,6 +94,7 @@ local function load_cfg(path)
 	local file, err = io.open(path, "r")
 	if not file then
 		dc.set("CLOUD", cfg_defaults())
+		dc.set("APPS", {})
 		return nil, err
 	end
 
@@ -126,8 +127,8 @@ local function load_cfg(path)
 	db = cjson.decode(str) or {}
 
 	db.cloud = set_cfg_defaults(db.cloud)
-	dc.set("CLOUD", db.cloud)
-	dc.set("APPS", db.apps)
+	dc.set("CLOUD", db.cloud or {})
+	dc.set("APPS", db.apps or {})
 
 	local _, csum = get_cfg_str()
 	md5sum = csum or sum
