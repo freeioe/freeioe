@@ -74,7 +74,7 @@ end
 ---
 -- 定义需要获取数据的输入项
 local inputs = {
-	{ name = "state", desc = "SymLink client connection state"},
+	{ name = "client_state", desc = "SymLink client connection state", vt="int"},
 }
 
 local function create_input(inputs, nodes, opcua_var)
