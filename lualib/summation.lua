@@ -55,13 +55,13 @@ end
 function sum:initialize(opt)
 	self._value = {}
 	if opt.file then
+		opt.save_span = opt.save_span or 60 * 5
 		--- loading from file
 		local path = (opt.path or '/var/run')..'/ioe_sum_v2_'
 		local filename = path..opt.key..'_'..opt.span
 		self._span_key = assert(get_span_key(opt.span))
 		self._filename = filename 
 		self._last_save = calc_save_time(os.time(), opt.save_span)
-		opt.save_span = opt.save_span or 60 * 5
 
 		local f, err = io.open(filename, 'r')
 		if f then

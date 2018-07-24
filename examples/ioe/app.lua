@@ -163,8 +163,8 @@ function app:start()
 			file = true,
 			save_span = 60 * 5, -- five minutes
 			key = 'wan',
-			span = 'hour', -- 'month',
-			path = '/root',
+			span = 'month',
+			path = '/root', -- Q102's data/cache partition
 		})
 	end
 
