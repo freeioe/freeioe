@@ -177,6 +177,9 @@ local msg_handler = {
 		if action == 'batch_script' then
 			snax.self().post.batch_script(args.id, args.data)
 		end
+		if action == 'restart' then
+			snax.self().post.sys_quit(args.id, args.data)
+		end
 		if action == 'reboot' then
 			snax.self().post.sys_reboot(args.id, args.data)
 		end
