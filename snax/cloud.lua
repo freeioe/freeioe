@@ -985,11 +985,11 @@ function accept.batch_script(id, script)
 end
 
 function accept.sys_quit(id, args)
-	skynet.call("UPGRADER", "lua", "system_quit", id, args)
+	skynet.call("UPGRADER", "lua", "system_quit", id, {})
 end
 
 function accept.sys_reboot(id, args)
-	skynet.call("UPGRADER", "lua", "system_reboot", id, args)
+	skynet.call("UPGRADER", "lua", "system_reboot", id, {})
 end
 
 function accept.output_to_device(id, info)
