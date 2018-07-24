@@ -86,7 +86,7 @@ function app:start()
 			end
 
 			-- command: refresh 
-			local commands = { refresh = 1, }
+			local commands = { refresh = 1, ntp_reload = 1, network_reload = 1, reload = 1}
 			local f = commands[command]
 			if f then
 				self._sys:post('command', command)
@@ -130,6 +130,14 @@ function app:start()
 		{
 			name = "refresh",
 			desc = "Force uploading NTP/NETWORK information",
+		},
+		{
+			name = "ntp_reload",
+			desc = "Force NTP service reload configurations",
+		},
+		{
+			name = "network_reload",
+			desc = "Force NETWORK service reload configurations",
 		},
 	}
 
@@ -186,6 +194,16 @@ end
 function app:on_post_command(action, force)
 	if action == 'refresh' then
 		self:read_ntp()
+		self:read_network_lan()
+	end
+	if action == 'ntp_reload' then
+		local info, err = sysinfo.exec('/ect/init.d/sysntpd reload')
+		log.info('ntp_reload result', info, err)
+		self:read_ntp()
+	end
+	if action == 'network_reload' then
+		local info, err = sysinfo.exec('/ect/init.d/network reload')
+		log.info('network_reload result', info, err)
 		self:read_network_lan()
 	end
 end
