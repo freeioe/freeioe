@@ -86,7 +86,7 @@ local msg_handler = {
 		--log.trace('MSG.DATA', topic, data, qos, retained)
 	end,
 	app = function(topic, data, qos, retained)
-		--log.trace('MSG.APP', topic, data, qos, retained)
+		log.info('MSG.APP', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -128,7 +128,7 @@ local msg_handler = {
 		end
 	end,
 	sys = function(topic, data, qos, retained)
-		--log.trace('MSG.SYS', topic, data, qos, retained)
+		log.info('MSG.SYS', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -210,6 +210,7 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 	log.notice("msg_callback", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
+		log.error("msg_callback recevied incorrect topic message")
 		return
 	end
 	if id and t then
@@ -219,6 +220,8 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 				sub = string.sub(sub, 2)
 			end
 			f(sub, data, qos, retained)
+		else
+			log.error("msg_callback cannot find handler", id, t)
 		end
 	end
 end
