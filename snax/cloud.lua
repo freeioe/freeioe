@@ -138,6 +138,9 @@ local msg_handler = {
 		if action == 'enable/data/cov' then
 			snax.self().post.enable_data_cov(args.id, tonumber(args.data) == 1)
 		end
+		if action == 'enable/data/cov_ttl' then
+			snax.self().post.enable_data_cov_ttl(args.id, tonumber(args.data) == 1)
+		end
 		if action == 'enable/data/upload_peroid' then
 			snax.self().post.enable_data_upload_period(args.id, tonumber(args.data))
 		end
@@ -646,6 +649,16 @@ end
 
 function accept.enable_data_cov(id, enable)
 	datacenter.set("CLOUD", "COV", enable)
+	--load_cov_conf()
+	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
+end
+
+function accept.enable_data_cov_ttl(id, enable)
+	if enable <= 30 then
+		datacenter.set("CLOUD", "COV_TTL", nil)
+	else
+		datacenter.set("CLOUD", "COV_TTL", enable)
+	end
 	--load_cov_conf()
 	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
 end
