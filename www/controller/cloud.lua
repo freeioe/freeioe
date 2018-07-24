@@ -27,21 +27,22 @@ return {
 		if action == 'enable' then
 			local option = post.option
 			local info = _("Action is accepted")
+			local id = 'from_web'
 			local cloud = snax.uniqueservice('cloud')
 			if option == 'data' then
 				--print(option, post.enable=='true')
-				cloud.post.enable_data(post.enable == 'true')
+				cloud.post.enable_data(id, post.enable == 'true')
 			elseif option == 'stat' then
 				--print(option, post.enable=='true')
-				cloud.post.enable_stat(post.enable == 'true')
+				cloud.post.enable_stat(id, post.enable == 'true')
 			elseif option == 'log' then
 				--print(option, tonumber(post.enable) or 0)
-				cloud.post.enable_log(tonumber(post.enable) or 0)
+				cloud.post.enable_log(id, tonumber(post.enable) or 0)
 			elseif option == 'comm' then
 				--print(option, tonumber(post.enable) or 0)
-				cloud.post.enable_comm(tonumber(post.enable) or 0)
+				cloud.post.enable_comm(id, tonumber(post.enable) or 0)
 			elseif option == 'event' then
-				cloud.post.enable_event(tonumber(post.enable) or -1)
+				cloud.post.enable_event(id, tonumber(post.enable) or -1)
 			else
 				info = _("Action %s is not allowed", option)
 			end
