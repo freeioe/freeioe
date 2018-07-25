@@ -91,15 +91,15 @@ function device:add(inputs, outputs, commands)
 	assert(not self._readonly, "This is not created device")
 	local org_inputs = self._props.inputs
 	for _, v in ipairs(inputs or {}) do
-		org_inputs[#org_inputs] = v
+		org_inputs[#org_inputs + 1] = v
 	end
 	local org_outputs = self._props.outputs
 	for _, v in ipairs(outputs or {}) do
-		org_outputs[#org_outputs] = v
+		org_outputs[#org_outputs + 1] = v
 	end
 	local org_commands = self._props.commands
 	for _, v in ipairs(commands or {}) do
-		org_commands[#org_commands] = v
+		org_commands[#org_commands + 1] = v
 	end
 	self:mod(org_inputs, org_outputs, org_commands)
 end
