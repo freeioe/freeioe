@@ -259,13 +259,10 @@ function app:on_frpc_start()
 	self._start_time = self._sys:time()
 	self._uptime_start = self._sys:now()
 	self._heartbeat_timeout = 0
-	self._dev:set_input_prop('starttime', 'value', self._start_time)
-	self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
 
-	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
-	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
-
-	self._dev:set_input_prop('frpc_visitors', 'value', self._visitors)
+	self:set_run_inputs()
+	self:read_network()
+	self:set_config_inputs()
 
 	local calc_uptime = nil
 	calc_uptime = function()
@@ -280,6 +277,9 @@ function app:on_frpc_start()
 				self._heartbeat_timeout = 0
 			end
 		end
+
+		self:read_network()
+		self:set_config_inputs()
 	end
 	calc_uptime()
 end
@@ -292,6 +292,31 @@ function app:on_frpc_stop()
 		self._uptime_start = nil
 	end
 	self._service:cleanup()
+end
+
+function app:set_run_inputs()
+	self._dev:set_input_prop('starttime', 'value', self._start_time)
+
+	-- for heartbeat stuff
+	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
+	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
+end
+
+function app:set_config_inputs()
+	self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
+	self._dev:set_input_prop('frpc_visitors', 'value', self._visitors)
+end
+
+function app:read_network()
+	local info = sysinfo.network_if('br-lan')
+	if info and info.ipv4 then
+		self._br_lan_ipv4 = info.ipv4
+		self._dev:set_input_prop('br_lan_ipv4', 'value', info.ipv4)
+	end
+	if info and info.ipv6 then
+		self._br_lan_ipv6 = info.ipv6
+		self._dev:set_input_prop('br_lan_ipv6', 'value', info.ipv6)
+	end
 end
 
 function app:run(tms)
@@ -307,19 +332,7 @@ function app:run(tms)
 	local status = self._service:status()
 	self._dev:set_input_prop('frpc_run', 'value', status and 1 or 0)
 
-	-- for heartbeat stuff
-	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
-	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
-
-	local info = sysinfo.network_if('br-lan')
-	if info and info.ipv4 and self._br_lan_ipv4 ~= info.ipv4 then
-		self._br_lan_ipv4 = info.ipv4
-		self._dev:set_input_prop('br_lan_ipv4', 'value', info.ipv4)
-	end
-	if info and info.ipv6 and self._br_lan_ipv6 ~= info.ipv6 then
-		self._br_lan_ipv6 = info.ipv6
-		self._dev:set_input_prop('br_lan_ipv6', 'value', info.ipv6)
-	end
+	self:set_run_inputs()
 
 	return 1000 * 5
 end
