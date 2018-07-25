@@ -247,6 +247,10 @@ end
 
 function app:close(reason)
 	self:on_post_service_ctrl('stop', true)
+	if self._cancel_more_input_timer then
+		self._cancel_more_input_timer()
+		self._cancel_more_input_timer = nil
+	end
 	self._service:remove()
 	--print(self._name, reason)
 end
@@ -266,8 +270,9 @@ function app:on_frpc_start()
 
 	local calc_uptime = nil
 	calc_uptime = function()
-		self._dev:set_input_prop('uptime', 'value', self._sys:now() - self._uptime_start)
 		self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
+
+		self._dev:set_input_prop('uptime', 'value', self._sys:now() - self._uptime_start)
 		if self._conf.enable_heartbeat then
 			if self._sys:time() > (self._heartbeat_timeout + 10) then
 				self._log:warning('Frpc running heartbeat rearched, close frpc')
@@ -327,6 +332,15 @@ function app:run(tms)
 			self:on_post_service_ctrl('start')
 		end
 		self._first_start = true
+
+		local calc_more_inputs = nil
+		calc_more_inputs = function()
+			self._cancel_more_input_timer = self._sys:cancelable_timeout(1000 * 60, calc_more_inputs)
+
+			self:read_network()
+			self:set_config_inputs()
+		end
+		calc_more_inputs()
 	end
 
 	local status = self._service:status()
