@@ -127,11 +127,12 @@ end
 function command.install_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
+	local from_web = args.from_web
 	local version, beta, editor = parse_version_string(args.version)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf
 
-	if (id and id ~= 'from_web') and is_inst_name_reserved(inst_name) then
+	if not from_web and is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
@@ -184,11 +185,12 @@ end
 function command.create_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
+	local from_web = args.from_web
 	local version = 0
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
 	local conf = args.conf or {}
 
-	if (id and id ~= 'from_web') and is_inst_name_reserved(inst_name) then
+	if not from_web and is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
