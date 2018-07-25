@@ -130,7 +130,7 @@ function command.install_app(id, args)
 	local from_web = args.from_web
 	local version, beta, editor = parse_version_string(args.version)
 	local sn = args.sn or cloud.req.gen_sn(inst_name)
-	local conf = args.conf
+	local conf = args.conf or {}
 
 	if not from_web and is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
