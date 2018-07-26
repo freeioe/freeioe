@@ -247,10 +247,6 @@ end
 
 function app:close(reason)
 	self:on_post_service_ctrl('stop', true)
-	if self._cancel_more_input_timer then
-		self._cancel_more_input_timer()
-		self._cancel_more_input_timer = nil
-	end
 	self._service:remove()
 	--print(self._name, reason)
 end
@@ -265,26 +261,11 @@ function app:on_frpc_start()
 	self._heartbeat_timeout = 0
 
 	self:set_run_inputs()
-	self:read_network()
-	self:set_config_inputs()
 
 	local calc_uptime = nil
 	calc_uptime = function()
 		self._cancel_uptime_timer = self._sys:cancelable_timeout(1000 * 60, calc_uptime)
-
 		self._dev:set_input_prop('uptime', 'value', self._sys:now() - self._uptime_start)
-		if self._conf.enable_heartbeat then
-			if self._sys:time() > (self._heartbeat_timeout + 10) then
-				self._log:warning('Frpc running heartbeat rearched, close frpc')
-				self._sys:post('service_ctrl', 'stop')
-				-- Clear heartbeat
-				self._conf.enable_heartbeat = 0
-				self._heartbeat_timeout = 0
-			end
-		end
-
-		self:read_network()
-		self:set_config_inputs()
 	end
 	calc_uptime()
 end
@@ -299,21 +280,22 @@ function app:on_frpc_stop()
 	self._service:cleanup()
 end
 
+function app:check_heartbeat()
+	if self._conf.enable_heartbeat then
+		if self._sys:time() > (self._heartbeat_timeout + 10) then
+			self._log:warning('Frpc running heartbeat rearched, close frpc')
+			self._sys:post('service_ctrl', 'stop')
+			-- Clear heartbeat
+			self._conf.enable_heartbeat = 0
+			self._heartbeat_timeout = 0
+		end
+	end
+end
+
 function app:set_run_inputs()
-	self._dev:set_input_prop('starttime', 'value', self._start_time)
-
-	-- for heartbeat stuff
-	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
-	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
-end
-
-function app:set_config_inputs()
-	self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
-	self._dev:set_input_prop('frpc_visitors', 'value', self._visitors)
-end
-
-function app:read_network()
+	--- br-lan network status
 	local info = sysinfo.network_if('br-lan')
+
 	if info and info.ipv4 then
 		self._br_lan_ipv4 = info.ipv4
 		self._dev:set_input_prop('br_lan_ipv4', 'value', info.ipv4)
@@ -322,6 +304,17 @@ function app:read_network()
 		self._br_lan_ipv6 = info.ipv6
 		self._dev:set_input_prop('br_lan_ipv6', 'value', info.ipv6)
 	end
+
+	--- Starttime
+	self._dev:set_input_prop('starttime', 'value', self._start_time)
+
+	-- for heartbeat stuff
+	self._dev:set_input_prop('enable_heartbeat', 'value', self._conf.enable_heartbeat and 1 or 0)
+	self._dev:set_input_prop('heartbeat_timeout', 'value', self._heartbeat_timeout or 0)
+
+	--- for configurations
+	self._dev:set_input_prop('config', 'value', cjson.encode(self._conf))
+	self._dev:set_input_prop('frpc_visitors', 'value', self._visitors)
 end
 
 function app:run(tms)
@@ -333,20 +326,14 @@ function app:run(tms)
 		end
 		self._first_start = true
 
-		local calc_more_inputs = nil
-		calc_more_inputs = function()
-			self._cancel_more_input_timer = self._sys:cancelable_timeout(1000 * 60, calc_more_inputs)
-
-			self:read_network()
-			self:set_config_inputs()
-		end
-		calc_more_inputs()
 	end
 
 	local status = self._service:status()
 	self._dev:set_input_prop('frpc_run', 'value', status and 1 or 0)
 
 	self:set_run_inputs()
+
+	self:check_heartbeat()
 
 	return 1000 * 5
 end
