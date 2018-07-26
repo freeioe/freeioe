@@ -325,7 +325,6 @@ function app:run(tms)
 			self:on_post_service_ctrl('start')
 		end
 		self._first_start = true
-
 	end
 
 	local status = self._service:status()
@@ -335,7 +334,7 @@ function app:run(tms)
 
 	self:check_heartbeat()
 
-	return 1000 * 5
+	return 1000 * 5 -- five seconds
 end
 
 function app:on_post_service_ctrl(action, force)

@@ -95,6 +95,16 @@ function app:start()
 			vt = "int",
 		},
 		{
+			name = "data_upload_cov",
+			desc = "Upload data COV setting",
+			vt = "int",
+		},
+		{
+			name = "data_upload_cov_ttl",
+			desc = "Upload data COV TTL",
+			vt = "int",
+		},
+		{
 			name = "data_upload_period",
 			desc = "Data upload period",
 			vt = "int",
@@ -369,6 +379,8 @@ function app:run(tms)
 	-- cloud flags
 	--
 	local enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	local data_upload_cov = datacenter.get("CLOUD", "COV") or true
+	local data_upload_cov_ttl = datacenter.get("CLOUD", "COV_TTL") or 60
 	local data_upload_period = datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")
 	local enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	local enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
@@ -376,6 +388,8 @@ function app:run(tms)
 	local enable_beta = datacenter.get('CLOUD', 'USING_BETA')
 
 	self._dev:set_input_prop('data_upload', 'value', enable_data_upload and 1 or 0)
+	self._dev:set_input_prop('data_upload_cov', 'value', data_upload_cov and 1 or 0)
+	self._dev:set_input_prop('data_upload_cov_ttl', 'value', math.floor(data_upload_cov_ttl))
 	self._dev:set_input_prop('data_upload_period', 'value', math.floor(data_upload_period))
 	self._dev:set_input_prop('stat_upload', 'value', enable_stat_upload  and 1 or 0)
 	self._dev:set_input_prop('comm_upload', 'value', enable_comm_upload or 0)
