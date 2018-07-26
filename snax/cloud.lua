@@ -265,6 +265,7 @@ local function mqtt_publish(topic, data, qos, retained)
 end
 
 local function publish_data(key, value, timestamp, quality)
+	--log.trace('publish_data begin', mqtt_client, key, value)
 	if not mqtt_client then
 		return
 	end
@@ -274,6 +275,7 @@ local function publish_data(key, value, timestamp, quality)
 	if not pb then
 		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 	else
+		--log.trace('publish_data turn period buffer')
 		pb:handle(key, timestamp, value, quality)
 	end
 end
@@ -281,6 +283,7 @@ end
 local total_compressed = 0
 local total_uncompressed = 0
 local function publish_data_list(val_list)
+	--log.trace('publish_data_list begin', mqtt_client, #val_list)
 	if not mqtt_client or #val_list == 0 then
 		return
 	end
@@ -295,7 +298,9 @@ local function publish_data_list(val_list)
 		if mqtt_client then
 			total_compressed = total_compressed + bytes_out
 			total_uncompressed = total_uncompressed + bytes_in
-			log.trace('Compressed size '..bytes_out..' Original size '..bytes_in, (total_compressed/total_uncompressed) * 100)
+			local total_rate = (total_compressed/total_uncompressed) * 100
+			local current_rate = (bytes_out/bytes_in) * 100
+			log.trace('Count '..#val_list..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
 			--return true
 			return mqtt_client:publish(mqtt_id.."/data_gz", deflated, 1, false)
 		end

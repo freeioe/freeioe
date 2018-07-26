@@ -4,6 +4,7 @@ local modbus = require 'modbus.init'
 local sm_client = require 'modbus.skynet_client'
 local socketchannel = require 'socketchannel'
 local serialchannel = require 'serialchannel'
+local csv_tpl = require 'csv_tpl'
 
 --- 注册对象(请尽量使用唯一的标识字符串)
 local app = class("XXXX_App")
@@ -35,31 +36,56 @@ function app:start()
 		end,
 	})
 
+	csv_tpl.init(self._sys:app_dir())
+
 	---获取设备序列号和应用配置
 	local sys_id = self._sys:id()
-	local config = self._conf or {
-		channel_type = 'socket'
+	local config = self._conf or {}
+	config.channel_type = config.channel_type or 'socket'
+	config.devs = config.devs or {
+		{ unit = 1, name = 'bms01', sn = 'xxx-xx-1', tpl = 'bms' },
+		{ unit = 2, name = 'bms02', sn = 'xxx-xx-2', tpl = 'bms2' },
 	}
 
-	--- 添加10个采集项
-	local inputs = {}
-	for i = 1, 10 do
-		inputs[#inputs + 1] = { 
-			name='tag'..i,
-			desc='tag'..i..' description',
-		}
+	self._devs = {}
+	for _, v in ipairs(config.devs) do
+		assert(v.sn and v.name and v.unit and v.tpl)
+
+		--- 生成设备的序列号
+		local dev_sn = sys_id.."."..v.sn
+		local tpl, err = csv_tpl.load_tpl(v.tpl)
+		if not tpl then
+			self._log:error("loading csv tpl failed", err)
+		else
+			local meta = self._api:default_meta()
+			meta.name = tpl.meta.name or "Modbus"
+			meta.description = tpl.meta.desc or "Modbus Device"
+			meta.series = tpl.meta.series or "XXX"
+			meta.inst = v.name
+			--- inputs
+			local inputs = {}
+			for _, v in ipairs(tpl.inputs) do
+				inputs[#inputs + 1] = {
+					name = v.name,
+					desc = v.desc,
+					vt = v.vt
+				}
+			end
+			inputs[#inputs + 1] = { name = "status", desc = "设备状态", vt="int"}
+			--- 生成设备对象
+			local dev = self._api:add_device(dev_sn, meta, inputs)
+			--- 生成设备通讯口统计对象
+			local stat = dev:stat('port')
+
+			table.insert(self._devs, {
+				unit = v.unit,
+				dev = dev,
+				tpl = tpl,
+				stat = stat,
+			})
+		end
 	end
 
-	--- 生成设备的序列号
-	local dev_sn = sys_id..".modbus_"..self._name
-	local meta = self._api:default_meta()
-	meta.name = "Modbus"
-	meta.description = "Modbus Device"
-	meta.series = "XXX"
-	--- 生成设备对象
-	local dev = self._api:add_device(dev_sn, meta, inputs)
-	--- 生成设备通讯口统计对象
-	local stat = dev:stat('port')
 	local client = nil
 
 	--- 获取配置
@@ -79,20 +105,7 @@ function app:start()
 		print('serial')
 		client = sm_client(serialchannel, opt, modbus.apdu_rtu, 1)
 	end
-	--- 设定通讯口数据回调
-	client:set_io_cb(function(io, msg)
-		--- 输出通讯报文
-		dev:dump_comm(io, msg)
-		--- 计算统计信息
-		if io == 'IN' then
-			stat:inc('bytes_in', string.len(msg))
-		else
-			stat:inc('bytes_out', string.len(msg))
-		end
-	end)
-	self._client1 = client
-	self._dev1 = dev
-	self._stat1 = stat
+	self._client = client
 
 	return true
 end
@@ -102,39 +115,33 @@ function app:close(reason)
 	print(self._name, reason)
 end
 
---- modbus寄存器数据解析
-function decode_registers(raw, count)
-	local d = modbus.decode
-	local len = d.uint8(raw, 2)
-	assert(len >= count * 2)
-	local regs = {}
-	--- 按照无符号短整数进行解析
-	for i = 0, count - 1 do
-		regs[#regs + 1] = d.uint16(raw, i * 2 + 3)
-	end
-	return regs
-end
-
---- 应用运行入口
-function app:run(tms)
-	local client = self._client1
-	if not client then
-		return
-	end
-
+function app:read_packet(dev, stat, unit, pack)
 	--- 设定读取的起始地址和读取的长度
-	local base_address = 0x00
+	local base_address = pack.saddr or 0x00
 	local req = {
-		func = 0x03, -- 03指令
+		func = tonumber(pack.func) or 0x03, -- 03指令
 		addr = base_address, -- 起始地址
-		len = 10, -- 长度
+		len = pack.len or 10, -- 长度
+		unit = unit or pack.unit
 	}
+
+	--- 设定通讯口数据回调
+	self._client:set_io_cb(function(io, msg)
+		--- 输出通讯报文
+		dev:dump_comm(io, msg)
+		--- 计算统计信息
+		if io == 'IN' then
+			stat:inc('bytes_in', string.len(msg))
+		else
+			stat:inc('bytes_out', string.len(msg))
+		end
+	end)
 	--- 读取数据
 	local r, pdu, err = pcall(function(req, timeout) 
 		--- 统计数据
-		self._stat1:inc('packets_out', 1)
+		stat:inc('packets_out', 1)
 		--- 接口调用
-		return client:request(req, timeout)
+		return self._client:request(req, timeout)
 	end, req, 1000)
 
 	if not r then 
@@ -144,24 +151,59 @@ function app:run(tms)
 		else
 			self._log:warning(pdu, err)
 		end
-		return
+		return self:invalid_dev(dev, pack)
 	end
 
 	if not pdu then 
 		self._log:warning("read failed: " .. err) 
-		return
+		return self:invalid_dev(dev, pack)
 	end
 
 	--- 统计数据
-	self._log:trace("read input registers done!")
-	self._stat1:inc('packets_in', 1)
-	--- 解析数据
-	local regs = decode_registers(pdu, 10)
-	local now = self._sys:time()
+	self._log:trace("read input registers done!", unit)
+	stat:inc('packets_in', 1)
 
-	--- 将解析好的数据设定到输入项
-	for r,v in ipairs(regs) do
-		self._dev1:set_input_prop('tag'..r, "value", math.tointeger(v), now, 0)
+	--- 解析数据
+	local d = modbus.decode
+	local len = d.uint8(pdu, 2)
+	--assert(len >= 38 * 2)
+
+	for _, input in ipairs(pack.inputs) do
+		local df = d[input.dt]
+		assert(df)
+		local index = input.saddr
+		local val = df(pdu, index + 2)
+		if input.rate and input.rate ~= 1 then
+			val = val * input.rate
+			dev:set_input_prop(input.name, "value", val)
+		else
+			dev:set_input_prop(input.name, "value", math.tointeger(val))
+		end
+	end
+	dev:set_input_prop('status', 'value', 0)
+end
+
+function app:invalid_dev(dev, pack)
+	for _, input in ipairs(pack.inputs) do
+		dev:set_input_prop(input.name, "value", 0, nil, 1)
+	end
+	dev:set_input_prop('status', 'value', 1, nil, 1)
+end
+
+function app:read_dev(dev, stat, unit, tpl)
+	for _, pack in ipairs(tpl.packets) do
+		self:read_packet(dev, stat, unit, pack)
+	end
+end
+
+--- 应用运行入口
+function app:run(tms)
+	if not self._client then
+		return
+	end
+
+	for _, dev in ipairs(self._devs) do
+		self:read_dev(dev.dev, dev.stat, dev.unit, dev.tpl)
 	end
 
 	--- 返回下一次调用run之前的时间间隔

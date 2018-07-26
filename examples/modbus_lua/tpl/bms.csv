@@ -1,0 +1,44 @@
+COMMENT,name,description,series,,,,
+META,Modbus,Modbus Device,XXX,,,,
+,,,,,,,
+COMMENT,name,description,vt,package,data type,start addr,rate
+INPUT,Us01,单体电压01,,PACK01,int16,1,0.001
+INPUT,Us02,单体电压02,,PACK01,int16,3,0.001
+INPUT,Us03,单体电压03,,PACK01,int16,5,0.001
+INPUT,Us04,单体电压04,,PACK01,int16,7,0.001
+INPUT,Us05,单体电压05,,PACK01,int16,9,0.001
+INPUT,Us06,单体电压06,,PACK01,int16,11,0.001
+INPUT,Us07,单体电压07,,PACK01,int16,13,0.001
+INPUT,Us08,单体电压08,,PACK01,int16,15,0.001
+INPUT,Us09,单体电压09,,PACK01,int16,17,0.001
+INPUT,Us10,单体电压10,,PACK01,int16,19,0.001
+INPUT,Us11,单体电压11,,PACK01,int16,21,0.001
+INPUT,Us12,单体电压12,,PACK01,int16,23,0.001
+INPUT,Us13,单体电压13,,PACK01,int16,25,0.001
+INPUT,Us14,单体电压14,,PACK01,int16,27,0.001
+INPUT,Us15,单体电压15,,PACK01,int16,29,0.001
+INPUT,Us16,单体电压16,,PACK01,int16,31,0.001
+INPUT,Ts01,单体温度01,,PACK01,int16,33,1
+INPUT,Ts02,单体温度02,,PACK01,int16,35,1
+INPUT,Ts03,单体温度03,,PACK01,int16,37,1
+INPUT,Ts04,单体温度04,,PACK01,int16,39,1
+INPUT,Ts05,单体温度05,,PACK01,int16,41,1
+INPUT,Ts06,单体温度06,,PACK01,int16,43,1
+INPUT,Ts07,单体温度07,,PACK01,int16,45,1
+INPUT,Ts08,单体温度08,,PACK01,int16,47,1
+INPUT,Tenv,环境温度,,PACK01,int16,49,1
+INPUT,Usmax,单体电压最大值,,PACK01,int16,51,0.001
+INPUT,Usmin,单体电压最小值,,PACK01,int16,53,0.001
+INPUT,Tshi,单体温度最高值,,PACK01,int16,55,1
+INPUT,Tslo,单体温度最低值,,PACK01,int16,57,1
+INPUT,UB,电池组电压,,PACK01,int16,59,0.001
+INPUT,UBL,母线电压,,PACK01,int16,61,0.001
+INPUT,Icc,充电电流,,PACK01,int16,63,0.001
+INPUT,Ifd,放电电流,,PACK01,int16,65,0.001
+INPUT,SOC,剩余容量%,,PACK01,int16,67,1
+INPUT,Cmax,额定容量Ah,,PACK01,int16,69,0.001
+INPUT,Cleft,剩余容量,,PACK01,int32,71,0.001
+INPUT,BNo,电池组号,int,PACK01,int16,75,1
+,,,,,,,
+COMMENT,name,description,function code,start addr,len,,
+PACKET,PACK01,读取BMS数据,3,0,38,,
