@@ -41,7 +41,21 @@ function app:start()
 	---获取设备序列号和应用配置
 	local sys_id = self._sys:id()
 	local config = self._conf or {}
+
 	config.channel_type = config.channel_type or 'socket'
+	if config.channel_type == 'socket' then
+		config.opt = config.opt or {
+			host = "127.0.0.1",
+			port = 1503,
+			nodelay = true,
+		}
+	else
+		config.opt = config.opt or {
+			port = "/dev/ttymxc1",
+			baudrate = 115200
+		}
+	end
+
 	config.devs = config.devs or {
 		{ unit = 1, name = 'bms01', sn = 'xxx-xx-1', tpl = 'bms' },
 		{ unit = 2, name = 'bms02', sn = 'xxx-xx-2', tpl = 'bms2' },
@@ -90,20 +104,9 @@ function app:start()
 
 	--- 获取配置
 	if config.channel_type == 'socket' then
-		opt = {
-			host = "127.0.0.1",
-			port = 1503,
-			nodelay = true,
-		}
-		print('socket')
-		client = sm_client(socketchannel, opt, modbus.apdu_tcp, 1)
+		client = sm_client(socketchannel, config.opt, modbus.apdu_tcp, 1)
 	else
-		opt = {
-			port = "/dev/ttymxc1",
-			baudrate = 115200
-		}
-		print('serial')
-		client = sm_client(serialchannel, opt, modbus.apdu_rtu, 1)
+		client = sm_client(serialchannel, config.opt, modbus.apdu_rtu, 1)
 	end
 	self._client = client
 
