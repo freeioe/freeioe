@@ -1,0 +1,297 @@
+#!/usr/bin/env perl
+use Getopt::Std;
+use FindBin;
+use Cwd;
+use lib "$FindBin::Bin";
+use warnings;
+use strict;
+use Cwd 'abs_path';
+
+chdir "$FindBin::Bin/..";
+$ENV{TOPDIR} //= getcwd();
+chdir $ENV{TOPDIR};
+$ENV{GIT_CONFIG_PARAMETERS}="'core.autocrlf=false'";
+$ENV{GREP_OPTIONS}="";
+
+my @feeds;
+
+
+sub parse_config() {
+	my $line = 0;
+	my %name;
+
+	open FEEDS, "feeds.conf" or
+		open FEEDS, "feeds.conf.default" or
+		die "Unable to open feeds configuration";
+	while (<FEEDS>) {
+		chomp;
+		s/#.+$//;
+		next unless /\S/;
+		my @line = split /\s+/, $_, 3;
+		my @src;
+		$line++;
+
+		my $valid = 1;
+		$line[0] =~ /^src-[\w-]+$/ or $valid = 0;
+		$line[1] =~ /^\w+$/ or $valid = 0;
+		@src = split /\s+/, ($line[2] or '');
+		@src = ('') if @src == 0;
+		$valid or die "Syntax error in feeds.conf, line: $line\n";
+
+		$name{$line[1]} and die "Duplicate feed name '$line[1]', line: $line\n";
+		$name{$line[1]} = 1;
+
+		push @feeds, [$line[0], $line[1], \@src];
+	}
+	close FEEDS;
+}
+
+sub update_location($$)
+{
+	my $name = shift;
+	my $url  = shift;
+	my $old_url;
+
+	-d "./feeds/$name.tmp" or mkdir "./feeds/$name.tmp" or return 1;
+
+	if( open LOC, "< ./feeds/$name.tmp/location" )
+	{
+		chomp($old_url = readline LOC);
+		close LOC;
+	}
+
+	if( !$old_url || $old_url ne $url )
+	{
+		if( open LOC, "> ./feeds/$name.tmp/location" )
+		{
+			print LOC $url, "\n";
+			close LOC;
+		}
+		return $old_url ? 1 : 0;
+	}
+
+	return 0;
+}
+
+my %update_method = (
+	'src-svn' => {
+		'init'		=> "svn checkout '%s' '%s'",
+		'update'	=> "svn update",
+		'controldir'	=> ".svn",
+		'revision'	=> "svn info | grep 'Revision' | cut -d ' ' -f 2 | tr -d '\n'"},
+	'src-cpy' => {
+		'init'		=> "cp -Rf '%s' '%s'",
+		'update'	=> "",
+		'revision'	=> "echo -n 'local'"},
+	'src-link' => {
+		'init'		=> "ln -s '%s' '%s'",
+		'update'	=> "",
+		'revision'	=> "echo -n 'local'"},
+	'src-dummy' => {
+		'init'		=> "true '%s' && mkdir '%s'",
+		'update'	=> "",
+		'revision'	=> "echo -n 'dummy'"},
+	'src-git' => {
+		'init'          => "git clone --depth 1 '%s' '%s'",
+		'init_branch'   => "git clone --depth 1 --branch '%s' '%s' '%s'",
+		'init_commit'   => "git clone '%s' '%s' && cd '%s' && git checkout -b '%s' '%s' && cd -",
+		'update'	=> "git pull --ff",
+		'update_force'	=> "git pull --ff || (git reset --hard HEAD; git pull --ff; exit 1)",
+		'post_update'	=> "git submodule update --init --recursive",
+		'controldir'	=> ".git",
+		'revision'	=> "git rev-parse --short HEAD | tr -d '\n'"},
+	'src-git-full' => {
+		'init'          => "git clone '%s' '%s'",
+		'init_branch'   => "git clone --branch '%s' '%s' '%s'",
+		'init_commit'   => "git clone '%s' '%s' && cd '%s' && git checkout -b '%s' '%s' && cd -",
+		'update'	=> "git pull --ff",
+		'update_force'	=> "git pull --ff || (git reset --hard HEAD; git pull --ff; exit 1)",
+		'post_update'	=> "git submodule update --init --recursive",
+		'controldir'	=> ".git",
+		'revision'	=> "git rev-parse --short HEAD | tr -d '\n'"},
+	'src-gitsvn' => {
+		'init'	=> "git svn clone -r HEAD '%s' '%s'",
+		'update'	=> "git svn rebase",
+		'controldir'	=> ".git",
+		'revision'	=> "git rev-parse --short HEAD | tr -d '\n'"},
+	'src-bzr' => {
+		'init'		=> "bzr checkout --lightweight '%s' '%s'",
+		'update'	=> "bzr update",
+		'controldir'	=> ".bzr"},
+	'src-hg' => {
+		'init'		=> "hg clone '%s' '%s'",
+		'update'	=> "hg pull --update",
+		'controldir'	=> ".hg"},
+	'src-darcs' => {
+		'init'    => "darcs get '%s' '%s'",
+		'update'  => "darcs pull -a",
+		'controldir' => "_darcs"},
+);
+
+# src-git: pull broken
+# src-cpy: broken if `basename $src` != $name
+
+sub update_feed_via($$$$$) {
+	my $type = shift;
+	my $name = shift;
+	my $src = shift;
+	my $relocate = shift;
+	my $force = shift;
+
+	my $m = $update_method{$type};
+	my $localpath = "./feeds/$name";
+	my $safepath = $localpath;
+	$safepath =~ s/'/'\\''/;
+	my ($base_branch, $branch) = split(/;/, $src, 2);
+	my ($base_commit, $commit) = split(/\^/, $src, 2);
+
+	if( $relocate || !$m->{'update'} || !-d "$localpath/$m->{'controldir'}" ) {
+		system("rm -rf '$safepath'");
+		if ($m->{'init_branch'} and $branch) {
+			system(sprintf($m->{'init_branch'}, $branch, $base_branch, $safepath)) == 0 or return 1;
+		} elsif ($m->{'init_commit'} and $commit) {
+			system(sprintf($m->{'init_commit'}, $base_commit, $safepath, $safepath, $commit, $commit)) == 0 or return 1;
+		} else {
+			system(sprintf($m->{'init'}, $src, $safepath)) == 0 or return 1;
+		}
+	} elsif ($m->{'init_commit'} and $commit) {
+		# in case git hash has been provided don't update the feed
+	} else {
+		my $update_cmd = $m->{'update'};
+		if ($force && exists $m->{'update_force'}) {
+			$update_cmd = $m->{'update_force'};
+		}
+		system("cd '$safepath'; $update_cmd") == 0 or return 1;
+	}
+	if ($m->{'post_update'}) {
+		my $cmd = $m->{'post_update'};
+		system("cd '$safepath'; $cmd") == 0 or return 1;
+	}
+
+	return 0;
+}
+
+sub update_feed($$$$$)
+{
+	my $type=shift;
+	my $name=shift;
+	my $src=shift;
+	my $perform_update=shift;
+	my $force_update=shift;
+	my $force_relocate=update_location( $name, "@$src" );
+	my $rv=0;
+
+	if( $force_relocate ) {
+		warn "Source of feed $name has changed, replacing copy\n";
+	}
+	$update_method{$type} or do {
+		warn "Unknown type '$type' in feed $name\n";
+		return 1;
+	};
+	$perform_update and do {
+		my $failed = 1;
+		foreach my $feedsrc (@$src) {
+			warn "Updating feed '$name' from '$feedsrc' ...\n";
+			if (update_feed_via($type, $name, $feedsrc, $force_relocate, $force_update) != 0) {
+				if ($force_update) {
+					$rv=1;
+					$failed=0;
+					warn "failed, ignore.\n";
+					next;
+				}
+				last;
+			}
+			$failed = 0;
+		}
+		$failed and do {
+			warn "failed.\n";
+			return 1;
+		};
+	};
+	return $rv;
+}
+
+sub update {
+	my %opts;
+	my $feed_name;
+	my $perform_update=1;
+	my $failed=0;
+
+	$ENV{SCAN_COOKIE} = $$;
+	$ENV{OPENWRT_VERBOSE} = 's';
+
+	getopts('ahif', \%opts);
+
+	if ($opts{h}) {
+		usage();
+		return 0;
+	}
+
+	if ($opts{i}) {
+		# don't update from (remote) repository
+		# only re-create index information
+		$perform_update=0;
+	}
+
+	-d "feeds" or do {
+			mkdir "feeds" or die "Unable to create the feeds directory";
+		};
+
+	if ( ($#ARGV == -1) or $opts{a}) {
+		foreach my $feed (@feeds) {
+			my ($type, $name, $src) = @$feed;
+			update_feed($type, $name, $src, $perform_update, $opts{f}) == 0 or $failed=1;
+		}
+	} else {
+		while ($feed_name = shift @ARGV) {
+			foreach my $feed (@feeds) {
+				my ($type, $name, $src) = @$feed;
+				if($feed_name ne $name) {
+					next;
+				}
+				update_feed($type, $name, $src, $perform_update, $opts{f}) == 0 or $failed=1;
+			}
+		}
+	}
+
+	return $failed;
+}
+
+sub usage() {
+	print <<EOF;
+Usage: $0 <command> [options]
+
+Commands:
+	update -a|<feedname(s)>: Update packages and lists of feeds in feeds.conf .
+	Options:
+	    -a :           Update all feeds listed within feeds.conf. Otherwise the specified feeds will be updated.
+	    -i :           Recreate the index only. No feed update from repository is performed.
+	    -f :           Force updating feeds even if there are changed, uncommitted files.
+
+	clean:             Remove downloaded/generated files.
+
+EOF
+	exit(1);
+}
+
+my %commands = (
+	'list' => \&list,
+	'update' => \&update,
+	'install' => \&install,
+	'search' => \&search,
+	'uninstall' => \&uninstall,
+	'feed_config' => \&feed_config,
+	'clean' => sub {
+		system("rm -rf ./feeds ./package/feeds");
+	}
+);
+
+my $arg = shift @ARGV;
+$arg or usage();
+parse_config;
+foreach my $cmd (keys %commands) {
+	$arg eq $cmd and do {
+		exit(&{$commands{$cmd}}());
+	};
+}
+usage();
