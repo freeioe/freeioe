@@ -1,0 +1,20 @@
+{
+	"channel_type": "serial",
+	"opt": {
+		"port": "/dev/ttymxc1",
+		"baudrate": 115200
+	},
+	"devs": [{
+			"unit": 1,
+			"name": "bms01",
+			"sn": "xxx-xx-xx-1",
+			"tpl": "bms"
+		},
+		{
+			"unit": 2,
+			"name": "bms02",
+			"sn": "xxx-xx-xx-2",
+			"tpl": "bms2"
+		}
+	]
+}
