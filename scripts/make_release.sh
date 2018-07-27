@@ -67,31 +67,31 @@ cp -rL lualib/resty __install/lualib/resty
 
 # Release example (modbus)
 # Release ioe
-./scripts/release_app.sh ioe $VERSION $REVISION
-./scripts/release_app.sh bms $VERSION $REVISION
-./scripts/release_app.sh modbus_lua $VERSION $REVISION
-./scripts/release_app.sh frpc $VERSION $REVISION
-./scripts/release_app.sh opcua_server $VERSION $REVISION
-./scripts/release_app.sh opcua_client $VERSION $REVISION
-./scripts/release_app.sh opcua_collect_example $VERSION $REVISION
-./scripts/release_app.sh symlink $VERSION $REVISION
-./scripts/release_app.sh network $VERSION $REVISION
+./scripts/release_app.sh ioe
+./scripts/release_app.sh bms
+./scripts/release_app.sh modbus_lua
+./scripts/release_app.sh frpc
+./scripts/release_app.sh opcua_server
+./scripts/release_app.sh opcua_client
+./scripts/release_app.sh opcua_collect_example
+./scripts/release_app.sh symlink
+./scripts/release_app.sh network
 # Cloud connectors
-./scripts/release_app.sh aliyun $VERSION $REVISION
-./scripts/release_app.sh baidu_cloud $VERSION $REVISION
-./scripts/release_app.sh huawei_cloud $VERSION $REVISION
+./scripts/release_app.sh aliyun
+./scripts/release_app.sh baidu_cloud
+./scripts/release_app.sh huawei_cloud
 
 # Release Extensions
 
 for plat in $PLAT_NAMES; do
-	./scripts/release_ext.sh opcua $VERSION $REVISION $plat "luaclib"
-	./scripts/release_ext.sh snap7 $VERSION $REVISION $plat "luaclib"
-	./scripts/release_ext.sh frpc $VERSION $REVISION $plat "bin"
+	./scripts/release_ext.sh opcua $plat "luaclib"
+	./scripts/release_ext.sh snap7 $plat "luaclib"
+	./scripts/release_ext.sh frpc $plat "bin"
 done
 
 # For pre-installed applications
 mkdir __install/apps
-./scripts/pre_inst.sh ioe ioe $VERSION
+./scripts/pre_inst.sh ioe ioe
 
 # For ioe extensions
 mkdir __install/ext

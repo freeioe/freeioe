@@ -1,43 +1,62 @@
 
-if [ $# -lt 3 ] ; then
-	echo "Usage: release_app.sh <app name> <version> <git version>"
+if [ $# -lt 1 ] ; then
+	echo "Usage: release_app.sh <app name>"
 	exit 0
 fi
 
-echo "Release App:" $1
+# echo "Release App:" $1
 
-if [ -f "__release/$1/$2.zip" ]
+BASE_DIR=`pwd`
+RELEASE_DIR=$BASE_DIR'/__release/'$1
+
+mkdir -p $RELEASE_DIR
+# echo 'Base Dir:'$BASE_DIR
+# echo 'Release Dir:'$BASE_DIR
+
+cd ./feeds/example_apps/$1
+
+### Get the version by count the commits
+VERSION=`git log --oneline | wc -l | tr -d ' '`
+
+### Generate the revision by last commit
+set -- $(git log -1 --format="%ct %h")
+R_SECS="$(($1 % 86400))"
+R_YDAY="$(date --utc --date="@$1" "+%y.%j")"
+REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
+
+# echo 'Version:'$VERSION
+# echo 'Revision:'$REVISION
+echo "Release App:" $1 "Version:" $VERSION "Revision:" $REVISION
+
+
+if [ -f "$RELEASE_DIR/$VERSION.zip" ]
 then
-	echo $1/$2'.zip already released'
+	echo $1/$VERSION'.zip already released'
 	exit
 fi
 
 # zip files
-mkdir -p __release/$1
-cd ./examples/$1
-echo $2 > version
-echo $3 >> version
+echo $VERSION > version
+echo $REVISION >> version
 
 if [ -f "luaclib/opcua.so" ]; then
 	mv luaclib/opcua.so ./opcua.so.bak~
 fi
 
-zip -r -q ../../__release/$1/$2.zip * -x *~
+zip -r -q $RELEASE_DIR/$VERSION.zip * -x *~
 rm -f version
 
 if [ -f "./opcua.so.bak~" ]; then
 	mv ./opcua.so.bak~ luaclib/opcua.so
 fi
-cd ../../
-md5sum -b __release/$1/$2.zip > __release/$1/$2.zip.md5
-du __release/$1/$2.zip -sh
-cat __release/$1/$2.zip.md5
+
+md5sum -b $RELEASE_DIR/$VERSION.zip > $RELEASE_DIR/$VERSION.zip.md5
+du $RELEASE_DIR/$VERSION.zip -sh
+cat $RELEASE_DIR/$VERSION.zip.md5
+
 ## Copy to latest
-cp -f __release/$1/$2.zip __release/$1/latest.zip
-cp -f __release/$1/$2.zip.md5 __release/$1/latest.zip.md5
-echo $2 > __release/$1/latest.version
+cp -f $RELEASE_DIR/$VERSION.zip $RELEASE_DIR/latest.zip
+cp -f $RELEASE_DIR/$VERSION.zip.md5 $RELEASE_DIR/latest.zip.md5
+echo $VERSION > $RELEASE_DIR/latest.version
 
-# copy to web server folder
-#mkdir -p /var/www/master/$1
-#cp __release/$1.zip /var/www/master/$1/latest.zip
-
+cd $BASE_DIR
