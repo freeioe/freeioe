@@ -49,5 +49,7 @@ ext
 __install
 __release
 prebuild
+examples
 *.ini
 bin
+feeds

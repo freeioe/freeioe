@@ -1,0 +1,3 @@
+src-git example_apps https://github.com/freeioe/freeioe_example_apps.git
+src-git prebuild_exts https://github.com/freeioe/freeioe_prebuild_exts.git
+#src-link custom /usr/src/openwrt/custom-feed
