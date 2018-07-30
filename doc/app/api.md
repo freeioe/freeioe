@@ -27,27 +27,29 @@ api:set_handler({
 
 * api:list_devices()
 
-枚举系统中所有设备描述对象
+枚举系统中所有设备对象的描述信息 (meta, inputs, outputs, commands等等)
 
-* api:add_device(sn, inputs, outputs, commands)
+* api:add_device(sn, meta, inputs, outputs, commands)
 
-创建采集设备对象。返回设备对象。
+创建新的采集设备对象。返回设备对象实例（参考设备API)。
 
 sn：设备序列号
 
-inputs：设备输入项
+meta: 设备Meta信息
 
-outputs：设备输出项
+inputs：设备输入项列表
 
-commands：设备控制项
+outputs：设备输出项列表
+
+commands：设备控制项列表
 
 * api:del_device(dev)
 
-删除设备。 dev为设备对象。
+删除设备。 dev为设备对象实例。
 
 * api:get_device(sn)
 
-获取设备对象。 此接口对象只能用来读取设备输入项数据，写入设备输出项，发送设备控制项。
+获取设备对象实例。 此接口对象只能用来读取设备输入项数据，写入设备输出项，发送设备控制项。
 
 * api:send_ctrl(app, ctrl, params)
 

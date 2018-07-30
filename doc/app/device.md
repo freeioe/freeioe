@@ -8,6 +8,10 @@
 
 修改设备描述项。 参考api:create_device
 
+* device:add(inputs, outputs, commands)
+
+在原有设备描述项基础上增加信息。 参考api:create_device
+
 * device:get_input_prop(input, prop)
 
 获取设备输入项的当前值。
