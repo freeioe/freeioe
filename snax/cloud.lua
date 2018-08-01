@@ -533,8 +533,8 @@ connect_proc = function(clean_session, username, password)
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("ON_DISCONNECT", success, rc, msg) 
-		mqtt_client_last = skynet.time()
 		if not enable_async and mqtt_client then
+			mqtt_client_last = skynet.time()
 			start_reconnect()
 		end
 	end
