@@ -130,17 +130,23 @@ function response.start_forward()
 		end
 	end, '0.0.0.0', 7788)
 
+	udp = udp_socket
+	udp_heartbeat = skynet.time() + 60
+
 	skynet.fork(function()
-		local udp_ = udp
+		local udp_ = udp_socket
+		log.debug("UDP Forward heartbeat checking start!!", udp_, udp)
 		while udp_ == udp do
-			if udp_heartbeat - skynet.time() > 0 then
+			--print('check heartbeat', udp_, udp)
+			if udp_heartbeat - skynet.time() < 0 then
+				--print('check heartbeat failed', udp_, udp, udp_heartbeat, skynet.time())
 				close_udp()
 				break
 			end
 			skynet.sleep(100)
 		end
+		log.debug("UDP Forward heartbeat checking quit!!", udp_, udp)
 	end)
-	udp = upd_socket
 
 	return true
 end
