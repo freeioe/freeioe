@@ -104,6 +104,14 @@ du __install -sh
 ###################
 ##
 ##################
+
+if [ -f "__release/freeioe/$VERSION.tar.gz" ]
+then
+	rm -rf __install
+	echo freeioe/$VERSION'.tar.gz already released'
+	exit
+fi
+
 cd __install
 tar czvf ../__release/freeioe/$VERSION.tar.gz * > /dev/null
 md5sum -b ../__release/freeioe/$VERSION.tar.gz > ../__release/freeioe/$VERSION.tar.gz.md5
