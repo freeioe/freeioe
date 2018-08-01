@@ -384,6 +384,7 @@ then
 		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz.new
 	else
 		echo "tar got error!"
+		rm -f $SKYNET_FILE
 		sh $IOE_DIR/ipt/rollback.sh
 		exit $?
 	fi
@@ -400,6 +401,7 @@ then
 		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz.new
 	else
 		echo "tar got error!"
+		rm -f $FREEIOE_FILE
 		sh $IOE_DIR/ipt/rollback.sh
 		exit $?
 	fi
