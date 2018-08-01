@@ -22,12 +22,19 @@ local channel_serial_meta = {
 local serial_error = setmetatable({}, {__tostring = function() return "[Error: Serial]" end })	-- alias for error object
 serial_channel.error = serial_error
 
+local function convert_number(val)
+	if type(val) == 'number' then
+		return tostring(math.floor(val))
+	end
+	return val
+end
+
 local function map_serial_opt(desc)
 	return {
-		baud = '_'..(desc.baudrate or 9600),
-		data_bits = '_'..(desc.data_bits or 8),
+		baud = '_'..(convert_number(desc.baudrate) or 9600),
+		data_bits = '_'..(convert_number(desc.data_bits) or 8),
 		parity = string.upper(desc.parity or "NONE"),
-		stop_bits = '_'..(desc.stop_bits or 1),
+		stop_bits = '_'..(convert_number(desc.stop_bits) or 1),
 		flow_control = string.upper(desc.flow_control or "OFF")
 	}
 end
