@@ -1,2 +1,4 @@
 # FreeIOE
-Internet Of Everything framework built on top of [Skynet framework|https://github.com/cloudwu/skynet]
+
+[FreeIOE](http://freeioe.org) is an IOE (Internet Of Everything) framework.
+
