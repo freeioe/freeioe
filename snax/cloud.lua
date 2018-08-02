@@ -652,7 +652,7 @@ function accept.enable_data(id, enable)
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
 	if not enable then
 		if cov then
-			cov:clean()
+			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
 		log.debug("Cloud data upload disabled!", enable)
 	end
