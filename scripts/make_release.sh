@@ -80,6 +80,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh aliyun
 ./scripts/release_app.sh baidu_cloud
 ./scripts/release_app.sh huawei_cloud
+# ./scripts/release_app.sh JC_T8600
 
 # Release Extensions
 

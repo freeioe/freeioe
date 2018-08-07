@@ -4,14 +4,21 @@ local class = require 'middleclass'
 
 local serial = class("SerialClass")
 
-function serial:initialize(port, baudrate, bytesize, parity, stopbits, flowcontrol)
+local function convert_number(val)
+	if type(val) == 'number' then
+		return tostring(math.floor(val))
+	end
+	return val
+end
+
+function serial:initialize(port, baudrate, data_bits, parity, stop_bits, flowcontrol)
 	assert(port, "Port is requried")
 	self._port_name = port
 	self._opts = {
-		baud = '_'..(baudrate or 9600),
-		data_bits = '_'..(bytesize or 8),
+		baud = '_'..(convert_number(baudrate) or 9600),
+		data_bits = '_'..(convert_number(data_bits) or 8),
 		parity = string.upper(parity or "NONE"),
-		stop_bits = '_'..(stopbits or 1),
+		stop_bits = '_'..(convert_number(stop_bits) or 1),
 		flow_control = string.upper(flowcontrol or "OFF")
 	}
 end
@@ -63,15 +70,20 @@ bind_func(serial, "dtr")
 bind_func(serial, "set_rts")
 bind_func(serial, "rts")
 
-function serial:start(cb)
+--- 
+-- serial start function
+-- @tparam function cb callback function. e.g. function(data, err) end
+-- @tparam number timeout serial reading timeout (in ms)
+function serial:start(cb, timeout)
 	local port = self._port
+	local timeout = timeout or 10
 	assert(port)
 	skynet.fork(function()
 		while true do
 			local len, err = port:in_queue()
 			if len and len > 0 then
-				local data, err = port:read(len, 10)
-				print("SERIAL:", len, data, err)
+				local data, err = port:read(len, timeout)
+				--print("SERIAL:", len, data, err)
 				if not data then
 					break
 				end
