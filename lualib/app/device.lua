@@ -26,6 +26,7 @@ function device:initialize(api, sn, props, readonly)
 
 	self._inputs_map = {}
 	for _, t in ipairs(props.inputs or {}) do
+		assert(self._inputs_map[t.name] == nil, "Duplicated input name ["..t.name.."] found")
 		self._inputs_map[t.name] = true
 	end
 	self._stats = {}
