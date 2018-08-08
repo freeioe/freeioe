@@ -257,7 +257,7 @@ local function mqtt_publish(topic, data, qos, retained)
 		end
 
 		if mqtt_client then
-			mqtt_client:publish(topic.."_gz", deflated, qos, retained)
+			return mqtt_client:publish(topic.."_gz", deflated, qos, retained)
 		else
 			return nil, "MQTT connection lost!"
 		end
