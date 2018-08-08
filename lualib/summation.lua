@@ -3,6 +3,8 @@ local cjson = require 'cjson.safe'
 
 local sum = class('Continue_Count_LIB')
 
+local SPAN_KEY = '__SPAN_KEY'
+
 local function get_span_key(span)
 	if span == 'year' then
 		return os.date('%Y')
@@ -67,6 +69,14 @@ function sum:initialize(opt)
 		if f then
 			local str = f:read('*a')
 			self._value = cjson.decode(str)
+			-- for origin version that does not have span key in saved file
+			if not self._value[SPAN_KEY] then
+				self._value[SPAN_KEY] == self._span_key
+			end
+			-- Check for span key 
+			if self._value[SPAN_KEY] ~= self._span_key then
+				self:reset()
+			end
 			f:close()
 		else
 			self._value = self:migrate_from_v1(opt) or {}
@@ -119,9 +129,12 @@ end
 
 function sum:reset()
 	for k, v in pairs(self._value) do
-		v.base = v.value
-		v.delta = 0
+		if k ~= SPAN_KEY then
+			v.base = v.value
+			v.delta = 0
+		end
 	end
+	self._value[SPAN_KEY] == self._span_key
 end
 
 function sum:save()
