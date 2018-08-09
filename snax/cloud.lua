@@ -13,6 +13,7 @@ local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
+local cancelable_timeout = require 'cancelable_timeout'
 
 local zlib_loaded, zlib -- will be initialized in init(...)
 
@@ -34,6 +35,7 @@ local apps_devices_fired = false
 
 --- Cloud options
 local enable_data_upload = nil -- true
+local enable_data_one_short_cancel = nil
 local enable_stat_upload = nil
 local enable_event_upload = nil
 local enable_comm_upload = nil
@@ -134,6 +136,9 @@ local msg_handler = {
 
 		if action == 'enable/data' then
 			snax.self().post.enable_data(args.id, tonumber(args.data) == 1)
+		end
+		if action == 'enable/data_one_short' then
+			snax.self().post.enable_data_one_short(args.id, tonumber(args.data))
 		end
 		if action == 'enable/data/cov' then
 			snax.self().post.enable_data_cov(args.id, tonumber(args.data) == 1)
@@ -309,7 +314,7 @@ end
 
 local function load_cov_conf()
 	local enable_cov = datacenter.get("CLOUD", "COV") or true
-	local ttl = datacenter.get("CLOUD", "COV_TTL") or 60 -- 60 seconds
+	local ttl = datacenter.get("CLOUD", "COV_TTL") or 300 -- five minutes 
 
 	local cov_m = require 'cov'
 	local opt = {}
@@ -657,6 +662,19 @@ function accept.enable_data(id, enable)
 		log.debug("Cloud data upload disabled!", enable)
 	end
 	snax.self().post.action_result('sys', id, true, "Done")
+end
+
+function accept.enable_data_one_short(id, period)
+	if enable_data_one_short_cancel then
+		enable_data_one_short_cancel()
+	end
+
+	local period = period or 300
+	snax.self().post.enable_data(id, true)
+
+	enable_data_one_short_cancel = cancelable_timeout(period * 100, function()
+		snax.self().post.enable_data(id, false)
+	end)
 end
 
 function accept.enable_data_cov(id, enable)
@@ -1077,6 +1095,9 @@ function init()
 end
 
 function exit(...)
+	if enable_data_one_short_cancel then
+		enable_data_one_short_cancel()
+	end
 	fire_device_timer = nil
 	fire_app_timer = nil
 	mosq.cleanup()

@@ -58,7 +58,8 @@ return {
 				end
 			end
 			if string.upper(option) == 'COV_TTL' then
-				if tonumber(value) < 60 then
+				value = math.floor(tonumber(value))
+				if value < 60 then
 					ngx.print(_('The COV TTL cannot be less than 60 seconds'))
 				end
 			end

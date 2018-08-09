@@ -8,8 +8,10 @@ function cov:initialize(opt)
 
 	opt.float_threshold = 0.000001
 	opt.try_convert_string = true
-	if opt.ttl then
-		assert(opt.ttl > 0)
+
+	opt.ttl = tonumber(opt.ttl)
+	if opt.ttl and opt.ttl < 0 then
+		opt.ttl = nil
 	end
 	opt.min_ttl_gap = opt.min_ttl_gap or 10  -- 0.1 seconds
 
