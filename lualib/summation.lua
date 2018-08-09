@@ -71,7 +71,7 @@ function sum:initialize(opt)
 			self._value = cjson.decode(str)
 			-- for origin version that does not have span key in saved file
 			if not self._value[SPAN_KEY] then
-				self._value[SPAN_KEY] == self._span_key
+				self._value[SPAN_KEY] = self._span_key
 			end
 			-- Check for span key 
 			if self._value[SPAN_KEY] ~= self._span_key then
@@ -134,7 +134,7 @@ function sum:reset()
 			v.delta = 0
 		end
 	end
-	self._value[SPAN_KEY] == self._span_key
+	self._value[SPAN_KEY] = self._span_key
 end
 
 function sum:save()
