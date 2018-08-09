@@ -196,8 +196,13 @@ function api:default_meta()
 	}
 end
 
+local function valid_device_sn(sn)
+	return nil == string.find(sn, '%s')
+end
+
 function api:add_device(sn, meta, inputs, outputs, commands)
 	assert(sn, "Device Serial Number is required")
+	assert(valid_device_sn(sn), "Invalid sn: "..sn)
 	valid_device_meta(meta or default_meta())
 	meta.app = self._app_name
 	meta.inst = meta.inst or meta.name -- 实际设备实例名称, 如:BMS #2,PLC #2
