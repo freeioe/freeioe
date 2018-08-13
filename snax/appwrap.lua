@@ -44,6 +44,15 @@ local on_close = function(...)
 	return true
 end
 
+local function fire_exception_event(info, data, level)
+	if not mgr_snax then
+		return
+	end
+	local data = data or {}
+	data.app = app_name
+	return mgr_snax.post.fire_event(app_name, sys_id, level or event.LEVEL_ERROR, event.EVENT_APP, info, data)
+end
+
 local function work_proc()
 	local timeout = 1000
 	while app do
@@ -55,6 +64,7 @@ local function work_proc()
 		else
 			if err then
 				log.warning(err)
+				fire_exception_event('Application run loop error!', { err=err }, event.LEVEL_WARNING)
 				timeout = 1000 * 60
 			end
 		end
@@ -145,17 +155,6 @@ function accept.app_post(msg, ...)
 	end
 end
 
-local function fire_exception_event(info, data)
-	if not mgr_snax then
-		return
-	end
-	local data = data or {}
-	data.app = app_name
-
-	local type_ = event.type_to_string(event.EVENT_APP)
-	return mgr_snax.post.fire_event(app_name, sys_id, event.LEVEL_ERROR, event.EVENT_APP, info, data)
-end
-
 function init(name, conf, mgr_handle, mgr_type)
 	-- Disable Skynet Code Cache!!
 	cache.mode('EXIST')
@@ -204,7 +203,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		local s = string.format("API Version required is too old. Required: %d. Current %d-%d",
 								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
 		log.error(s)
-		fire_exception_event(s)
+		fire_exception_event(s, {sys_ver=app_sys.API_MIN_VER, ver=m.API_VER})
 		return nil, s
 	else
 		if not m.API_VER then

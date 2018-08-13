@@ -15,8 +15,6 @@ local sys_app = 'ioe'
 local function fire_exception_event(app_name, info, data)
 	local data = data or {}
 	data.app = app_name
-
-	local type_ = event.type_to_string(event.EVENT_APP)
 	return snax.self().post.fire_event(app_name, sys_id, event.LEVEL_ERROR, event.EVENT_APP, info, data)
 end
 
