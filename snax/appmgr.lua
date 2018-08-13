@@ -12,6 +12,14 @@ local reg_map = {}
 local closing = false
 local sys_app = 'ioe'
 
+local function fire_exception_event(app_name, info, data)
+	local data = data or {}
+	data.app = app_name
+
+	local type_ = event.type_to_string(event.EVENT_APP)
+	return snax.self().post.fire_event(app_name, sys_id, event.LEVEL_ERROR, event.EVENT_APP, info, data)
+end
+
 ---
 -- Return instance id
 function response.start(name, conf)
@@ -30,6 +38,7 @@ function response.start(name, conf)
 	if not r then
 		local info = "Failed to start app "..name..". Error: "..err
 		log.error(info)
+		fire_exception_event(name, "Failed to start app"..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")
 		return nil, info
 	end

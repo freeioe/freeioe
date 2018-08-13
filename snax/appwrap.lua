@@ -145,7 +145,7 @@ function accept.app_post(msg, ...)
 	end
 end
 
-function fire_exception_event(info, data)
+local function fire_exception_event(info, data)
 	if not mgr_snax then
 		return
 	end
