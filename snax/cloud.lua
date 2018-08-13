@@ -306,7 +306,6 @@ local function publish_data_list(val_list)
 			local total_rate = (total_compressed/total_uncompressed) * 100
 			local current_rate = (bytes_out/bytes_in) * 100
 			log.trace('Count '..#val_list..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
-			--return true
 			return mqtt_client:publish(mqtt_id.."/data_gz", deflated, 1, false)
 		end
 	end
@@ -314,14 +313,19 @@ end
 
 local function load_cov_conf()
 	local enable_cov = datacenter.get("CLOUD", "COV") or true
-	local ttl = datacenter.get("CLOUD", "COV_TTL") or 300 -- five minutes 
+	local default_ttl = 300 -- five minutes
+	local ttl = datacenter.get("CLOUD", "COV_TTL") or default_ttl
 
 	local cov_m = require 'cov'
 	local opt = {}
-	if not enable_cov then
+	if not enable_cov and enable_data_upload then
 		opt.disable = true
 	else
 		opt.ttl = ttl
+		--- if data is not upload to our cloud, then take default ttl always.
+		if enable_data_upload then
+			opt.ttl = default_ttl
+		end
 	end
 
 	cov = cov_m:new(opt)
@@ -354,7 +358,13 @@ local function load_pb_conf()
 		return
 	end
 
-	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 0)-- period in ms 
+	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 1000)-- period in ms
+
+	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
+	if not enable_data_upload then
+		period = 60 * 1000
+	end
+
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
 		cov_min_timer_gap = math.floor(period / 10)
@@ -669,11 +679,17 @@ function accept.enable_data_one_short(id, period)
 		enable_data_one_short_cancel()
 	end
 
-	local period = period or 300
-	snax.self().post.enable_data(id, true)
+	enable_data_upload = true
+	log.debug("Cloud data one-short upload enabled!")
+	snax.self().post.action_result('sys', id, true, "Done")
 
+	local period = tonumber(period) or 300
 	enable_data_one_short_cancel = cancelable_timeout(period * 100, function()
-		snax.self().post.enable_data(id, false)
+		enable_data_upload = false
+		if cov then
+			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
+		end
+		log.debug("Cloud data one-short upload disabled!")
 	end)
 end
 
