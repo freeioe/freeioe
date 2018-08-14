@@ -34,7 +34,7 @@ function response.start(name, conf)
 
 	local r, err = inst.req.start()
 	if not r then
-		local info = "Failed to start app "..name..". Error: "..err
+		local info = "Failed to start app "..name..". Error: "..tostring(err)
 		log.error(info)
 		fire_exception_event(name, "Failed to start app"..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")

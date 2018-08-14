@@ -23,9 +23,9 @@ local function protect_call(app, func, ...)
 
 	local r, er, err = xpcall(f, debug.traceback, app, ...)
 	if not r then
-		return nil, er
+		return nil, tostring(er)
 	end
-	return er, err
+	return er, tostring(err)
 end
 
 local on_close = function(...)
