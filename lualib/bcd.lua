@@ -3,8 +3,19 @@
 -- nil - formating integer as its length
 local _M = {}
 
+local function unfold_format(format)
+	return string.gsub(format, "([XxHhNn])(%d+)", function(c, num)
+		local ret = {}
+		for i = 1, num do
+			ret[#ret + 1] = c
+		end
+		return table.concat(ret)
+	end)
+end
+
 function _M.encode(v, format)
-	local format = string.gsub(format or '.', 'x', 'X')
+	local format = unfold_format(string.gsub(format or '.', 'x', 'X'))
+	print(format)
 	local int_s, float_s = string.match(format, '([X]*).?([X]*)')
 	local len = string.len(int_s) + string.len(float_s)
 	local float_len = string.len(float_s)
@@ -30,7 +41,7 @@ function _M.encode(v, format)
 end
 
 function _M.decode(str, format)
-	local format = string.gsub(format or '.', 'x', 'X')
+	local format = unfold_format(string.gsub(format or '.', 'x', 'X'))
 	local int_s, float_s = string.match(format, '([X]*).?([X]*)')
 	local int_len, float_len = string.len(int_s), string.len(float_s)
 
@@ -63,6 +74,8 @@ function test()
 	print_hex(bcd.encode(1234567890.00231))
 	print_hex(bcd.encode(-1234567890.00231))
 	print_hex(bcd.encode(1234567890.00231, "X.XXXX"))
+	print_hex(bcd.encode(1234567890.00231, "X.X4"))
+	print_hex(bcd.encode(1234567890.00231, "X6.X4"))
 	print_hex(bcd.encode(12345.21))
 	print_hex(bcd.encode(-12345.21))
 	print_hex(bcd.encode(tostring(123456.12)))
@@ -71,6 +84,7 @@ function test()
 	print_hex(r)
 	print(bcd.decode(r))
 	print(bcd.decode(r, "XXX.XX"))
+	print(bcd.decode(r, "X3.X2"))
 end
 
 test()
