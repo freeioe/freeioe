@@ -670,6 +670,8 @@ function accept.enable_data(id, enable)
 			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
 		log.debug("Cloud data upload disabled!", enable)
+	else
+		snax.self().post.fire_data_snapshot()
 	end
 	snax.self().post.action_result('sys', id, true, "Done")
 end
@@ -682,6 +684,7 @@ function accept.enable_data_one_short(id, period)
 	enable_data_upload = true
 	log.debug("Cloud data one-short upload enabled!")
 	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.fire_data_snapshot()
 
 	local period = tonumber(period) or 300
 	enable_data_one_short_cancel = cancelable_timeout(period * 100, function()
