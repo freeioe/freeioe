@@ -63,7 +63,7 @@ local function work_proc()
 			timeout = t
 		else
 			if err then
-				log.warning(err)
+				log.warning('APP.run return error', err)
 				fire_exception_event('Application run loop error!', { err=err }, event.LEVEL_WARNING)
 				timeout = 1000 * 60
 			end

@@ -138,7 +138,7 @@ function response.start_forward()
 		log.debug("UDP Forward heartbeat checking start!!", udp_, udp)
 		while udp_ == udp do
 			--print('check heartbeat', udp_, udp)
-			if udp_heartbeat - skynet.time() < 0 then
+			if udp_heartbeat < skynet.time() then
 				--print('check heartbeat failed', udp_, udp, udp_heartbeat, skynet.time())
 				close_udp()
 				break

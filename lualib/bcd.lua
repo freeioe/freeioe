@@ -4,7 +4,7 @@
 local _M = {}
 
 local function unfold_format(format)
-	return string.gsub(format, "([XxHhNn])(%d+)", function(c, num)
+	return string.gsub(format, "([XxNn#])(%d+)", function(c, num)
 		local ret = {}
 		for i = 1, num do
 			ret[#ret + 1] = c
@@ -14,9 +14,9 @@ local function unfold_format(format)
 end
 
 function _M.encode(v, format)
-	local format = unfold_format(string.gsub(format or '.', 'x', 'X'))
-	print(format)
-	local int_s, float_s = string.match(format, '([X]*).?([X]*)')
+	local format = unfold_format(format or ""):gsub('x', 'X'):gsub('n', 'N')
+	--print(format)
+	local int_s, float_s = string.match(format, '([XN#]*).?([XN#]*)')
 	local len = string.len(int_s) + string.len(float_s)
 	local float_len = string.len(float_s)
 
@@ -41,8 +41,8 @@ function _M.encode(v, format)
 end
 
 function _M.decode(str, format)
-	local format = unfold_format(string.gsub(format or '.', 'x', 'X'))
-	local int_s, float_s = string.match(format, '([X]*).?([X]*)')
+	local format = unfold_format(format or ""):gsub('x', 'X'):gsub('n', 'N')
+	local int_s, float_s = string.match(format, '([XN#]*).?([XN#]*)')
 	local int_len, float_len = string.len(int_s), string.len(float_s)
 
 	local v = 0
@@ -52,12 +52,15 @@ function _M.decode(str, format)
 		v = v * 100 + (val // 16) * 10 + val % 16
 	end
 
-	if float_len > 0 then
-		v = v * (0.1 ^ float_len)
+	if (int_len + float_len) > 0 then
+		v = v % (10 ^ (int_len + float_len))
 	end
 
-	if int_len > 0 then
-		v = v % (10 ^ int_len)
+	if float_len > 0 then
+		v = v * (0.1 ^ float_len)
+	else
+		--- convert to integer if format has no .
+		v = math.floor(v)
 	end
 
 	return v
@@ -87,6 +90,6 @@ function test()
 	print(bcd.decode(r, "X3.X2"))
 end
 
-test()
+--test()
 
 return _M
