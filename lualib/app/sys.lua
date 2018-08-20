@@ -153,10 +153,13 @@ end
 
 --- Get cloud configuration api
 -- @tparam string conf_name Cloud application configuration name or ID
+-- @tparam string ext Local saving file extension. e.g. csv conf xml. default csv
+-- @tparam string dir Application template file saving directory. <current_path>/tpl
 -- @treturn conf_api
-function sys:conf_api(conf_name)
+function sys:conf_api(conf_name, ext, dir)
+	local dir = self:app_dir()..(dir or 'tpl')
 	app = dc.get("APPS", self._app_name)
-	return conf_api:new(app.name, conf_name)
+	return conf_api:new(app.name, conf_name, ext, dir)
 end
 
 function sys:version()
