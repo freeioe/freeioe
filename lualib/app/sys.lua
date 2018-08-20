@@ -6,6 +6,7 @@ local class = require 'middleclass'
 local ioe = require 'ioe'
 local api = require 'app.api'
 local logger = require 'app.logger'
+local conf_api = require 'app.conf_api'
 local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
@@ -148,6 +149,14 @@ function sys:set_conf(config)
 		dc.set("APPS", self._app_name, app)
 		return  true
 	end
+end
+
+--- Get cloud configuration api
+-- @tparam string conf_name Cloud application configuration name or ID
+-- @treturn conf_api
+function sys:conf_api(conf_name)
+	app = dc.get("APPS", self._app_name)
+	return conf_api:new(app.name, conf_name)
 end
 
 function sys:version()

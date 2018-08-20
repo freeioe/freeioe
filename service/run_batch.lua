@@ -47,6 +47,13 @@ local batch_env = {
 			conf = conf,
 		})
 	end,
+	CLEAN_APPS = function()
+		local appmgr = snax.uniqueservice('cloud')
+		local list = appmgr.req.list()
+		for k, v in pairs() do
+			REMOVE_APP(k)
+		end
+	end,
 	UPGRADE_SYS = function(version, skynet_version, need_ack)
 		local id = gen_task_id('sys', "Upgrade system to version "..version.." "..(skynet_version and ("with skynet "..skynet_version) or "withou skynet"))
 		assert(version)

@@ -40,6 +40,7 @@ local function cfg_defaults()
 		DATA_UPLOAD = false,
 		EVENT_UPLOAD = 99,
 		PKG_HOST_URL = "ioe.symgrid.com",
+		CNF_HOST_URL = "ioe.symgrid.com",
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
 end
