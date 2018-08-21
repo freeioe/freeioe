@@ -12,12 +12,12 @@ local api_header = {
 
 --- Constructor
 -- @tparam string app Application ID
--- @tparam string conf Application configuration Name or ID
+-- @tparam string conf Application configuration id
 -- @tparam string ext Local saving file extension. e.g. csv conf xml. default csv
 -- @tparam string dir Application template file saving directory. full path.
 function api:initialize(app, conf, ext, dir)
 	-- Service host (ip or domain)
-	self._host = datacenter.wait("CNF_HOST_URL")
+	self._host = datacenter.wait("CLOUD", "CNF_HOST_URL")
 	self._app = app
 	self._conf = conf
 	self._ext = ext or 'csv'
@@ -31,14 +31,14 @@ function api:version()
 	local url = '/conf_center/app_conf_version'
 	local query = { sn = self._sn, app = self._app, conf = self._conf }
 	local status, header, body = httpdown.get(self._host, url, api_header, query)
-	log.info('conf_api.version', self._host..url, status, body or header)
+	log.debug('conf_api.version', self._host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
 		if not msg.message then
 			return nil, "No version found!"
 		end
-		return msg.message.version
+		return math.tointeger(msg.message.version)
 	else
 		return nil, body
 	end
@@ -58,14 +58,17 @@ function api:data(version)
 	local url = '/conf_center/app_conf_data'
 	local query = { sn = self._sn, app = self._app, conf = self._conf, version = version }
 	local status, header, body = httpdown.get(self._host, url, api_header, query)
-	log.info('conf_api.data', self._host..url, status, body or header)
+	log.debug('conf_api.data', self._host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
 		if not msg.message then
 			return nil, "Version not valided!"
 		end
-		self:_save_local_data(msg.message.data, msg.message.version)
+		if math.tointeger(msg.message.version) ~= tonumber(version) then
+			return nil, "Version is different"
+		end
+		self:_save_local_data(msg.message.data, version)
 		return msg.message.data, msg.message.version
 	else
 		return nil, body
@@ -95,4 +98,4 @@ function api:_save_local_data(data, version)
 	return nil, err
 end
 
-return _M
+return api

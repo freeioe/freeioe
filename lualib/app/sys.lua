@@ -152,7 +152,7 @@ function sys:set_conf(config)
 end
 
 --- Get cloud configuration api
--- @tparam string conf_name Cloud application configuration name or ID
+-- @tparam string conf_name Cloud application configuration id
 -- @tparam string ext Local saving file extension. e.g. csv conf xml. default csv
 -- @tparam string dir Application template file saving directory. <current_path>/tpl
 -- @treturn conf_api
