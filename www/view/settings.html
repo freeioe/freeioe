@@ -5,7 +5,6 @@
 {-main-}
 <h1 class="header"> {{_("System Settings")}} </h1>
 
-<h3 class="ui dividing header">{{_("PKG")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
@@ -16,7 +15,7 @@
 	<tbody>
 		<tr>
 			<td>
-				{{_("PKG Host URL")}}
+				{{_("Application Center Host")}}
 			</td>
 			<td>
 				<div class="ui action input">
@@ -30,6 +29,42 @@
 					</button>
 					{% end %}
 				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				{{_("Application Conf Center Host")}}
+			</td>
+			<td>
+				<div class="ui action input">
+					{% if not edit_enable then %}
+					<input id="cnf_host_url" value="{{cnf_host}}" type="text" readonly="true">
+					{% else %}
+					<input id="cnf_host_url" value="{{pkg_host}}" type="text">
+					<button id="cnf_host_url_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+					{% end %}
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				{{_("Enable Configuration Upload")}}
+			</td>
+			<td>
+				{% if cfg_upload then %}
+				<div class="ui toggle checked checkbox" id="cfg_upload">
+					<input class="hidden" type="checkbox" checked="true">
+					<label></label>
+				</div>
+				{% else %}
+				<div class="ui toggle checkbox" id="cfg_upload">
+					<input class="hidden" type="checkbox">
+					<label></label>
+				</div>
+				{% end %}
 			</td>
 		</tr>
 		<tr>
@@ -48,23 +83,10 @@
 					<label></label>
 				</div>
 				{% end %}
-
-
 			</td>
 		</tr>
 	</tbody>
 </table>
-
-<div class="ui icon message">
-	<i class="inbox icon"></i>
-	<div class="content">
-		<div class="header">
-			<div id="message_ui">
-				{{ message }}
-			</div>
-		</div>
-	</div>
-</div>
 
 <div class="ui longer using_beta modal scrolling transition hidden">
 	<div class="ui header">{{_("Warning")}}</div>
@@ -85,32 +107,62 @@
 		<div class="ui cancel button">Cancel</div>
 	</div>
 </div>
+
+<div class="ui basic msg_print form">
+	<div class="ui success message"></div>
+	<div class="ui error message"></div>
+</div>
+
 {-main-}
 
 {-script-}
 <script>
+var msg_form = null;
+function reset_message() {
+	msg_form.removeClass('success').removeClass('error');
+};
+function print_err_message(msg) {
+	reset_message();
+	console.log('Exception:' + msg);
+	msg_form.find('.ui.error.message').html(msg);
+	msg_form.addClass('error');
+};
+function print_message(msg) {
+	reset_message();
+	console.log('OK:' + msg);
+	msg_form.find('.ui.success.message').html(msg);
+	msg_form.addClass('success');
+};
 function refresh_page() {
 	window.location.replace("/settings");
 };
 function uncheck_using_beta() {
-	var beta = $('#using_beta');
-	beta.checkbox('uncheck');
+	$('#using_beta').checkbox('uncheck');
+};
+function uncheck_cfg_upload() {
+	$('#cfg_upload').checkbox('uncheck');
 };
 function settings_option(option, value) {
 	$.post("/settings", {from_web:true, action:'pkg', option:option, value:value}, function(data) {
-		$('#message_ui').html('<i>' + data + '</i>');
+		print_message(data);
 	})
 	.done(function() {
-		setTimeout('refresh_page()', 500);
+		setTimeout(refresh_page, 500);
 	})
 	.fail(function() {
-		$('#message_ui').html('<i>{{_("Failed to send request")}}</i>');
+		print_err_message('{{_("Failed to send request")}}');
+		setTimeout(refresh_page, 500);
 	});
 };
 $(document).ready(function(){
+	msg_form = $('.ui.msg_print.form');
 	$("#pkg_host_url_btn").click(function() {
 		var value = $('#pkg_host_url').val();
 		settings_option('pkg_host_url', value);
+	});
+	$("#cnf_host_url_btn").click(function() {
+		var value = $('#cnf_host_url').val();
+		settings_option('cnf_host_url', value);
 	});
 	var using_beta = {{ using_beta and "true" or "false" }};
 	$('#using_beta')
@@ -121,7 +173,7 @@ $(document).ready(function(){
 					.modal({
 						closable  : false,
 						onDeny    : function(){
-							setTimeout('uncheck_using_beta()', 500);
+							setTimeout(uncheck_using_beta, 500);
 						},
 						onApprove : function() {
 							settings_option('using_beta', true);
@@ -134,6 +186,32 @@ $(document).ready(function(){
 			onUnchecked: function() {
 				if (using_beta) {
 					settings_option('using_beta', false);
+				}
+			}
+		})
+	;
+	var cfg_upload = {{ cfg_upload and "true" or "false" }};
+	$('#cfg_upload')
+		.checkbox({
+			// check all children
+			onChecked: function() {
+				$('.ui.longer.cfg_upload.modal')
+					.modal({
+						closable  : false,
+						onDeny    : function(){
+							setTimeout(uncheck_cfg_upload, 500);
+						},
+						onApprove : function() {
+							settings_option('cfg_upload', true);
+						}
+					})
+					.modal('show')
+				;
+			},
+			// uncheck all children
+			onUnchecked: function() {
+				if (cfg_upload) {
+					settings_option('cfg_upload', false);
 				}
 			}
 		})

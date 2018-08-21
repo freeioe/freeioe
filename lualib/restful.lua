@@ -1,4 +1,4 @@
-local json = require 'cjson'
+local cjson = require 'cjson'
 local class = require 'middleclass'
 
 local restful = class("RESTFULL_API")
@@ -7,13 +7,15 @@ function restful:initialize(host, timeout, headers)
 	assert(host)
 	self._host = host
 	self._timeout = timeout or 5000
-	self._headers = headers or {}
+	self._headers = headers or {
+		Accept = "application/json"
+	}
 end
 
 local function init_httpc(timeout)
 	local httpc = require 'http.httpc'
 
-	httpc.dns()
+	--httpc.dns()
 	if timeout then
 		httpc.timeout = timeout / 10
 	end
@@ -45,7 +47,14 @@ function restful:request(method, url, params, query)
     end
 
 	local httpc = init_httpc()
-    local r, status, body = pcall(httpc.request, method, host, url, recvheader, self._headers, content)
+
+	local headers = {}
+	for k, v in pairs(self._headers) do headers[k] = v end
+	if string.len(content) > 0 then
+		headers['content-type'] = headers['content-type'] or 'application/json'
+	end
+
+    local r, status, body = pcall(httpc.request, method, self._host, url, recvheader, headers, content)
 	if not r then
 		return nil, status
 	else

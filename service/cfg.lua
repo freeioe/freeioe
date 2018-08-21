@@ -41,6 +41,7 @@ local function cfg_defaults()
 		EVENT_UPLOAD = 99,
 		PKG_HOST_URL = "ioe.symgrid.com",
 		CNF_HOST_URL = "ioe.symgrid.com",
+		SYS_CFG_UPLOAD = true,
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
 end
@@ -157,53 +158,54 @@ end
 local function save_cfg_cloud(content, content_md5sum)
 	local id = dc.get("CLOUD", "ID")
 	if id and db_restful then
-		local url = "ioe_device_conf/"..id
-		local c = {
+		log.info("::CFG:: Upload cloud config start")
+		local url = "/conf_center/upload_device_conf"
+		local params = {
+			sn = id,
 			timestamp = db_modification,
 			data = content,
 			md5 = content_md5sum,
 		}
-		local status, body = db_restful:post(url, c)
-		if not status and status ~= 200 then
-			log.warning("::CFG:: Saving cloud config failed", status or -1, body)
+		local status, body = db_restful:post(url, params)
+		if not status or status ~= 200 then
+			log.warning("::CFG:: Saving cloud config failed", status or -1)
+		else
+			log.info("::CFG:: Upload cloud config done!")
 		end
 	end
 end
 
-local function load_cfg_cloud()
+local function load_cfg_cloud(cfg_id)
 	local id = dc.get("CLOUD", "ID")
 	if id and db_restful then
-		local status, body = db_restful:get("ioe_device_conf/"..id.."/timestamp")
-		if status ~= 200 then
+		local status, body = db_restful:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
+		if not status or status ~= 200 then
 			log.warning("::CFG:: Get cloud config failed", status or -1, body)
-			return
+			return nil, "Failed to download device configuration "..cfg_id
 		end
-		tm = tonumber(body)
-		if tm and tm > db_modification then
-			log.notice("::CFG:: Configuration in cloud is newer")
-			local status, content = db_restful:get("ioe_device_conf/"..id.."/content")
-			if status ~= 200 then
-				log.warning("::CFG:: Get cloud config failed", status or -1, body)
-			end
-			local status, md5sum = db_restful:get("ioe_device_conf/"..id.."/md5")
-			if status ~= 200 then
-				log.warning("::CFG:: Get cloud config failed", status or -1, body)
-			end
-			local sum = md5.sumhexa(content)
-			if sum ~= md5sum then
-				log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
-			end
-			local r, err = save_cfg(db_file, str, sum)
-			if not r  then
-				log.warning("::CFG:: Saving configurtaion failed", err)
-			end
-			log.warning("::CFG:: FreeIOE reboot now!!")
+		local new_cfg = cjson.decode(body)
+
+		log.notice("::CFG:: Get configuration from cloud is done!")
+		local content = new_cfg.data
+		local md5sum = new_cfg.md5
+
+		local sum = md5.sumhexa(content)
+		if sum ~= md5sum then
+			log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
+			return nil, "The downloaded configuration hasing is incorrect!"
+		end
+
+		local r, err = save_cfg(db_file, str, sum)
+		if not r  then
+			log.warning("::CFG:: Saving configurtaion failed", err)
+			return nil, "Saving configuration failed!"
+		end
+		log.warning("::CFG:: FreeIOE reboot in five seconds!!")
+
+		skynet.timeout(500, function()
 			-- Quit skynet
 			skynet.abort()
-		end
-		if tm and tm <= db_modification then
-			log.info("::CFG:: Local configuration is newer")
-		end
+		end)
 	end
 end
 
@@ -214,8 +216,10 @@ function command.SAVE(opt_path)
 		if r then
 			md5sum = sum
 		end
-		save_cfg_cloud(str, sum)
+
 		os.execute('sync')
+
+		save_cfg_cloud(str, sum)
 	end
 end
 
@@ -223,10 +227,16 @@ function command.CLEAR()
 	db = {}
 end
 
+function command.DOWNLOAD(id)
+	return load_cfg_cloud(id)
+end
+
 local function init_restful()
-	local cfg = dc.get("CLOUD", "CFG")
-	if cfg and cfg.ENABLE then
-		db_restful = restful:new(cfg.HOST, cfg.TIMEOUT)
+	local cfg_upload = dc.get("CLOUD", "SYS_CFG_UPLOAD")
+	if cfg_upload then
+		local host = dc.get("CLOUD", "CNF_HOST_URL")
+		log.info("::CFG:: System configuration upload enabled!", host)
+		db_restful = restful:new(host)
 	end
 end
 
@@ -244,9 +254,6 @@ skynet.start(function()
 	end)
 	skynet.register "CFG"
 
-	skynet.timeout(50, function()
-		load_cfg_cloud()
-	end)
 	skynet.fork(function()
 		while true do
 			command.SAVE()
