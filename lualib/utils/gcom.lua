@@ -64,7 +64,7 @@ _M.get_ccid = function()
 		return nil, err
 	end
 
-	local ccid = string.match(s, '+CCID:%s-(%d+)')
+	local ccid = string.match(s, '+CCID:%s-(%w+)')
 	if not ccid then
 		return nil, s
 	end
