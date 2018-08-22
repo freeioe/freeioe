@@ -65,6 +65,9 @@ function api:data(version)
 		if not msg.message then
 			return nil, "Version not valided!"
 		end
+		if math.tointeger(msg.message.version) == -1 then
+			return nil, "Cloud configuration not found in sever!"
+		end
 		if math.tointeger(msg.message.version) ~= tonumber(version) then
 			return nil, "Version is different"
 		end

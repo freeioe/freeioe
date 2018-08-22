@@ -2,12 +2,14 @@ local class = require 'middleclass'
 local skynet = require 'skynet'
 local conf_api = require 'app.conf_api'
 local log = require 'utils.log'
+local cjson = require 'cjson.safe'
 
 local helper = class("APP_CONF_API_HELPER")
 
 function helper:initialize(sys_api, conf, templates_ext, templates_dir, templates_node, devices_node)
+	assert(sys_api and conf)
 	self._sys = sys_api
-	self._conf = conf or {}
+	self._conf = conf
 	self._templates_ext = templates_ext or "csv"
 	self._templates_dir = templates_dir or "tpl"
 	self._templates_node = templates_node or "tpls"
@@ -17,9 +19,49 @@ function helper:initialize(sys_api, conf, templates_ext, templates_dir, template
 	self._devices = {}
 end
 
+function helper:_load_conf()
+	local conf_name, version = string.match(self._conf, "([^%.]+).(%d+)")
+	conf_name = conf_name or self._conf
+	version = math.tointeger(version)
+
+	local api = self._sys:conf_api(conf_name, "cnf", self._templates_dir)
+
+	--- Fetch latest version
+	if not version then
+		local ver, err = api:version()
+		if not ver then
+			log.warning("Get cloud configuration version failed", err)
+			return {}
+		end
+		version = ver
+	end
+
+	--- Fetch configuration now!
+	log.notice("Loading cloud configuration", conf_name, version)
+
+	local config, err = api:data(version)
+	if not config then
+		log.warning("Cloud configuration loading failed", err)
+		return {}
+	end
+	-- Decode as json
+	return cjson.decode(config) or {}
+end
+
 function helper:_real_fetch()
+	if type(self._conf) == 'string' then
+		self._conf = self:_load_conf()
+	end
+
 	local templates = self._conf[self._templates_node] or {}
 	local devices = self._conf[self._devices_node] or {}
+
+	if #templates == 0 then
+		for _, dev in ipairs(devices) do
+			self._devices[dev.name] = dev
+		end
+		return
+	end
 
 	while true do
 		local not_finished = false
@@ -65,6 +107,10 @@ function helper:fetch(async)
 			self:_real_fetch()
 		end)
 	end
+end
+
+function helper:config()
+	return self._conf
 end
 
 function helper:templates()
