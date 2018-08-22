@@ -763,7 +763,7 @@ function accept.set_conf(id, args)
 end
 
 function accept.download_cfg(id, args)
-	local r, err = skynet.call("CFG", "lua", "download", args.name)
+	local r, err = skynet.call("CFG", "lua", "download", args.name, args.host)
 	snax.self().post.action_result('sys', id, r, err or "Done")
 end
 

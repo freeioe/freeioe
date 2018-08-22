@@ -155,9 +155,10 @@ local function save_cfg(path, content, content_md5sum)
 	return true
 end
 
-local function save_cfg_cloud(content, content_md5sum)
+local function save_cfg_cloud(content, content_md5sum, rest)
 	local id = dc.get("CLOUD", "ID")
-	if id and db_restful then
+	local rest = rest or db_restful
+	if id and rest then
 		log.info("::CFG:: Upload cloud config start")
 		local url = "/conf_center/upload_device_conf"
 		local params = {
@@ -166,7 +167,7 @@ local function save_cfg_cloud(content, content_md5sum)
 			data = content,
 			md5 = content_md5sum,
 		}
-		local status, body = db_restful:post(url, params)
+		local status, body = rest:post(url, params)
 		if not status or status ~= 200 then
 			log.warning("::CFG:: Saving cloud config failed", status or -1)
 			return nil, "Saving cloud configuration failed!"
@@ -177,10 +178,11 @@ local function save_cfg_cloud(content, content_md5sum)
 	end
 end
 
-local function load_cfg_cloud(cfg_id)
+local function load_cfg_cloud(cfg_id, rest)
 	local id = dc.get("CLOUD", "ID")
-	if id and db_restful then
-		local status, body = db_restful:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
+	local rest = rest or db_restful
+	if id and rest then
+		local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
 		if not status or status ~= 200 then
 			log.warning("::CFG:: Get cloud config failed", status or -1, body)
 			return nil, "Failed to download device configuration "..cfg_id
@@ -230,21 +232,20 @@ function command.CLEAR()
 	db = {}
 end
 
-function command.DOWNLOAD(id)
-	return load_cfg_cloud(id)
+function command.DOWNLOAD(id, host)
+	if not host then
+		return load_cfg_cloud(id)
+	else
+		local rest  = restful:new(host)
+		return load_cfg_cloud(id, host)
+	end
 end
 
 function command.UPLOAD(host)
 	local host = host or dc.get("CNF_HOST_URL")
-
-	local rest_org = db_restful
-	db_restful = restful:new(host)
-
+	local rest = restful:new(host)
 	local str, sum = get_cfg_str()
-	local r, err = save_cfg_cloud(str, sum)
-
-	db_restful = rest_org
-	return r, err
+	return save_cfg_cloud(str, sum, rest)
 end
 
 local function init_restful()
