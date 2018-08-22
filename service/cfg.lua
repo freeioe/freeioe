@@ -11,6 +11,7 @@ local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
 local db_restful = nil
+local db_auto_upload = false
 
 local command = {}
 
@@ -41,7 +42,7 @@ local function cfg_defaults()
 		EVENT_UPLOAD = 99,
 		PKG_HOST_URL = "ioe.symgrid.com",
 		CNF_HOST_URL = "ioe.symgrid.com",
-		--SYS_CFG_UPLOAD = true,
+		--CFG_AUTO_UPLOAD = true,
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
 end
@@ -230,7 +231,9 @@ function command.SAVE(opt_path)
 
 		os.execute('sync')
 
-		save_cfg_cloud(str, sum, db_restful)
+		if db_auto_upload then
+			save_cfg_cloud(str, sum, db_restful)
+		end
 	end
 end
 
@@ -250,12 +253,13 @@ function command.UPLOAD(host)
 end
 
 local function init_restful()
-	local cfg_upload = dc.get("CLOUD", "SYS_CFG_UPLOAD")
-	if cfg_upload then
-		local host = dc.get("CLOUD", "CNF_HOST_URL")
+	db_auto_upload = dc.get("CLOUD", "CFG_AUTO_UPLOAD")
+	if db_auto_upload then
 		log.info("::CFG:: System configuration upload enabled!", host)
-		db_restful = restful:new(host)
 	end
+
+	local host = dc.get("CLOUD", "CNF_HOST_URL")
+	db_restful = restful:new(host)
 end
 
 skynet.start(function()

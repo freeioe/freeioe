@@ -195,23 +195,16 @@ $(document).ready(function(){
 		.checkbox({
 			// check all children
 			onChecked: function() {
-				$('.ui.longer.cfg_upload.modal')
-					.modal({
-						closable  : false,
-						onDeny    : function(){
-							setTimeout(uncheck_cfg_upload, 500);
-						},
-						onApprove : function() {
-							settings_option('cfg_upload', true);
-						}
-					})
-					.modal('show')
-				;
+				if (!cfg_upload) {
+					settings_option('cfg_auto_upload', true);
+					cfg_upload = true;
+				}
 			},
 			// uncheck all children
 			onUnchecked: function() {
 				if (cfg_upload) {
-					settings_option('cfg_upload', false);
+					settings_option('cfg_auto_upload', false);
+					cfg_upload = false;
 				}
 			}
 		})

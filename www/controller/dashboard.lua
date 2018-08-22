@@ -64,7 +64,7 @@ return {
 		local using_beta = dc.get('CLOUD', 'USING_BETA')
 		local ioe_sn = dc.get('CLOUD', 'ID') -- sysinfo.ioe_sn()
 		local ioe_cloud_sn = dc.get('CLOUD', 'CLOUD_ID')
-		local cfg_upload = dc.get('CLOUD', 'SYS_CFG_UPLOAD')
+		local cfg_upload = dc.get('CLOUD', 'CFG_AUTO_UPLOAD')
 		
 		local cloud = snax.uniqueservice('cloud')
 		local cloud_status, cloud_last = cloud.req.get_status()
