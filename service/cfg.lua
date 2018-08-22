@@ -156,62 +156,68 @@ local function save_cfg(path, content, content_md5sum)
 end
 
 local function save_cfg_cloud(content, content_md5sum, rest)
-	local id = dc.get("CLOUD", "ID")
-	local rest = rest or db_restful
-	if id and rest then
-		log.info("::CFG:: Upload cloud config start")
-		local url = "/conf_center/upload_device_conf"
-		local params = {
-			sn = id,
-			timestamp = db_modification,
-			data = content,
-			md5 = content_md5sum,
-		}
-		local status, body = rest:post(url, params)
-		if not status or status ~= 200 then
-			log.warning("::CFG:: Saving cloud config failed", status or -1)
-			return nil, "Saving cloud configuration failed!"
-		else
-			log.info("::CFG:: Upload cloud config done!")
-			return true
-		end
+	assert(content, content_md5sum)
+	if not rest then
+		return nil, "Restful api missing"
+	end
+
+	log.info("::CFG:: Upload cloud config start")
+
+	local id = dc.wait("CLOUD", "ID")
+	local url = "/conf_center/upload_device_conf"
+	local params = {
+		sn = id,
+		timestamp = db_modification,
+		data = content,
+		md5 = content_md5sum,
+	}
+	local status, body = rest:post(url, params)
+	if not status or status ~= 200 then
+		log.warning("::CFG:: Saving cloud config failed", status or -1)
+		return nil, "Saving cloud configuration failed!"
+	else
+		log.info("::CFG:: Upload cloud config done!")
+		return true
 	end
 end
 
 local function load_cfg_cloud(cfg_id, rest)
-	local id = dc.get("CLOUD", "ID")
-	local rest = rest or db_restful
-	if id and rest then
-		local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
-		if not status or status ~= 200 then
-			log.warning("::CFG:: Get cloud config failed", status or -1, body)
-			return nil, "Failed to download device configuration "..cfg_id
-		end
-		local new_cfg = cjson.decode(body)
-
-		log.notice("::CFG:: Get configuration from cloud is done!")
-		local content = new_cfg.data
-		local md5sum = new_cfg.md5
-
-		local sum = md5.sumhexa(content)
-		if sum ~= md5sum then
-			log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
-			return nil, "The downloaded configuration hasing is incorrect!"
-		end
-
-		local r, err = save_cfg(db_file, str, sum)
-		if not r  then
-			log.warning("::CFG:: Saving configurtaion failed", err)
-			return nil, "Saving configuration failed!"
-		end
-		log.warning("::CFG:: FreeIOE reboot in five seconds!!")
-
-		skynet.timeout(500, function()
-			-- Quit skynet
-			skynet.abort()
-		end)
-		return true
+	assert(cfg_id)
+	if not rest then
+		return nil, "Restful api missing"
 	end
+
+	log.info("::CFG:: Download cloud config start")
+
+	local id = dc.wait("CLOUD", "ID")
+	local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
+	if not status or status ~= 200 then
+		log.warning("::CFG:: Get cloud config failed", status or -1, body)
+		return nil, "Failed to download device configuration "..cfg_id
+	end
+	local new_cfg = cjson.decode(body)
+
+	local content = new_cfg.data
+	local md5sum = new_cfg.md5
+
+	local sum = md5.sumhexa(content)
+	if sum ~= md5sum then
+		log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
+		return nil, "The downloaded configuration hasing is incorrect!"
+	end
+
+	local r, err = save_cfg(db_file, str, sum)
+	if not r  then
+		log.warning("::CFG:: Saving configurtaion failed", err)
+		return nil, "Saving configuration failed!"
+	end
+
+	log.notice("::CFG:: Download cloud config finished. FreeIOE reboot in five seconds!!")
+	skynet.timeout(500, function()
+		-- Quit skynet
+		skynet.abort()
+	end)
+	return true
 end
 
 function command.SAVE(opt_path)
@@ -224,7 +230,7 @@ function command.SAVE(opt_path)
 
 		os.execute('sync')
 
-		save_cfg_cloud(str, sum)
+		save_cfg_cloud(str, sum, db_restful)
 	end
 end
 
@@ -233,17 +239,12 @@ function command.CLEAR()
 end
 
 function command.DOWNLOAD(id, host)
-	if not host then
-		return load_cfg_cloud(id)
-	else
-		local rest  = restful:new(host)
-		return load_cfg_cloud(id, host)
-	end
+	local rest = host and restful:new(host) or db_restful
+	return load_cfg_cloud(id, rest)
 end
 
 function command.UPLOAD(host)
-	local host = host or dc.get("CNF_HOST_URL")
-	local rest = restful:new(host)
+	local rest = host and restful:new(host) or db_restful
 	local str, sum = get_cfg_str()
 	return save_cfg_cloud(str, sum, rest)
 end

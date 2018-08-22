@@ -38,6 +38,14 @@ msgid "Application API"
 msgstr ""
 
 
+msgid "Application Center Host"
+msgstr ""
+
+
+msgid "Application Conf Center Host"
+msgstr ""
+
+
 msgid "Application Configruation"
 msgstr ""
 
@@ -259,6 +267,10 @@ msgstr ""
 
 
 msgid "Enable Cloud Web Mapping"
+msgstr ""
+
+
+msgid "Enable Configuration Upload"
 msgstr ""
 
 
@@ -511,14 +523,6 @@ msgstr ""
 
 
 msgid "Outputs"
-msgstr ""
-
-
-msgid "PKG"
-msgstr ""
-
-
-msgid "PKG Host URL"
 msgstr ""
 
 

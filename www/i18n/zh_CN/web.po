@@ -28,6 +28,12 @@ msgstr "应用"
 msgid "Application API"
 msgstr "应用接口"
 
+msgid "Application Center Host"
+msgstr "应用中心地址"
+
+msgid "Application Conf Center Host"
+msgstr "应用配置中心地址"
+
 msgid "Application Configruation"
 msgstr "应用配置"
 
@@ -195,6 +201,9 @@ msgstr "文档"
 
 msgid "Enable Cloud Web Mapping"
 msgstr "开启Web映射"
+
+msgid "Enable Configuration Upload"
+msgstr "开启配置自动上传"
 
 msgid "Enable SymLink Connect"
 msgstr "开启SymLink连接"
@@ -384,12 +393,6 @@ msgstr "非法选项"
 
 msgid "Outputs"
 msgstr "输出项"
-
-msgid "PKG"
-msgstr "软件包"
-
-msgid "PKG Host URL"
-msgstr "软件包服务器地址"
 
 msgid "PKG option is changed!"
 msgstr "软件包配置项修改成功"
@@ -654,6 +657,12 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "PKG"
+#~ msgstr "软件包"
+
+#~ msgid "PKG Host URL"
+#~ msgstr "软件包服务器地址"
 
 #~ msgid "Application Name"
 #~ msgstr "应用名称"
