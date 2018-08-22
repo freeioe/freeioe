@@ -111,6 +111,18 @@ _M.meminfo = function()
 	end
 end
 
+--- Get the system uptime
+-- includes 'total' 'used' 'free'
+-- @treturn table information struct {total=xx, used=xx, free=xx}
+_M.uptime = function()
+	local s, err = _M.cat_file('/proc/uptime')
+	if not s then
+		return nil, err
+	end
+
+	return string.match(s, "(%d+)%s-(%d+)")
+end
+
 --- Get he loadavg
 -- output the loadavg as one table, includes: lavg_1, lavg_5, lavg_15, nr_running, nr_threads, last_pid
 -- @treturn table Refer to description
