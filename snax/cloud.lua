@@ -140,15 +140,6 @@ local msg_handler = {
 		if action == 'enable/data_one_short' then
 			snax.self().post.enable_data_one_short(args.id, tonumber(args.data))
 		end
-		if action == 'enable/data/cov' then
-			snax.self().post.enable_data_cov(args.id, tonumber(args.data) == 1)
-		end
-		if action == 'enable/data/cov_ttl' then
-			snax.self().post.enable_data_cov_ttl(args.id, tonumber(args.data) == 1)
-		end
-		if action == 'enable/data/upload_peroid' then
-			snax.self().post.enable_data_upload_period(args.id, tonumber(args.data))
-		end
 		if action == 'enable/stat' then
 			snax.self().post.enable_stat(args.id, tonumber(args.data) == 1)
 		end
@@ -623,6 +614,13 @@ function response.disconnect()
 	return true
 end
 
+function response.reconnect()
+	if mqtt_client then
+		return nil, "Already connected!"
+	end
+	start_reconnect()
+end
+
 function response.list_cfg_keys()
 	return {
 		"ID",
@@ -639,6 +637,7 @@ function response.list_cfg_keys()
 		"COV",
 		"COV_TTL",
 		"PKG_HOST_URL",
+		"CNF_HOST_URL",
 	}
 end
 
@@ -654,25 +653,16 @@ function response.get_id()
 	return mqtt_id
 end
 
-function response.set_conf(conf)
+function response.set_conf(conf, reboot)
 	datacenter.set("CLOUD", conf)
-	snax.self().post.action_result('sys', id, true, "Done")
-	snax.self().post.reconnect()
+	if reboot then
+		snax.self().post.sys_quit(args.id, args.data)
+	end
 	return true
 end
 
 function response.get_conf()
 	return datacenter.get("CLOUD")
-end
-
-function response.download_cfg(id, args)
-	local r, err = skynet.call("CFG", "lua", "download", args.name)
-	snax.self().post.action_result('sys', id, r, err or "Done")
-end
-
-function response.upload_cfg(id, args)
-	local r, err = skynet.call("CFG", "lua", "upload", args.host)
-	snax.self().post.action_result('sys', id, r, err or "Done")
 end
 
 function response.get_status()
@@ -711,27 +701,6 @@ function accept.enable_data_one_short(id, period)
 		end
 		log.debug("Cloud data one-short upload disabled!")
 	end)
-end
-
-function accept.enable_data_cov(id, enable)
-	datacenter.set("CLOUD", "COV", enable)
-	--load_cov_conf()
-	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
-end
-
-function accept.enable_data_cov_ttl(id, enable)
-	if enable <= 30 then
-		datacenter.set("CLOUD", "COV_TTL", nil)
-	else
-		datacenter.set("CLOUD", "COV_TTL", enable)
-	end
-	--load_cov_conf()
-	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
-end
-
-function accept.enable_data_upload_period(id, period)
-	datacenter.set("CLOUD", "DATA_UPLOAD_PERIOD", period)-- period in ms
-	snax.self().post.action_result('sys', id, true, "Done! You need reboot FreeIOE to take this change!")
 end
 
 function accept.enable_stat(id, enable)
@@ -784,6 +753,26 @@ function accept.enable_event(id, level)
 	datacenter.set('CLOUD', 'EVENT_UPLOAD', enable_event_upload)
 	snax.self().post.action_result('sys', id, true, "Done")
 end
+
+function accept.set_conf(id, args)
+	for k, v in pairs(args) do
+		datacenter.set("CLOUD", string.upper(k), v)
+	end
+	snax.self().post.action_result('sys', id, true, "Done! System will be reboot to table those changes")
+	snax.self().post.sys_quit(args.id, args.data)
+end
+
+function accept.download_cfg(id, args)
+	local r, err = skynet.call("CFG", "lua", "download", args.name)
+	snax.self().post.action_result('sys', id, r, err or "Done")
+end
+
+function accept.upload_cfg(id, args)
+	local r, err = skynet.call("CFG", "lua", "upload", args.host)
+	snax.self().post.action_result('sys', id, r, err or "Done")
+	return r, err
+end
+
 
 ---
 -- When register to logger service, this is used to handle the log messages
