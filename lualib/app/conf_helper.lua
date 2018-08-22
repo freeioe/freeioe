@@ -70,7 +70,10 @@ end
 function helper:templates()
 	local templates = {}
 	for _, v in ipairs(self._conf[self._templates_node] or {}) do
-		table.insert(templates, self._templates[v.name])
+		local tpl = self.templates[v.name]
+		if tpl then
+			table.insert(templates, tpl)
+		end
 	end
 	return templates
 end
@@ -78,7 +81,10 @@ end
 function helper:devices()
 	local devices = {}
 	for _, v in ipairs(self._conf[self._devices_node] or {}) do
-		table.insert(devices, self._devices[v.name])
+		local dev = self._devices[v.name]
+		if dev then
+			table.insert(devices, dev)
+		end
 	end
 	return devices
 end

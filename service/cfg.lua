@@ -11,7 +11,6 @@ local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
 local db_restful = nil
-local db_auto_upload = false
 
 local command = {}
 
@@ -231,7 +230,8 @@ function command.SAVE(opt_path)
 
 		os.execute('sync')
 
-		if db_auto_upload then
+		local cfg_upload = dc.get("CLOUD", "CFG_AUTO_UPLOAD")
+		if cfg_upload then
 			save_cfg_cloud(str, sum, db_restful)
 		end
 	end
@@ -253,8 +253,8 @@ function command.UPLOAD(host)
 end
 
 local function init_restful()
-	db_auto_upload = dc.get("CLOUD", "CFG_AUTO_UPLOAD")
-	if db_auto_upload then
+	local cfg_upload = dc.get("CLOUD", "CFG_AUTO_UPLOAD")
+	if cfg_upload then
 		log.info("::CFG:: System configuration upload enabled!", host)
 	end
 
