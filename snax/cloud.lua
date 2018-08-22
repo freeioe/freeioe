@@ -167,6 +167,12 @@ local msg_handler = {
 		if action == 'conf' then
 			snax.self().post.set_conf(args.id, args.data)
 		end
+		if action == 'cfg/download' then
+			snax.self().post.download_cfg(args.id, args.data)
+		end
+		if action == 'cfg/upload' then
+			snax.self().post.upload_cfg(args.id, args.data)
+		end
 		if action == 'upgrade' then
 			snax.self().post.sys_upgrade(args.id, args.data)
 		end
@@ -650,12 +656,23 @@ end
 
 function response.set_conf(conf)
 	datacenter.set("CLOUD", conf)
+	snax.self().post.action_result('sys', id, true, "Done")
 	snax.self().post.reconnect()
 	return true
 end
 
 function response.get_conf()
 	return datacenter.get("CLOUD")
+end
+
+function response.download_cfg(id, args)
+	local r, err = skynet.call("CFG", "lua", "download", args.name)
+	snax.self().post.action_result('sys', id, r, err or "Done")
+end
+
+function response.upload_cfg(id, args)
+	local r, err = skynet.call("CFG", "lua", "upload", args.host)
+	snax.self().post.action_result('sys', id, r, err or "Done")
 end
 
 function response.get_status()

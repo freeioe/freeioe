@@ -41,7 +41,7 @@ local function cfg_defaults()
 		EVENT_UPLOAD = 99,
 		PKG_HOST_URL = "ioe.symgrid.com",
 		CNF_HOST_URL = "ioe.symgrid.com",
-		SYS_CFG_UPLOAD = true,
+		--SYS_CFG_UPLOAD = true,
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
 end
@@ -169,8 +169,10 @@ local function save_cfg_cloud(content, content_md5sum)
 		local status, body = db_restful:post(url, params)
 		if not status or status ~= 200 then
 			log.warning("::CFG:: Saving cloud config failed", status or -1)
+			return nil, "Saving cloud configuration failed!"
 		else
 			log.info("::CFG:: Upload cloud config done!")
+			return true
 		end
 	end
 end
@@ -206,6 +208,7 @@ local function load_cfg_cloud(cfg_id)
 			-- Quit skynet
 			skynet.abort()
 		end)
+		return true
 	end
 end
 
@@ -229,6 +232,19 @@ end
 
 function command.DOWNLOAD(id)
 	return load_cfg_cloud(id)
+end
+
+function command.UPLOAD(host)
+	local host = host or dc.get("CNF_HOST_URL")
+
+	local rest_org = db_restful
+	db_restful = restful:new(host)
+
+	local str, sum = get_cfg_str()
+	local r, err = save_cfg_cloud(str, sum)
+
+	db_restful = rest_org
+	return r, err
 end
 
 local function init_restful()
