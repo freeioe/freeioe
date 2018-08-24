@@ -22,7 +22,8 @@ return {
 		assert(post.app_file and type(post.app_file) == 'table')
 
 		local app_file = post.app_file
-		if app_file['content-type'] ~= 'application/zip' then
+		local ct = app_file['content-type']
+		if ct ~= 'application/zip' and ct ~= 'application/x-zip-compressed' then
 			return ngx.print(_('Application package must be zip file'))
 		end
 		--print(string.len(app_file.contents), app_file.size)
