@@ -5,6 +5,7 @@ local sysinfo = require 'utils.sysinfo'
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
 local pkg_api = require 'pkg_api'
+local ioe = require 'ioe'
 
 local tasks = {}
 local command = {}
@@ -319,7 +320,7 @@ function command.pkg_enable_beta()
 	end
 
 	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local sys_id = datacenter.get("CLOUD", "ID")
+	local sys_id = ioe.id()
 
 	local r, err = pkg_api.pkg_enable_beta(pkg_host, sys_id)
 	if r then

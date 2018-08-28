@@ -34,13 +34,13 @@ local function cfg_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
 	return {
 		ID = ioe_sn,
-		HOST = "ioe.symgrid.com",
+		HOST = "cloud.thingsroot.com",
 		PORT = 1883,
 		KEEPALIVE = 60,
 		DATA_UPLOAD = false,
 		EVENT_UPLOAD = 99,
-		PKG_HOST_URL = "ioe.symgrid.com",
-		CNF_HOST_URL = "ioe.symgrid.com",
+		PKG_HOST_URL = "cloud.thingsroot.com",
+		CNF_HOST_URL = "cloud.thingsroot.com",
 		--CFG_AUTO_UPLOAD = true,
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
@@ -163,7 +163,7 @@ local function save_cfg_cloud(content, content_md5sum, rest)
 
 	log.info("::CFG:: Upload cloud config start")
 
-	local id = dc.wait("CLOUD", "ID")
+	local id = dc.get("CLOUD", "CLOUD_ID") or dc.wait("CLOUD", "ID")
 	local url = "/conf_center/upload_device_conf"
 	local params = {
 		sn = id,
@@ -189,7 +189,7 @@ local function load_cfg_cloud(cfg_id, rest)
 
 	log.info("::CFG:: Download cloud config start")
 
-	local id = dc.wait("CLOUD", "ID")
+	local id = dc.get("CLOUD", "CLOUD_ID") or dc.wait("CLOUD", "ID")
 	local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
 	if not status or status ~= 200 then
 		log.warning("::CFG:: Get cloud config failed", status or -1, body)
