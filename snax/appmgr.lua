@@ -45,7 +45,7 @@ function response.start(name, conf)
 	app.last = skynet.time()
 
 	for handle, srv in pairs(reg_map) do
-		srv.post.app_started(name, inst.handle)
+		srv.post.app_event('start', name, inst.handle)
 	end
 
 	return inst
@@ -67,7 +67,7 @@ function response.stop(name, reason)
 	end
 
 	for handle, srv in pairs(reg_map) do
-		srv.post.app_stoped(name)
+		srv.post.app_event('stop', name, reason)
 	end
 
 	return true
@@ -104,6 +104,9 @@ function response.set_conf(inst, conf)
 
 	app.conf = conf or {}
 	local r, err = app.inst.req.set_conf(conf)
+	if r then
+		snax.self().post.app_event('conf', inst, conf)
+	end
 	return r, err
 end
 
@@ -118,6 +121,7 @@ end
 function response.app_option(inst, option, value)
 	if dc.get("APPS", inst) then
 		dc.set("APPS", inst, option, value)
+		snax.self().post.app_event('option', inst, option, value)
 		return true
 	else
 		return nil, "Application instance does not exits!"
@@ -154,9 +158,15 @@ function accept.app_start(inst)
 	end)
 end
 
-function accept.app_create(inst, opts)
-	if not applist[inst] then
-		applist[inst] = {}
+function accept.app_event(event, inst_name, ...)
+	if event == 'create' then
+		if not applist[inst] then
+			applist[inst] = {conf=conf}
+		end
+	end
+
+	for handle, srv in pairs(reg_map) do
+		srv.post.app_event(event, inst_name, ...)
 	end
 end
 
@@ -179,10 +189,12 @@ function accept.app_heartbeat_check()
 	end
 end
 
-function accept.reg_snax(handle, type)
+function accept.reg_snax(handle, type, fire_list)
 	local snax_inst = snax.bind(handle, type)
 	reg_map[handle] = snax_inst
-	snax_inst.post.app_list(applist)
+	if fire_list then
+		snax_inst.post.app_list(applist)
+	end
 	return true
 end
 

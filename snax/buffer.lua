@@ -124,6 +124,16 @@ function accept.app_started(name, handle)
 	nh_map[name] = handle
 end
 
+function accept.app_event(event, name, ...)
+	if event == 'start' then
+		snax.self().post.app_started(name, ...)
+	end
+	if event == 'stop' then
+		snax.self().post.app_stoped(name, ...)
+	end
+	-- TODO: more events?
+end
+
 function accept.app_stoped(name)
 	local handle = nh_map[name]
 	if not handle then

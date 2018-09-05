@@ -8,29 +8,45 @@ local urllib = require "http.url"
 local sockethelper = require "http.sockethelper"
 local cjson = require 'cjson.safe'
 local log = require 'utils.log'
+local restful = require 'restful'
 
 
 local client_map = {}
 local msg_handler = {}
 local handler = {}
+local http_api = nil
 
-local function send_data(client, data)
+local client_class = {}
+
+function client_class:send(data)
 	local str, err = cjson.encode(data)
 	if not str then
 		log.error("WebSocket cjson encode error", err)
 		return nil, err
 	end
 
-	local ws = client.ws
+	local ws = self.ws
 	local r, err = xpcall(ws.send_text, debug.traceback, ws, str)
 	if not r then
 		log.error("Call send_text failed", err)
-		ws:close()
+		ws:close(nil, err)
 		return nil, err
 	end
 
-	client.last = skynet.now()
+	self.last = skynet.now()
 	return true
+end
+
+function client_class:close(code, reason)
+	return self.ws:close(code, reason)
+end
+
+function client_class:ping(data)
+	return self.ws:send_ping(data)
+end
+
+function client_class:id()
+	return self.ws.id
 end
 
 local function handle_socket(id)
@@ -48,7 +64,7 @@ local broadcast_id = 0
 local function broadcast_msg(code, data)
 	broadcast_id = broadcast_id + 1
 	for id, client in pairs(client_map) do
-		send_data(client, {
+		client:send({
 			id = broadcast_id,
 			code = code,
 			data = data,
@@ -58,17 +74,18 @@ end
 
 function handler.on_open(ws)
     log.debug(string.format("%d::open", ws.id))
-	client_map[ws.id] = {
+	local client = setmetatable({
 		ws = ws,
 		last = skynet.now(),
 		authed = false,
 		_in_ping = false,
-	}
+	}, {__index=client_class})
 
+	client_map[ws.id] = client
 	-- delay send our information
-	local ws_id = ws.id
+	--
 	skynet.timeout(20, function()
-		send_data(client_map[ws_id], {
+		client:send({
 			id = 1,
 			code = 'info',
 			data = {
@@ -94,7 +111,7 @@ function handler.on_message(ws, message)
 
 		local f = msg_handler[msg.code]
 		if not f then
-			return send_data(client, {
+			return client:send({
 				id = id,
 				code = code,
 				data = {
@@ -103,7 +120,7 @@ function handler.on_message(ws, message)
 				}
 			})
 		else
-			return f(msg.id, msg.code, msg.data)
+			return f(client, msg.id, msg.code, msg.data)
 		end
 	else
 		-- Should not be here
@@ -125,28 +142,56 @@ function handler.on_pong(ws, data)
 	end
 end
 
-function msg_handler.login(id, code, data)
+function msg_handler.login(client, id, code, data)
+    log.debug(string.format("%d login %s %s", client.ws.id, data.user, data.passwd))
+	local status, body = http_api:post("/user/login", nil, {username=data.user, password=data.passwd})
+	if status == 200 then
+		return client:send({ id = id, code = code, data = { result = true, user = data.user }})
+	else
+		return client:send({ id = id, code = code, data = { result = false, message = "Login failed" }})
+	end
 end
 
-function msg_handler.app_new(id, code, data)
+function msg_handler.app_new(client, id, code, data)
+	if not ioe.beta() then
+		return client:send({id = id, code = code, data = { result = false, message = "Device in not in beta mode" }})
+	end
+	local args = {
+		name = data.app,
+		inst = data.inst,
+		from_web = true,
+	}
+	local r, err = skynet.call("UPGRADER", "lua", "create_app", id, args)
+	local result = true
+	if not r then
+		result = false
+		log.error("Create application error", err)
+	else
+		local cloud = snax.uniqueservice('cloud')
+		if cloud then
+			cloud.post.fire_apps()
+		end
+	end
+
+	return client:send({id = id, code = code, data = { result = result, message = err or "Done" }})
 end
 
-function msg_handler.app_start(id, code, data)
+function msg_handler.app_start(client, id, code, data)
 end
 
-function msg_handler.app_stop(id, code, data)
+function msg_handler.app_stop(client, id, code, data)
 end
 
-function msg_handler.app_list(id, code, data)
+function msg_handler.app_list(client, id, code, data)
 end
 
-function msg_handler.app_download(id, code, data)
+function msg_handler.app_download(client, id, code, data)
 end
 
-function msg_handler.file_download(id, code, data)
+function msg_handler.file_download(client, id, code, data)
 end
 
-function msg_handler.file_upload(id, code, data)
+function msg_handler.file_upload(client, id, code, data)
 end
 
 function accept.on_log(data)
@@ -174,6 +219,7 @@ end
 local ws_socket = nil
 
 function init()
+	http_api = restful("127.0.0.1:8808")
 	local address = "0.0.0.0:8818"
     log.notice("WebSocket Listening", address)
 
@@ -194,14 +240,13 @@ function init()
 			local now = skynet.now()
 			for k, v in pairs(client_map) do
 				local diff = math.abs(now - v.last)
-				local ws = v.ws
 				if diff > 60 * 100 then
-					log.debug(string.format("%d ping timeout %d-%d", ws.id, v.last, now))
-					ws:close(nil, 'Ping timeout')
+					log.debug(string.format("%d ping timeout %d-%d", v:id(), v.last, now))
+					v:close(nil, 'Ping timeout')
 				end
 				if not v._in_ping and diff >= (30 * 100) then
-					log.trace(string.format("%d send ping", ws.id))
-					ws:send_ping(tostring(now))
+					log.trace(string.format("%d send ping", v:id()))
+					v:ping(tostring(now))
 					v._in_ping = true
 				end
 			end

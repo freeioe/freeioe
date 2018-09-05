@@ -111,6 +111,9 @@ function command.upgrade_app(id, args)
 
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
+				--- Post to appmgr for instance added
+				appmgr.post.app_event('upgrade', inst_name)
+
 				return install_result(id, true, "Application upgradation is done!")
 			else
 				-- Upgrade will not remove app folder
@@ -169,6 +172,9 @@ function command.install_app(id, args)
 
 			local r, err = appmgr.req.start(inst_name, conf)
 			if r then
+				--- Post to appmgr for instance added
+				appmgr.post.app_event('install', inst_name)
+
 				return install_result(id, true, "Application installtion is done")
 			else
 				datacenter.set("APPS", inst_name, nil)
@@ -215,7 +221,7 @@ function command.create_app(id, args)
 
 	--- Post to appmgr for instance added
 	local appmgr = snax.uniqueservice("appmgr")
-	appmgr.post.app_create(inst_name)
+	appmgr.post.app_event('create', inst_name)
 
 	return true
 end
@@ -250,7 +256,7 @@ function command.install_local_app(id, args)
 
 	--- Post to appmgr for instance added
 	local appmgr = snax.uniqueservice("appmgr")
-	appmgr.post.app_create(inst_name)
+	appmgr.post.app_event('create', inst_name)
 
 	--[[
 	log.notice("Try to start application", inst_name)
@@ -290,6 +296,7 @@ function command.uninstall_app(id, args)
 	if r then
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
+		appmgr.post.app_event('uninstall', inst_name)
 		return install_result(id, true, "Application uninstall is done")
 	else
 		return install_result(id, false, "Application uninstall failed, Error: "..err)
