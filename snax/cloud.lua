@@ -787,7 +787,7 @@ end
 local fire_device_timer = nil
 function accept.fire_devices(timeout)
 	local timeout = timeout or 10
-	log.notice("Cloud fire devices data, timeout", timeout)
+	log.notice("Cloud fire devices, timeout", timeout)
 	if fire_device_timer then
 		return
 	end
@@ -836,6 +836,7 @@ end
 local fire_app_timer = nil
 function accept.fire_apps(timeout)
 	local timeout = timeout or 10
+	log.notice("Cloud fire applications, timeout", timeout)
 	if fire_app_timer then
 		return
 	end

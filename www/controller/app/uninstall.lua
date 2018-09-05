@@ -22,10 +22,6 @@ return {
 		local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", id, args)
 		if r then
 			ngx.print('Application uninstall is done!')
-			local cloud = snax.uniqueservice('cloud')
-			if cloud then
-				cloud.post.fire_apps(100)
-			end
 		else
 			ngx.print('Application uninstall failed', err)
 		end

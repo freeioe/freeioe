@@ -149,6 +149,7 @@ function accept.app_modified(inst, from)
 	end
 
 	dc.set("APPS", inst, 'islocal', 1)
+	snax.self().post.app_event('option', inst, 'islocal', 1)
 end
 
 function accept.app_start(inst)

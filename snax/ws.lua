@@ -9,7 +9,7 @@ local sockethelper = require "http.sockethelper"
 local cjson = require 'cjson.safe'
 local log = require 'utils.log'
 local restful = require 'restful'
-
+local app_file_editor = require 'app_file_editor'
 
 local client_map = {}
 local msg_handler = {}
@@ -64,11 +64,13 @@ local broadcast_id = 0
 local function broadcast_msg(code, data)
 	broadcast_id = broadcast_id + 1
 	for id, client in pairs(client_map) do
-		client:send({
-			id = broadcast_id,
-			code = code,
-			data = data,
-		})
+		if client.authed then
+			client:send({
+				id = broadcast_id,
+				code = code,
+				data = data,
+			})
+		end
 	end
 end
 
@@ -146,15 +148,21 @@ function msg_handler.login(client, id, code, data)
     log.debug(string.format("%d login %s %s", client.ws.id, data.user, data.passwd))
 	local status, body = http_api:post("/user/login", nil, {username=data.user, password=data.passwd})
 	if status == 200 then
+		client.authed = true
 		return client:send({ id = id, code = code, data = { result = true, user = data.user }})
 	else
 		return client:send({ id = id, code = code, data = { result = false, message = "Login failed" }})
 	end
 end
 
+function __fire_result(client, id, code, r, err)
+	local result = r and true or false
+	return client:send({id = id, code = code, data = { result = result, message = err or "Done" }})
+end
+
 function msg_handler.app_new(client, id, code, data)
 	if not ioe.beta() then
-		return client:send({id = id, code = code, data = { result = false, message = "Device in not in beta mode" }})
+		return __fire_result(client, id, code, false, "Device in not in beta mode")
 	end
 	local args = {
 		name = data.app,
@@ -162,36 +170,67 @@ function msg_handler.app_new(client, id, code, data)
 		from_web = true,
 	}
 	local r, err = skynet.call("UPGRADER", "lua", "create_app", id, args)
-	local result = true
-	if not r then
-		result = false
-		log.error("Create application error", err)
-	else
-		local cloud = snax.uniqueservice('cloud')
-		if cloud then
-			cloud.post.fire_apps()
-		end
-	end
-
-	return client:send({id = id, code = code, data = { result = result, message = err or "Done" }})
+	return __fire_result(client, id, code, r, err)
 end
 
 function msg_handler.app_start(client, id, code, data)
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.start(data.inst)
+	return __fire_result(client, id, code, r, err)
 end
 
 function msg_handler.app_stop(client, id, code, data)
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.stop(data.inst, data.reason)
+	return __fire_result(client, id, code, r, err)
 end
 
 function msg_handler.app_list(client, id, code, data)
+	local appmgr = snax.uniqueservice('appmgr')
+	local applist = appmgr.req.list()
+	return client:send({id = id, code = code, data = applist})
 end
 
-function msg_handler.app_download(client, id, code, data)
+function msg_handler.editor_get(client, id, code, data)
+	local get_ops = app_file_editor.get_ops
+
+	local app = data.app
+	local operation = data.operation
+	local node_id = data.id ~= '/' and data.id or ''
+	local f = get_ops[operation]
+	local content, err = f(app, node_id, data)
+	if content then
+		return client:send({id = id, code = code, data = { result = true, content = content}})
+	else
+		return __fire_result(client, id, code, false, err)
+	end
 end
 
-function msg_handler.file_download(client, id, code, data)
+function msg_handler.editor_post(client, id, code, data)
+	if not ioe.beta() then
+		return __fire_result(client, id, code, false, "Device in not in beta mode")
+	end
+
+	local post_ops = app_file_editor.post_ops
+
+	local app = data.app
+	local operation = data.operation
+	local node_id = data.id
+	local f = post_ops[operation]
+	local content, err = f(app, node_id, data)
+	if content then
+		return client:send({id = id, code = code, data = { result = true, content = content}})
+	else
+		return __fire_result(client, id, code, false, err)
+	end
 end
 
-function msg_handler.file_upload(client, id, code, data)
+function accept.app_event(event, inst_name, ...)
+	broadcast_msg('app_event', {inst = inst_name, params = {...}})
+end
+
+function accept.app_list(applist)
+	broadcast_msg('app_list', list)
 end
 
 function accept.on_log(data)
@@ -208,11 +247,14 @@ end
 
 local function connect_buffer_service(enable)
 	local buffer = snax.uniqueservice('buffer')
+	local appmgr = snax.uniqueservice('appmgr')
 	local obj = snax.self()
 	if enable then
 		buffer.post.listen(obj.handle, obj.type)
+		appmgr.post.reg_snax(obj.handle, obj.type, true)
 	else
 		logger.post.unlisten(obj.handle)
+		appmgr.post.unreg_snax(obj.handle)
 	end
 end
 

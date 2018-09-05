@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
 local sysinfo = require 'utils.sysinfo'
+local ioe = require 'ioe'
 
 local function pretty_memory(size)
 	local size = tonumber(size)

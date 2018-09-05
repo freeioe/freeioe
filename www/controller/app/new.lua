@@ -33,10 +33,6 @@ return {
 		local r, err = skynet.call("UPGRADER", "lua", "create_app", id, args)
 		if r then
 			ngx.print('Application creation is done!')
-			local cloud = snax.uniqueservice('cloud')
-			if cloud then
-				cloud.post.fire_apps()
-			end
 		else
 			ngx.print('Application creation failed', err)
 		end

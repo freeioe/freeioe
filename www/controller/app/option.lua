@@ -24,8 +24,6 @@ return {
 		local appmgr = snax.uniqueservice('appmgr')
 		appmgr.req.app_option(post.inst, post.option, post.value)
 
-		local cloud = snax.uniqueservice('cloud')
-		cloud.post.fire_apps()
 		ngx.print(_('Application option changed!'))
 	end,
 }
