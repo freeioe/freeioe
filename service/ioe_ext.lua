@@ -6,6 +6,7 @@ local sysinfo = require 'utils.sysinfo'
 local httpdown = require 'httpdown'
 local pkg_api = require 'pkg_api'
 local lfs = require 'lfs'
+local ioe = require 'ioe'
 
 local tasks = {}
 local installed = {}
@@ -272,14 +273,14 @@ function command.upgrade_ext(id, args)
 end
 
 function command.pkg_check_update(ext, beta)
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
+	local pkg_host = ioe.pkg_host_url()
+	local beta = beta and ioe.beta() 
 	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
 	return pkg_api.pkg_check_update(pkg_host, ext, beta)
 end
 
 function command.pkg_check_version(ext, version)
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local pkg_host = ioe.pkg_host_url()
 	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
 	return pkg_api.pkg_check_version(pkg_host, ext, version)
 end

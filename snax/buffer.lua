@@ -4,8 +4,6 @@ local socket = require 'skynet.socket'
 local crypt = require 'skynet.crypt'
 local log = require 'utils.log'
 local app_api = require 'app.api'
-local cyclebuffer = require 'cyclebuffer'
-local cjson = require 'cjson.safe'
 
 local api = nil
 
@@ -25,10 +23,8 @@ end
 local event_buffer = {}
 local max_event_buf_size = 256
 
--- UDP Forwarder
-local udp = nil
-local udp_target = nil
-local udp_heartbeat = 0
+-- Forwarder
+local listen_map = {}
 
 --[[
 -- Api Handler
@@ -49,11 +45,9 @@ local Handler = {
 			table.remove(list, 1)
 		end
 		comm_buffer[app] = list
-		if udp and udp_target then
-			socket.sendto(udp, udp_target, cjson.encode({
-				['type'] = 'comm',
-				data = list[#list]
-			}))
+
+		for handle, srv in pairs(listen_map) do
+			srv.post.on_comm(list[#list])
 		end
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
@@ -69,11 +63,9 @@ local Handler = {
 		if #event_buffer > max_event_buf_size then
 			table.remove(event_buffer, 1)
 		end
-		if udp and udp_target then
-			socket.sendto(udp, udp_target, cjson.encode({
-				['type'] = 'event',
-				data = event_buffer[#event_buffer]
-			}))
+
+		for handle, srv in pairs(listen_map) do
+			srv.post.on_event(event_buffer[#event_buffer])
 		end
 	end,
 }
@@ -105,57 +97,6 @@ function response.get_event()
 	return event_buffer
 end
 
-local function close_udp()
-	if udp then
-		log.notice("UDP Forward is closing...")
-		socket.close(udp)
-		udp = nil
-		udp_target = nil
-		udp_heartbeat = 0
-	end
-end
-
-function response.start_forward()
-	close_udp()
-	log.notice("UDP Forward is starting...")
-	local udp_socket = socket.udp(function(str, from)
-		--print(str, from)
-		if str == 'WHOISYOURDADDY' then
-			udp_target = from
-			udp_heartbeat = skynet.time() + 60
-		else
-			if str then
-				socket.sendto(udp_socket, from, str)
-			end
-		end
-	end, '0.0.0.0', 7788)
-
-	udp = udp_socket
-	udp_heartbeat = skynet.time() + 60
-
-	skynet.fork(function()
-		local udp_ = udp_socket
-		log.debug("UDP Forward heartbeat checking start!!", udp_, udp)
-		while udp_ == udp do
-			--print('check heartbeat', udp_, udp)
-			if udp_heartbeat < skynet.time() then
-				--print('check heartbeat failed', udp_, udp, udp_heartbeat, skynet.time())
-				close_udp()
-				break
-			end
-			skynet.sleep(100)
-		end
-		log.debug("UDP Forward heartbeat checking quit!!", udp_, udp)
-	end)
-
-	return true
-end
-
-function response.stop_forward()
-	close_udp()
-	return true
-end
-
 function accept.log(ts, lvl, content, ...)
 	local process, data = string.match(content, '^%[(.+)%]: (.+)$')
 	local list = log_buffer[process] or {}
@@ -170,11 +111,8 @@ function accept.log(ts, lvl, content, ...)
 	end
 	log_buffer[process] = list
 
-	if udp and udp_target then
-		socket.sendto(udp, udp_target, cjson.encode({
-			['type'] = 'log',
-			data = list[#list]
-		}))
+	for handle, srv in pairs(listen_map) do
+		srv.post.on_log(list[#list])
 	end
 end
 
@@ -202,6 +140,14 @@ function accept.app_list(list)
 			nh_map[k] = v.inst.handle
 		end
 	end
+end
+
+function accept.listen(handle, type)
+	listen_map[handle] = snax.bind(handle, type)
+end
+
+function accept.unlisten(handle, type)
+	listen_map[handle] = nil
 end
 
 local function connect_log_server(enable)
@@ -232,5 +178,6 @@ function init()
 end
 
 function exit(...)
+	connect_log_server(false)
 	log.notice("System buffer service stoped!")
 end

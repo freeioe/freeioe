@@ -45,7 +45,7 @@ skynet.start(function()
 		socket.start(id)
 
 		-- limit request body size to 8192 (you can pass nil to unlimit)
-		local code, url, method, header, body, httpver = httpd.read_request(sockethelper.readfunc(id), 1024 * 1024)
+		local code, url, method, header, body, httpver = httpd.read_request(sockethelper.readfunc(id), 8192)
 		log.trace('Web access', httpver, method, url, code)
 		if code then
 			if code ~= 200 then
@@ -83,7 +83,7 @@ skynet.start(function()
 	end
 	local balance = 1
 	local id = socket.listen(ip, port)
-	skynet.error("Web listen on:", port)
+	skynet.error("Web listen on:", ip, port)
 	socket.start(id , function(id, addr)
 		--skynet.error(string.format("%s connected, pass it to agent :%08x", addr, agent[balance]))
 		skynet.send(agent[balance], "lua", id)

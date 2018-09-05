@@ -1,6 +1,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
+local ioe = require 'ioe'
 
 return {
 	get = function(self)
@@ -8,10 +9,10 @@ return {
 			self:redirect('/user/login')
 		else
 			local get = ngx.req.get_uri_args()
-			local using_beta = dc.get('CLOUD', 'USING_BETA')
-			local pkg_host = dc.get('CLOUD', 'PKG_HOST_URL')
-			local cnf_host = dc.get('CLOUD', 'CNF_HOST_URL')
-			local cfg_upload = dc.get('CLOUD', 'CFG_AUTO_UPLOAD')
+			local using_beta = ioe.beta()
+			local pkg_host = ioe.pkg_host_url()
+			local cnf_host = ioe.cnf_host_url()
+			local cfg_upload = ioe.cfg_auto_upload()
 			lwf.render('settings.html', {
 				using_beta=using_beta,
 				pkg_host=pkg_host,
@@ -43,24 +44,8 @@ return {
 				end
 				value = r
 			end
-			dc.set('CLOUD', string.upper(option), value)
+			dc.set('SYS', string.upper(option), value)
 			ngx.print(_('PKG option is changed!'))
-		end
-		if action == 'debugger' then
-			local using_beta = dc.get('CLOUD', 'USING_BETA')
-			if not using_beta then
-				return
-			end
-			local option = post.option
-			local value = post.value
-			local buffer = snax.uniqueservice('buffer')
-			if option == 'forward' then
-				if value == true or value == 'true' then
-					buffer.req.start_forward()
-				else
-					buffer.req.stop_forward()
-				end
-			end
 		end
 	end
 }

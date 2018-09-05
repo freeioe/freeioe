@@ -380,7 +380,7 @@ end
 -- loading configruation from datacenter
 --]]
 local function load_conf()
-	mqtt_id = ioe.id() --datacenter.get("CLOUD", "CLOUD_ID") or datacenter.wait("CLOUD", "ID")
+	mqtt_id = ioe.id() --datacenter.get("CLOUD", "ID") or datacenter.wait("SYS", "ID")
 	mqtt_host = datacenter.get("CLOUD", "HOST")
 	mqtt_port = datacenter.get("CLOUD", "PORT")
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
@@ -621,26 +621,6 @@ function response.reconnect()
 	start_reconnect()
 end
 
-function response.list_cfg_keys()
-	return {
-		"ID",
-		"CLOUD_ID",
-		"HOST",
-		"PORT",
-		"TIMEOUT",
-		"DATA_UPLOAD",
-		"DATA_UPLOAD_PERIOD",
-		"LOG_UPLOAD",
-		"COMM_UPLOAD",
-		"COMM_UPLOAD_APPS",
-		"STAT_UPLOAD",
-		"COV",
-		"COV_TTL",
-		"PKG_HOST_URL",
-		"CNF_HOST_URL",
-	}
-end
-
 function response.gen_sn(sid)
 	-- Frappe autoname 
 	--hashlib.sha224((txt or "") + repr(time.time()) + repr(random_string(8))).hexdigest()
@@ -733,12 +713,12 @@ end
 
 function accept.enable_beta(id, enable)
 	if not enable then
-		datacenter.set('CLOUD', 'USING_BETA', false)
+		ioe.set_beta(false)
 	else
 		local r, err = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
 		if r then
 			log.warning("Using beta is enabled from cloud!")
-			datacenter.set('CLOUD', 'USING_BETA', true)
+			ioe.set_beta(true)
 		else
 			log.warning("Cannot enable beta", err)
 			snax.self().post.action_result('sys', id, false, err)

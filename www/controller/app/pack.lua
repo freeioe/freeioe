@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local dc = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
 local uuid = require 'uuid'
+local ioe = require 'ioe'
 
 local pack_target_path = "/tmp/ioe/"
 
@@ -37,7 +38,7 @@ return {
 			ngx.print(_('You are not logined!'))
 			return
 		end
-		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		local using_beta = ioe.beta()
 		if not using_beta then
 			ngx.print(_('FreeIOE device in not in beta mode!'))
 			return

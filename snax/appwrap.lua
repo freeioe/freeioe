@@ -221,7 +221,7 @@ function init(name, conf, mgr_handle, mgr_type)
 end
 
 function exit(...)
-	log.info("App "..app_name.." closed.")
+	log.info("App "..app_name.." closing...")
 	if cancel_ping_timer then
 		cancel_ping_timer()
 		cancel_ping_timer = nil
@@ -229,6 +229,7 @@ function exit(...)
 	local r, err = on_close(...)
 	if not r then
 		log.error(err)
-		fire_exception_event("App closed failure.", {err=err})
+		--fire_exception_event("App closed failure.", {err=err})
 	end
+	log.info("App "..app_name.." closed!")
 end

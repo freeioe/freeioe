@@ -11,8 +11,9 @@ return {
 			local get = ngx.req.get_uri_args()
 			--local cloud = snax.uniqueservice('cloud')
 			local cfg = dc.get('CLOUD')
+			local sys = dc.get('SYS')
 			local edit_sn = lfs.attributes("/etc/profile.d/echo_sn.sh", "mode") == 'file'
-			lwf.render('cloud.html', {cfg=cfg, nowtime=skynet.time(), edit_enable=get.edit_enable, edit_sn=edit_sn})
+			lwf.render('cloud.html', {sys=sys, cfg=cfg, nowtime=skynet.time(), edit_enable=get.edit_enable, edit_sn=edit_sn})
 		end
 	end,
 	post = function(self)
@@ -63,7 +64,7 @@ return {
 					ngx.print(_('The COV TTL cannot be less than 60 seconds'))
 				end
 			end
-			if string.upper(option) == 'CLOUD_ID' then
+			if string.upper(option) == 'ID' then
 				if string.len(tostring(value) or '') == 0 then
 					value = nil
 				end

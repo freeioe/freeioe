@@ -82,6 +82,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh huawei_cloud
 # ./scripts/release_app.sh JC_T8600
 ./scripts/release_app.sh dlt645
+./scripts/release_app.sh sim_tank
 
 # Release Extensions
 

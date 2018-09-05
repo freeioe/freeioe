@@ -9,18 +9,18 @@
 	<tbody>
 		<tr>
 			<td>
-				{{cfg.ID}}
+				{{sys.ID}}
 			</td>
 			<td>
 				<div class="ui action input">
 					{% if edit_enable or edit_sn then %}
-					<input id="ioe_cloud_id" value="{{cfg.CLOUD_ID}}" type="text">
+					<input id="ioe_cloud_id" value="{{cfg.ID}}" type="text">
 					<button id="ioe_cloud_id_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>
 					{% else %}
-						{{cfg.CLOUD_ID}}
+						{{cfg.ID}}
 					{% end %}
 				</div>
 			</td>

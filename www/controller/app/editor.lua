@@ -1,6 +1,7 @@
 local snax = require 'skynet.snax'
 local lfs = require 'lfs'
 local dc = require 'skynet.datacenter'
+local ioe = require 'ioe'
 
 local function get_file_ext(filename)
 	local ext = string.match(filename, '%.(%w-)$')
@@ -206,7 +207,7 @@ return {
 			self:redirect('/user/login')
 			return
 		end
-		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		local using_beta = ioe.beta()
 		if not using_beta then
 			return
 		end
@@ -228,7 +229,7 @@ return {
 			self:redirect('/user/login')
 			return
 		end
-		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		local using_beta = ioe.beta()
 		if not using_beta then
 			return
 		end

@@ -1,5 +1,6 @@
 local dc = require 'skynet.datacenter'
 local snax = require 'skynet.snax'
+local ioe = require 'ioe'
 
 return {
 	get = function(self)
@@ -7,7 +8,7 @@ return {
 			self:redirect('/user/login')
 			return
 		else
-			local using_beta = dc.get('CLOUD', 'USING_BETA')
+			local using_beta = ioe.beta()
 			if not using_beta then
 				self:redirect('/app')
 				return

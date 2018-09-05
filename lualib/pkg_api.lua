@@ -6,6 +6,7 @@ local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
 local helper = require 'utils.helper'
+local ioe = require 'ioe'
 
 local _M = {}
 
@@ -150,7 +151,7 @@ function _M.create_download_func(inst_name, app_name, version, ext, cb, is_exten
 			return cb(nil, err)
 		end
 
-		local pkg_host = datacenter.get("CLOUD", "PKG_HOST_URL")
+		local pkg_host = ioe.pkg_host_url()
 
 		local url = "/download/"..app_name.."/"..version..ext
 		if is_extension then

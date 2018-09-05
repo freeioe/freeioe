@@ -20,6 +20,7 @@ skynet.start(function()
 	local appmgr = snax.uniqueservice("appmgr")
 	-- This is one comm data buffer service for get one snapshot
 	local commlog = snax.uniqueservice("buffer")
+	local ws = snax.uniqueservice("ws")
 
 	skynet.exit()
 end)

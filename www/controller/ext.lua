@@ -1,5 +1,6 @@
 local dc = require 'skynet.datacenter'
 local skynet = require 'skynet'
+local ioe = require 'ioe'
 
 return {
 	get = function(self)
@@ -9,8 +10,8 @@ return {
 			return
 		else
 			local exts = skynet.call("IOE_EXT", "lua", "list")
-			local pkg_host_url = dc.get('PKG_HOST_URL')
-			local using_beta = dc.get('CLOUD', 'USING_BETA')
+			local pkg_host_url = ioe.pkg_host_url()
+			local using_beta = ioe.beta()
 			lwf.render('ext.html', {exts=exts, pkg_host_url=pkg_host_url, force_upgrade=get.force_upgrade, using_beta=using_beta})
 		end
 	end

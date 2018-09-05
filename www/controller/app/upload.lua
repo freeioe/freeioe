@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
 local pkg_api = require 'pkg_api'
+local ioe = require 'ioe'
 
 return {
 	post = function(self)
@@ -9,7 +10,7 @@ return {
 			ngx.print(_('You are not logined!'))
 			return
 		end
-		local using_beta = dc.get('CLOUD', 'USING_BETA')
+		local using_beta = ioe.beta()
 		if not using_beta then
 			ngx.print(_('FreeIOE device in not in beta mode!'))
 			return

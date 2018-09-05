@@ -1,5 +1,6 @@
 local dc = require 'skynet.datacenter'
 local snax = require 'skynet.snax'
+local ioe = require 'ioe'
 
 return {
 	get = function(self)
@@ -17,7 +18,7 @@ return {
 				v.version = math.floor(tonumber(v.version) or 0)
 				v.auto = math.floor(tonumber(v.auto or 1))
 			end
-			local using_beta = dc.get('CLOUD', 'USING_BETA')
+			local using_beta = ioe.beta() 
 			lwf.json(self, {apps=apps, using_beta=using_beta})
 		end
 	end

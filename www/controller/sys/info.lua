@@ -1,6 +1,5 @@
-local dc = require 'skynet.datacenter'
-local snax = require 'skynet.snax'
 local sysinfo = require 'utils.sysinfo'
+local ioe = require 'ioe'
 
 return {
 	get = function(self)
@@ -10,8 +9,8 @@ return {
 		local uname = sysinfo.uname("-a")
 		local arch = sysinfo.cpu_arch()
 		local os_id = sysinfo.os_id()
-		local using_beta = dc.get('CLOUD', 'USING_BETA')
-		local ioe_sn = dc.get('CLOUD', 'ID') or sysinfo.ioe_sn()
+		local using_beta = ioe.beta()
+		local ioe_sn = ioe.hw_id()
 		local uptime = string.match(sysinfo.cat_file('/proc/uptime') or "", "%d+")
 		local uptime_str = sysinfo.exec('uptime -s')
 		lwf.json(self, {

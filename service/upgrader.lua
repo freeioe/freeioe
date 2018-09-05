@@ -76,7 +76,7 @@ function command.upgrade_app(id, args)
 	if not app then
 		return install_result(id, false, "There is no app for instance name "..inst_name)	
 	end
-	if beta and not datacenter.get('CLOUD', 'USING_BETA') then
+	if beta and not ioe.beta() then
 		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
 	end
 	local appmgr = snax.uniqueservice("appmgr")
@@ -141,7 +141,7 @@ function command.install_app(id, args)
 		local err = "Application already installed"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
-	if beta and not datacenter.get('CLOUD', 'USING_BETA') then
+	if beta and not ioe.beta() then
 		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
 	end
 
@@ -199,7 +199,7 @@ function command.create_app(id, args)
 		local err = "Application already installed"
 		return install_result(id, false, "Failed to install App. Error: "..err)
 	end
-	if not datacenter.get('CLOUD', 'USING_BETA') then
+	if not ioe.beta() then
 		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
 	end
 
@@ -233,7 +233,7 @@ function command.install_local_app(id, args)
 	if datacenter.get("APPS", inst_name) and not args.force then
 		return nil, "Application already installed"
 	end
-	if not datacenter.get('CLOUD', 'USING_BETA') then
+	if not ioe.beta() then
 		return nil, "Device is not in beta mode! Cannot install beta version"
 	end
 
@@ -301,13 +301,13 @@ function command.list_app()
 end
 
 function command.pkg_check_update(app, beta)
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
-	local beta = beta and datacenter.get('CLOUD', 'USING_BETA')
+	local pkg_host = ioe.pkg_host_url()
+	local beta = beta and ioe.beta()
 	return pkg_api.pkg_check_update(pkg_host, app, beta)
 end
 
 function command.pkg_check_version(app, version)
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local pkg_host = ioe.pkg_host_url()
 	return pkg_api.pkg_check_version(pkg_host, app, version)
 end
 
@@ -319,7 +319,7 @@ function command.pkg_enable_beta()
 		return true
 	end
 
-	local pkg_host = datacenter.get('CLOUD', 'PKG_HOST_URL')
+	local pkg_host = ioe.pkg_host_url()
 	local sys_id = ioe.id()
 
 	local r, err = pkg_api.pkg_enable_beta(pkg_host, sys_id)
