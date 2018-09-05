@@ -336,7 +336,7 @@ function ws:recv_frame()
             self:close()
             self.handler.on_close(self, code, reason)
         elseif frame_opcode == 0x9 then --Ping
-            self:send_pong()
+            self:send_pong(frame_data)
         elseif frame_opcode == 0xA then -- Pong
             self.handler.on_pong(self, frame_data)
         end
@@ -351,12 +351,12 @@ function ws:start()
     while true do
         local r, message, err = xpcall(recv, debug.traceback, self)
 		if not r then
-			skynet.error('ws recv error', message)
+			--skynet.error('ws recv error', message)
             socket.close(self.id)
 			break
 		else
 			if not message then
-				print('recv eror:', message, err)
+				--print('recv eror:', message, err)
 				socket.close(self.id)
 				break
 			end

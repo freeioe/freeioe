@@ -75,7 +75,7 @@ local function broadcast_msg(code, data)
 end
 
 function handler.on_open(ws)
-    log.debug(string.format("%d::open", ws.id))
+    log.debug(string.format("WebSocket[%d] connected", ws.id))
 	local client = setmetatable({
 		ws = ws,
 		last = skynet.now(),
@@ -99,7 +99,7 @@ function handler.on_open(ws)
 end
 
 function handler.on_message(ws, message)
-    log.debug(string.format("%d receive:%s", ws.id, message))
+    --log.debug(string.format("%d receive:%s", ws.id, message))
 	--ws:send_text(message .. "from server")
 
 	local client = client_map[ws.id]
@@ -131,12 +131,12 @@ function handler.on_message(ws, message)
 end
 
 function handler.on_close(ws, code, reason)
-    log.debug(string.format("%d close:%s  %s", ws.id, code, reason))
+    log.debug(string.format("WebSocket[%d] close:%s  %s", ws.id, code, reason))
 	client_map[ws.id] = nil
 end
 
 function handler.on_pong(ws, data)
-    log.debug(string.format("%d on_pong %s", ws.id, data))
+    --log.debug(string.format("%d on_pong %s", ws.id, data))
 	local v = client_map[ws.id]
 	if v then
 		v.last = tonumber(data) or skynet.now()
@@ -145,7 +145,7 @@ function handler.on_pong(ws, data)
 end
 
 function msg_handler.login(client, id, code, data)
-    log.debug(string.format("%d login %s %s", client.ws.id, data.user, data.passwd))
+    log.debug(string.format("WebSocket[%d] login %s %s", client.ws.id, data.user, data.passwd))
 	local status, body = http_api:post("/user/login", nil, {username=data.user, password=data.passwd})
 	if status == 200 then
 		client.authed = true
@@ -186,9 +186,18 @@ function msg_handler.app_stop(client, id, code, data)
 end
 
 function msg_handler.app_list(client, id, code, data)
+	local dc = require 'skynet.datacenter'
+	local apps = dc.get('APPS') or {}
 	local appmgr = snax.uniqueservice('appmgr')
 	local applist = appmgr.req.list()
-	return client:send({id = id, code = code, data = applist})
+	for k, v in pairs(apps) do
+		v.running = applist[k] and applist[k].inst or nil
+		v.running = v.running and true or false
+		v.version = math.floor(tonumber(v.version) or 0)
+		v.auto = math.floor(tonumber(v.auto or 1))
+	end
+
+	return client:send({id = id, code = code, data = apps})
 end
 
 function msg_handler.editor_get(client, id, code, data)
@@ -280,17 +289,23 @@ function init()
 		while true do
 
 			local now = skynet.now()
+			local remove_list = {}
 			for k, v in pairs(client_map) do
 				local diff = math.abs(now - v.last)
 				if diff > 60 * 100 then
 					log.debug(string.format("%d ping timeout %d-%d", v:id(), v.last, now))
 					v:close(nil, 'Ping timeout')
+					table.insert(remove_list, k)
 				end
 				if not v._in_ping and diff >= (30 * 100) then
 					log.trace(string.format("%d send ping", v:id()))
 					v:ping(tostring(now))
 					v._in_ping = true
 				end
+			end
+
+			for _, v in ipairs(remove_list) do
+				client_map[v] = nil
 			end
 
 			skynet.sleep(100)
