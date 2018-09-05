@@ -1092,10 +1092,17 @@ function init()
 	skynet.fork(function()
 		api = app_api:new('CLOUD')
 		api:set_handler(Handler, true)
+
+		local appmgr = snax.uniqueservice('appmgr')
+		local obj = snax.self()
+		appmgr.post.reg_snax(obj.handle, obj.type)
 	end)
 end
 
 function exit(...)
+	local obj = snax.self()
+	appmgr.post.unreg_snax(obj.handle, obj.type)
+
 	if enable_data_one_short_cancel then
 		enable_data_one_short_cancel()
 	end

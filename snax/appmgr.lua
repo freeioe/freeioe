@@ -189,6 +189,8 @@ function accept.app_heartbeat_check()
 	end
 end
 
+
+---- for event stuff
 function accept.reg_snax(handle, type, fire_list)
 	local snax_inst = snax.bind(handle, type)
 	reg_map[handle] = snax_inst
