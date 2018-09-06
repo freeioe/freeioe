@@ -146,6 +146,7 @@ local function load_cfg(path)
 	db = cjson.decode(str) or {}
 
 	if not db.sys then
+		db.sys = {}
 		db.sys.ID = db.cloud.ID
 		db.cloud.ID = db.cloud.CLOUD_ID
 		db.cloud.CLOUD_ID = nil
