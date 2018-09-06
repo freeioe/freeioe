@@ -145,6 +145,15 @@ local function load_cfg(path)
 
 	db = cjson.decode(str) or {}
 
+	if not db.sys then
+		db.sys.ID = db.cloud.ID
+		db.cloud.ID = db.cloud.CLOUD_ID
+		db.cloud.CLOUD_ID = nil
+
+		db.sys.USING_BETA = db.cloud.USING_BETA
+		db.cloud.USING_BETA = nil
+	end
+
 	db.cloud = set_cloud_defaults(db.cloud)
 	db.sys = set_sys_defaults(db.sys)
 	dc.set("CLOUD", db.cloud or {})
