@@ -479,7 +479,7 @@ $(document).ready(function() {
 				closable  : false,
 				onApprove : function() {
 					var session = code_editor.getSession();
-					if (session.changed) {
+					if (session) {
 						$('#editor_menu .item.save').addClass('disabled');
 						localStorage.removeItem(local_storage_prefix + session.name);
 						doc_list[session.name] = null;
