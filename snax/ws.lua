@@ -122,7 +122,20 @@ function handler.on_message(ws, message)
 				}
 			})
 		else
-			return f(client, msg.id, msg.code, msg.data)
+			local r, result, err = xpcall(f, debug.traceback, client, msg.id, msg.code, msg.data)
+			if not r then
+				log.error(string.format("Call msg_handler[%s]", msg.code), result)
+				return client:send({
+					id = id,
+					code = code,
+					data = {
+						result = false,
+						message = result
+					}
+				})
+			else
+				return result, err
+			end
 		end
 	else
 		-- Should not be here

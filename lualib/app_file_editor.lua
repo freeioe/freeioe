@@ -8,6 +8,7 @@ local function get_file_ext(filename)
 end
 
 local function path_join(...)
+	--local path = table.concat({...}, '/'):gsub("//","/"):gsub("//","/")
 	local path = table.concat({...}, '/')
 	assert(not string.match(path, '%.%.'), "Cannot have .. in node id")
 	return path
@@ -15,6 +16,7 @@ end
 
 local function get_app_path(app, ...)
 	local path = path_join("./ioe/apps", app, ...)
+	--path = string.gsub(path, "\\", "/"):gsub("//", "/"):gsub("//","/")
 	path = string.gsub(path, "\\", "/")
 	return path
 end
