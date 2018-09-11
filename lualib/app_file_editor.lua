@@ -178,13 +178,22 @@ local get_ops = {
 	end,
 	get_content = function(app, node, opt)
 		local path = get_app_path(app, node)
-		local f = assert(io.open(path, 'r'))
-		local content = f:read('a')
-		f:close()
-		return {
-			['type'] = get_file_ext(node),
-			content = content
-		}
+		local ext = get_file_ext(node)
+		local mode = lfs.attributes(path, 'mode')
+		local size = lfs.attributes(path, 'size')
+		if ext ~= 'so' and mode == 'file' and size < 1024 * 1024  then
+			local f = assert(io.open(path, 'r'))
+			local content = f:read('a')
+			f:close()
+			return {
+				['type'] = ext,
+				content = content
+			}
+		else
+			return {
+				['type'] = ext,
+			}
+		end
 	end,
 }
 
