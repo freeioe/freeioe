@@ -61,6 +61,22 @@ local function list_nodes(app, sub)
 	end
 end
 
+local function stat_node(app, sub)
+	local path = get_app_path(app, sub)
+	local mode = lfs.attributes(path, 'mode')
+	local access = lfs.attributes(path, 'access')
+	local modification = lfs.attributes(path, 'modification')
+	local size = lfs.attributes(path, 'size')
+
+	return {
+		id = sub,
+		mode = mode,
+		access = access,
+		modification = modification,
+		size = size
+	}
+end
+
 local get_ops = {
 	get_node = function(app, node, opt)
 		if node == '#' then
@@ -80,6 +96,12 @@ local get_ops = {
 		else
 			return list_nodes(app, node)
 		end
+	end,
+	stat_node = function(app, node, opt)
+		if node == '#' then
+			node = ""
+		end
+		return stat_node(app, node)
 	end,
 	create_node = function(app, node, opt)
 		file_type = opt['type']
