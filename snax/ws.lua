@@ -234,8 +234,14 @@ function msg_handler.editor_post(client, id, code, data)
 	end
 end
 
+function msg_handler.event_list(client, id, code, data)
+	local buffer = snax.uniqueservice('buffer')
+	local events = buffer.req.get_event()
+	client:send({id = id, code = code, data = { result = true, data = events}})
+end
+
 function accept.app_event(event, inst_name, ...)
-	broadcast_msg('app_event', {inst = inst_name, params = {...}})
+	broadcast_msg('app_event', {event=event, app = inst_name, data = {...}})
 end
 
 function accept.app_list(applist)
