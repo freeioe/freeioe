@@ -23,9 +23,9 @@ local function protect_call(app, func, ...)
 
 	local r, er, err = xpcall(f, debug.traceback, app, ...)
 	if not r then
-		return nil, tostring(er)
+		return nil, er and tostring(er) or nil
 	end
-	return er, tostring(err)
+	return er, er and tostring(err) or nil
 end
 
 local on_close = function(...)
@@ -228,7 +228,7 @@ function exit(...)
 	end
 	local r, err = on_close(...)
 	if not r then
-		log.error(err)
+		log.error(err or 'Unknown closed error')
 		--fire_exception_event("App closed failure.", {err=err})
 	end
 	log.info("App "..app_name.." closed!")
