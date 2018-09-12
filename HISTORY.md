@@ -13,3 +13,4 @@ v1.1.0 (2018-9-11)
 
 * Support VS Code extension with WebSocket
 * Fixed a few bugs
+
