@@ -8,6 +8,7 @@ local urllib = require "http.url"
 local sockethelper = require "http.sockethelper"
 local cjson = require 'cjson.safe'
 local log = require 'utils.log'
+local sysinfo = require 'utils.sysinfo'
 local restful = require 'restful'
 local app_file_editor = require 'app_file_editor'
 
@@ -99,7 +100,7 @@ function handler.on_open(ws)
 end
 
 function handler.on_message(ws, message)
-    --log.debug(string.format("%d receive:%s", ws.id, message))
+    log.debug(string.format("%d receive:%s", ws.id, message))
 	--ws:send_text(message .. "from server")
 
 	local client = client_map[ws.id]
@@ -157,10 +158,21 @@ function handler.on_pong(ws, data)
 	end
 end
 
+local function auth_user(user, passwd)
+	if user == 'AUTH_CODE' then
+		return skynet.call("UPGRADER", "lua", "pkg_user_access", passwd)
+	end
+	local status, body = http_api:post("/user/login", nil, {username=user, password=passwd})
+	if status == 200 then
+		return true
+	end
+	return nil, body
+end
+
 function msg_handler.login(client, id, code, data)
     log.debug(string.format("WebSocket[%d] login %s %s", client.ws.id, data.user, data.passwd))
-	local status, body = http_api:post("/user/login", nil, {username=data.user, password=data.passwd})
-	if status == 200 then
+	local r, err = auth_user(data.user, data.passwd)
+	if r then
 		client.authed = true
 		return client:send({ id = id, code = code, data = { result = true, user = data.user }})
 	else
@@ -251,6 +263,31 @@ function msg_handler.event_list(client, id, code, data)
 	local buffer = snax.uniqueservice('buffer')
 	local events = buffer.req.get_event()
 	client:send({id = id, code = code, data = { result = true, data = events}})
+end
+
+function msg_handler.device_info(client, id, code, data)
+	local dc = require 'skynet.datacenter'
+	local cloud = snax.uniqueservice('cloud')
+
+	local cfg = {
+		sys = dc.get("SYS") or {},
+		cloud = dc.get("CLOUD") or {},
+		-- app = dc.get("APP") or {}
+	}
+
+	local status = {
+		cloud = cloud.req.get_status(),
+		mem = sysinfo.meminfo(),
+		uptime = sysinfo.uptime(),
+		loadavg = sysinfo.loadavg(),
+		network = sysinfo.network(),
+		version = sysinfo.version(),
+		skynet_version = sysinfo.skynet_version(),
+		cpu_arch = sysinfo.cpu_arch(),
+		platform = sysinfo.platform(),
+	}
+
+	client:send({id = id, code = code, data = { result = true, data = { cfg=cfg, status=status } } })
 end
 
 function accept.app_event(event, inst_name, ...)

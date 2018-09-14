@@ -336,6 +336,12 @@ function command.pkg_enable_beta()
 	return r, err
 end
 
+function command.pkg_user_access(auth_code)
+	local pkg_host = ioe.pkg_host_url()
+	local sys_id = ioe.id()
+	return pkg_api.pkg_user_access(pkg_host, sys_id, auth_code)
+end
+
 local function get_core_name(name, platform)
 	local name = name
 	local platform = platform or sysinfo.platform()

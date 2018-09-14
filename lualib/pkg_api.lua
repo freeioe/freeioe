@@ -48,6 +48,24 @@ function _M.pkg_enable_beta(pkg_host, sys_id)
 	end
 end
 
+function _M.pkg_user_access(pkg_host, sys_id, auth_code)
+	local url = '/pkg/user_access_device'
+	local headers = {
+		Accpet="application/json",
+		AuthorizationCode=auth_code
+	}
+	local status, header, body = httpdown.get(pkg_host, url, headers, {sn=sys_id})
+	log.info('pkg_user_access', pkg_host..url, status, body or header)
+	local ret = {}
+	if status == 200 then
+		local msg = cjson.decode(body)
+		return msg.message == true
+	else
+		return nil, body
+	end
+
+end
+
 function _M.pkg_check_version(pkg_host, app, version)
 	local version = version
 	if type(version) == 'number' then

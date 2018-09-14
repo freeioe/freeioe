@@ -101,9 +101,12 @@ local get_ops = {
 	end,
 	stat_node = function(app, node, opt)
 		if node == '#' then
-			node = ""
+			node = "/"
 		end
-		return stat_node(app, node)
+		return {
+			id = node,
+			stat = stat_node(app, node)
+		}
 	end,
 	create_node = function(app, node, opt)
 		file_type = opt['type']
