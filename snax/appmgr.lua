@@ -15,7 +15,7 @@ local sys_app = 'ioe'
 local function fire_exception_event(app_name, info, data)
 	local data = data or {}
 	data.app = app_name
-	return snax.self().post.fire_event(app_name, sys_id, event.LEVEL_ERROR, event.EVENT_APP, info, data)
+	return snax.self().post.fire_event(app_name, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, info, data)
 end
 
 ---
@@ -36,7 +36,7 @@ function response.start(name, conf)
 	if not r then
 		local info = "Failed to start app "..name..". Error: "..tostring(err)
 		log.error(info)
-		fire_exception_event(name, "Failed to start app"..name, {info=app, err=err})
+		fire_exception_event(name, "Failed to start app "..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")
 		return nil, info
 	end

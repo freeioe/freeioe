@@ -4,12 +4,12 @@ local cache = require "skynet.codecache"
 local app_sys = require 'app.sys'
 local event = require 'app.event'
 local log = require 'utils.log'
+local ioe = require 'ioe'
 
 local app = nil
 local app_name = "UNKNOWN"
 local mgr_snax = nil
 local sys_api = nil
-local sys_id = nil
 
 local cancel_ping_timer = nil
 local app_ping_timeout = 5000 -- ms
@@ -40,7 +40,6 @@ local on_close = function(...)
 	end
 	sys_api = nil
 	app = nil
-	app_name = "UNKNOWN"
 	return true
 end
 
@@ -50,7 +49,7 @@ local function fire_exception_event(info, data, level)
 	end
 	local data = data or {}
 	data.app = app_name
-	return mgr_snax.post.fire_event(app_name, sys_id, level or event.LEVEL_ERROR, event.EVENT_APP, info, data)
+	return mgr_snax.post.fire_event(app_name, ioe.id(), level or event.LEVEL_ERROR, event.EVENT_APP, info, data)
 end
 
 local function work_proc()
@@ -162,7 +161,6 @@ function init(name, conf, mgr_handle, mgr_type)
 	app_name = name
 	mgr_snax = snax.bind(mgr_handle, mgr_type)
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
-	sys_id = sys_api:id()
 
 	log.info("App "..app_name.." starting")
 	package.path = package.path..";./ioe/apps/"..name.."/?.lua;./ioe/apps/"..name.."/?.luac"..";./ioe/apps/"..name.."/lualib/?.lua;./ioe/apps/"..name.."/lualib/?.luac"
