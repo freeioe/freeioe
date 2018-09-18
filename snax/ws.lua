@@ -100,7 +100,7 @@ function handler.on_open(ws)
 end
 
 function handler.on_message(ws, message)
-    log.debug(string.format("%d receive:%s", ws.id, message))
+    log.debug(string.format("WebSocket[%d] message len :  %d", ws.id, string.len(message)))
 	--ws:send_text(message .. "from server")
 
 	local client = client_map[ws.id]
