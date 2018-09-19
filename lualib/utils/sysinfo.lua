@@ -402,6 +402,11 @@ _M.firmware_version = function()
 			patt = '[^%s]'
 		end
 		return string.match(s, "Firmware Version:%s+("..patt.."+)")
+	else
+		local s, err = _M.cat_file('/etc/os-release')
+		if s then
+			return string.match(s, 'PRETTY_NAME="([^"]+)"')
+		end
 	end
 end
 
