@@ -394,4 +394,15 @@ _M.ioe_sn = function()
 	return assert(read_ioe_sn() or os.getenv("IOE_SN"))
 end
 
+_M.firmware_version = function()
+	local s, err = _M.exec('sysinfo sw', true)
+	if s and string.len(s) > 0 then
+		local patt = '%g'
+		if _VERSION == 'Lua 5.1' then
+			patt = '[^%s]'
+		end
+		return string.match(s, "Firmware Version:%s+("..patt.."+)")
+	end
+end
+
 return _M
