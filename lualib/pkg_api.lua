@@ -86,6 +86,23 @@ function _M.pkg_check_version(pkg_host, app, version)
 	end
 end
 
+function _M.pkg_latest_version(pkg_host, app, beta)
+	local beta = beta and 1 or 0
+	local url = '/pkg/get_latest_version'
+	local status, header, body = httpdown.get(pkg_host, url, api_header, {app=app, beta=beta})
+	log.info('pkg_check_version', pkg_host..url, status, body or header)
+	local ret = {}
+	if status == 200 then
+		local msg = cjson.decode(body)
+		if not msg.message then
+			return nil, "Version not found!"
+		end
+		return msg.message
+	else
+		return nil, body
+	end
+end
+
 function _M.get_app_version(inst_name)
 	local dir = _M.get_app_folder(inst_name)
 	local f, err = io.open(dir.."/version", "r")
