@@ -99,6 +99,10 @@ end
 
 function accept.log(ts, lvl, content, ...)
 	local process, data = string.match(content, '^%[(.+)%]: (.+)$')
+	if not ( process and data ) then
+		return
+	end
+
 	local list = log_buffer[process] or {}
 	list[#list + 1] = {
 		timestamp = ts,

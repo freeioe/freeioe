@@ -510,6 +510,7 @@ local Handler = {
 		local timestamp = timestamp or skynet.time()
 		local quality = quality or 0
 
+		--cov:handle(publish_data_no_pb, key, value, timestamp, quality)
 		publish_data_no_pb(key, value, timestamp, quality)
 	end
 }

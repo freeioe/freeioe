@@ -136,7 +136,7 @@ function accept.app_post(msg, ...)
 
 	if app.accept then
 		local r, err = protect_call(app, 'accept', msg, ...)
-		if not r then
+		if not r and err then
 			log.warning("Failed to call accept function in application for msg", msg)
 			log.trace(err)
 		end
@@ -144,7 +144,7 @@ function accept.app_post(msg, ...)
 		local msg = 'on_post_'..msg
 		if app[msg] then
 			local r, err = protect_call(app, msg, ...)
-			if not r then
+			if not r and err then
 				log.warning("Failed to call accept function in application for msg", msg)
 				log.trace(err)
 			end

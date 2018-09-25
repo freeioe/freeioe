@@ -127,13 +127,17 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 end
 
 function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
-	local r, err = self:set_input_prop(input, prop, value, timestamp, quality)
-	if not r then
-		return nil, err
+	assert(not self._readonly, "This is not created device")
+	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
+	if not self._inputs_map[input] then
+		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
+	local timestamp = timestamp or skynet.time()
+	local quality = quality or 0
 
 	self._data_chn:publish('input_em', self._app_name, self._sn, input, prop, value, timestamp, quality)
-	return true
+
+	return self:set_input_prop(input, prop, value, timestamp, quality)
 end
 
 function device:get_output_prop(output, prop)
