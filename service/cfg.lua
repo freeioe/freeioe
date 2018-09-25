@@ -71,6 +71,9 @@ local function set_cloud_defaults(data)
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
 	end
+	if string.match(data.HOST, 'symgrid.com') then
+		data.HOST = defaults.HOST
+	end
 	return data
 end
 
