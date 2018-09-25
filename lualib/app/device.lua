@@ -126,6 +126,16 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	return true
 end
 
+function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
+	local r, err = self:set_input_prop(input, prop, value, timestamp, quality)
+	if not r then
+		return nil, err
+	end
+
+	self._data_chn:publish('input_em', self._app_name, self._sn, input, prop, value, timestamp, quality)
+	return true
+end
+
 function device:get_output_prop(output, prop)
 	local t = dc.get('OUTPUT', self._sn, output, prop)
 	return t.value, t.timestamp

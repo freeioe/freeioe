@@ -31,6 +31,9 @@ function app:start()
 		--- 处理设备输入项数值变更消息，当需要监控其他设备时才需要此接口，并在set_handler函数传入监控标识
 		on_input = function(app, sn, input, prop, value, timestamp, quality)
 		end,
+		--- 设备紧急数据
+		on_input_em = function(app, sn, input, prop, value, timestamp, quality)
+		end,
 		]]
 		on_output = function(app, sn, output, prop, value)
 		end,

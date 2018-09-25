@@ -37,6 +37,10 @@ quality: 质量戳。默认为0
 dev:set_input_prop("Temperature", "value", 10)
 ```
 
+* device:set_input_prop_emergency(input, prop, value, timestamp, quality)
+
+写入设备输入项属性值(紧急数据，需要尽快传递至云端数据)。此接口内部会调用set_input_prop接口，保证云端不处理紧急数据的情况下，也会将数据记录到云端。
+
 * device:get_output_prop(output, prop)
 
 获取设备输出项当前输出数据

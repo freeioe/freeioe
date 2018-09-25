@@ -266,6 +266,17 @@ local function mqtt_publish(topic, data, qos, retained)
 	end
 end
 
+local function publish_data_no_pb(key, value, timestamp, quality)
+	--log.trace('publish_data begin', mqtt_client, key, value)
+	if not mqtt_client then
+		return
+	end
+
+	--log.trace("Publish data", key, value, timestamp, quality)
+	local val = cjson.encode({ key, timestamp, value, quality}) or value
+	return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+end
+
 local function publish_data(key, value, timestamp, quality)
 	--log.trace('publish_data begin', mqtt_client, key, value)
 	if not mqtt_client then
@@ -488,6 +499,19 @@ local Handler = {
 
 		cov:handle(publish_data, key, value, timestamp, quality)
 	end,
+	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
+		log.trace('on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
+		if not enable_data_upload and sn ~= mqtt_id then
+			-- Skip data
+			return
+		end
+
+		local key = table.concat({sn, input, prop}, '/')
+		local timestamp = timestamp or skynet.time()
+		local quality = quality or 0
+
+		publish_data_no_pb(key, value, timestamp, quality)
+	end
 }
 
 function response.ping()
