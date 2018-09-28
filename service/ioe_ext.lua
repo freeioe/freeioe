@@ -275,13 +275,13 @@ end
 function command.pkg_check_update(ext, beta)
 	local pkg_host = ioe.pkg_host_url()
 	local beta = beta and ioe.beta() 
-	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
+	local ext = 'ext/'..sysinfo.platform()..'/'..ext
 	return pkg_api.pkg_check_update(pkg_host, ext, beta)
 end
 
 function command.pkg_check_version(ext, version)
 	local pkg_host = ioe.pkg_host_url()
-	local ext = 'ext/'..sysinfo.os_id()..'/'..sysinfo.cpu_arch()..'/'..ext
+	local ext = 'ext/'..sysinfo.platform()..'/'..ext
 	return pkg_api.pkg_check_version(pkg_host, ext, version)
 end
 

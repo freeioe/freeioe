@@ -1,4 +1,4 @@
-local skynet = require 'skynet'
+local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local log = require 'utils.log'
 local mc = require 'skynet.multicast'
@@ -62,8 +62,18 @@ function response.stop(name, reason)
 	end
 
 	if app.inst then
+		local force_kill = function()
+			log.warning("Force to kill app "..name.." as it is not closed within 10 seconds")
+			skynet.kill(app.inst.handle)
+		end
+		skynet.timeout(1000, function()
+			if force_kill then
+				force_kill()
+			end
+		end)
 		snax.kill(app.inst, reason)
 		app.inst = nil
+		force_kill = nil
 	end
 
 	for handle, srv in pairs(reg_map) do
