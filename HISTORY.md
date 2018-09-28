@@ -14,3 +14,15 @@ v1.1.0 (2018-9-11)
 * Support VS Code extension with WebSocket
 * Fixed a few bugs
 
+v1.1.1 (2018-9-25)
+------------------
+
+* Fixed beta flag reading issue
+* Reading system firmware/os version
+* Migrate cloud host to thingsroot.com
+
+v1.1.2 ()
+------------------
+
+* Emergency input value (API_VER=2)
+* Force kill application if timeout

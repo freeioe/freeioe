@@ -197,11 +197,11 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, m
 	end
 
-	if m.API_VER and m.API_VER < app_sys.API_MIN_VER then
-		local s = string.format("API Version required is too old. Required: %d. Current %d-%d",
+	if m.API_VER and (m.API_VER < app_sys.API_MIN_VER or m.API_VER > app_sys.API_VER) then
+		local s = string.format("API Version required is out of range. Required: %d. Current %d-%d",
 								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
 		log.error(s)
-		fire_exception_event(s, {sys_ver=app_sys.API_MIN_VER, ver=m.API_VER})
+		fire_exception_event(s, {sys_min_ver=app_sys.API_MIN_VER, sys_ver=ap_sys.API_VER, ver=m.API_VER})
 		return nil, s
 	else
 		if not m.API_VER then
