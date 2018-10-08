@@ -53,18 +53,22 @@ local function fire_exception_event(info, data, level)
 end
 
 local function work_proc()
-	local timeout = 1000
+	local timeout = 100
 	while app do
-		skynet.sleep(timeout / 10)
+		skynet.sleep(timeout)
 
 		local t, err = protect_call(app, 'run', timeout)
 		if t then
-			timeout = t
+			timeout = t // 10
 		else
 			if err then
 				log.warning('APP.run return error', err)
 				fire_exception_event('Application run loop error!', { err=err }, event.LEVEL_WARNING)
-				timeout = 1000 * 60
+				timeout = timeout * 2
+
+				if timeout >= 100 * 60 * 5 then
+					timeout = 100 * 5
+				end
 			end
 		end
 	end
