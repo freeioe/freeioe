@@ -65,15 +65,25 @@ function response.stop(name, reason)
 		local force_kill = function()
 			log.warning("Force to kill app "..name.." as it is not closed within 10 seconds")
 			skynet.kill(app.inst.handle)
+
+			app.inst = nil
 		end
+
 		skynet.timeout(1000, function()
 			if force_kill then
 				force_kill()
 			end
 		end)
-		snax.kill(app.inst, reason)
-		app.inst = nil
-		force_kill = nil
+
+		skynet.fork(function()
+			snax.kill(app.inst, reason)
+			app.inst = nil
+			force_kill = nil
+		end)
+
+		while app.inst do
+			skynet.sleep(100)
+		end
 	end
 
 	for handle, srv in pairs(reg_map) do
