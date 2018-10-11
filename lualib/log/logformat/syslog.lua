@@ -2,7 +2,7 @@ local string = require "string"
 local math   = require "math"
 local Log    = require "log"
 
-local mod,floor,ceil,abs,pow = math.mod,math.floor,math.ceil,math.abs,math.pow
+local mod,floor,ceil,abs,pow = math.fmod,math.floor,math.ceil,math.abs,math.pow
 local fmt = string.format
 
 -- removes the decimal part of a number
