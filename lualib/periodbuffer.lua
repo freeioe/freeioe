@@ -39,6 +39,10 @@ function pb:fire_all(cb)
 	return false
 end
 
+function pb:reinit(period, size)
+	self._period = period or self._period
+	self._max_size = size or self._max_size
+end
 
 function pb:size()
 	return #self._buf

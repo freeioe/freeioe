@@ -15,43 +15,47 @@ local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
 local cancelable_timeout = require 'cancelable_timeout'
 
+--- Compress data using zlib
 local zlib_loaded, zlib -- will be initialized in init(...)
 
---- Connection options
-local mqtt_id = nil --"UNKNOWN_ID"
-local mqtt_host = nil --"cloud.symid.com"
-local mqtt_port = nil --1883
-local mqtt_keepalive = nil --300
-local mqtt_client = nil
-local mqtt_client_last = nil
+--- Cloud/MQTT connection options
+local mqtt_id = nil				--"UNKNOWN_ID"
+local mqtt_host = nil			--"cloud.thingsroot.com"
+local mqtt_port = nil			--1883
+local mqtt_keepalive = nil		--300
+local mqtt_client = nil			--- MQTT Client instance
+local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
 
---- Next reconnect timeout
+--- Next reconnect timeout which will be multi by two until a max time
 local mqtt_reconnect_timeout = 100
 
 --- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
+--- Close connection flag in block mode
 local close_connection = false
+--- App devices data fire flag to prevent fire data when reconnected
 local apps_devices_fired = false
 
 --- Cloud options
-local enable_data_upload = nil -- true
-local enable_data_one_short_cancel = nil
-local enable_stat_upload = nil
-local enable_event_upload = nil
-local enable_comm_upload = nil
-local enable_comm_upload_apps = {}
-local max_enable_comm_upload = 60 * 10
-local enable_log_upload = nil
-local max_enable_log_upload = 60 * 10
+local enable_data_upload = nil				--- Whether upload device data (boolean)
+local enable_data_one_short_cancel = nil	--- Whether enable data upload in one short time (time)
+local enable_stat_upload = nil				--- Whether upload device stat (boolean)
+local enable_event_upload = nil				--- Whether upload event data (level in number)
+local enable_comm_upload = nil				--- Whether upload communication data (time)
+local enable_comm_upload_apps = {}			--- Whether upload communication data for specified application
+local max_enable_comm_upload = 60 * 10		--- Max upload communication data period
+local enable_log_upload = nil				--- Whether upload logs (time)
+local max_enable_log_upload = 60 * 10		--- Max upload logs period
 
-local api = nil
-local cov = nil
-local cov_min_timer_gap = 10
-local pb = nil
-local log_buffer = nil
-local event_buffer = nil
+local api = nil					--- App API object to access devices
+local cov = nil					--- COV helper
+local cov_min_timer_gap = 10	--- COV min timer gap which will be set to period / 10 if upload period enabled
+local pb = nil					--- Upload period buffer helper
+local log_buffer = nil			--- Cycle buffer for logs
+local event_buffer = nil		--- Cycle buffer for events
+local comm_buffer = nil			--- Cycle buffer for communication data
 
---- Log function handler
+--- Log function handler for mqtt library
 local log_func = nil
 local null_log_print = function() end
 local log_callback = function(level, ...)
@@ -74,7 +78,7 @@ local log_callback = function(level, ...)
 	end
 end
 
---- Wild topics match
+--- Wild topics match to subscribe messages from cloud
 local wildtopics = {
 	"app/#",
 	"sys/#",
@@ -421,7 +425,6 @@ end
 --[[
 -- Api Handler
 --]]
-local comm_buffer = nil
 local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
 		--local hex = crypt.hexencode(table.concat({...}, '\t'))
