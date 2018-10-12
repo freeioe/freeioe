@@ -26,3 +26,5 @@ v1.1.2 ()
 
 * Emergency input value (API_VER=2)
 * Force kill application if timeout
+* Control signal stength led
+
