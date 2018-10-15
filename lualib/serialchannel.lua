@@ -519,10 +519,13 @@ local function rs232_read(port, len, timeout)
 		end
 		skynet.sleep(1)
 	end
+
+	--- Return any thing if serial has
 	local ilen, err = port:in_queue()
-	if ilen then
-		port:read(ilen, 10)
+	if ilen and ilen > 0 then
+		return port:read(ilen >= len and len or ilen, 10)
 	end
+
 	return false, "Serial read timeout ..."
 	--[[
 	]]--
