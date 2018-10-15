@@ -496,11 +496,17 @@ local function wrapper_serial_function(f)
 end
 
 local function rs232_read(port, len, timeout)
-	local timeout = timeout or 300
-	return port:read(len, timeout * 10, 1)
-
 	--[[
-	local timeout = (timeout or 3 * 1000) / 10
+	local timeout = timeout or 300
+	--return port:read(len, timeout * 10, 1)
+	local r, err = port:read(len, timeout * 10, 1)
+	if not r or string.len(r) == 0 then
+		return false, err or "Serial read timeout ..."
+	end
+	return r, err
+	]]--
+
+	local timeout = timeout or 300
 
 	local start = skynet.now()
 	while skynet.now() - start < timeout do
@@ -513,7 +519,12 @@ local function rs232_read(port, len, timeout)
 		end
 		skynet.sleep(1)
 	end
-	return false, "RS232 reading timeout...."
+	local ilen, err = port:in_queue()
+	if ilen then
+		port:read(ilen, 10)
+	end
+	return false, "Serial read timeout ..."
+	--[[
 	]]--
 end
 
