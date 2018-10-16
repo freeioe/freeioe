@@ -15,6 +15,9 @@ local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
 local cancelable_timeout = require 'cancelable_timeout'
 
+--- Service running
+local service_stop = false
+
 --- Compress data using zlib
 local zlib_loaded, zlib -- will be initialized in init(...)
 
@@ -51,6 +54,7 @@ local api = nil					--- App API object to access devices
 local cov = nil					--- COV helper
 local cov_min_timer_gap = 10	--- COV min timer gap which will be set to period / 10 if upload period enabled
 local pb = nil					--- Upload period buffer helper
+local stat_pb = nil				--- Upload period buffer helper for stat data
 local log_buffer = nil			--- Cycle buffer for logs
 local event_buffer = nil		--- Cycle buffer for events
 local comm_buffer = nil			--- Cycle buffer for communication data
@@ -280,8 +284,13 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 	end
 
 	--log.trace("Publish data", key, value, timestamp, quality)
-	local val = cjson.encode({ key, timestamp, value, quality}) or value
-	return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+	local val, err = cjson.encode({ key, timestamp, value, quality})
+	if val then
+		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+	else
+		log.warning('Failed cjson encode', err)
+		return nil, err
+	end
 end
 
 local function publish_data(key, value, timestamp, quality)
@@ -291,18 +300,46 @@ local function publish_data(key, value, timestamp, quality)
 	end
 
 	--log.trace("Publish data", key, value, timestamp, quality)
-	local val = cjson.encode({ key, timestamp, value, quality}) or value
+	local val, err = cjson.encode({ key, timestamp, value, quality})
+	if not val then
+		log.warning('Failed cjson encode', err)
+		return nil, err
+	end
 	if not pb then
 		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 	else
 		--log.trace('publish_data turn period buffer')
 		pb:handle(key, timestamp, value, quality)
+		return true
+	end
+end
+
+local function publish_stat(key, value, timestamp, quality)
+	--log.trace('publish_stat begin', mqtt_client, key, value)
+	if not mqtt_client then
+		return
+	end
+
+	--log.trace("Publish stat", key, value, timestamp)
+	local val, err = cjson.encode({ key, timestamp, value, quality})
+	if not val then
+		log.warning('Failed cjson encode', err)
+		return nil, err
+	end
+
+	if not stat_pb then
+		return mqtt_client:publish(mqtt_id.."/stat", val, 1, false)
+	else
+		--log.trace('publish_stat turn period buffer')
+		stat_pb:handle(key, timestamp, value, quality)
+		return true
 	end
 end
 
 local total_compressed = 0
 local total_uncompressed = 0
-local function publish_data_list(val_list)
+local function publish_data_list_impl(val_list, topic)
+	assert(val_list, topic)
 	--log.trace('publish_data_list begin', mqtt_client, #val_list)
 	if not mqtt_client or #val_list == 0 then
 		return
@@ -321,9 +358,19 @@ local function publish_data_list(val_list)
 			local total_rate = (total_compressed/total_uncompressed) * 100
 			local current_rate = (bytes_out/bytes_in) * 100
 			log.trace('Count '..#val_list..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
-			return mqtt_client:publish(mqtt_id.."/data_gz", deflated, 1, false)
+
+			local topic = mqtt_id.."/"..topic
+			return mqtt_client:publish(topic, deflated, 1, false)
 		end
 	end
+end
+
+local publish_data_list = function(val_list)
+	return publish_data_list_impl(val_list, 'data_gz')
+end
+
+local publish_stat_list = function(val_list)
+	return publish_data_list_impl(val_list, 'stat_gz')
 end
 
 local function load_cov_conf()
@@ -332,6 +379,8 @@ local function load_cov_conf()
 	local ttl = datacenter.get("CLOUD", "COV_TTL") or default_ttl
 
 	local cov_m = require 'cov'
+
+	--- Device data cov stuff
 	local opt = {}
 	if not enable_cov and enable_data_upload then
 		opt.disable = true
@@ -342,11 +391,10 @@ local function load_cov_conf()
 			opt.ttl = default_ttl
 		end
 	end
-
 	cov = cov_m:new(opt)
 
 	skynet.fork(function()
-		while true do
+		while not service_stop do
 			--- Trigger cov timer
 			local gap = nil
 			if zlib_loaded then
@@ -366,7 +414,43 @@ local function load_cov_conf()
 			skynet.sleep(math.floor(gap * 100))
 		end
 	end)
+
+	--- Stat data cov stuff
+	local stat_cov_opt = {}
+	if not enable_cov and enable_stat_upload then
+		stat_cov_opt.disable = true
+	else
+		stat_cov_opt.ttl = ttl
+		--- if data is not upload to our cloud, then take default ttl always.
+		if enable_stat_upload then
+			stat_cov_opt.ttl = default_ttl
+		end
+	end
+	stat_cov = cov_m:new(opt)
+
+	skynet.fork(function()
+		while not service_stop do
+			--- Trigger cov timer
+			local gap = nil
+			if zlib_loaded then
+				local list = {}
+				gap = stat_cov:timer(skynet.time(), function(key, value, timestamp, quality)
+					list[#list+1] = {key, timestamp, value, quality}
+				end)
+				publish_stat_list(list)
+			else
+				gap = stat_cov:timer(skynet.time(), publish_stat)
+			end
+
+			--- Make sure sleep not less than min gap
+			if gap < cov_min_timer_gap then
+				gap = cov_min_timer_gap
+			end
+			skynet.sleep(math.floor(gap * 100))
+		end
+	end)
 end
+
 
 local function load_pb_conf()
 	if not zlib_loaded then
@@ -383,12 +467,19 @@ local function load_pb_conf()
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
 		cov_min_timer_gap = math.floor(period / 10)
+
 		pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
 		pb:start(publish_data_list)
+		stat_pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
+		stat_pb:start(publish_stat_list)
 	else
 		if pb then
 			pb:stop()
 			pb = nil
+		end
+		if stat_pb then
+			stat_pb:stop()
+			stat_pb = nil
 		end
 	end
 end
@@ -403,11 +494,13 @@ local function load_conf()
 	mqtt_port = datacenter.get("CLOUD", "PORT")
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
 	mqtt_secret = datacenter.get("CLOUD", "SECRET")
+	log.notice("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
+
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
-	enable_event_upload = datacenter.get("CLOUD", "EVENT_UPLOAD")
+	enable_event_upload = tonumber(datacenter.get("CLOUD", "EVENT_UPLOAD"))
 
 	enable_comm_upload_apps = datacenter.get("CLOUD", "COMM_UPLOAD_APPS") or {}
 	local changed = false
@@ -425,6 +518,67 @@ local function load_conf()
 	load_cov_conf()
 end
 
+local function publish_comm(app, sn, dir, ts, content)
+	if not mqtt_client then
+		return
+	end
+
+	local key = mqtt_id.."/comm"
+	local msg = { (sn or app).."/"..dir, ts, content }
+	--log.trace('publish comm', key, table.concat(msg))
+
+	if enable_comm_upload and ts < enable_comm_upload then
+		return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+	end
+
+	if enable_comm_upload_apps[app] and ts < enable_comm_upload_apps[app] then
+		return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+	end
+
+	return true
+end
+
+local function publish_log(ts, lvl, ...)
+	if not mqtt_client then
+		return
+	end
+	if (enable_log_upload and ts < enable_log_upload) then
+		return mqtt_client:publish(mqtt_id.."/log", cjson.encode({lvl, ts, ...}), 1, false)
+	end
+	return true
+end
+
+local function publish_event(sn, level, type_, info, data, timestamp)
+	local event = { level = level, ['type'] = type_, info = info, data = data }
+	if mqtt_client then
+		return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, event, timestamp}), 1, false)
+	else
+		return false
+	end
+end
+
+function load_buffers()
+	comm_buffer = cyclebuffer:new(32, "COMM")
+	log_buffer = cyclebuffer:new(128, "LOG")
+	event_buffer = cyclebuffer:new(16, "EVENT")
+	skynet.fork(function()
+		while not service_stop do
+			local gap = 100
+			if mqtt_client then
+				local r = comm_buffer:fire_all(publish_comm)
+					and log_buffer:fire_all(publish_log)
+					and event_buffer:fire_all(publish_event)
+				if r then
+					gap = 500
+				else
+					log.trace('buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
+				end
+			end
+			skynet.sleep(gap)
+		end
+	end)
+end
+
 --[[
 -- Api Handler
 --]]
@@ -433,49 +587,26 @@ local Handler = {
 		--local hex = crypt.hexencode(table.concat({...}, '\t'))
 		--hex = string.gsub(hex, "%w%w", "%1 ")
 		--log.trace('on_comm', app, sn, dir, ts, hex)
-		local id = mqtt_id
 		local content = crypt.base64encode(table.concat({...}, '\t'))
-
-		comm_buffer:handle(function(app, sn, dir, ts, content)
-			if not mqtt_client then
-				return
-			end
-
-			local key = id.."/comm"
-			local msg = { (sn or app).."/"..dir, ts, content }
-			--log.trace('publish comm', key, table.concat(msg))
-
-			if enable_comm_upload and ts < enable_comm_upload then
-				return mqtt_client:publish(key, cjson.encode(msg), 1, false)
-			end
-
-			if enable_comm_upload_apps[app] and ts < enable_comm_upload_apps[app] then
-				return mqtt_client:publish(key, cjson.encode(msg), 1, false)
-			end
-
-			return true
-		end, app, sn, dir, ts, content)
+		comm_buffer:handle(publish_comm, app, sn, dir, ts, content)
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
 		--print(app, sn, stat, prop, value, timestamp)
-		if mqtt_client and enable_stat_upload then
-			local key = mqtt_id.."/stat"
-			local msg = {
-				sn.."/"..stat.."/"..prop, timestamp, value
-			}
-			return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+		if not enable_stat_upload then
+			return
 		end
+
+		local key = table.concat({sn, stat, prop}, '/')
+		local timestamp = timestamp or skynet.time()
+		local quality = 0
+
+		stat_cov:handle(publish_stat, key, value, timestamp, quality)
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
 		if not enable_event_upload or (tonumber(level) < enable_event_upload)  then
 			return
 		end
-		event_buffer:handle(function(sn, level, type_, info, data, timestamp)
-			local event = { level = level, ['type'] = type_, info = info, data = data }
-			if mqtt_client then
-				return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, event, timestamp}), 1, false)
-			end
-		end, sn, level, type_, info, data, timestamp)
+		event_buffer:handle(publish_event, sn, level, type_, info, data, timestamp)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('on_add_device', app, sn, props)
@@ -717,6 +848,14 @@ end
 function accept.enable_stat(id, enable)
 	enable_stat_upload = enable
 	datacenter.set("CLOUD", "STAT_UPLOAD", enable)
+	if not enable then
+		if stat_cov then
+			stat_cov:clean()
+		end
+		log.debug("Cloud stat data upload disabled!", enable)
+	else
+		snax.self().post.fire_stat_snapshot()
+	end
 	snax.self().post.action_result('sys', id, true, "Done")
 end
 
@@ -760,7 +899,7 @@ function accept.enable_beta(id, enable)
 end
 
 function accept.enable_event(id, level)
-	enable_event_upload = level
+	enable_event_upload = math.floor(tonumber(level))
 	datacenter.set('CLOUD', 'EVENT_UPLOAD', enable_event_upload)
 	snax.self().post.action_result('sys', id, true, "Done")
 end
@@ -789,12 +928,7 @@ end
 -- When register to logger service, this is used to handle the log messages
 --
 function accept.log(ts, lvl, ...)
-	local id = mqtt_id
-	log_buffer:handle(function(ts, lvl, ...)
-		if mqtt_client and (enable_log_upload and ts < enable_log_upload) then
-			return mqtt_client:publish(id.."/log", cjson.encode({lvl, ts, ...}), 1, false)
-		end
-	end, ts, lvl, ...)
+	log_buffer:handle(publish_log, ts, lvl, ...)
 end
 
 ---
@@ -811,6 +945,24 @@ function accept.fire_data_snapshot()
 	else
 		cov:fire_snapshot(function(key, value, timestamp, quality)
 			publish_data(key, value, timestamp or now, quality or 0)
+		end)
+	end
+end
+
+---
+-- Fire stat snapshot
+---
+function accept.fire_stat_snapshot()
+	local now = skynet.time()
+	if zlib_loaded then
+		local val_list = {}
+		stat_cov:fire_snapshot(function(key, value, timestamp, quality)
+			val_list[#val_list + 1] = {key, timestamp or now, value, quality or 0}
+		end)
+		publish_stat_list(val_list)
+	else
+		stat_cov:fire_snapshot(function(key, value, timestamp, quality)
+			publish_stat(key, value, timestamp or now, quality or 0)
 		end)
 	end
 end
@@ -1113,11 +1265,7 @@ function init()
 	mosq.init()
 
 	load_conf()
-	log.notice("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
-
-	comm_buffer = cyclebuffer:new(32, "COMM")
-	log_buffer = cyclebuffer:new(128, "LOG")
-	event_buffer = cyclebuffer:new(16, "EVENT")
+	load_buffers()
 
 	connect_log_server(true)
 
