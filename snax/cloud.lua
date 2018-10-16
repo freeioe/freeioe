@@ -132,6 +132,9 @@ local msg_handler = {
 		if action == 'option' then
 			snax.self().post.app_option(args.id, args.data)
 		end
+		if action == 'rename' then
+			snax.self().post.app_rename(args.id, args.data)
+		end
 	end,
 	sys = function(topic, data, qos, retained)
 		log.info('MSG.SYS', topic, data, qos, retained)
@@ -1009,6 +1012,12 @@ end
 function accept.app_option(id, args)
 	local appmgr = snax.uniqueservice('appmgr')
 	local r, err = appmgr.req.app_option(args.inst, args.option, args.value)
+	snax.self().post.action_result('app', id, r, err or "Done")
+end
+
+function accept.app_rename(id, args)
+	local appmgr = snax.uniqueservice('appmgr')
+	local r, err = appmgr.req.app_rename(args.inst, args.new_name)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
 

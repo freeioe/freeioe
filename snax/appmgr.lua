@@ -148,6 +148,24 @@ function response.app_option(inst, option, value)
 	end
 end
 
+function response.app_rename(inst, new_name, reason)
+	if not inst or not new_name then
+		return nil, "Incorrect params"
+	end
+	local inst = inst
+	local new_name = new_name
+	local reason = reason or "Rename from "..inst.." to "..new_name
+	if not applist[inst] then
+		return nil, "App not exists!"
+	end
+
+	local r, err = snax.self().req.stop(inst, reason)
+	if not r then
+		return nil, err
+	end
+	return skynet.call("UPGRADER", "lua", "rename_app", "from_cloud", {inst=inst, new_name=new_name})
+end
+
 function response.get_channel(name)
 	local c = mc_map[string.upper(name)]
 	if c then
@@ -183,6 +201,15 @@ function accept.app_event(event, inst_name, ...)
 	if event == 'create' then
 		if not applist[inst] then
 			applist[inst] = {conf=conf}
+		end
+	end
+	if event == 'rename' then
+		local new_name = select(1, ...)
+		applist[inst_name] = nil
+
+		local auto = dc.get("APPS", new_name, "auto")
+		if tonumber(auto or 1) ~= 0 then
+			snax.self().post.app_start(new_name)
 		end
 	end
 

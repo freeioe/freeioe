@@ -69,11 +69,31 @@
 	</div>
 	<div class="content">
 		<form class="ui app_conf form" action="/app/conf" method="post" accept-charset="utf-8">
-			<input type="hidden" name="inst" type="text" value="">
-			<input type="hidden" name="conf" type="text" value="">
+			<input type="hidden" name="inst" value="">
+			<input type="hidden" name="conf" value="">
 			<div class="field">
 				<label>{{_("Configuration")}}</label>
 				<div id="json_editor" style="width: 600px;height: 300px;"></div>
+			</div>
+			<div class="ui primary submit button">{{_("Change")}}</div>
+		</form>
+	</div>
+</div>
+
+<div class="ui small app_rename modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{_("Rename application")}}
+	</div>
+	<div class="content">
+		<form class="ui app_rename form" action="/app/rename" method="post" accept-charset="utf-8">
+			<div class="field">
+				<label>{{_("Application")}}</label>
+				<input id="rename_inst" name="inst" readonly="" type="text" value="">
+			</div>
+			<div class="field">
+				<label>{{_("New Instance Name")}}</label>
+				<input value="" name="new_name" type="text">
 			</div>
 			<div class="ui primary submit button">{{_("Change")}}</div>
 		</form>
@@ -323,6 +343,15 @@ $(document).ready(function(){
 	$('.ui.button.conf').click(function() {
 		conf_app($(this).data('inst'), editor);
 	});
+	$('.ui.button.rename').click(function() {
+		$('.ui.app_rename.modal #rename_inst').val($(this).data('inst'));
+		$('.ui.app_rename.modal')
+			.modal({
+				closable  : true
+			})
+			.modal('show')
+		;
+	});
 	$('.ui.button.uninstall').click(function() {
 		uninstall_app($(this).data('inst'));
 	});
@@ -379,6 +408,20 @@ $(document).ready(function(){
 			print_err_message(xhr.responseText);
 		}
 	});
+
+	$('.ui.app_rename.form').ajaxForm({
+		beforeSend: function () {
+			reset_message();
+		},
+		success: function (response) {
+			print_message(response)
+			setTimeout(refresh_page, 1000);
+		},
+		error: function(xhr) {
+			print_err_message(xhr.responseText);
+		}
+	});
+
 
 {% if using_beta then %}
 	$('.ui.segment .ui.button.new_app').click(function() {

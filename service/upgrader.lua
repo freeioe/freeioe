@@ -266,6 +266,35 @@ function command.install_local_app(id, args)
 	return true
 end
 
+function command.rename_app(id, args)
+	local inst_name = args.inst
+	local new_name = args.new_name
+	if is_inst_name_reserved(inst_name) then
+		return nil, "Application instance name is reserved"
+	end
+	if is_inst_name_reserved(new_name) then
+		return nil, "Application new name is reserved"
+	end
+	if datacenter.get("APPS", new_name) and not args.force then
+		return nil, "Application new already used"
+	end
+	local app = datacenter.get("APPS", inst_name)
+	if not app then
+		return nil, "Application instance not installed"
+	end
+
+	local source_folder = get_target_folder(inst_name)
+	local target_folder = get_target_folder(new_name)
+	os.execute("mv "..source_folder.." "..target_folder)
+
+	datacenter.set("APPS", inst_name, nil)
+	datacenter.set("APPS", new_name, app)
+
+	local appmgr = snax.uniqueservice("appmgr")
+	appmgr.post.app_event('rename', inst_name, new_name)
+	return true
+end
+
 function command.install_missing_app(inst_name)
 	skynet.timeout(100, function()
 		local appmgr = snax.uniqueservice("appmgr")
