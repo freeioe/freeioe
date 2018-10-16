@@ -1,36 +1,8 @@
 local skynet = require 'skynet'
 local dc = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
-local uuid = require 'uuid'
 local ioe = require 'ioe'
-
-local pack_target_path = "/tmp/ioe/"
-
-local function path_join(...)
-	return table.concat({...}, '/')
-end
-
-local function get_app_path(app, ...)
-	return path_join("./ioe/apps", app, ...)
-end
-
-local function pack_app(inst, version)
-	local app = dc.get("APPS", inst)
-
-	--local target_file = inst.."_v"..version..".tar.gz"
-	local target_file = inst.."_ver_"..version..".zip"
-	local target_file_escape = string.gsub(target_file, " ", "__")
-	os.execute("mkdir -p "..pack_target_path)
-	os.execute("rm -f "..pack_target_path..target_file_escape)
-
-	--local cmd = "tar -cvzf "..pack_target_path..target_file_escape.." "..string.gsub(get_app_path(inst, "*"), " ", "\\ ")
-	local cmd = "cd "..string.gsub(get_app_path(inst), " ", "\\ ").." && zip -r -q "..pack_target_path..target_file_escape.." ./*"
-	local r, status, code = os.execute(cmd)
-	if not r then
-		return nil, "failed to pack application"..inst
-	end
-	return target_file_escape
-end
+local afe = require 'app_file_editor'
 
 return {
 	post = function(self)
@@ -38,6 +10,7 @@ return {
 			ngx.print(_('You are not logined!'))
 			return
 		end
+
 		local using_beta = ioe.beta()
 		if not using_beta then
 			ngx.print(_('FreeIOE device in not in beta mode!'))
@@ -50,7 +23,7 @@ return {
 		local version = tonumber(post.version) or uuid.new()
 		assert(inst and version)
 		assert(string.len(inst) > 0)
-		local r, err = pack_app(inst, version)
+		local r, err = afe.post_ops.pack_app(inst, version)
 
 		if r then
 			ngx.header.content_type = "application/json; charset=utf-8"

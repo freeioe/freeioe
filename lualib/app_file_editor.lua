@@ -1,6 +1,9 @@
 local snax = require 'skynet.snax'
+local uuid = require 'uuid'
 local lfs = require 'lfs'
 local ioe = require 'ioe'
+
+local pack_target_path = "/tmp/ioe/"
 
 local function get_file_ext(filename)
 	local ext = string.match(filename, '%.(%w-)$')
@@ -78,6 +81,31 @@ local function stat_node(app, sub)
 		size = size
 	}
 end
+
+local function pack_app(inst, version)
+	if not inst then
+		return nil, "Application instance missing"
+	end
+
+	local version = version or uuid.new()
+	local app = dc.get("APPS", inst)
+
+	--local target_file = inst.."_v"..version..".tar.gz"
+	local target_file = inst.."_ver_"..version..".zip"
+	local target_file_escape = string.gsub(target_file, " ", "__")
+	os.execute("mkdir -p "..pack_target_path)
+	os.execute("rm -f "..pack_target_path..target_file_escape)
+
+	--local cmd = "tar -cvzf "..pack_target_path..target_file_escape.." "..string.gsub(get_app_path(inst, "*"), " ", "\\ ")
+	local cmd = "cd "..string.gsub(get_app_path(inst), " ", "\\ ").." && zip -r -q "..pack_target_path..target_file_escape.." ./*"
+	local r, status, code = os.execute(cmd)
+	if not r then
+		return nil, "failed to pack application"..inst
+	end
+	return target_file_escape
+end
+
+
 
 local get_ops = {
 	get_node = function(app, node, opt)
@@ -234,6 +262,7 @@ local post_ops = {
 		appmgr.post.app_modified(app, 'web_editor')
 		return { status = 'OK' }
 	end,
+	pack_app = pack_app,
 }
 
 return {
