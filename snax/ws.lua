@@ -259,6 +259,22 @@ function msg_handler.editor_post(client, id, code, data)
 	end
 end
 
+function msg_handler.app_pack(client, id, code, data)
+	if not ioe.beta() then
+		return __fire_result(client, id, code, false, "Device in not in beta mode")
+	end
+
+	local pack_app = app_file_editor.post_ops.pack_app
+
+	local app = data.app
+	local r, err = pack_app(app)
+	if r then
+		return client:send({id = id, code = code, data = { result = true, content = r}})
+	else
+		return __fire_result(client, id, code, false, err)
+	end
+end
+
 function msg_handler.event_list(client, id, code, data)
 	local buffer = snax.uniqueservice('buffer')
 	local events = buffer.req.get_event()
