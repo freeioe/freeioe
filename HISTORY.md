@@ -27,4 +27,6 @@ v1.1.2 ()
 * Emergency input value (API_VER=2)
 * Force kill application if timeout
 * Control signal stength led
-
+* Support rename app instance name
+* Support pack app from websocket
+* Bug fixes
