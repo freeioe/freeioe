@@ -177,6 +177,11 @@ function _M.create_download_func(inst_name, app_name, version, ext, cb, is_exten
 	local ext = ext
 	local cb = cb
 	local is_extension = is_extension
+
+	if version == 'latest' and ioe.beta() then
+		version = 'latest.beta'
+	end
+
 	return function()
 		--local app_name_escape = string.gsub(app_name, '/', '__')
 		--local path = "/tmp/"..inst_name..'__'..app_name_escape.."_"..version..ext
