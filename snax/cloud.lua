@@ -166,8 +166,8 @@ local msg_handler = {
 		if action == 'enable/event' then
 			snax.self().post.enable_event(args.id, tonumber(args.data))
 		end
-		if action == 'conf' then
-			snax.self().post.set_conf(args.id, args.data)
+		if action == 'cloud_conf' then
+			snax.self().post.set_cloud_conf(args.id, args.data)
 		end
 		if action == 'cfg/download' then
 			snax.self().post.download_cfg(args.id, args.data)
@@ -904,7 +904,7 @@ function accept.enable_event(id, level)
 	snax.self().post.action_result('sys', id, true, "Done")
 end
 
-function accept.set_conf(id, args)
+function accept.set_cloud_conf(id, args)
 	for k, v in pairs(args) do
 		datacenter.set("CLOUD", string.upper(k), v)
 	end
