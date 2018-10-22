@@ -3,7 +3,7 @@
 SKYNET_PLAT=$1
 
 # Validate platform name
-PLAT_NAMES="linux/x86_64 openwrt/arm_cortex-a9_neon openwrt/mips_24kc openwrt/x86_64"
+PLAT_NAMES="linux/x86_64 openwrt/arm_cortex-a9_neon openwrt/mips_24kc openwrt/x86_64 openwrt/aarch64_cortex-a53"
 PLAT_OK=0
 for plat in $PLAT_NAMES; do
 	if [ "$SKYNET_PLAT" == "$plat" ]; then
