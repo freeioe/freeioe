@@ -55,9 +55,9 @@ function command.unreg_snax(handle)
 	return true
 end
 
-skynet.start(function()
-	skynet.fork(create_log)
+create_log()
 
+skynet.start(function()
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.lower(cmd)]
 		if f then
@@ -67,5 +67,9 @@ skynet.start(function()
 		end
 	end)
 
-	skynet.register ".logger"
+	local sname = ".logger"
+	local s = skynet.localname(sname)
+	if not s then
+		skynet.register ".logger"
+	end
 end)
