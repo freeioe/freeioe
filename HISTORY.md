@@ -29,4 +29,5 @@ v1.1.2 ()
 * Control signal stength led
 * Support rename app instance name
 * Support pack app from websocket
+* Upgrade with latest skynet
 * Bug fixes
