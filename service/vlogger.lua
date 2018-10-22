@@ -67,9 +67,6 @@ skynet.start(function()
 		end
 	end)
 
-	local sname = ".logger"
-	local s = skynet.localname(sname)
-	if not s then
-		skynet.register ".logger"
-	end
+	--- Latest skynet will register .logger for us, keep this register for make this working with older skynet
+	skynet.register ".logger"
 end)
