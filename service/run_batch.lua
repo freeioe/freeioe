@@ -21,15 +21,15 @@ local function gen_task_id(cate, info)
 end
 
 local batch_env = {
-	INSTALL_APP = function(inst, name, version, sn, conf)
+	INSTALL_APP = function(inst, name, version, conf, sn)
 		local id = gen_task_id('app', "Install application "..name.." as "..inst)
 		assert(inst and name and version)
 		local r, err = skynet.call("UPGRADER", "lua", "install_app", id, {
 			name = name,
 			inst = inst,
 			version = version,
-			sn = sn,
 			conf = conf
+			sn = sn,
 		})
 	end,
 	REMOVE_APP = function(inst)
@@ -38,7 +38,7 @@ local batch_env = {
 			inst = inst,
 		})
 	end,
-	UPGRADE_APP = function(inst, version, sn, conf)
+	UPGRADE_APP = function(inst, version, conf, sn)
 		local id = gen_task_id('app', "Upgrade application instance "..inst.." to version "..version)
 		local r, err = skynet.call("UPGRADER", "lua", "upgrade_app", id, {
 			inst = inst,
