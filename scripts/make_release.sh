@@ -89,6 +89,7 @@ cp -rL lualib/resty __install/lualib/resty
 for plat in $PLAT_NAMES; do
 	./scripts/release_ext.sh opcua $plat "luaclib"
 	./scripts/release_ext.sh snap7 $plat "luaclib"
+	./scripts/release_ext.sh plctag $plat "luaclib"
 	./scripts/release_ext.sh frpc $plat "bin"
 done
 
