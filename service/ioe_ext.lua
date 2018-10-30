@@ -229,9 +229,12 @@ function command.install_depends(app_inst)
 end
 
 function command.upgrade_ext(id, args)
+	local cloud = snax.uniqueservice('cloud')
 	local inst = args.inst or args.name..".latest"
 	if not installed[inst] then
-		log.error("Extension does not exists! inst:", inst)
+		local err = "Extension does not exists! inst: "..inst
+		log.error(err)
+		cloud.post.action_result("sys", id, false, err)
 		return
 	end
 
@@ -248,7 +251,9 @@ function command.upgrade_ext(id, args)
 
 	create_download(name, version, function(result, path)
 		if not result then
-			log.error("Failed to download extension. Error: "..path)
+			local err = "Failed to download extension. Error: "..path
+			log.error(err)
+			cloud.post.action_result("sys", id, false, err)
 		else
 			log.notice("Download Extension finished", name, version)
 
@@ -268,6 +273,7 @@ function command.upgrade_ext(id, args)
 					log.error("Failed to start application after extension upgraded. Error: "..err)
 				end
 			end
+			cloud.post.action_result("sys", id, true, "Application upgradation is done!")
 		end
 	end)
 end

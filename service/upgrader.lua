@@ -556,6 +556,10 @@ function command.upgrade_core(id, args)
 	local version, beta = parse_version_string(args.version)
 	local skynet_args = args.skynet
 
+	if command.is_upgrading() then
+		return sys_action_result(id, false, "FreeIOE is upgrading!!!")
+	end
+
 	if args.no_ack then
 		local base_dir = get_ioe_dir()
 		lfs.mkdir(base_dir.."/ipt")
@@ -578,9 +582,11 @@ function command.upgrade_core(id, args)
 				return sys_action_result(id, r, err)
 			end
 		else
+			datacenter.set("UPGRADER", "upgrade_core", nil)
 			return sys_action_result(id, false, "Failed to download core system. Error: "..info)
 		end
 	end, ".tar.gz")
+	return true
 end
 
 local rollback_time = nil
@@ -604,7 +610,14 @@ function command.list()
 end
 
 function command.is_upgrading()
-	return tasks['__FREEIOE__'] or tasks['__SKYNET__']
+	local running = false
+	for k, v in pairs(tasks) do
+		if v.name == '__FREEIOE__' or v.name == '__SKYNET__' then
+			running = true
+			break
+		end
+	end
+	return running
 end
 
 function command.bind_cloud(handle, type)

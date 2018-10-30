@@ -11,6 +11,7 @@ local batch_id = arg[1]
 local tasks = {}
 
 local function gen_task_id(cate, info)
+	log.info('BatchScript Create sub task: ', info)
 	local id = batch_id .. '.' .. #tasks
 	tasks[#tasks + 1] = {
 		id = id,
@@ -18,6 +19,11 @@ local function gen_task_id(cate, info)
 		info = info,
 	}
 	return id
+end
+
+local function post_action_result(channel, id, result, info)
+	local cloud = snax.uniqueservice('cloud')
+	cloud.post.action_result(channel, id, result, info)
 end
 
 local batch_env = {
@@ -28,15 +34,23 @@ local batch_env = {
 			name = name,
 			inst = inst,
 			version = version,
-			conf = conf
-			sn = sn,
+			conf = conf,
+			sn = sn
 		})
+		if not r then
+			local err = "Call install_app failed. "..err
+			log.error(err)
+		end
 	end,
 	REMOVE_APP = function(inst)
 		local id = gen_task_id('app', "Remove application instance "..inst)
 		local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", id, {
 			inst = inst,
 		})
+		if not r then
+			local err = "Call uninstall_app failed. "..err
+			log.error(err)
+		end
 	end,
 	UPGRADE_APP = function(inst, version, conf, sn)
 		local id = gen_task_id('app', "Upgrade application instance "..inst.." to version "..version)
@@ -44,26 +58,65 @@ local batch_env = {
 			inst = inst,
 			version = version,
 			sn = sn,
-			conf = conf,
+			conf = conf
 		})
+		if not r then
+			local err = "Call upgrade_app failed. "..err
+			log.error(err)
+		end
+	end,
+	CONF_APP = function(inst, conf)
+		local id = gen_task_id('app', "Config application "..inst)
+		local appmgr = snax.uniqueservice('appmgr')
+		local r, err = appmgr.req.set_conf(inst, conf)
+		post_action_result('app', id, r, err or "Done")
+	end,
+	SET_APP_OPTION = function(inst, option, value)
+		local appmgr = snax.uniqueservice('appmgr')
+		local r, err = appmgr.req.app_option(inst, option, value)
+		post_action_result('app', id, r, err or "Done")
+	end,
+	RENAME_APP = function(inst, new_name)
+		local id = gen_task_id('app', "Rename application "..inst)
+		local appmgr = snax.uniqueservice('appmgr')
+		local r, err = appmgr.req.app_rename(inst, new_name)
+		post_action_result('app', id, r, err or "Done")
 	end,
 	CLEAN_APPS = function()
-		local appmgr = snax.uniqueservice('cloud')
+		local appmgr = snax.uniqueservice('appmgr')
 		local list = appmgr.req.list()
 		for k, v in pairs() do
 			REMOVE_APP(k)
 		end
 	end,
+	UPGRADE_EXT = function(inst, version)
+		local id = gen_task_id('app', "Upgrade extension instance "..inst.." to version "..version)
+		local r, err = skynet.call("IOE_EXT", "lua", "upgrade_ext", id, {
+			inst = inst,
+			version = version,
+		})
+		if not r then
+			local err = "Call upgrade_ext failed. "..err
+			log.error(err)
+		end
+	end,
 	UPGRADE_SYS = function(version, skynet_version, need_ack)
-		local id = gen_task_id('sys', "Upgrade system to version "..version.." "..(skynet_version and ("with skynet "..skynet_version) or "withou skynet"))
-		assert(version)
+		local id = gen_task_id('sys', "Upgrade system to version "..version.." "..(skynet_version and ("with skynet "..skynet_version) or "without skynet"))
+		if not version then
+			post_action_result('app', id, false, "Version is required!")
+			return 
+		end
 		local no_ack = need_ack and true or false
 		local skynet_args = skynet_version and {version=skynet_version} or nil
-		local r, err = skynet.call("UPGRADE", "lua", "upgrade_core", id, {
+		local r, err = skynet.call("UPGRADER", "lua", "upgrade_core", id, {
 			version = version,
 			no_ack = no_ack,
 			skynet = skynet_args,
 		})
+		if not r then
+			local err = "Call upgrade_core failed. "..err
+			log.error(err)
+		end
 	end,
 	TEST = function(...)
 		print(...)
@@ -83,7 +136,8 @@ skynet.start(function()
 	local f, err = load(script, nil, "bt", batch_env)
 	local cloud = snax.uniqueservice('cloud')
 	if not f then
-		log.error("Loading batch script failed", err)
+		local err = "Loading batch script failed. "..err
+		log.error(err)
 		cloud.post.action_result("batch_script", batch_id, false, err)
 	else
 		local r, err = xpcall(f, debug.traceback)

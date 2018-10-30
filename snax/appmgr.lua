@@ -97,7 +97,7 @@ end
 function response.restart(name, reason)
 	local name = name
 	local reason = reason or "Restart"
-	skynet.timeout(10, function()
+	skynet.timeout(100, function()
 		snax.self().req.stop(name, reason)
 		snax.self().req.start(name)
 	end)
