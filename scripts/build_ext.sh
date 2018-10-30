@@ -1,3 +1,4 @@
+# !/usr/bin/env sh
 
 if [ $# -lt 3 ] ; then
 	echo "Usage: build_ext.sh <cpu arch> <toolchain script name> <target dir>"
