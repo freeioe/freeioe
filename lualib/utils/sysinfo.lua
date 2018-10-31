@@ -120,7 +120,7 @@ _M.uptime = function()
 		return nil, err
 	end
 
-	return string.match(s, "(%d+)%s-(%d+)")
+	return string.match(s, "([%d%.]+)%s")
 end
 
 --- Get he loadavg

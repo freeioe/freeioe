@@ -71,8 +71,9 @@ return {
 		local cloud_status, cloud_last = cloud.req.get_status()
 		--cloud_last = pretty_time(math.floor(skynet.time() - cloud_last))
 		cloud_last = math.floor(cloud_last)
-		local uptime = string.match(sysinfo.cat_file('/proc/uptime') or "", "%d+") or skynet.starttime()
-		local uptime_str = sysinfo.exec('uptime -s') or os.date('%c', uptime)
+		local uptime = sysinfo.uptime() or skynet.starttime()
+		local uptime_str = os.date('%c', math.floor(skynet.time() - uptime))
+		local skynet_uptime = os.date('%c', skynet.starttime())
 
 		lwf.render('dashboard.html', {
 			version = version, 
@@ -99,6 +100,7 @@ return {
 			sys_time_str = os.date("%Y-%m-%d %H:%M:%S %Z"),
 			uptime = uptime,
 			uptime_str = uptime_str,
+			skynet_uptime = skynet_uptime,
 		})
 	end
 }
