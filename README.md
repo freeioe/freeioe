@@ -48,7 +48,7 @@ FreeIOE is based on [Skynet](https://github.com/cloudwu/skynet). More informatio
 Please use [issue list](https://github.com/freeioe/freeioe/issues).
 
 
-## Buy an FreeIOE device
+## Where to buy FreeIOE device
 
 [ThingsRoot](https://thingsroot.com/product/)
 
