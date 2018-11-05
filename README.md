@@ -50,7 +50,7 @@ Please use [issue list](https://github.com/freeioe/freeioe/issues).
 
 ## Where to buy FreeIOE device
 
-[ThingsRoot](https://thingsroot.com/product/)
+[ThingsLink Devices](https://thingsroot.com/product/)
 
 
 ## Known Issue

@@ -50,7 +50,7 @@ FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架. 可以从 [S
 
 ## 购买FreeIOE智能设备
 
-[冬笋科技](https://thingsroot.com/product/)
+[冬笋ThingsLink智能网关](https://thingsroot.com/product/)
 
 
 ## 已知问题
