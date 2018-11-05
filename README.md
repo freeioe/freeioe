@@ -3,7 +3,7 @@ FreeIOE
 
 [FreeIOE](http://freeioe.org) is an framework for building IOE (Internet Of Everything) gateway device.
 
-[Chinese|中文](https://github.com/freeioe/freeioe/README_CN.md)
+[Chinese|中文](/README_CN.md)
 
 
 ## How to use FreeIOE devices
