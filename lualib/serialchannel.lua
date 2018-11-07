@@ -546,7 +546,7 @@ local function rs232_read(port, len, timeout)
 		return port:read(ilen >= len and len or ilen, 10)
 	end
 
-	return false, "Serial read timeout ..."
+	return false, string.format("Serial read timeout! %d - %d", len, timeout)
 	--[[
 	]]--
 end

@@ -346,16 +346,16 @@ function init()
 	local address = "0.0.0.0:8818"
     log.notice("WebSocket Listening", address)
 
-	skynet.fork(function()
-		connect_buffer_service(true)
-	end)
-
     local id = assert(socket.listen(address))
     socket.start(id , function(id, addr)
        socket.start(id)
        pcall(handle_socket, id)
     end)
 	ws_socket = id
+
+	skynet.fork(function()
+		connect_buffer_service(true)
+	end)
 
 	skynet.fork(function()
 		while true do
