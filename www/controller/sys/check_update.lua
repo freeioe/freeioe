@@ -5,11 +5,11 @@ return {
 	get = function(self)
 		local get = ngx.req.get_uri_args()
 		local beta = (get.beta == 'true' and true or false)
-		local ioe_ver, ioe_beta = skynet.call("UPGRADER", "lua", "pkg_check_update", "freeioe", beta)
+		local ioe_ver, ioe_beta = skynet.call(".upgrader", "lua", "pkg_check_update", "freeioe", beta)
 		assert(ioe_ver)
 
 		local plat = sysinfo.platform()
-		local sver, sbeta = skynet.call("UPGRADER", "lua", "pkg_check_update", plat.."_skynet", beta)
+		local sver, sbeta = skynet.call(".upgrader", "lua", "pkg_check_update", plat.."_skynet", beta)
 		assert(sver)
 		local ret = {
 			ioe = {

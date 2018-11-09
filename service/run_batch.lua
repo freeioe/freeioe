@@ -30,7 +30,7 @@ local batch_env = {
 	INSTALL_APP = function(inst, name, version, conf, sn)
 		local id = gen_task_id('app', "Install application "..name.." as "..inst)
 		assert(inst and name and version)
-		local r, err = skynet.call("UPGRADER", "lua", "install_app", id, {
+		local r, err = skynet.call(".upgrader", "lua", "install_app", id, {
 			name = name,
 			inst = inst,
 			version = version,
@@ -44,7 +44,7 @@ local batch_env = {
 	end,
 	REMOVE_APP = function(inst)
 		local id = gen_task_id('app', "Remove application instance "..inst)
-		local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", id, {
+		local r, err = skynet.call(".upgrader", "lua", "uninstall_app", id, {
 			inst = inst,
 		})
 		if not r then
@@ -54,7 +54,7 @@ local batch_env = {
 	end,
 	UPGRADE_APP = function(inst, version, conf, sn)
 		local id = gen_task_id('app', "Upgrade application instance "..inst.." to version "..version)
-		local r, err = skynet.call("UPGRADER", "lua", "upgrade_app", id, {
+		local r, err = skynet.call(".upgrader", "lua", "upgrade_app", id, {
 			inst = inst,
 			version = version,
 			sn = sn,
@@ -91,7 +91,7 @@ local batch_env = {
 	end,
 	UPGRADE_EXT = function(inst, version)
 		local id = gen_task_id('app', "Upgrade extension instance "..inst.." to version "..version)
-		local r, err = skynet.call("IOE_EXT", "lua", "upgrade_ext", id, {
+		local r, err = skynet.call(".ioe_ext", "lua", "upgrade_ext", id, {
 			inst = inst,
 			version = version,
 		})
@@ -108,7 +108,7 @@ local batch_env = {
 		end
 		local no_ack = need_ack and true or false
 		local skynet_args = skynet_version and {version=skynet_version} or nil
-		local r, err = skynet.call("UPGRADER", "lua", "upgrade_core", id, {
+		local r, err = skynet.call(".upgrader", "lua", "upgrade_core", id, {
 			version = version,
 			no_ack = no_ack,
 			skynet = skynet_args,

@@ -38,7 +38,7 @@ return {
 			from_web = true,
 			conf = conf,
 		}
-		local r, err = skynet.call("UPGRADER", "lua", "install_app", id, args)
+		local r, err = skynet.call(".upgrader", "lua", "install_app", id, args)
 		if r then
 			ngx.print('Application installation is done!')
 		else

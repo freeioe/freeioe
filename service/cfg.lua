@@ -307,7 +307,7 @@ skynet.start(function()
 			error(string.format("Unknown command %s", tostring(cmd)))
 		end
 	end)
-	skynet.register "CFG"
+	skynet.register ".cfg"
 
 	skynet.fork(function()
 		while true do

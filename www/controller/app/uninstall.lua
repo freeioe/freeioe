@@ -19,7 +19,7 @@ return {
 			inst = inst,
 			from_web = true
 		}
-		local r, err = skynet.call("UPGRADER", "lua", "uninstall_app", id, args)
+		local r, err = skynet.call(".upgrader", "lua", "uninstall_app", id, args)
 		if r then
 			ngx.print('Application uninstall is done!')
 		else

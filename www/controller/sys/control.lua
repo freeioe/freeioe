@@ -15,17 +15,17 @@ return {
 
 		if action == 'reboot' then
 			local args = { from_web = from_web, delay = 5 }
-			skynet.call("UPGRADER", "lua", "system_reboot", id, args)
+			skynet.call(".upgrader", "lua", "system_reboot", id, args)
 			ngx.print(_('Device will be reboot after five seconds!'))
 		end
 		if action == 'quit' then
 			local args = { from_web = from_web, delay = 5 }
-			skynet.call("UPGRADER", "lua", "system_quit", id, args)
+			skynet.call(".upgrader", "lua", "system_quit", id, args)
 			ngx.print(_('System will be restart after five seconds!'))
 		end
 		if action == 'upgrade_ack' then
 			local args = { from_web = from_web }
-			skynet.call("UPGRADER", "lua", "upgrade_core_ack", id, args)
+			skynet.call(".upgrader", "lua", "upgrade_core_ack", id, args)
 			ngx.print(_('System upgrade ack is done!'))
 		end
 	end,

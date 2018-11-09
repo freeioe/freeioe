@@ -582,7 +582,6 @@ function command.upgrade_core(id, args)
 				return sys_action_result(id, r, err)
 			end
 		else
-			datacenter.set("UPGRADER", "upgrade_core", nil)
 			return sys_action_result(id, false, "Failed to download core system. Error: "..info)
 		end
 	end, ".tar.gz")
@@ -656,7 +655,7 @@ skynet.start(function()
 			error(string.format("Unknown command %s", tostring(cmd)))
 		end
 	end)
-	skynet.register "UPGRADER"
+	skynet.register ".upgrader"
 	skynet.fork(function()
 		if check_rollback() then
 			log.notice("Rollback will be applied in five minutes")

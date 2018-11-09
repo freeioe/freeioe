@@ -23,7 +23,7 @@ return {
 			inst = inst,
 			name = ext,
 		}
-		skynet.call("IOE_EXT", "lua", "upgrade_ext", id, args)
+		skynet.call(".ioe_ext", "lua", "upgrade_ext", id, args)
 		ngx.print('Extension upgrade is done!')
 	end,
 }

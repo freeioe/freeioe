@@ -37,7 +37,7 @@ return {
 			if value == 'true' then value = true end
 			if value == 'false' then value = false end
 			if value and option == 'using_beta' then
-				local r, err = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
+				local r, err = skynet.call(".upgrader", "lua", "pkg_enable_beta")
 				if not r then
 					ngx.print(string.format(_('Cannot enable beta. Error: %s'), err))
 					return

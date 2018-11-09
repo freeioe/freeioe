@@ -173,12 +173,12 @@ function init(name, conf, mgr_handle, mgr_type)
 	local f, err = io.open("./ioe/apps/"..name.."/app.lua", "r")
 	if not f then
 		log.warning("Application does not exits!, Try to install it")	
-		skynet.call("UPGRADER", "lua", "install_missing_app", name)
+		skynet.call(".upgrader", "lua", "install_missing_app", name)
 		return nil, "App does not exits!"
 	end
 	f:close()
 
-	local r, err = skynet.call("IOE_EXT", "lua", "install_depends", name)
+	local r, err = skynet.call(".ioe_ext", "lua", "install_depends", name)
 	if not r then
 		log.error("Failed to install depends for ", name, "error:", err)
 		local info = "Failed to start app. install depends failed"

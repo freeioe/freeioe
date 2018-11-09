@@ -41,7 +41,7 @@ skynet.start(function()
 			error(string.format("Unknown command %s", tostring(cmd)))
 		end
 	end)
-	skynet.register "EXEC_SAL"
+	skynet.register ".EXEC_SAL"
 
 	skynet.fork(function()
 		while true do

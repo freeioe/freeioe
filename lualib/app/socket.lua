@@ -99,7 +99,7 @@ function app_port:initialize(conf, share_name)
 	assert(conf)
 	self._name = share_name or uuid()
 	self._conf = conf
-	self._agent = service.new("APP.SOCKET_PORT."..self._name, agent_service, self._name, self._conf)
+	self._agent = service.new(".app_socket_port_"..self._name, agent_service, self._name, self._conf)
 end
 
 function app_port:get_name()

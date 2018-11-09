@@ -30,7 +30,7 @@ return {
 			inst = inst,
 			from_web = true,
 		}
-		local r, err = skynet.call("UPGRADER", "lua", "create_app", id, args)
+		local r, err = skynet.call(".upgrader", "lua", "create_app", id, args)
 		if r then
 			ngx.print('Application creation is done!')
 		else

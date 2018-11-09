@@ -24,7 +24,7 @@ return {
 			inst = inst,
 			name = app,
 		}
-		skynet.call("UPGRADER", "lua", "upgrade_app", id, args)
+		skynet.call(".upgrader", "lua", "upgrade_app", id, args)
 		ngx.print('Application upgrade is done!')
 	end,
 }

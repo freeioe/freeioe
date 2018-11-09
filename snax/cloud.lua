@@ -885,7 +885,7 @@ function accept.enable_beta(id, enable)
 	if not enable then
 		ioe.set_beta(false)
 	else
-		local r, err = skynet.call("UPGRADER", "lua", "pkg_enable_beta")
+		local r, err = skynet.call(".upgrader", "lua", "pkg_enable_beta")
 		if r then
 			log.warning("Using beta is enabled from cloud!")
 			ioe.set_beta(true)
@@ -913,12 +913,12 @@ function accept.set_cloud_conf(id, args)
 end
 
 function accept.download_cfg(id, args)
-	local r, err = skynet.call("CFG", "lua", "download", args.name, args.host)
+	local r, err = skynet.call(".cfg", "lua", "download", args.name, args.host)
 	snax.self().post.action_result('sys', id, r, err or "Done")
 end
 
 function accept.upload_cfg(id, args)
-	local r, err = skynet.call("CFG", "lua", "upload", args.host)
+	local r, err = skynet.call(".cfg", "lua", "upload", args.host)
 	snax.self().post.action_result('sys', id, r, err or "Done")
 	return r, err
 end
@@ -1044,15 +1044,15 @@ function accept.app_event(event, inst_name, ...)
 end
 
 function accept.app_install(id, args)
-	skynet.call("UPGRADER", "lua", "install_app", id, args)
+	skynet.call(".upgrader", "lua", "install_app", id, args)
 end
 
 function accept.app_uninstall(id, args)
-	skynet.call("UPGRADER", "lua", "uninstall_app", id, args)
+	skynet.call(".upgrader", "lua", "uninstall_app", id, args)
 end
 
 function accept.app_upgrade(id, args)
-	skynet.call("UPGRADER", "lua", "upgrade_app", id, args)
+	skynet.call(".upgrader", "lua", "upgrade_app", id, args)
 end
 
 function accept.app_start(id, args)
@@ -1086,7 +1086,7 @@ function accept.app_conf(id, args)
 end
 
 function accept.app_list(id, args)
-	local apps, err = skynet.call("UPGRADER", "lua", "list_app")
+	local apps, err = skynet.call(".upgrader", "lua", "list_app")
 	-- Fire action result if id is not empty
 	if id then
 		snax.self().post.action_result('app', id, apps, err or "Done")
@@ -1174,15 +1174,15 @@ function accept.app_rename(id, args)
 end
 
 function accept.sys_upgrade(id, args)
-	skynet.call("UPGRADER", "lua", "upgrade_core", id, args)
+	skynet.call(".upgrader", "lua", "upgrade_core", id, args)
 end
 
 function accept.sys_upgrade_ack(id, args)
-	skynet.call("UPGRADER", "lua", "upgrade_core_ack", id, args)
+	skynet.call(".upgrader", "lua", "upgrade_core_ack", id, args)
 end
 
 function accept.ext_list(id, args)
-	local exts, err = skynet.call("IOE_EXT", "lua", "list")
+	local exts, err = skynet.call(".ioe_ext", "lua", "list")
 	snax.self().post.action_result('app', id, exts, err or "Done")
 	if exts then
 		mqtt_publish(mqtt_id.."/exts", exts, 1, true)
@@ -1190,7 +1190,7 @@ function accept.ext_list(id, args)
 end
 
 function accept.ext_upgrade(id, args)
-	skynet.call("IOE_EXT", "lua", "upgrade_ext", id, args)
+	skynet.call(".ioe_ext", "lua", "upgrade_ext", id, args)
 end
 
 function accept.batch_script(id, script)
@@ -1201,11 +1201,11 @@ function accept.batch_script(id, script)
 end
 
 function accept.sys_quit(id, args)
-	skynet.call("UPGRADER", "lua", "system_quit", id, {})
+	skynet.call(".upgrader", "lua", "system_quit", id, {})
 end
 
 function accept.sys_reboot(id, args)
-	skynet.call("UPGRADER", "lua", "system_reboot", id, {})
+	skynet.call(".upgrader", "lua", "system_reboot", id, {})
 end
 
 function accept.output_to_device(id, info)
@@ -1270,7 +1270,7 @@ function init()
 	connect_log_server(true)
 
 	local s = snax.self()
-	skynet.call("UPGRADER", "lua", "bind_cloud", s.handle, s.type)
+	skynet.call(".upgrader", "lua", "bind_cloud", s.handle, s.type)
 
 	skynet.fork(function()
 		connect_proc() 

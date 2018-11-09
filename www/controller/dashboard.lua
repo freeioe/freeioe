@@ -58,8 +58,8 @@ return {
 		local cpu_model = sysinfo.cpu_model()
 		local meminfo =  sysinfo.meminfo() or {}
 		local uname = sysinfo.uname("-a")
-		local rollback_time = skynet.call("UPGRADER", "lua", "rollback_time")
-		local is_upgrading = skynet.call("UPGRADER", "lua", "is_upgrading")
+		local rollback_time = skynet.call(".upgrader", "lua", "rollback_time")
+		local is_upgrading = skynet.call(".upgrader", "lua", "is_upgrading")
 		local arch = sysinfo.cpu_arch()
 		local os_id = sysinfo.os_id()
 		local using_beta = ioe.beta()

@@ -20,7 +20,7 @@ _M.exec = function(cmd, inplace)
 		f:close()
 		return s
 	else
-		return skynet.call("EXEC_SAL", "lua", "exec", cmd)
+		return skynet.call(".exec_sal", "lua", "exec", cmd)
 	end
 end
 

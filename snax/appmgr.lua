@@ -163,7 +163,7 @@ function response.app_rename(inst, new_name, reason)
 	if not r then
 		return nil, err
 	end
-	return skynet.call("UPGRADER", "lua", "rename_app", "from_cloud", {inst=inst, new_name=new_name})
+	return skynet.call(".upgrader", "lua", "rename_app", "from_cloud", {inst=inst, new_name=new_name})
 end
 
 function response.get_channel(name)
