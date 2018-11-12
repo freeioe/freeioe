@@ -7,12 +7,42 @@ _M.exec = function(port, script)
 	return sysinfo.exec('gcom -d '..port..' -s '..script)
 end
 
-_M.detect_device = function()
-	local mode = lfs.attributes('/dev/ttyUSB3', 'mode')
-	if mode then
-		return '/dev/ttyUSB3'
+_M.get_boardname = function()
+	if _M._board_name then
+		return _M._board_name
 	end
-	return '/dev/ttymxc3'
+	local f, err = io.open('/proc/device-tree/model', 'r')
+	if f then
+		s = f:read("l")
+		if string.match(s, 'Q2040') then
+			_M._board_name = 'Q204'
+		end
+		if string.match(s, 'TGW303X') then
+			_M._board_name = 'Q102'
+		end
+		f:close()
+	end
+	return _M._board_name or 'Unknown'
+end
+
+_M.detect_device = function()
+	if _M._dev_tty then
+		return _M._dev_tty
+	end
+
+	local bname = _M.get_boardname()
+	if bname == 'Q204' then
+		_M._dev_tty = '/dev/ttyUSB2'
+	end
+	if bname == 'Q102' then
+		local mode = lfs.attributes('/dev/ttyUSB3', 'mode')
+		if mode then
+			_M._dev_tty = '/dev/ttyUSB3'
+		end
+		return _M._dev_tty or '/dev/ttymxc3'
+	end
+
+	return _M._dev_tty or '/dev/tty0'
 end
 
 _M.gen_gcom_script = function(at_cmd)
@@ -47,6 +77,10 @@ end
 
 _M.auto_port_exec = function(script, at_cmd)
 	local port, err = _M.detect_device()
+	if not port then
+		return nil, err
+	end
+
 	local script_path = '/etc/gcom/'..script
 	if 'file' ~= lfs.attributes(script_path, 'mode') then
 		script_path, err = _M.create_gcom_script(script, at_cmd)
