@@ -1,5 +1,6 @@
 local skynet = require "skynet.manager"
 local dc = require "skynet.datacenter"
+local queue = require "skynet.queue"
 local cjson = require "cjson.safe"
 local md5 = require "md5"
 local lfs = require 'lfs'
@@ -12,6 +13,7 @@ local md5sum = ""
 local db_modification = 0
 local db_restful = nil
 
+local lock = nil -- Critical Section
 local command = {}
 
 function command.GET(app, ...)
@@ -296,13 +298,16 @@ local function init_restful()
 end
 
 skynet.start(function()
+	lock = queue()
 	load_cfg(db_file)
 	init_restful()
 
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.upper(cmd)]
 		if f then
-			skynet.ret(skynet.pack(f(...)))
+			lock(function(...)
+				skynet.ret(skynet.pack(f(...)))
+			end, ...)
 		else
 			error(string.format("Unknown command %s", tostring(cmd)))
 		end
@@ -311,7 +316,9 @@ skynet.start(function()
 
 	skynet.fork(function()
 		while true do
-			command.SAVE()
+			lock(function()
+				command.SAVE()
+			end)
 			skynet.sleep(500)
 		end
 	end)
