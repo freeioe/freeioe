@@ -10,7 +10,7 @@ return {
 		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 		assert(post.inst)
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local r, err = appmgr.req.stop(post.inst, post.reason)
 		if r then
 			ngx.print(_('Application stoped!'))

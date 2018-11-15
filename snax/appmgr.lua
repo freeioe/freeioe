@@ -8,7 +8,7 @@ local event = require 'app.event'
 
 local applist = {}
 local mc_map = {}
-local reg_map = {}
+local listeners = {}
 local closing = false
 local sys_app = 'ioe'
 
@@ -44,7 +44,7 @@ function response.start(name, conf)
 	app.inst = inst
 	app.last = skynet.time()
 
-	for handle, srv in pairs(reg_map) do
+	for handle, srv in pairs(listeners) do
 		srv.post.app_event('start', name, inst.handle)
 	end
 
@@ -86,7 +86,7 @@ function response.stop(name, reason)
 		end
 	end
 
-	for handle, srv in pairs(reg_map) do
+	for handle, srv in pairs(listeners) do
 		srv.post.app_event('stop', name, reason)
 	end
 
@@ -213,7 +213,7 @@ function accept.app_event(event, inst_name, ...)
 		end
 	end
 
-	for handle, srv in pairs(reg_map) do
+	for handle, srv in pairs(listeners) do
 		srv.post.app_event(event, inst_name, ...)
 	end
 end
@@ -237,19 +237,18 @@ function accept.app_heartbeat_check()
 	end
 end
 
-
 ---- for event stuff
-function accept.reg_snax(handle, type, fire_list)
+function accept.listen(handle, type, fire_list)
 	local snax_inst = snax.bind(handle, type)
-	reg_map[handle] = snax_inst
+	listeners[handle] = snax_inst
 	if fire_list then
 		snax_inst.post.app_list(applist)
 	end
 	return true
 end
 
-function accept.unreg_snax(handle)
-	reg_map[handle] = nil
+function accept.unlisten(handle)
+	listeners[handle] = nil
 	return true
 end
 
@@ -327,6 +326,6 @@ function exit(...)
 		v:delete()
 	end
 	mc_map = {}
-	reg_map = {}
+	listeners = {}
 	log.info("AppMgr service closed!")
 end

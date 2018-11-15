@@ -10,7 +10,7 @@ return {
 			return
 		else
 			local apps = dc.get('APPS') or {}
-			local appmgr = snax.uniqueservice('appmgr')
+			local appmgr = snax.queryservice('appmgr')
 			local applist = appmgr.req.list()
 			for k, v in pairs(apps) do
 				v.running = applist[k] and applist[k].inst or nil

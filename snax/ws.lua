@@ -192,20 +192,19 @@ function msg_handler.app_new(client, id, code, data)
 	local args = {
 		name = data.app,
 		inst = data.inst,
-		from_web = true,
 	}
 	local r, err = skynet.call(".upgrader", "lua", "create_app", id, args)
 	return __fire_result(client, id, code, r, err)
 end
 
 function msg_handler.app_start(client, id, code, data)
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.start(data.inst)
 	return __fire_result(client, id, code, r, err)
 end
 
 function msg_handler.app_stop(client, id, code, data)
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.stop(data.inst, data.reason)
 	return __fire_result(client, id, code, r, err)
 end
@@ -213,7 +212,7 @@ end
 function msg_handler.app_list(client, id, code, data)
 	local dc = require 'skynet.datacenter'
 	local apps = dc.get('APPS') or {}
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local applist = appmgr.req.list()
 	for k, v in pairs(apps) do
 		v.running = applist[k] and applist[k].inst or nil
@@ -276,14 +275,14 @@ function msg_handler.app_pack(client, id, code, data)
 end
 
 function msg_handler.event_list(client, id, code, data)
-	local buffer = snax.uniqueservice('buffer')
+	local buffer = snax.queryservice('buffer')
 	local events = buffer.req.get_event()
 	client:send({id = id, code = code, data = { result = true, data = events}})
 end
 
 function msg_handler.device_info(client, id, code, data)
 	local dc = require 'skynet.datacenter'
-	local cloud = snax.uniqueservice('cloud')
+	local cloud = snax.queryservice('cloud')
 
 	local cfg = {
 		sys = dc.get("SYS") or {},
@@ -327,15 +326,15 @@ function accept.on_event(data)
 end
 
 local function connect_buffer_service(enable)
-	local buffer = snax.uniqueservice('buffer')
-	local appmgr = snax.uniqueservice('appmgr')
+	local buffer = snax.queryservice('buffer')
+	local appmgr = snax.queryservice('appmgr')
 	local obj = snax.self()
 	if enable then
 		buffer.post.listen(obj.handle, obj.type)
-		appmgr.post.reg_snax(obj.handle, obj.type, true)
+		appmgr.post.listen(obj.handle, obj.type, true)
 	else
 		logger.post.unlisten(obj.handle)
-		appmgr.post.unreg_snax(obj.handle)
+		appmgr.post.unlisten(obj.handle)
 	end
 end
 

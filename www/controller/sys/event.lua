@@ -10,7 +10,7 @@ return {
 		local get = ngx.req.get_uri_args()
 		local app = get['app']
 
-		local buffer = snax.uniqueservice("buffer")
+		local buffer = snax.queryservice("buffer")
 		local list, err = buffer.req.get_event()
 		for _, v in ipairs(list or {}) do
 			local ms = string.format("%03d", math.floor((v.timestamp % 1) * 1000))

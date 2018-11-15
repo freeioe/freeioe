@@ -3,7 +3,7 @@ local snax = require 'skynet.snax'
 local log = require 'log'
 
 local LOG = nil
-local reg_map = {}
+local listeners = {}
 
 local function create_log()
 	local max_lvl = os.getenv('IOE_LOG_LEVEL') or 'info'
@@ -28,7 +28,7 @@ skynet.register_protocol {
 	dispatch = function(_, address, msg)
 		local content = string.format("[%08x]: %s", address, msg)
 		LOG.notice(content)
-		for handle, srv in pairs(reg_map) do
+		for handle, srv in pairs(listeners) do
 			srv.post.log(skynet.time(), 'notice', content)
 		end
 	end
@@ -45,13 +45,13 @@ skynet.register_protocol {
 
 local command = {}
 
-function command.reg_snax(handle, type)
-	reg_map[handle] = snax.bind(handle, type)
+function command.listen(handle, type)
+	listeners[handle] = snax.bind(handle, type)
 	return true
 end
 
-function command.unreg_snax(handle)
-	reg_map[handle] = nil
+function command.unlisten(handle)
+	listeners[handle] = nil
 	return true
 end
 

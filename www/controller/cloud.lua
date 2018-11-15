@@ -9,7 +9,7 @@ return {
 			self:redirect('/user/login')
 		else
 			local get = ngx.req.get_uri_args()
-			--local cloud = snax.uniqueservice('cloud')
+			--local cloud = snax.queryservice('cloud')
 			local cfg = dc.get('CLOUD')
 			local sys = dc.get('SYS')
 			local edit_sn = lfs.attributes("/etc/profile.d/echo_sn.sh", "mode") == 'file'
@@ -29,7 +29,7 @@ return {
 			local option = post.option
 			local info = _("Action is accepted")
 			local id = 'from_web'
-			local cloud = snax.uniqueservice('cloud')
+			local cloud = snax.queryservice('cloud')
 			if option == 'data' then
 				--print(option, post.enable=='true')
 				cloud.post.enable_data(id, post.enable == 'true')

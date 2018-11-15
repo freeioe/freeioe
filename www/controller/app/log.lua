@@ -13,7 +13,7 @@ return {
 		if get.from_file then
 			logs, err = log_reader.by_app(app, max_line)
 		else
-			local buffer = snax.uniqueservice("buffer")
+			local buffer = snax.queryservice("buffer")
 			logs, err = buffer.req.get_log(app)
 			for _, log in ipairs(logs or {}) do
 				local ms = string.format("%03d", math.floor((log.timestamp % 1) * 1000))

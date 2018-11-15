@@ -11,7 +11,7 @@ return {
 		local post = ngx.req.get_post_args()
 		assert(post.device and post.command and post.param)
 
-		local cloud = snax.uniqueservice('cloud')
+		local cloud = snax.queryservice('cloud')
 		local cmd = {
 			device = post.device,
 			cmd = post.command,

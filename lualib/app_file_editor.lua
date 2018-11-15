@@ -240,7 +240,7 @@ local post_ops = {
 		local f = assert(io.open(path, 'w'))
 		f:write(content)
 		f:close()
-		local appmgr = snax.uniqueservice("appmgr")
+		local appmgr = snax.queryservice("appmgr")
 		appmgr.post.app_modified(app, 'web_editor')
 		return { status = 'OK' }
 	end,
@@ -258,7 +258,7 @@ local post_ops = {
 		end
 		f:write(content)
 		f:close()
-		local appmgr = snax.uniqueservice("appmgr")
+		local appmgr = snax.queryservice("appmgr")
 		appmgr.post.app_modified(app, 'web_editor')
 		return { status = 'OK' }
 	end,

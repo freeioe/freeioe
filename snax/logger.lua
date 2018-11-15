@@ -2,7 +2,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 
 local LOG
-local reg_map = {}
+local listeners = {}
 
 function accept.log(lvl, ...)
 	local f = LOG[lvl]
@@ -10,18 +10,18 @@ function accept.log(lvl, ...)
 		f = LOG.notice
 	end
 	f(...)
-	for handle, srv in pairs(reg_map) do
+	for handle, srv in pairs(listeners) do
 		srv.post.log(skynet.time(), lvl, ...)
 	end
 end
 
-function accept.reg_snax(handle, type)
-	reg_map[handle] = snax.bind(handle, type)
+function accept.listen(handle, type)
+	listeners[handle] = snax.bind(handle, type)
 	return true
 end
 
-function accept.unreg_snax(handle)
-	reg_map[handle] = nil
+function accept.unlisten(handle)
+	listeners[handle] = nil
 	return true
 end
 

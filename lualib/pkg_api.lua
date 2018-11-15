@@ -170,25 +170,24 @@ function _M.generate_tmp_path(inst_name, app_name, version, ext)
 	return "/tmp/"..inst_name..'__'..app_name_escape.."_"..version..ext
 end
 
-function _M.create_download_func(inst_name, app_name, version, ext, cb, is_extension)
+function _M.create_download_func(inst_name, app_name, version, ext, is_extension)
 	local inst_name = inst_name
 	local app_name = app_name:gsub('%.', '/')
 	local version = version
 	local ext = ext
-	local cb = cb
 	local is_extension = is_extension
 
 	if version == 'latest' and ioe.beta() then
 		version = 'latest.beta'
 	end
 
-	return function()
+	return function(success_callback)
 		--local app_name_escape = string.gsub(app_name, '/', '__')
 		--local path = "/tmp/"..inst_name..'__'..app_name_escape.."_"..version..ext
-		local path = _M.generate_tmp_path(inst_name, app_name, version ,ext)
+		local path = _M.generate_tmp_path(inst_name, app_name, version, ext)
 		local file, err = io.open(path, "w+")
 		if not file then
-			return cb(nil, err)
+			return nil, err
 		end
 
 		local pkg_host = ioe.pkg_host_url()
@@ -199,13 +198,13 @@ function _M.create_download_func(inst_name, app_name, version, ext, cb, is_exten
 			url = "/download/ext/"..plat.."/"..app_name.."/"..version..ext
 		end
 
-		log.notice('Start Download Package', app_name, 'From URL:', pkg_host..url)
+		log.notice('Start download package '..app_name..' from: '..pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
-			return cb(nil, tostring(header))
+			return nil, "Download package "..app_name.." failed. Reason:"..tostring(header)
 		end
 		if status < 200 or status > 400 then
-			return cb(nil, "Download Package failed, status code "..status)
+			return nil, "Download package failed, status code "..status
 		end
 		file:write(body)
 		file:close()
@@ -214,15 +213,15 @@ function _M.create_download_func(inst_name, app_name, version, ext, cb, is_exten
 		if status and status == 200 then
 			local sum, err = helper.md5sum(path)
 			if not sum then
-				return cb(nil, "Cannot caculate md5, error:\t"..err)
+				return on_result(nil, "Cannot caculate md5, error:\t"..err)
 			end
 			log.notice("Downloaded file md5 sum", sum)
 			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
 			if sum ~= md5 then
-				return cb(nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum)
+				return "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum
 			end
 		end
-		cb(true, path)
+		return success_callback(path)
 	end
 end
 

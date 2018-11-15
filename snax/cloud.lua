@@ -240,12 +240,12 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 end
 
 local function connect_log_server(enable)
-	local logger = snax.uniqueservice('logger')
+	local logger = snax.queryservice('logger')
 	local obj = snax.self()
 	if enable then
-		logger.post.reg_snax(obj.handle, obj.type)
+		logger.post.listen(obj.handle, obj.type)
 	else
-		logger.post.unreg_snax(obj.handle)
+		logger.post.unlisten(obj.handle)
 	end
 end
 
@@ -1058,7 +1058,7 @@ end
 function accept.app_start(id, args)
 	local inst = args.inst
 	local conf = args.conf
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.start(inst, conf)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
@@ -1066,7 +1066,7 @@ end
 function accept.app_stop(id, args)
 	local inst = args.inst
 	local reason = args.reason
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.stop(inst, reason)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
@@ -1074,13 +1074,13 @@ end
 function accept.app_restart(id, args)
 	local inst = args.inst
 	local reason = args.reason
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.restart(inst, reason)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
 
 function accept.app_conf(id, args)
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.set_conf(args.inst, args.conf)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
@@ -1093,7 +1093,7 @@ function accept.app_list(id, args)
 	end
 
 	if apps then
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local app_list = appmgr.req.list()
 		local now_time = skynet.time()
 		for k, v in pairs(apps) do
@@ -1117,7 +1117,7 @@ function accept.app_query_log(id, args)
 	local max_count = tonumber(args.max_count) or 60
 	local log, err = log_reader.by_app(app, max_count) 
 	]]--
-	local buffer = snax.uniqueservice('buffer')
+	local buffer = snax.queryservice('buffer')
 	local logs, err = buffer.req.get_log(app)
 	snax.self().post.action_result('app', id, logs, err or "Done")
 	if logs then
@@ -1133,7 +1133,7 @@ end
 function accept.app_query_comm(id, args)
 	local log_reader = require 'log_reader'
 	local app = args.inst
-	local buffer = snax.uniqueservice('buffer')
+	local buffer = snax.queryservice('buffer')
 	local comms, err = buffer.req.get_comm(app)
 	snax.self().post.action_result('app', id, comms, err or "Done")
 	if comms then
@@ -1162,13 +1162,13 @@ function accept.app_upload_comm(id, args)
 end
 
 function accept.app_option(id, args)
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.app_option(args.inst, args.option, args.value)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
 
 function accept.app_rename(id, args)
-	local appmgr = snax.uniqueservice('appmgr')
+	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.app_rename(args.inst, args.new_name)
 	snax.self().post.action_result('app', id, r, err or "Done")
 end
@@ -1269,9 +1269,6 @@ function init()
 
 	connect_log_server(true)
 
-	local s = snax.self()
-	skynet.call(".upgrader", "lua", "bind_cloud", s.handle, s.type)
-
 	skynet.fork(function()
 		connect_proc() 
 	end)
@@ -1279,19 +1276,20 @@ function init()
 		api = app_api:new('CLOUD')
 		api:set_handler(Handler, true)
 
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local obj = snax.self()
-		appmgr.post.reg_snax(obj.handle, obj.type)
+		appmgr.post.listen(obj.handle, obj.type)
 	end)
 end
 
 function exit(...)
 	local obj = snax.self()
-	appmgr.post.unreg_snax(obj.handle, obj.type)
+	appmgr.post.unlisten(obj.handle, obj.type)
 
 	if enable_data_one_short_cancel then
 		enable_data_one_short_cancel()
 	end
+	connect_log_server(false)
 	fire_device_timer = nil
 	fire_app_timer = nil
 	mosq.cleanup()

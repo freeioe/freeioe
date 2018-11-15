@@ -22,7 +22,7 @@ local function gen_task_id(cate, info)
 end
 
 local function post_action_result(channel, id, result, info)
-	local cloud = snax.uniqueservice('cloud')
+	local cloud = snax.queryservice('cloud')
 	cloud.post.action_result(channel, id, result, info)
 end
 
@@ -67,23 +67,23 @@ local batch_env = {
 	end,
 	CONF_APP = function(inst, conf)
 		local id = gen_task_id('app', "Config application "..inst)
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local r, err = appmgr.req.set_conf(inst, conf)
 		post_action_result('app', id, r, err or "Done")
 	end,
 	SET_APP_OPTION = function(inst, option, value)
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local r, err = appmgr.req.app_option(inst, option, value)
 		post_action_result('app', id, r, err or "Done")
 	end,
 	RENAME_APP = function(inst, new_name)
 		local id = gen_task_id('app', "Rename application "..inst)
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local r, err = appmgr.req.app_rename(inst, new_name)
 		post_action_result('app', id, r, err or "Done")
 	end,
 	CLEAN_APPS = function()
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local list = appmgr.req.list()
 		for k, v in pairs() do
 			REMOVE_APP(k)
@@ -134,7 +134,7 @@ skynet.start(function()
 
 	--- Loading script string
 	local f, err = load(script, nil, "bt", batch_env)
-	local cloud = snax.uniqueservice('cloud')
+	local cloud = snax.queryservice('cloud')
 	if not f then
 		local err = "Loading batch script failed. "..err
 		log.error(err)

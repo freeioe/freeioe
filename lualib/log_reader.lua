@@ -51,7 +51,7 @@ end
 
 -- Return {log={...}, sys={...}}
 function _M.by_app(app_name, count)
-	local appmgr = snax.uniqueservice("appmgr")
+	local appmgr = snax.queryservice("appmgr")
 	local app_inst, err = appmgr.req.app_inst(app_name)
 	if not app_inst then
 		return nil, err

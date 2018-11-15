@@ -1,5 +1,6 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
+local queue = require 'skynet.queue'
 local datacenter = require 'skynet.datacenter'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
@@ -7,6 +8,8 @@ local httpdown = require 'httpdown'
 local pkg_api = require 'pkg_api'
 local lfs = require 'lfs'
 local ioe = require 'ioe'
+
+local ext_lock = nil
 
 local tasks = {}
 local installed = {}
@@ -30,6 +33,35 @@ local function parse_inst_name(inst_name)
 	return string.match(inst_name, '^(.+).(%d+)$')
 end
 
+local function action_result(id, result, ...)
+	if result then
+		log.info(...)
+	else
+		log.error(...)
+	end
+
+	if id then
+		local cloud = snax.queryservice('cloud')
+		cloud.post.action_result('sys', id, result, ...)
+	end
+	return result, ...
+end
+
+local function xpcall_ret(id, ok, ...)
+	if ok then
+		return action_result(id, ...)
+	end
+	return action_result(id, false, ...)
+end
+
+local function action_exec(func)
+	local func = func
+	return function(id, args)
+		return xpcall_ret(id, xpcall(func, debug.traceback, id, args))
+	end
+end
+
+
 local function create_task(func, task_name, ...)
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
@@ -39,10 +71,17 @@ local function create_task(func, task_name, ...)
 	end, task_name, ...)
 end
 
+local function map_result_action(func_name)
+	local func = command[func_name]
+	assert(func)
+	command[func_name] = function(id, args)
+		return action_result(id, ext_lock(func, id, args))
+	end
+end
 
-local function create_download(app_name, version, cb)
-	local down = pkg_api.create_download_func(app_name, app_name, version, ".tar.gz", cb, true)
-	create_task(down, "Download Extension "..app_name)
+local function create_download(inst_name, ext_name, version, success_cb)
+	local down = pkg_api.create_download_func(inst_name, ext_name, version, ".tar.gz", true)
+	return down(success_cb)
 end
 
 
@@ -55,7 +94,7 @@ local function get_app_depends(app_inst)
 			local name, version = string.match(line, '^([^:]+):(%d+)$')
 			name = name or line
 			version = version or 'latest'
-			exts[name] = version
+			table.insert(exts, { name = name, version = version})
 		end
 		f:close()
 	end
@@ -122,10 +161,10 @@ local function list_depends()
 	local depends = {}
 	for app_inst, v in pairs(app_list) do
 		local exts = get_app_depends(app_inst)
-		for name, version in pairs(exts) do
-			local inst_name = make_inst_name(name, version)
+		for _, ext in ipairs(exts) do
+			local inst_name = make_inst_name(ext.name, ext.version)
 			local dep = depends[inst_name] or {}
-			dep[#dep + 1] = app_inst
+			table.insert(dep, app_inst)
 			depends[inst_name] = dep
 		end
 	end
@@ -159,83 +198,75 @@ end
 -- @treturn bool, string
 function command.install_depends(app_inst)
 	local exts = get_app_depends(app_inst)
-	local wait_list = {}
-	for name, version in pairs(exts) do
-		local inst = make_inst_name(name, version)
+	if #exts == 0 then
+		return true, "There no dependency extension needed by "..app_inst
+	end
+
+	for _, ext in ipairs(exts) do
+		local inst = make_inst_name(ext.name, ext.version)
 		if not installed[inst] then
+			create_task(function()
+				return command.install_ext(nil, {name=ext.name, version=ext.version, inst=inst})
+			end, "Download extension "..inst)
+			skynet.sleep(20) -- wait for installation started
+		end
+	end
+
+	--- Make sure all depends installation is run before this.
+	return ext_lock(function()
+		local result = true
+		local failed_depends = {}
+
+		for _, ext in pairs(exts) do
+			local inst = make_inst_name(ext.name, ext.version)
+			if not installed[inst] then
+				result = false
+				failed_depends[#failed_depends + 1] = inst
+			else
+				install_depends_to_app(inst, app_inst)
+			end
+		end
+
+		if not result then
+			return false, "Install depends failed, failed exts: "..table.concat(failed_depends)
+		end
+		return true, "Install depends for application is done!"
+	end)
+end
+
+function command.install_ext(id, args)
+	local name = args.name
+	local version = args.version or 'latest'
+	local inst = make_inst_name(name, version)
+	if installed[inst] then
+		return true, "Extension "..inst.." already installed"
+	end
+
+	return create_download(inst, name, version, function(path)
+		log.notice("Download Extension finished", name, version)
+
+		local target_folder = get_target_folder(inst)
+		lfs.mkdir(target_folder)
+		log.debug("tar xzf "..path.." -C "..target_folder)
+		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
+		os.execute("rm -rf "..path)
+		if r and status == 'exit' then
 			installed[inst] = {
 				name = name,
 				version = version,
 			}
-			wait_list[inst] = {
-				task_name = tname,
-				running = true,
-			}
-
-			create_download(name, version, function(result, info)
-				wait_list[inst].result = result
-				wait_list[inst].msg = info
-				if not result then
-					installed[inst] = nil
-					log.error(info)
-				else
-					log.notice("Download Extension finished", name, version)
-
-					local target_folder = get_target_folder(inst)
-					lfs.mkdir(target_folder)
-					log.debug("tar xzf "..info.." -C "..target_folder)
-					local r, status = os.execute("tar xzf "..info.." -C "..target_folder)
-					os.execute("rm -rf "..info)
-					if r and status == 'exit' then
-						install_depends_to_app(inst, app_inst)
-					else
-						wait_list[inst].result = false
-						wait_list[inst].msg = "failed to unzip Extension"
-					end
-				end
-				wait_list[inst].running = false
-			end)
+			return true
 		else
-			install_depends_to_app(inst, app_inst)
+			return false, "failed to unzip Extension"
 		end
-	end
-
-	local t = skynet.now()
-	--- max timeout 10 mins
-	while (skynet.now() - t) < (10 * 60 * 100) do
-		local finished = true
-		local result = true
-		local info = "done"
-		local failed_depends = {}
-
-		for k,v in pairs(wait_list) do
-			if v.running then
-				finished = false
-			end
-			if not v.result then
-				result = false
-				failed_depends[#failed_depends + 1] = k
-			end
-		end
-		if not result then
-			info = "Install depends failed, failed exts: "..table.concat(failed_depends)
-		end
-		if finished then
-			return result, info
-		end
-		skynet.sleep(100)
-	end
-	return nil, "timeout"
+	end)
 end
 
 function command.upgrade_ext(id, args)
-	local cloud = snax.uniqueservice('cloud')
 	local inst = args.inst or args.name..".latest"
 	if not installed[inst] then
 		local err = "Extension does not exists! inst: "..inst
-		log.error(err)
-		cloud.post.action_result("sys", id, false, err)
-		return
+		return false, err
 	end
 
 	local name = args.name
@@ -244,37 +275,31 @@ function command.upgrade_ext(id, args)
 	--- Stop all applications depends on this extension
 	local depends = list_depends()
 	local applist = depends[inst]
-	local appmgr = snax.uniqueservice("appmgr")
+	local appmgr = snax.queryservice("appmgr")
 	for _,app_inst in ipairs(applist) do
 		appmgr.req.stop(app_inst, "Upgrade Extension "..inst)
 	end
 
-	create_download(name, version, function(result, path)
-		if not result then
-			local err = "Failed to download extension. Error: "..path
-			log.error(err)
-			cloud.post.action_result("sys", id, false, err)
-		else
-			log.notice("Download Extension finished", name, version)
+	return create_download(inst, name, version, function(path)
+		log.notice("Download Extension finished", name, version)
 
-			local target_folder = get_target_folder(inst)
-			log.debug("tar xzf "..path.." -C "..target_folder)
-			local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
-			os.execute("rm -rf "..path)
-			log.notice("Install Extension finished", name, version, r, status)
-			installed[inst] = {
-				name = name,
-				version = version
-			}
+		local target_folder = get_target_folder(inst)
+		log.debug("tar xzf "..path.." -C "..target_folder)
+		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
+		os.execute("rm -rf "..path)
+		log.notice("Install Extension finished", name, version, r, status)
+		installed[inst] = {
+			name = name,
+			version = version
+		}
 
-			for _,app_inst in ipairs(applist) do
-				local r, err = appmgr.req.start(app_inst)
-				if not r then
-					log.error("Failed to start application after extension upgraded. Error: "..err)
-				end
+		for _,app_inst in ipairs(applist) do
+			local r, err = appmgr.req.start(app_inst)
+			if not r then
+				log.error("Failed to start application after extension upgraded. Error: "..err)
 			end
-			cloud.post.action_result("sys", id, true, "Application upgradation is done!")
 		end
+		return true, "Extension upgradation is done!"
 	end)
 end
 
@@ -291,7 +316,11 @@ function command.pkg_check_version(ext, version)
 	return pkg_api.pkg_check_version(pkg_host, ext, version)
 end
 
+map_result_action('upgrade_ext')
+map_result_action('install_ext')
+
 skynet.start(function()
+	ext_lock = queue()
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.lower(cmd)]
 		if f then

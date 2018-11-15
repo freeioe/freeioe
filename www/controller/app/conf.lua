@@ -13,7 +13,7 @@ return {
 			return
 		end
 
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local conf = appmgr.req.get_conf(app)
 		if not conf then
 			conf = dc.get("APPS", app, 'conf')
@@ -39,7 +39,7 @@ return {
 				post.conf = {}
 			end
 		end
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local inst = appmgr.req.app_inst(post.inst)
 		if not inst then
 			if dc.get("APPS", post.inst) then

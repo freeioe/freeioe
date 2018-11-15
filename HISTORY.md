@@ -30,4 +30,5 @@ v1.1.2 ()
 * Support rename app instance name
 * Support pack app from websocket
 * Upgrade with latest skynet
+* Improving upgrader and ioe_ext service
 * Bug fixes

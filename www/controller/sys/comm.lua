@@ -6,7 +6,7 @@ return {
 			return
 		end
 		local get = ngx.req.get_uri_args()
-		local buffer = snax.uniqueservice('buffer')
+		local buffer = snax.queryservice('buffer')
 		local list = buffer.req.get_comm(get.app) or "[]"
 		lwf.json(self, list)
 	end,

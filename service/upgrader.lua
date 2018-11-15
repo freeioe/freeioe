@@ -1,5 +1,7 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
+local queue = require 'skynet.queue'
+local lockable_queue = require 'skynet.lockable_queue'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo' 
 local lfs = require 'lfs'
@@ -7,9 +9,13 @@ local datacenter = require 'skynet.datacenter'
 local pkg_api = require 'pkg_api'
 local ioe = require 'ioe'
 
+local sys_lock = nil
+local app_lock = nil
+local task_lock = nil
 local tasks = {}
+local aborting = false
+
 local command = {}
-local cloud = nil
 
 local get_target_folder = pkg_api.get_app_folder
 local parse_version_string = pkg_api.parse_version_string
@@ -25,107 +31,152 @@ local function is_inst_name_reserved(inst)
 	end
 end
 
-local function create_task(func, task_name, task_desc, ...)
+local function action_result(channel, id, result, ...)
+	if result then
+		log.info(...)
+	else
+		log.error(...)
+	end
+
+	if id and id ~= 'from_web' and cloud then
+		local cloud = snax.queryservice('cloud')
+		cloud.post.action_result(channel, id, result, ...)
+	end
+	return result, ...
+end
+
+local function xpcall_ret(channel, id, ok, ...)
+	if ok then
+		return action_result(channel, id, ...)
+	end
+	return action_result(channel, id, false, ...)
+end
+
+local function action_exec(channel, func)
+	local channel = channel
+	local func = func
+	return function(id, args)
+		return xpcall_ret(channel, id, xpcall(func, debug.traceback, id, args))
+	end
+end
+
+--[[
+local function create_task(lock, task_func)
+	local spawn_co = {}
+	skynet.fork(function()
+		-- Make sure we locked the queue
+		skynet.wakeup(spawn_co)
+		task_lock(task_func)
+	end)
+	skynet.wait(spawn_co)
+	return true
+end
+]]--
+
+local function create_task(func, task_name, ...)
+	if aborting then
+		return false, "System is aborting"
+	end
+
 	skynet.fork(function(task_name, ...)
 		tasks[coroutine.running()] = {
-			name = task_name,
-			desc = task_desc,
-			status = 'RUNNING',
+			name = task_name
 		}
-		func(...)
-		tasks[coroutine.running()] = nil
+		local r, err = func(...)
 	end, task_name, ...)
+
+	return true, task_name.. " started"
 end
 
-local function create_download(inst_name, app_name, version, cb, ext)
-	local ext = ext or ".zip"
-	local down = pkg_api.create_download_func(inst_name, app_name, version, ext, cb)
-	create_task(down, inst_name, "Download Application "..app_name)
+local function gen_app_sn(inst_name)
+	local cloud = snax.queryservice('cloud')
+	return cloud.req.gen_sn(inst_name)
 end
 
-local function install_result(id, result, ...)
-	if result then
-		log.info(...)
-	else
-		log.error(...)
+local function create_download(channel)
+	return function(inst_name, app_name, version, success_cb, ext)
+		local ext = ext or ".zip"
+		local down = pkg_api.create_download_func(inst_name, app_name, version, ext)
+		return down(success_cb)
 	end
-
-	if cloud then
-		cloud.post.action_result("app", id, result, ...)
-	end
-	return result, ...
 end
 
-local function sys_action_result(id, result, ...)
-	if result then
-		log.info(...)
-	else
-		log.error(...)
-	end
+local create_app_download = create_download('app')
+local create_sys_download = create_download('sys')
 
-	if cloud then
-		cloud.post.action_result("sys", id, result, ...)
+local function map_app_action(func_name, lock)
+	local func = command[func_name]
+	assert(func)
+	command[func_name] = function(id, args)
+		return create_task(function()
+			return action_result('app', id, app_lock(func, lock, id, args))
+		end, 'Application Action '..func_name)
 	end
-	return result, ...
+end
+
+local function map_sys_action(func_name, lock)
+	local func = command[func_name]
+	assert(func)
+	command[func_name] = function(id, args)
+		return create_task(function()
+			return action_result('sys', id, sys_lock(func, lock, id, args))
+		end, 'System Action '..func_name)
+	end
 end
 
 function command.upgrade_app(id, args)
 	local inst_name = args.inst
 	local version, beta, editor = parse_version_string(args.version)
+	if beta and not ioe.beta() then
+		return false, "Device is not in beta mode! Cannot install beta version"
+	end
+
 	local app = datacenter.get("APPS", inst_name)
 	if not app then
-		return install_result(id, false, "There is no app for instance name "..inst_name)	
+		return false, "There is no app for instance name "..inst_name
 	end
-	if beta and not ioe.beta() then
-		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
-	end
-	local appmgr = snax.uniqueservice("appmgr")
 
 	local name = args.fork and args.name or app.name
 	if args.name and args.name ~= name then
-		return install_result(id, false, "Cannot upgrade application as name is different, installed "..app.name.." wanted "..args.name)
+		return false, "Cannot upgrade application as name is different, installed "..app.name.." wanted "..args.name
 	end
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
-	local target_folder = get_target_folder(inst_name)
 
 	local download_version = editor and version..".editor" or version
-	create_download(inst_name, name, download_version, function(r, info)
+	return create_app_download(inst_name, name, download_version, function(path)
+		log.notice("Download application finished", name)
+		local appmgr = snax.queryservice("appmgr")
+		local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
+		if not r then
+			return false, "Failed to stop App. Error: "..err
+		end
+
+		local target_folder = get_target_folder(inst_name)
+		os.execute("unzip -oq "..path.." -d "..target_folder)
+		os.execute("rm -rf "..path)
+
+		if not version or version == 'latest' then
+			version = get_app_version(inst_name)
+		end
+		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+		if editor then
+			datacenter.set("APPS", inst_name, "islocal", 1)
+		end
+
+		local r, err = appmgr.req.start(inst_name, conf)
 		if r then
-			log.notice("Download application finished", name)
-			local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
-			if not r then
-				return install_result(id, false, "Failed to stop App. Error: "..err)
-			end
+			--- Post to appmgr for instance added
+			appmgr.post.app_event('upgrade', inst_name)
 
-			os.execute("unzip -oq "..info.." -d "..target_folder)
-			os.execute("rm -rf "..info)
-
-			if not version or version == 'latest' then
-				version = get_app_version(inst_name)
-			end
-			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
-			if editor then
-				datacenter.set("APPS", inst_name, "islocal", 1)
-			end
-
-			local r, err = appmgr.req.start(inst_name, conf)
-			if r then
-				--- Post to appmgr for instance added
-				appmgr.post.app_event('upgrade', inst_name)
-
-				return install_result(id, true, "Application upgradation is done!")
-			else
-				-- Upgrade will not remove app folder
-				--datacenter.set("APPS", inst_name, nil)
-				--os.execute("rm -rf "..target_folder)
-				return install_result(id, false, "Failed to start App. Error: "..err)
-			end
+			return true, "Application upgradation is done!"
 		else
-			return install_result(id, false, "Failed to download App. Error: "..info)
+			-- Upgrade will not remove app folder
+			--datacenter.set("APPS", inst_name, nil)
+			--os.execute("rm -rf "..target_folder)
+			return false, "Failed to start App. Error: "..err
 		end
 	end)
-	return true
 end
 
 function command.install_app(id, args)
@@ -133,80 +184,78 @@ function command.install_app(id, args)
 	local inst_name = args.inst
 	local from_web = args.from_web
 	local version, beta, editor = parse_version_string(args.version)
-	local sn = args.sn or cloud.req.gen_sn(inst_name)
-	local conf = args.conf or {}
+	if beta and not ioe.beta() then
+		return false, "Device is not in beta mode! Cannot install beta version"
+	end
 
+	local sn = args.sn or gen_app_sn(inst_name)
+	local conf = args.conf or {}
 	if not from_web and is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
-		return install_result(id, false, "Failed to install App. Error: "..err)
+		return false, "Failed to install App. Error: "..err
 	end
 	if datacenter.get("APPS", inst_name) and not args.force then
 		local err = "Application already installed"
-		return install_result(id, false, "Failed to install App. Error: "..err)
-	end
-	if beta and not ioe.beta() then
-		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
+		return false, "Failed to install App. Error: "..err
 	end
 
 	-- Reserve app instance name
 	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, downloading=true})
 
-	local appmgr = snax.uniqueservice("appmgr")
-	local target_folder = get_target_folder(inst_name)
-	lfs.mkdir(target_folder)
-
 	local download_version = editor and version..".editor" or version
-	create_download(inst_name, name, download_version, function(r, info)
+	local r, err = create_app_download(inst_name, name, download_version, function(info)
+		log.notice("Download application finished", name)
+		local target_folder = get_target_folder(inst_name)
+		lfs.mkdir(target_folder)
+		os.execute("unzip -oq "..info.." -d "..target_folder)
+		os.execute("rm -rf "..info)
+
+		if not version or version == 'latest' then
+			version = get_app_version(inst_name)
+		end
+		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+		if editor then
+			datacenter.set("APPS", inst_name, "islocal", 1)
+		end
+
+		local appmgr = snax.queryservice("appmgr")
+		local r, err = appmgr.req.start(inst_name, conf)
 		if r then
-			log.notice("Download application finished", name)
-			os.execute("unzip -oq "..info.." -d "..target_folder)
-			os.execute("rm -rf "..info)
+			--- Post to appmgr for instance added
+			appmgr.post.app_event('install', inst_name)
 
-			if not version or version == 'latest' then
-				version = get_app_version(inst_name)
-			end
-			datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
-			if editor then
-				datacenter.set("APPS", inst_name, "islocal", 1)
-			end
-
-			local r, err = appmgr.req.start(inst_name, conf)
-			if r then
-				--- Post to appmgr for instance added
-				appmgr.post.app_event('install', inst_name)
-
-				return install_result(id, true, "Application installtion is done")
-			else
-				datacenter.set("APPS", inst_name, nil)
-				os.execute("rm -rf "..target_folder)
-				return install_result(id, false, "Failed to start App. Error: "..err)
-			end
+			return true, "Application installtion is done"
 		else
 			datacenter.set("APPS", inst_name, nil)
-			return install_result(id, false, "Failed to download App. Error: "..info)
+			os.execute("rm -rf "..target_folder)
+			return false, "Failed to start App. Error: "..err
 		end
 	end)
-	return true
+
+	if not r then
+		datacenter.set("APPS", inst_name, nil)
+	end
+	return r, err
 end
 
 function command.create_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
-	local from_web = args.from_web
 	local version = 0
-	local sn = args.sn or cloud.req.gen_sn(inst_name)
-	local conf = args.conf or {}
 
-	if not from_web and is_inst_name_reserved(inst_name) then
+	if not ioe.beta() then
+		return false, "Device is not in beta mode! Cannot install beta version"
+	end
+
+	local sn = args.sn or gen_app_sn(inst_name)
+	local conf = args.conf or {}
+	if is_inst_name_reserved(inst_name) then
 		local err = "Application instance name is reserved"
-		return install_result(id, false, "Failed to install App. Error: "..err)
+		return false, "Failed to install App. Error: "..err
 	end
 	if datacenter.get("APPS", inst_name) and not args.force then
 		local err = "Application already installed"
-		return install_result(id, false, "Failed to install App. Error: "..err)
-	end
-	if not ioe.beta() then
-		return install_result(id, false, "Device is not in beta mode! Cannot install beta version")
+		return false, "Failed to install App. Error: "..err
 	end
 
 	-- Reserve app instance name
@@ -220,7 +269,7 @@ function command.create_app(id, args)
 	os.execute('echo editor >> '..target_folder.."/version")
 
 	--- Post to appmgr for instance added
-	local appmgr = snax.uniqueservice("appmgr")
+	local appmgr = snax.queryservice("appmgr")
 	appmgr.post.app_event('create', inst_name)
 
 	return true
@@ -229,24 +278,26 @@ end
 function command.install_local_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
-	local sn = args.sn or cloud.req.gen_sn(inst_name)
+	local sn = args.sn or gen_app_sn(inst_name)
 	local conf = args.conf or {}
 	local file_path = args.file
 
-	if is_inst_name_reserved(inst_name) then
-		return nil, "Application instance name is reserved"
-	end
-	if datacenter.get("APPS", inst_name) and not args.force then
-		return nil, "Application already installed"
-	end
 	if not ioe.beta() then
 		return nil, "Device is not in beta mode! Cannot install beta version"
 	end
 
+	if is_inst_name_reserved(inst_name) then
+		return false, "Application instance name is reserved"
+	end
+	if datacenter.get("APPS", inst_name) and not args.force then
+		return nil, "Application already installed"
+	end
+
 	-- Reserve app instance name
 	datacenter.set("APPS", inst_name, {name=name, version=0, sn=sn, conf=conf, islocal=1, auto=0})
-	local target_folder = get_target_folder(inst_name)
 	log.notice("Install local application package", file_path)
+
+	local target_folder = get_target_folder(inst_name)
 	os.execute("unzip -oq "..file_path.." -d "..target_folder)
 	os.execute("rm -rf "..file_path)
 
@@ -255,7 +306,7 @@ function command.install_local_app(id, args)
 	--datacenter.set("APPS", inst_name, "auto", 1)
 
 	--- Post to appmgr for instance added
-	local appmgr = snax.uniqueservice("appmgr")
+	local appmgr = snax.queryservice("appmgr")
 	appmgr.post.app_event('create', inst_name)
 
 	--[[
@@ -290,14 +341,15 @@ function command.rename_app(id, args)
 	datacenter.set("APPS", inst_name, nil)
 	datacenter.set("APPS", new_name, app)
 
-	local appmgr = snax.uniqueservice("appmgr")
+	local appmgr = snax.queryservice("appmgr")
 	appmgr.post.app_event('rename', inst_name, new_name)
+
 	return true
 end
 
 function command.install_missing_app(inst_name)
 	skynet.timeout(100, function()
-		local appmgr = snax.uniqueservice("appmgr")
+		local appmgr = snax.queryservice("appmgr")
 		local info = datacenter.get("APPS", inst_name)
 		if not info or info.islocal then
 			return
@@ -315,10 +367,9 @@ function command.install_missing_app(inst_name)
 end
 
 function command.uninstall_app(id, args)
-	local from_web = args.from_web
 	local inst_name = args.inst
 
-	local appmgr = snax.uniqueservice("appmgr")
+	local appmgr = snax.queryservice("appmgr")
 	local target_folder = get_target_folder(inst_name)
 
 	local r, err = appmgr.req.stop(inst_name, "Uninstall App")
@@ -326,10 +377,12 @@ function command.uninstall_app(id, args)
 		os.execute("rm -rf "..target_folder)
 		datacenter.set("APPS", inst_name, nil)
 		appmgr.post.app_event('uninstall', inst_name)
-		return install_result(id, true, "Application uninstall is done")
+		return true, "Application uninstall is done"
 	else
-		return install_result(id, false, "Application uninstall failed, Error: "..err)
+		return false, "Application uninstall failed, Error: "..err
 	end
+
+	return true
 end
 
 function command.list_app()
@@ -385,14 +438,7 @@ local function download_upgrade_skynet(id, args, cb)
 	local version, beta = parse_version_string(args.version)
 	local kname = get_core_name('skynet', args.platform)
 
-	create_download('__SKYNET__', kname, version, function(r, info)
-		if r then
-			cb(info)
-		else
-			return install_result(id, false, "Failed to download skynet. Error: "..info)
-		end
-	end, ".tar.gz")
-
+	return create_sys_download('__SKYNET__', kname, version, cb, ".tar.gz")
 end
 
 local function get_ps_e()
@@ -543,7 +589,8 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	end
 	write_script(base_dir.."/ipt/upgrade", os.date())
 
-	skynet.timeout(50, function()
+	aborting = true
+	skynet.timeout(100, function()
 		skynet.abort()
 	end)
 
@@ -556,36 +603,26 @@ function command.upgrade_core(id, args)
 	local version, beta = parse_version_string(args.version)
 	local skynet_args = args.skynet
 
-	if command.is_upgrading() then
-		return sys_action_result(id, false, "FreeIOE is upgrading!!!")
-	end
-
 	if args.no_ack then
 		local base_dir = get_ioe_dir()
 		lfs.mkdir(base_dir.."/ipt")
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
 			log.error("Create upgrade_no_ack failed", status, code)
-			return sys_action_result(id, false, "Failed to create upgrade_no_ack file!")
+			return false, "Failed to create upgrade_no_ack file!"
 		end
 	end
 
-	create_download('__FREEIOE__', 'freeioe', version, function(r, info)
-		if r then
-			if skynet_args then
-				download_upgrade_skynet(id, skynet_args, function(path) 
-					local r, err = start_upgrade_proc(info, path) 
-					return sys_action_result(id, r, err)
-				end)
-			else
-				local r, err = start_upgrade_proc(info)
-				return sys_action_result(id, r, err)
-			end
+	return create_sys_download('__FREEIOE__', 'freeioe', version, function(path)
+		local freeioe_path = path
+		if skynet_args then
+			return download_upgrade_skynet(id, skynet_args, function(path) 
+				return start_upgrade_proc(freeioe_path, path) 
+			end)
 		else
-			return sys_action_result(id, false, "Failed to download core system. Error: "..info)
+			return start_upgrade_proc(freeioe_path)
 		end
 	end, ".tar.gz")
-	return true
 end
 
 local rollback_time = nil
@@ -594,47 +631,38 @@ function command.upgrade_core_ack(id, args)
 	local upgrade_ack_sh = base_dir.."/ipt/upgrade_ack.sh"
 	local r, status, code = os.execute("sh "..upgrade_ack_sh)
 	if not r then
-		return sys_action_result(id, false, "Failed execute ugprade_ack.sh.  "..status.." "..code)
+		return false, "Failed execute ugprade_ack.sh.  "..status.." "..code
 	end
 	rollback_time = nil
-	return sys_action_result(id, true, "System upgradation ACK is done")
+	sys_lock(nil, true)
+	return true, "System upgradation ACK is done"
 end
 
 function command.rollback_time()
 	return rollback_time and math.floor(rollback_time - skynet.time()) or nil
 end
 
-function command.list()
-	return tasks
-end
-
 function command.is_upgrading()
-	local running = false
-	for k, v in pairs(tasks) do
-		if v.name == '__FREEIOE__' or v.name == '__SKYNET__' then
-			running = true
-			break
-		end
-	end
-	return running
-end
-
-function command.bind_cloud(handle, type)
-	cloud = snax.bind(handle, type)
+	-- TODO: make a upgrading flag?
+	return false
 end
 
 function command.system_reboot(id, args)
+	aborting = true
 	local delay = args.delay or 5
 	skynet.timeout(delay * 100, function()
 		os.execute("reboot")
 	end)
+	return true
 end
 
 function command.system_quit(id, args)
+	aborting = true
 	local delay = args.delay or 5
 	skynet.timeout(delay * 100, function()
 		skynet.abort()
 	end)
+	return true
 end
 
 local function check_rollback()
@@ -644,9 +672,43 @@ local function check_rollback()
 		f:close()
 		return true
 	end
+	return false
 end
 
+local function rollback_co()
+	log.notice("Rollback will be applied in five minutes")
+	rollback_time = skynet.time() + 5 * 60
+	skynet.timeout(5 * 60 * 100, function()
+		if check_rollback() then
+			aborting = true
+			log.error("System will be rollback now!")
+			skynet.sleep(100)
+			skynet.abort()
+		else
+			-- renew the lock as the lockable queue has been finalized/locked
+			sys_lock(nil, true)
+		end
+	end)
+end
+
+-- map action result functions
+map_app_action('upgrade_app', false)
+map_app_action('install_app', false)
+map_app_action('create_app', false)
+map_app_action('install_local_app', false)
+map_app_action('rename_app', false)
+map_app_action('uninstall_app', false)
+
+map_sys_action('upgrade_core', true)
+--map_action('upgrade_code_ack', 'sys')
+map_sys_action('system_reboot', true)
+map_sys_action('system_quit', true)
+
 skynet.start(function()
+	sys_lock = lockable_queue()
+	app_lock = lockable_queue(sys_lock, false)
+	task_lock = queue()
+
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.lower(cmd)]
 		if f then
@@ -655,19 +717,12 @@ skynet.start(function()
 			error(string.format("Unknown command %s", tostring(cmd)))
 		end
 	end)
+
 	skynet.register ".upgrader"
-	skynet.fork(function()
-		if check_rollback() then
-			log.notice("Rollback will be applied in five minutes")
-			rollback_time = skynet.time() + 5 * 60
-			skynet.timeout(5 * 60 * 100, function()
-				if check_rollback() then
-					log.error("System will be rollback now!")
-					skynet.sleep(100)
-					skynet.abort()
-				end
-			end)
-		end
-	end)
+
+	--- For rollback thread
+	if check_rollback() then
+		sys_lock(rollback_co, true)
+	end
 end)
 

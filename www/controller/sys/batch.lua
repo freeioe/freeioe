@@ -9,7 +9,7 @@ return {
 
 		local get = ngx.req.get_uri_args()
 
-		local cloud = snax.uniqueservice('cloud')
+		local cloud = snax.queryservice('cloud')
 		local result, info = cloud.req.batch_result(get.id)
 
 		lwf.json(self, {result=result, info=info})
@@ -24,7 +24,7 @@ return {
 		local post = ngx.req.get_post_args()
 		assert(post.id and post.script)
 
-		local cloud = snax.uniqueservice('cloud')
+		local cloud = snax.queryservice('cloud')
 		cloud.post.batch_script(post.id, post.script)
 		ngx.print(_('Script is running!'))
 	end,

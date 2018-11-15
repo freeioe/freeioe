@@ -11,8 +11,8 @@ local api = class("APP_MGR_API")
 
 function api:initialize(app_name, mgr_snax, cloud_snax)
 	self._app_name = app_name
-	self._mgr_snax = mgr_snax or snax.uniqueservice('appmgr')
-	self._cloud_snax = cloud_snax or snax.uniqueservice('cloud')
+	self._mgr_snax = mgr_snax or snax.queryservice('appmgr')
+	self._cloud_snax = cloud_snax or snax.queryservice('cloud')
 	self._devices = {}
 end
 

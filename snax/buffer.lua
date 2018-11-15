@@ -165,17 +165,17 @@ function accept.unlisten(handle, type)
 end
 
 local function connect_log_server(enable)
-	local logger = snax.uniqueservice('logger')
-	local appmgr = snax.uniqueservice('appmgr')
+	local logger = snax.queryservice('logger')
+	local appmgr = snax.queryservice('appmgr')
 	local obj = snax.self()
 	if enable then
-		logger.post.reg_snax(obj.handle, obj.type)
-		skynet.call(".logger", "lua", "reg_snax", obj.handle, obj.type)
-		appmgr.post.reg_snax(obj.handle, obj.type, true)
+		logger.post.listen(obj.handle, obj.type)
+		skynet.call(".logger", "lua", "listen", obj.handle, obj.type)
+		appmgr.post.listen(obj.handle, obj.type, true)
 	else
-		logger.post.unreg_snax(obj.handle)
-		skynet.call(".logger", "lua", "unreg_snax", obj.handle)
-		appmgr.post.unreg_snax(obj.handle)
+		logger.post.unlisten(obj.handle)
+		skynet.call(".logger", "lua", "unlisten", obj.handle)
+		appmgr.post.unlisten(obj.handle)
 	end
 end
 

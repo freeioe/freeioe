@@ -125,7 +125,7 @@ function sys:app_sn()
 		app_sn = app.sn
 	end
 	if not app_sn then
-		local cloud = snax.uniqueservice('cloud')
+		local cloud = snax.queryservice('cloud')
 		app_sn = cloud.req.gen_sn(self._app_name)
 	end
 	self._app_sn = app_sn
@@ -171,7 +171,7 @@ end
 -- Generate device application
 --]]
 function sys:gen_sn(dev_name)
-	local cloud = snax.uniqueservice('cloud')
+	local cloud = snax.queryservice('cloud')
 	return cloud.req.gen_sn(self._app_name.."."..dev_name)
 end
 

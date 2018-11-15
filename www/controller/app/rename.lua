@@ -13,7 +13,7 @@ return {
 		assert(string.len(post.inst) > 0)
 		assert(string.len(post.new_name) > 0)
 
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		local r, err = appmgr.req.app_rename(post.inst, post.new_name)
 		if not r then
 			ngx.print(_(err))

@@ -21,7 +21,7 @@ return {
 			return
 		end
 
-		local appmgr = snax.uniqueservice('appmgr')
+		local appmgr = snax.queryservice('appmgr')
 		appmgr.req.app_option(post.inst, post.option, post.value)
 
 		ngx.print(_('Application option changed!'))
