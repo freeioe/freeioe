@@ -38,7 +38,7 @@ local function action_result(channel, id, result, ...)
 		log.error(...)
 	end
 
-	if id and id ~= 'from_web' and cloud then
+	if id and id ~= 'from_web' then
 		local cloud = snax.queryservice('cloud')
 		cloud.post.action_result(channel, id, result, ...)
 	end
