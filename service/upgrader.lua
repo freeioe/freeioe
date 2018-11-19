@@ -634,7 +634,6 @@ function command.upgrade_core_ack(id, args)
 		return false, "Failed execute ugprade_ack.sh.  "..status.." "..code
 	end
 	rollback_time = nil
-	sys_lock(nil, true)
 	return true, "System upgradation ACK is done"
 end
 
@@ -677,18 +676,25 @@ end
 
 local function rollback_co()
 	log.notice("Rollback will be applied in five minutes")
+
+	local do_rollback = nil
+	do_rollback = function()
+		log.error("System will be rollback now!")
+		aborting = true
+		skynet.sleep(100)
+		do_rollback = nil
+		skynet.abort()
+	end
+
 	rollback_time = skynet.time() + 5 * 60
 	skynet.timeout(5 * 60 * 100, function()
-		if check_rollback() then
-			aborting = true
-			log.error("System will be rollback now!")
-			skynet.sleep(100)
-			skynet.abort()
-		else
-			-- renew the lock as the lockable queue has been finalized/locked
-			sys_lock(nil, true)
-		end
+		if do_rollback then do_rollback() end
 	end)
+
+	while do_rollback do
+		skynet.sleep(100)
+		if not check_rollback() then do_rollback = nil end
+	end
 end
 
 -- map action result functions
@@ -722,7 +728,10 @@ skynet.start(function()
 
 	--- For rollback thread
 	if check_rollback() then
-		sys_lock(rollback_co, true)
+		skynet.fork(function()
+			sys_lock(rollback_co, true)
+		end)
+		skynet.sleep(20)
 	end
 end)
 
