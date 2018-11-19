@@ -6,8 +6,7 @@ SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 echo $SCRIPTPATH
 
-BUILD_LIB=$1
-CUR_DIR=`pwd`
+SKYNET_DIR=`pwd`
 
 declare -A plats
 
@@ -19,8 +18,5 @@ plats["openwrt/aarch64_cortex-a53"]="bp3plus_exports.sh"
 
 for item in "${!plats[@]}"; 
 do
-	if [ "$BUILD_LIB" == "opcua" ]; then
-		bash $SCRIPTPATH/build_ext_opcua.sh $item ${plats[$item]} $CUR_DIR/../..
-	fi
-	bash $SCRIPTPATH/build_ext.sh $item ${plats[$item]} $SCRIPTPATH/../feeds/prebuild_exts/$item/
+	bash $SCRIPTPATH/build_skynet.sh $item ${plats[$item]} $SKYNET_DIR $SCRIPTPATH/../
 done

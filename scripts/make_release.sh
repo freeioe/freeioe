@@ -19,7 +19,7 @@ if [ "$SKYNET_PLAT" != "" ] && [ $PLAT_OK == 0 ]; then
 fi
 
 # Release Skynet
-./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
+# ./scripts/release_skynet.sh ~/mycode/skynet $SKYNET_PLAT
 
 echo "--------------------------------------------"
 echo "FreeIOE System IN:" $PWD
