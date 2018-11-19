@@ -1,7 +1,7 @@
 FreeIOE
 ===================
 
-[FreeIOE](http://freeioe.org) 是用于构建智能的物联网数据网关的软件框架。
+[FreeIOE](http://freeioe.org) 是用于构建物联网智能数据网关的软件框架。
 
 [English|英文](/README.md)
 

@@ -24,11 +24,11 @@ v1.1.1 (2018-9-25)
 v1.1.2 ()
 ------------------
 
-* Emergency input value (API_VER=2)
+* Emergency input value (API\_VER=2)
 * Force kill application if timeout
 * Control signal stength led
 * Support rename app instance name
 * Support pack app from websocket
 * Upgrade with latest skynet
-* Improving upgrader and ioe_ext service
+* Improving upgrader and ioe\_ext service
 * Bug fixes
