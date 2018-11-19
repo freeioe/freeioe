@@ -564,8 +564,8 @@ end
 local function start_upgrade_proc(ioe_path, skynet_path)
 	assert(ioe_path)
 	local skynet_path = skynet_path or '/IamNotExits.unknown'
-	log.warning("Core System Upgrade....")
-	log.trace(ioe_path, skynet_path)
+	log.warning("::UPGRADER:: Core System Upgrade....")
+	log.trace("::UPGRADER::", ioe_path, skynet_path)
 	--local ps_e = get_ps_e()
 
 	local base_dir = get_ioe_dir()
@@ -594,7 +594,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 		skynet.abort()
 	end)
 
-	log.warning("Core system upgradation Done!")
+	log.warning("::UPGRADER:: Core system upgradation Done!")
 	return true, "System upgradation is done!"
 end
 
@@ -675,11 +675,11 @@ local function check_rollback()
 end
 
 local function rollback_co()
-	log.notice("Rollback will be applied in five minutes")
+	log.notice("::UPGRADER:: Rollback will be applied in five minutes")
 
 	local do_rollback = nil
 	do_rollback = function()
-		log.error("System will be rollback now!")
+		log.error("::UPGRADER:: System will be rollback now!")
 		aborting = true
 		skynet.sleep(100)
 		do_rollback = nil

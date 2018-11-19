@@ -114,7 +114,7 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 			if lfs.attributes(path, 'mode') == 'file' then
 				local lnpath = target_folder..filename
 				os.execute("rm -f "..lnpath)
-				log.debug('Link ', path, lnpath)
+				log.debug('File Link ', path, lnpath)
 				os.execute("ln -s "..path.." "..lnpath)
 			end
 		end
@@ -122,14 +122,14 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 end
 
 local function install_depends_to_app(ext_inst, app_inst)
-	log.debug("Try to install "..ext_inst.." to "..app_inst)
+	log.debug("::EXT:: Try to install "..ext_inst.." to "..app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'luaclib')
 	install_depends_to_app_ext(ext_inst, app_inst, 'lualib')
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
 
 function remove_depends(inst)
-	log.warning('Remove Extension', inst)
+	log.warning('::EXT:: Remove Extension', inst)
 	installed[inst] = nil
 	local target_folder = get_target_folder(inst)
 	os.execute("rm -rf "..target_folder)
@@ -142,7 +142,7 @@ local function list_installed()
 		if filename ~= '.' and filename ~= '..' then
 			if lfs.attributes(root..filename, 'mode') == 'directory' then
 				local name, version = parse_inst_name(filename)
-				log.debug('Installed Extension', name, version)
+				log.debug('::EXT:: Installed Extension', name, version)
 				list[filename] = {
 					name = name,
 					version = version
@@ -174,7 +174,7 @@ end
 ---
 -- Check installed exts whether its required application exists for not
 local function auto_clean_exts()
-	log.debug("Auto cleanup installed extensions")
+	log.debug("::EXT:: Auto cleanup installed extensions")
 	local depends = list_depends()
 	for inst, v in pairs(installed) do
 		if not depends[inst] then
