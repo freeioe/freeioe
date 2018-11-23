@@ -21,7 +21,7 @@ v1.1.1 (2018-9-25)
 * Reading system firmware/os version
 * Migrate cloud host to thingsroot.com
 
-v1.1.2 ()
+v1.1.2 (2018-11-23)
 ------------------
 
 * Emergency input value (API\_VER=2)
