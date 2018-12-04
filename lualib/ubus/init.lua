@@ -161,7 +161,7 @@ function ubus:start_request(msg_id, ubuf, peer)
 	local msg = umsg:new(msg_id, seq, peer, ubuf)
 	self.__req_seq = self.__req_seq + 1
 	
-	print("Send", seq, basexx.to_hex(tostring(msg)))
+	--print("Send", seq, basexx.to_hex(tostring(msg)))
 	-- TODO:
 	--local r, err = socket.write(self.__sock, tostring(msg))
 	local r, err = self.__client:send(tostring(msg))
@@ -187,7 +187,7 @@ function ubus:dispatch_response(msg)
 	if not co then
 		return nil, "No request thread found for "..msg:seq()
 	end
-	print('response', msg:seq(), msg:type()) --, msg:data())
+	--print('response', msg:seq(), msg:type()) --, msg:data())
 	local data = self.__result_data[co] or {}
 	if msg:type() == umsg.DATA then
 		table.insert(data, msg)
@@ -196,7 +196,7 @@ function ubus:dispatch_response(msg)
 	end
 	if msg:type() == umsg.STATUS then
 		local status = assert(msg:data(ubus.ATTR_STATUS))
-		print('STATUS', status)
+		--print('STATUS', status)
 		self.__result[co] = true
 		self.__result_code[co] = status
 		skynet.wakeup(co)
@@ -262,7 +262,7 @@ function ubus:objects(path)
 			signature = items 
 		})
 	end
-	print(cjson.encode(results))
+	--print(cjson.encode(results))
 
 	return results
 end
@@ -271,7 +271,7 @@ function ubus:lookup_id(path)
 	local ret = self:objects(path)
 	if path then
 		for _, v in ipairs(ret) do
-			print(v.path, path)
+			--print(v.path, path)
 			if v.path == path then
 				return v.id
 			end

@@ -57,7 +57,7 @@ end
 
 function umsg:parse_hdr(blob_info, raw)
 	local ver, typ, seq, peer = string.unpack(umsg.HDR_FORMAT, raw)
-	print('UMSG Header VERSION:', ver, 'TYPE:', typ, 'SEQ:', seq, 'PEER:', peer)
+	--print('UMSG Header VERSION:', ver, 'TYPE:', typ, 'SEQ:', seq, 'PEER:', peer)
 	if typ == umsg.HELLO and ver ~= umsg.MSG_VERSION then
 		return nil, "Invalid ubus message version: "..ver
 	end

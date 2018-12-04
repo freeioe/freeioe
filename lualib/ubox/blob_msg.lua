@@ -59,7 +59,7 @@ function blob_msg.static:parse(blob_info, raw, pos)
 	end
 	pos = pos + self:padding_len(data_len)
 
-	print('blob_msg name:', self._name, 'msg_type:', head:id(), 'len:', head:len())
+	--print('blob_msg name:', self._name, 'msg_type:', head:id(), 'len:', head:len())
 
 	local blobs = {}
 	if head:id() == blob_msg.TABLE or head:id() == blob_msg.ARRAY then
