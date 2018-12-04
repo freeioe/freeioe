@@ -861,7 +861,13 @@ end
 
 function accept.enable_log(id, sec)
 	local sec = tonumber(sec)
-	if sec and sec > 0 and sec < max_enable_log_upload then
+	if sec > max_enable_log_upload then
+		local err = "Log upload period cannot be bigger than "..max_enable_log_upload
+		snax.self().post.action_result('sys', id, false, err)
+		return
+	end
+
+	if sec and sec > 0 then
 		enable_log_upload = math.floor(skynet.time()) + sec
 	else
 		enable_log_upload = nil
@@ -872,7 +878,13 @@ end
 
 function accept.enable_comm(id, sec)
 	local sec = tonumber(sec)
-	if sec and sec > 0 and sec < max_enable_comm_upload then
+	if sec > max_enable_comm_upload then
+		local err = "Comm upload period cannot be bigger than "..max_enable_comm_upload
+		snax.self().post.action_result('sys', id, false, err)
+		return
+	end
+
+	if sec and sec > 0 then
 		enable_comm_upload = math.floor(skynet.time()) + sec
 	else
 		enable_comm_upload = nil
