@@ -43,33 +43,34 @@ function blob_msg.static:parse(blob_info, raw, pos)
 	local data = head:data()
 	local name, index = string.unpack(blob_msg.HDR_FORMAT, data)
 	self._name = name
+	self._len = head:len() - self:hdr_len()
 
 	pos = self:hdr_len() + 1
 	local bi = blob_msg.blob_info[head:id()]
+	local data_len = 0
 	if bi and bi.fmt then
 		self._data = string.unpack(bi.fmt, data, pos)
-		self._len = bi.len or 0
+		data_len = bi.len or 0
 	else
 		if head:id() == blob_msg.STRING then
-			self._len = head:len() - self:hdr_len()
+			data_len = head:len() - self:hdr_len()
 			self._data = string.sub(data, pos, pos + self._len - 2)
-		else
-			self._len = 0
 		end
 	end
-	pos = pos + self:padding_len(self._len)
+	pos = pos + self:padding_len(data_len)
 
-	--print('blob_msg name:', self._name, 'msg_type:', head:id(), 'len:', head:len())
+	print('blob_msg name:', self._name, 'msg_type:', head:id(), 'len:', head:len())
 
 	local blobs = {}
-	while string.len(data) > pos + blob.ATTR_HDR_LEN + blob_msg.HDR_LEN do
-		local b = assert(blob_msg:parse(blob_info, data, pos))
-		table.insert(blobs, b)
-		--print('parse blob_msg pos', pos, b:pad_len())
-		pos = pos + b:pad_len()
+	if head:id() == blob_msg.TABLE or head:id() == blob_msg.ARRAY then
+		while string.len(data) > pos + blob.ATTR_HDR_LEN + blob_msg.HDR_LEN do
+			local b = assert(blob_msg:parse(blob_info, data, pos))
+			table.insert(blobs, b)
+			--print('parse blob_msg pos', pos, b:pad_len())
+			pos = pos + b:pad_len()
+		end
+		--print('blob_msg', self._name, 'contains blob count: ', #blobs)
 	end
-	--print('blob_msg', self._name, 'contains blob count: ', #blobs)
-
 	self._blobs = blobs
 
 	return self
