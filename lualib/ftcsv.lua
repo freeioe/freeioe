@@ -319,7 +319,7 @@ function ftcsv.parse(inputFile, delimiter, options)
     assert(#delimiter == 1 and type(delimiter) == "string", "the delimiter must be of string type and exactly one character")
 
     -- OPTIONS yo
-    local header = true
+    local headers = true
     local rename
     local fieldsToKeep = nil
     local loadFromString = false
@@ -327,7 +327,7 @@ function ftcsv.parse(inputFile, delimiter, options)
     if options then
         if options.headers ~= nil then
             assert(type(options.headers) == "boolean", "ftcsv only takes the boolean 'true' or 'false' for the optional parameter 'headers' (default 'true'). You passed in '" .. tostring(options.headers) .. "' of type '" .. type(options.headers) .. "'.")
-            header = options.headers
+            headers = options.headers
         end
         if options.rename ~= nil then
             assert(type(options.rename) == "table", "ftcsv only takes in a key-value table for the optional parameter 'rename'. You passed in '" .. tostring(options.rename) .. "' of type '" .. type(options.rename) .. "'.")
@@ -342,7 +342,7 @@ function ftcsv.parse(inputFile, delimiter, options)
                     fieldsToKeep[ofieldsToKeep[j]] = true
                 end
             end
-            if header == false and options.rename == nil then
+            if headers == false and options.rename == nil then
                 error("ftcsv: fieldsToKeep only works with header-less files when using the 'rename' functionality")
             end
         end
@@ -384,13 +384,13 @@ function ftcsv.parse(inputFile, delimiter, options)
 
     -- make sure a header isn't empty
     for _, header in ipairs(headerField) do
-        if #header == 0 then
+        if headers and  #header == 0 then
             error('ftcsv: Cannot parse a file which contains empty headers')
         end
     end
 
     -- for files where there aren't headers!
-    if header == false then
+    if headers == false then
         i = startLine
         for j = 1, #headerField do
             headerField[j] = j

@@ -32,3 +32,9 @@ v1.1.2 (2018-11-23)
 * Upgrade with latest skynet
 * Improving upgrader and ioe\_ext service
 * Bug fixes
+
+v1.2.0 ()
+------------------
+
+* Support ubus based on lsocket
+* 
