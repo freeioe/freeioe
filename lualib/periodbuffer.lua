@@ -11,6 +11,7 @@ function pb:initialize(period, size, name)
 	self._max_size = size
 	self._name = name or "unknown period consumer"
 	self._buf = {}
+	self._cb = nil
 end
 
 function pb:handle(...)
@@ -27,6 +28,9 @@ function pb:handle(...)
 end
 
 function pb:fire_all(cb)
+	local cb = cb or self._cb
+	assert(cb)
+
 	local buf = self._buf
 	if #buf <= 0 then
 		return true
@@ -49,7 +53,9 @@ function pb:size()
 end
 
 function pb:start(cb)
+	assert(cb)
 	self._stop = nil
+	self._cb = cb
 	skynet.fork(function()
 		while not self._stop do
 			self:fire_all(cb)

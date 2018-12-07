@@ -196,6 +196,9 @@ local msg_handler = {
 		if action == 'reboot' then
 			snax.self().post.sys_reboot(args.id, args.data)
 		end
+		if action == 'data/flush' then
+			snax.self().post.data_flush(args.id)
+		end
 	end,
 	output = function(topic, data, qos, retained)
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
@@ -699,6 +702,9 @@ connect_proc = function(clean_session, username, password)
 				apps_devices_fired = true
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
+				if pb then
+					skynet.timeout(100, function() snax.self().post.data_flush() end)
+				end
 			end
 		else
 			log.warning("ON_CONNECT", success, rc, msg) 
@@ -1218,6 +1224,15 @@ end
 
 function accept.sys_reboot(id, args)
 	skynet.call(".upgrader", "lua", "system_reboot", id, {})
+end
+
+function accept.data_flush(id)
+	if pb then
+		pb:fire_all()
+	end
+	if id then
+		snax.self().post.action_result('sys', id, true, "Done")
+	end
 end
 
 function accept.output_to_device(id, info)
