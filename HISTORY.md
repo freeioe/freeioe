@@ -37,4 +37,4 @@ v1.2.0 ()
 ------------------
 
 * Support ubus based on lsocket
-* 
+* Upload data with one second when connected to cloud

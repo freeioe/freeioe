@@ -127,7 +127,7 @@ function blob_msg.static:from_lua(blob_info, name, val)
 		else
 			self._id = blob_msg.TABLE
 			for k, v in pairs(val) do
-				local b = blob_msg:from_lua(k, v)
+				local b = blob_msg:from_lua(self._blob_info, k, v)
 				table.insert(self._blobs, b)
 			end
 		end
@@ -145,6 +145,17 @@ function blob_msg:initialize(blob_info, id, name, len, data)
 	self._len = len
 	self._data = data
 	self._blobs = {}
+end
+
+function blob:dbg_print()
+	print('blob_msg', self._id, self._name, self._len)
+	if not self._blobs or #self._blobs == 0 then
+		return
+	end
+	for _, v in ipairs(self._blobs) do
+		v:dbg_print()
+	end
+	print('blob_msg end', self._id, self._name, self._len)
 end
 
 function blob_msg:hdr_len()
@@ -176,6 +187,9 @@ function blob_msg:blob()
 
 	--print('message header len', string.len(msg_hdr))
 	local msg_hdr = string.pack(blob_msg.HDR_FORMAT, self._name)
+	if self:hdr_len() > string.len(msg_hdr) then
+		msg_hdr = msg_hdr..string.rep('\0', self:hdr_len() - string.len(msg_hdr))
+	end
 	local data = msg_hdr
 
 	if self._len and self._len > 0 then
@@ -187,7 +201,7 @@ function blob_msg:blob()
 		end
 		local pad_len = self:pad_len() - blob.ATTR_HDR_LEN
 		if pad_len > string.len(data) then
-			raw_data = raw_data..string.rep('\0', pad_len - string.len(data))
+			data = data..string.rep('\0', pad_len - string.len(data))
 		end
 	end
 	data = data .. table.concat(list)

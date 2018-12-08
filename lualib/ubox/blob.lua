@@ -170,6 +170,10 @@ function blob:initialize(blob_info, id, len, data, ext)
 	self._ext = ext
 end
 
+function blob:dbg_print()
+	print('blob', self._id, self._len, self._ext)
+end
+
 function blob:data()
 	return self._data
 end

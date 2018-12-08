@@ -6,6 +6,7 @@ local log = require 'utils.log'
 local app_api = require 'app.api'
 
 local api = nil
+local bus = nil
 
 local handle_to_process = function(handle)
 	return string.format("%08x", handle)
@@ -71,6 +72,34 @@ function accept.publish(name, data)
 end
 
 function init()
+	--[[
+	local sysinfo = require 'utils.sysinfo'
+	if sysinfo.os_id() ~= 'openwrt' then
+		log.notice("System ubus service can only run on OpenWRT")
+		skynet.fork(function()
+			snax.exit()
+		end)
+	end
+	]]--
+	bus = ubus:new()
+	bus:connect("172.30.19.103", 11000)
+	print(bus:status())
+	print('add object', bus:add('freeioe', {
+		ping = { 
+			function()
+				print('on ping')
+				return 0
+			end, { id = ubus.INT32, msg = ubus.STRING }
+		},
+		test = {
+			function(req, msg)
+				print('on test')
+			end, { id = ubus.INT32, msg = ubus.STRING }
+		}
+	}, function(...)
+		print('subscribe cb', ...)
+	end))
+
 	log.notice("System ubus service started!")
 end
 

@@ -22,6 +22,7 @@ skynet.start(function()
 	-- This is one comm data buffer service for get one snapshot
 	local commlog = snax.uniqueservice("buffer")
 	local ws = snax.uniqueservice("ws")
+	local ubus = snax.uniqueservice('ubus')
 
 	skynet.exit()
 end)

@@ -53,6 +53,12 @@ function blob_buf:add_buf(id, val)
 	self:add_raw(id, tostring(val))
 end
 
+function blob_buf:add_nested(id)
+	local nest = blob_buf:new(self._blob_info, id)
+	self:add(nest)
+	return nest
+end
+
 function blob_buf:add_uint8(id, val)
 	self:add(blob:new(self._blob_info, id, 1, val))
 end
@@ -113,6 +119,14 @@ end
 
 function blob_buf:__tostring()
 	return tostring(self:blob())
+end
+
+function blob_buf:dbg_print()
+	print('blob_buf start', self._id)
+	for _, v in ipairs(self._blobs) do
+		v:dbg_print()
+	end
+	print('blob_buf end', self._id)
 end
 
 function blob_buf:blob()
