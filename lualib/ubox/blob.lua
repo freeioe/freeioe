@@ -242,7 +242,7 @@ function blob:__tostring()
 		id_len = id_len | blob.ATTR_EXTENDED
 	end
 	local raw_data, data_len = self:pack_data()
-	--print("blob tostring", basexx.to_hex(string.pack('>I4c'..data_len, id_len, raw_data)))
+	print("blob tostring", basexx.to_hex(string.pack('>I4c'..data_len, id_len, raw_data)))
 	return string.pack('>I4c'..data_len, id_len, raw_data)
 end
 

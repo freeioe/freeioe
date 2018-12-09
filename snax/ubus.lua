@@ -4,6 +4,7 @@ local ubus = require 'ubus'
 local crypt = require 'skynet.crypt'
 local log = require 'utils.log'
 local app_api = require 'app.api'
+local cjson = require 'cjson.safe'
 
 local api = nil
 local bus = nil
@@ -82,18 +83,23 @@ function init()
 	end
 	]]--
 	bus = ubus:new()
-	bus:connect("172.30.19.103", 11000)
+	--bus:connect("172.30.19.103", 11000)
+	bus:connect("172.30.11.230", 11000)
 	print(bus:status())
 	print('add object', bus:add('freeioe', {
 		ping = { 
-			function()
-				print('on ping')
-				return 0
+			function(req, msg, resp)
+				print('on ping', req, msg, resp)
+				print(cjson.encode(msg))
+				resp({id=msg.id})
+				resp({msg='ping'})
+				return ubus.STATUS_OK
 			end, { id = ubus.INT32, msg = ubus.STRING }
 		},
 		test = {
 			function(req, msg)
 				print('on test')
+				return ubus.STATUS_OK
 			end, { id = ubus.INT32, msg = ubus.STRING }
 		}
 	}, function(...)

@@ -8,7 +8,8 @@ local umsg = class('ubus.msg')
 
 umsg.static.ALIGN = 4
 umsg.static.HDR_LEN = 8
-umsg.static.HDR_FORMAT = '!4>BBHI4'
+--umsg.static.HDR_FORMAT = '!4>BBHI4'
+umsg.static.HDR_FORMAT = '!4>BBHi4'
 umsg.static.MAX_MSG_LEN = 1048576
 umsg.static.MAX_NOTIFY_PEERS = 16
 umsg.static.MSG_VERSION = 0
@@ -32,7 +33,7 @@ function umsg.static:read_sock(sock, blob_info)
 	local self = self:allocate()
 	local min_len = umsg.HDR_LEN + ublob.ATTR_HDR_LEN
 	local hdr_data, err = socket.read(sock, min_len)
-	print('read_sock', basexx.to_hex(hdr_data))
+	--print('read_sock', basexx.to_hex(hdr_data))
 	if not hdr_data or string.len(hdr_data) < min_len then
 		return nil, "Not enough data for ubus message header, error: "..err
 	end
@@ -41,14 +42,14 @@ function umsg.static:read_sock(sock, blob_info)
 		return nil, err
 	end
 
-	print('Need len', blob_len - ublob.ATTR_HDR_LEN, blob_info)
+	--print('Need len', blob_len - ublob.ATTR_HDR_LEN, blob_info)
 	if blob_len > ublob.ATTR_HDR_LEN then
 		local blob_data, err = socket.read(sock, blob_len - ublob.ATTR_HDR_LEN)
 		if not blob_data or string.len(blob_data) < blob_len - ublob.ATTR_HDR_LEN then
 			return nil, "Not enough data for ubus message body, error: "..err
 		end
 
-		print('Data ready...')
+		--print('Data ready...')
 		local blob_raw = string.sub(hdr_data, umsg.HDR_LEN + 1)..blob_data
 		self._buf = assert(ublob_buf:parse(blob_info, blob_raw))
 	end
@@ -123,7 +124,7 @@ function umsg:data(id)
 end
 
 function umsg:dbg_print()
-	print('umsg', self._version, self._type, self._seq, self._peer)
+	--print('umsg', self._version, self._type, self._seq, self._peer)
 	self._buf:dbg_print()
 end
 

@@ -97,7 +97,7 @@ local monitor_blob_info = {
 
 ubus.static.monitor_blob_info = monitor_blob_info
 
-function ublob_buf:add_ubus_data(data)
+function ublob_buf:add_ubus_method_params(data)
 	local msg_buf = ublob_buf:new(ubus.blob_info, 0)
 	for k, v in pairs(data or {}) do
 		local msg = ublob_msg:from_lua(ubus.blob_info, k, v)
@@ -106,8 +106,8 @@ function ublob_buf:add_ubus_data(data)
 	self:add_buf(ubus.ATTR_DATA, msg_buf)
 end
 
-function ublob_buf:add_ubus_signature(data)
-	local msg_buf = self:add_nested(ubus.ATTR_SIGNATURE)
+function ublob_buf:add_ubus_data(msg_id, data)
+	local msg_buf = self:add_nested(msg_id)
 	for k, v in pairs(data or {}) do
 		local msg = ublob_msg:from_lua(ubus.blob_info, k, v)
 		msg_buf:add(msg:blob())
@@ -200,8 +200,8 @@ function ubus:start_request(msg_id, ubuf, peer)
 	return r, err
 end
 
-function ubus:send_ubuf(msg_id, ubuf, peer, seq)
-	local msg = umsg:new(msg_id, seq, peer, ubuf)
+function ubus:send_ubuf(req, msg_id, ubuf)
+	local msg = umsg:new(msg_id, req.seq, req.peer, ubuf)
 	return self.__client:send(tostring(msg))
 end
 
@@ -216,13 +216,25 @@ function ubus:dispatch_function()
 	end
 end
 
+function ubus:map_request(msg)
+	return {
+		seq = msg:seq(),
+		type = msg:type(),
+		peer = msg:peer(),
+		msg = msg
+	}
+end
+
 function ubus:dispatch_response(msg)
 	print('response', msg:seq(), msg:type(), msg:peer()) --, msg:data())
 
-	if msg:type() == umsg.DATA then
-		local co = self.__thread[msg:seq()]
+	local req = self:map_request(msg)
+	local msg_type = req.type
+	local msg_seq = req.seq
+	if msg_type == umsg.DATA then
+		local co = self.__thread[msg_seq]
 		if not co then
-			return nil, "No request thread found for "..msg:seq()
+			return nil, "No request thread found for "..msg_seq
 		end
 		--print('DATA------------')
 		--msg:dbg_print()
@@ -233,10 +245,10 @@ function ubus:dispatch_response(msg)
 		self.__result_data[co] = data
 		return
 	end
-	if msg:type() == umsg.STATUS then
+	if msg_type == umsg.STATUS then
 		local co = self.__thread[msg:seq()]
 		if not co then
-			return nil, "No request thread found for "..msg:seq()
+			return nil, "No request thread found for "..msg_seq
 		end
 		local status = assert(msg:data(ubus.ATTR_STATUS))
 		--print('STATUS', status)
@@ -246,7 +258,7 @@ function ubus:dispatch_response(msg)
 		return
 	end
 
-	if msg:type() == umsg.MONITOR then
+	if msg_type == umsg.MONITOR then
 		return self:process_monitor_messsage(msg)
 	end
 
@@ -254,69 +266,66 @@ function ubus:dispatch_response(msg)
 	if not obj_id then
 		return
 	end
-	if msg:type() == umsg.INVOKE then
-		return self:__request(self.process_invoke_message, obj_id, msg)
+	if msg_type == umsg.INVOKE then
+		return self:__request(self.process_invoke_message, req, obj_id, msg)
 	end
-	if msg:type() == umsg.UNSUBSCRIBE then
-		return self:__request(self.process_unsub_message, obj_id, msg)
+	if msg_type == umsg.UNSUBSCRIBE then
+		return self:__request(self.process_unsub_message, req, obj_id, msg)
 	end
-	if msg:type() == umsg.NOTIFY then
-		return self:__request(self.process_notify_message, obj_id, msg)
+	if msg_type == umsg.NOTIFY then
+		return self:__request(self.process_notify_message, req, obj_id, msg)
 	end
 end
 
-function ubus:__fire_status(status, obj_id, peer, seq)
-	assert(peer and seq)
+function ubus:__fire_status(req, obj_id, status)
+	print('fire status', obj_id, status)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_STATUS, status)
 	buf:add_int32(ubus.ATTR_OBJID, obj_id)
-	return self:send_ubuf(umsg.STATUS, buf, peer, seq)
+	return self:send_ubuf(req, umsg.STATUS, buf)
 end
 
-function ubus:__request(func, obj_id, msg)
-	local ret, data = func(self, obj_id, msg)
+function ubus:__send_reply(req, obj_id, data)
+	print('reply data', obj_id, data)
+	local buf = ublob_buf:new(ubus.blob_info, 0)
+	buf:add_int32(ubus.ATTR_OBJID, obj_id)
+	buf:add_ubus_data(ubus.ATTR_DATA, data)
+	return self:send_ubuf(req, umsg.DATA, buf)
+end
+
+function ubus:__request(func, req, obj_id, msg)
+	local ret, data = func(self, req, obj_id, msg)
 
 	local no_reply = msg:data(ubus.ATTR_NO_REPLY)
 	if no_reply and no_reply ~= 0 then
 		return
 	end
 
-	if ret ~= STATUS_OK then
-		return self:__fire_status(ret, obj_id, msg:peer(), msg:seq())
-	else
-		local buf = ublob_buf:new(ubus.blob_info, 0)
-		buf:add_int32(ubus.ATTR_OBJID, obj_id)
-		buf:add_nested(ubus.ATTR_DATA, data)
-		local r, err = self:send_ubuf(umsg.DATA, buf, msg:peer(), msg:seq())
-		if not r then
-			return nil, err
-		end
-		return self:__fire_status(ubus.STATUS_OK, obj_id, msg:peer(), msg:seq())
-	end
+	return self:__fire_status(req, obj_id, ret)
 end
 
-function ubus:process_obj_message(obj_id, method, msg)
+function ubus:process_obj_message(req, obj_id, method, msg)
 	local obj = self.__objects[obj_id]
 	if not obj then
 		return STATUS_NOT_FOUND
 	end
 
-	local func = obj.methods[method] or obj.methods.__notify_cb
+	local func = obj.methods[method] and obj.methods[method][1] or obj.methods.__notify_cb
 	if not func then
 		return STATUS_METHOD_NOT_FOUND
 	end
 
-	local data = msg:data(ubus.ATTR_DATA)
-	local items = {}
-	for k,v in pairs(data) do
+	local msg_data = msg:data(ubus.ATTR_DATA)
+	local data = {}
+	for k,v in pairs(msg_data or {}) do
 		--print(basexx.to_hex(tostring(v)))
 		local msg = assert(ublob_msg:from_blob(ubus.blob_info, v))
 
 		local name, val = msg:msg2lua() 
 		if string.len(name) > 0 then
-			items[name] = val
+			data[name] = val
 		else
-			table.insert(items, val)
+			table.insert(data, val)
 		end
 	end
 	local acl =  {}
@@ -324,29 +333,28 @@ function ubus:process_obj_message(obj_id, method, msg)
 	acl.group = msg:data(ubus.ATTR_GROUP)
 	acl.object = self.__objects[obj_id].path
 
-	local req = {
-		peer = umsg:peer(),
-		seq = umsg:seq(),
-		object = obj_id,
-		acl = acl,
-	}
-	return m[1](req, data, m[3])
+	req.object = obj_id
+	req.acl = acl
+
+	return func(req, data, function(data)
+		self:__send_reply(req, obj_id, data)
+	end)
 end
 
-function ubus:process_invoke_message(obj_id, msg)
+function ubus:process_invoke_message(req, obj_id, msg)
 	local method = msg:data(ubus.ATTR_METHOD)
 	if not method then
 		return STATUS_INVALID_ARGUMENT
 	end
-	return self:process_obj_message(obj_id, method, msg)
+	return self:process_obj_message(req, obj_id, method, msg)
 end
 
-function ubus:process_unsub_message(obj_id, msg)
-	return self:process_obj_message(obj_id, '__remove_cb', msg)
+function ubus:process_unsub_message(req, obj_id, msg)
+	return self:process_obj_message(req, obj_id, '__remove_cb', msg)
 end
 
-function ubus:process_notify_message(obj_id, msg)
-	return self:process_obj_message(obj_id, '__subscribe_cb', msg)
+function ubus:process_notify_message(req, obj_id, msg)
+	return self:process_obj_message(req, obj_id, '__subscribe_cb', msg)
 end
 
 function ubus:request(request_id, buf, peer)
@@ -446,7 +454,7 @@ function ubus:add(path, methods, subscribe_cb)
 
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_string(ubus.ATTR_OBJPATH, path)
-	buf:add_ubus_signature(meta)
+	buf:add_ubus_data(ubus.ATTR_SIGNATURE, meta)
 
 	local objs, err = self:request(umsg.ADD_OBJECT, buf, 0)
 	if not objs then
@@ -493,7 +501,7 @@ function ubus:notify(id, method, params)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, id)
 	buf:add_string(ubus.ATTR_METHOD, method)
-	buf:add_ubus_data(params)
+	buf:add_ubus_method_params(params)
 	buf:add_int8(ubus.ATTR_NO_REPLY, 1)
 
 	return self:request(umsg.NOTIFY, buf, id)
@@ -503,6 +511,7 @@ end
 function ubus:call(path, method, params)
 	assert(path and method)
 	local id, err = self:lookup_id(path)
+	--print(path, id)
 	if not id then
 		return nil, err
 	end
@@ -510,7 +519,7 @@ function ubus:call(path, method, params)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, id)
 	buf:add_string(ubus.ATTR_METHOD, method)
-	buf:add_ubus_data(params)
+	buf:add_ubus_method_params(params)
 
 	local objs, err = self:request(umsg.INVOKE, buf, id)
 	if not objs then
