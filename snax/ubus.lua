@@ -172,6 +172,7 @@ function init()
 		skynet.fork(function()
 			snax.exit()
 		end)
+		return
 	end
 
 	bus = ubus:new()
