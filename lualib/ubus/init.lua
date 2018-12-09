@@ -226,7 +226,7 @@ function ubus:map_request(msg)
 end
 
 function ubus:dispatch_response(msg)
-	print('response', msg:seq(), msg:type(), msg:peer()) --, msg:data())
+	--print('response', msg:seq(), msg:type(), msg:peer()) --, msg:data())
 
 	local req = self:map_request(msg)
 	local msg_type = req.type
@@ -278,7 +278,7 @@ function ubus:dispatch_response(msg)
 end
 
 function ubus:__fire_status(req, obj_id, status)
-	print('fire status', obj_id, status)
+	--print('fire status', obj_id, status)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_STATUS, status)
 	buf:add_int32(ubus.ATTR_OBJID, obj_id)
@@ -286,7 +286,7 @@ function ubus:__fire_status(req, obj_id, status)
 end
 
 function ubus:__send_reply(req, obj_id, data)
-	print('reply data', obj_id, data)
+	--print('reply data', obj_id, data)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, obj_id)
 	buf:add_ubus_data(ubus.ATTR_DATA, data)
@@ -299,6 +299,10 @@ function ubus:__request(func, req, obj_id, msg)
 	local no_reply = msg:data(ubus.ATTR_NO_REPLY)
 	if no_reply and no_reply ~= 0 then
 		return
+	end
+
+	if data and type(data) == 'table' then
+		self.__send_reply(req, obj_id, data)
 	end
 
 	return self:__fire_status(req, obj_id, ret)
@@ -466,8 +470,7 @@ function ubus:add(path, methods, subscribe_cb)
 	local rid = v:data(ubus.ATTR_OBJID)
 	local rtype = v:data(ubus.ATTR_OBJTYPE)
 
-	v:dbg_print()
-
+	--v:dbg_print()
 	if subscribe_cb then
 		-- Call this when notified that someone is subscribe on this object
 		methods.__subscribe_cb = subscribe_cb

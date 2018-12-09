@@ -20,55 +20,13 @@ local Handler = {
 		--local hex = crypt.hexencode(table.concat({...}, '\t'))
 		--hex = string.gsub(hex, "%w%w", "%1 ")
 		local content = crypt.base64encode(table.concat({...}, '\t'))
-		local list  = comm_buffer[app] or {}
-		list[#list + 1] = {
-			sn = sn,
-			dir = dir,
-			ts = ts,
-			data = content
-		}
-		if #list > max_comm_buf_size then
-			table.remove(list, 1)
-		end
-		comm_buffer[app] = list
-
-		for handle, srv in pairs(listen_map) do
-			srv.post.on_comm(list[#list])
-		end
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
-		event_buffer[#event_buffer + 1] = {
-			app = app,
-			sn = sn,
-			level = level,
-			['type'] = type_,
-			info = info,
-			data = data,
-			timestamp = timestamp,
-		}
-		if #event_buffer > max_event_buf_size then
-			table.remove(event_buffer, 1)
-		end
-
-		for handle, srv in pairs(listen_map) do
-			srv.post.on_event(event_buffer[#event_buffer])
-		end
 	end,
 }
 
 function response.ping()
 	return "PONG"
-end
-
-function response.create_object(name, methods)
-	return false
-end
-
-function response.delete_object(name)
-	return false
-end
-
-function accept.publish(name, data)
 end
 
 function create_methods(bus)
@@ -115,11 +73,7 @@ function create_methods(bus)
 				end
 				local appmgr = snax.queryservice('appmgr')
 				local r, err = appmgr.req.start(msg.inst)
-				response({
-					result = r,
-					msg = err
-				})
-
+				response( {result = r, msg = err} )
 				return ubus.STATUS_OK
 			end, {inst=ubus.STRING}
 		},
@@ -130,10 +84,7 @@ function create_methods(bus)
 				end
 				local appmgr = snax.queryservice('appmgr')
 				local r, err = appmgr.req.stop(msg.inst)
-				response( {
-					result = r,
-					msg = err
-				} )
+				response( {result = r, msg = err} )
 				return ubus.STATUS_OK
 			end, {inst=ubus.STRING}
 		},
@@ -152,6 +103,65 @@ function create_methods(bus)
 				return ubus.STATUS_OK
 			end, {device=ubus.STRING}
 		},
+		upgrade = {
+			function(req, msg, response)
+				local data = {
+					version = msg.version,
+					no_ack = 1,
+				}
+				if msg.skynet then
+					data.skynet = {
+						version = data.skynet
+					}
+				end
+				local r, err = skynet.call(".upgrader", "lua", "upgrade_core", req.peer, data)
+				response( {result = r, msg = err} )
+				return ubus.STATUS_OK
+			end, {version=ubus.INT32, skynet=ubus.INT32}
+		},
+		upgrade_app = {
+			function(req, msg, response)
+				if not msg.inst then
+					return ubus.INVALID_ARGUMENT
+				end
+				local data = {
+					inst = msg.inst,
+					version = msg.version
+				}
+
+				local r, err = skynet.call(".upgrader", "lua", "upgrade_app", req.peer, data)
+				response( {result = r, msg = err} )
+				return ubus.STATUS_OK
+			end, {inst=ubus.STRING, version=ubus.INT32}
+		},
+		install_app = {
+			function(req, msg, response)
+				if not msg.inst or not msg.name then
+					return ubus.INVALID_ARGUMENT
+				end
+				local data = {
+					inst = msg.inst,
+					version = msg.version,
+					name = msg.name,
+					conf = msg.conf
+				}
+
+				local r, err = skynet.call(".upgrader", "lua", "install_app", req.peer, data)
+				response( {result = r, msg = err} )
+				return ubus.STATUS_OK
+			end, {inst=ubus.STRING, name=ubus.STRING,version=ubus.INT32,conf=ubus.TABLE}
+		},
+		option_app = {
+			function(req, msg, response)
+				if not msg.inst or not msg.option or msg.value == nil then
+					return ubus.INVALID_ARGUMENT
+				end
+				local appmgr = snax.queryservice('appmgr')
+				local r, err = appmgr.req.app_option(msg.inst, msg.option, msg.value)
+				response( {result = r, msg = err} )
+				return ubus.STATUS_OK
+			end, {inst=ubus.STRING, option=ubus.STRING, value=ubus.STRING}
+		}
 	}
 end
 
@@ -168,7 +178,8 @@ function init()
 
 	bus = ubus:new()
 	--bus:connect("172.30.19.103", 11000)
-	bus:connect("172.30.11.230", 11000)
+	--bus:connect("172.30.11.230", 11000)
+	bus:connect("/tmp/ubus.sock")
 	local s, err = bus:status()
 	if not s then
 		log.error('Cannot connect to ubusd', err)
