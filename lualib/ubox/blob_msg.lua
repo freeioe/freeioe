@@ -88,6 +88,9 @@ local msglua_types =  {
 	string = blob_msg.STRING
 }
 function blob_msg.static:from_lua(blob_info, name, val)
+	if type(val) == 'boolean' then
+		val = val and 1 or 0
+	end
 	assert(val)
 	local self = self:allocate()
 	self._blob_info = blob_info
@@ -122,8 +125,10 @@ function blob_msg.static:from_lua(blob_info, name, val)
 	elseif val_type == 'table' then
 		if #val ~= 0 then
 			self._id = blob_msg.ARRAY
-			-- TODO:
-			assert(false, "not supported array for now")
+			for _, v in pairs(val) do
+				local b = blob_msg:from_lua(self._blob_info, '', v)
+				table.insert(self._blobs, b)
+			end
 		else
 			self._id = blob_msg.TABLE
 			for k, v in pairs(val) do

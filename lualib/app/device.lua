@@ -171,6 +171,10 @@ function device:list_props()
 	return self._props
 end
 
+function device:data()
+	return dc.get('INPUT', self._sn)
+end
+
 function device:dump_comm(dir, ...)
 	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
 end
