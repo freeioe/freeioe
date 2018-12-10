@@ -33,7 +33,7 @@ v1.1.2 (2018-11-23)
 * Improving upgrader and ioe\_ext service
 * Bug fixes
 
-v1.2.0 ()
+v1.2.0 (2018-12-10)
 ------------------
 
 * Support ubus based on lsocket
