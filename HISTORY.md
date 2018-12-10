@@ -39,3 +39,8 @@ v1.2.0 (2018-12-10)
 * Support ubus based on lsocket
 * Create ubus service when OS is OpenWRT
 * Upload data within one second when connected to cloud
+
+v1.2.1 (2018-12-10)
+------------------
+* Fixed ubus call parameter issue
+
