@@ -97,14 +97,24 @@ local monitor_blob_info = {
 
 ubus.static.monitor_blob_info = monitor_blob_info
 
+--[[
 function ublob_buf:add_ubus_method_params(data)
+	local msg_buf = self:add_nested(ubus.ATTR_DATA)
+	for k, v in pairs(data or {}) do
+		local msg = ublob_msg:from_lua(ubus.blob_info, k, v)
+		msg_buf:add(msg:blob())
+	end
+
+	--[[
 	local msg_buf = ublob_buf:new(ubus.blob_info, 0)
 	for k, v in pairs(data or {}) do
 		local msg = ublob_msg:from_lua(ubus.blob_info, k, v)
 		msg_buf:add(msg:blob())
 	end
 	self:add_buf(ubus.ATTR_DATA, msg_buf)
+	]--
 end
+]]--
 
 function ublob_buf:add_ubus_data(msg_id, data)
 	local msg_buf = self:add_nested(msg_id)
@@ -504,7 +514,7 @@ function ubus:notify(id, method, params)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, id)
 	buf:add_string(ubus.ATTR_METHOD, method)
-	buf:add_ubus_method_params(params)
+	buf:add_ubus_data(ubus.ATTR_DATA, params)
 	buf:add_int8(ubus.ATTR_NO_REPLY, 1)
 
 	return self:request(umsg.NOTIFY, buf, id)
@@ -522,7 +532,7 @@ function ubus:call(path, method, params)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, id)
 	buf:add_string(ubus.ATTR_METHOD, method)
-	buf:add_ubus_method_params(params)
+	buf:add_ubus_data(ubus.ATTR_DATA, params)
 
 	local objs, err = self:request(umsg.INVOKE, buf, id)
 	if not objs then
