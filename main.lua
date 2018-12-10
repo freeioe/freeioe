@@ -23,8 +23,5 @@ skynet.start(function()
 	local commlog = snax.uniqueservice("buffer")
 	local ws = snax.uniqueservice("ws")
 
-	--skynet.newservice('test_ubus')
-	local ubus = snax.uniqueservice('ubus')
-
 	skynet.exit()
 end)

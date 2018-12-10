@@ -165,24 +165,15 @@ function create_methods(bus)
 	}
 end
 
-function init()
-	local sysinfo = require 'utils.sysinfo'
-	if sysinfo.os_id() ~= 'openwrt' then
-		log.notice("System ubus service can only run on OpenWRT")
-		skynet.fork(function()
-			snax.exit()
-		end)
-		return
-	end
-
+function init(...)
 	bus = ubus:new()
-	bus:connect()
+	bus:connect(...)
 	--bus:connect("172.30.19.103", 11000)
 	--bus:connect("172.30.11.230", 11000)
 	--bus:connect("/tmp/ubus.sock")
 	local s, err = bus:status()
 	if not s then
-		log.error('Cannot connect to ubusd', err)
+		log.error('Cannot connect to ubusd', err, ...)
 		return
 	end
 
