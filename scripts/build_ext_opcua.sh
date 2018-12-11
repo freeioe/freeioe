@@ -22,7 +22,6 @@ toolchains["openwrt/aarch64_cortex-a53"]="Toolchain-aarch64-openwrt-linux-gcc.cm
 cd $SOURCE_DIR
 
 if [ "$TOOLCHAIN" == "native" ]; then
-	cd ../../
 	rm build -rf
 	mkdir build/
 	cd build

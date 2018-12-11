@@ -83,6 +83,7 @@ cp -rL lualib/resty __install/lualib/resty
 # ./scripts/release_app.sh JC_T8600
 ./scripts/release_app.sh dlt645
 ./scripts/release_app.sh sim_tank
+./scripts/release_app.sh focas
 
 # Release Extensions
 
