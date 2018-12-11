@@ -46,6 +46,5 @@ v1.2.1 (2018-12-10)
 
 v1.2.2 (2018-12-11)
 ------------------
-* Fixed ubus call parameter issue
 * Fixed ubus detection
 
