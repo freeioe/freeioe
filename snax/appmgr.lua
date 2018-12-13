@@ -199,8 +199,8 @@ end
 
 function accept.app_event(event, inst_name, ...)
 	if event == 'create' then
-		if not applist[inst] then
-			applist[inst] = {conf=conf}
+		if not applist[inst_name] then
+			applist[inst_name] = {conf=conf}
 		end
 	end
 	if event == 'rename' then
