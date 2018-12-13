@@ -214,7 +214,7 @@ local get_ops = {
 		local ext = get_file_ext(node)
 		local mode = lfs.attributes(path, 'mode')
 		local size = lfs.attributes(path, 'size')
-		if ext ~= 'so' and mode == 'file' and size < 1024 * 1024  then
+		if ext ~= 'so' and mode == 'file' and size < 4 * 1024 * 1024  then
 			local f = assert(io.open(path, 'r'))
 			local content = f:read('a')
 			f:close()
@@ -246,6 +246,9 @@ local post_ops = {
 	end,
 	set_content_ex = function(app, node, opt)
 		local content = opt.text
+		if string.len(content) > 4 * 1024 * 1024 then
+			return { status = 'Failed' }
+		end
 		local path = get_app_path(app, node)
 		local f, err = io.open(path, 'w')
 		if not f then
