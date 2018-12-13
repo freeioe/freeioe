@@ -41,11 +41,11 @@ luac.out
 
 *~
 *.un~
+*.swp
 lwf
 conf
 apps
 ext
-*.swp
 __install
 __release
 prebuild
