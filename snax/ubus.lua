@@ -3,7 +3,9 @@ local snax = require 'skynet.snax'
 local ubus = require 'ubus'
 local crypt = require 'skynet.crypt'
 local log = require 'utils.log'
+local sysinfo = require 'utils.sysinfo'
 local app_api = require 'app.api'
+local ioe = require 'ioe'
 
 local api = nil
 local bus = nil
@@ -33,20 +35,31 @@ function create_methods(bus)
 	return {
 		ping = { 
 			function(req, msg, resp)
-				print('on ping', req, msg, resp)
-				resp({id=msg.id})
-				resp({msg='ping'})
+				resp({id=msg.id, msg=msg})
 				return ubus.STATUS_OK
 			end, { id = ubus.INT32, msg = ubus.STRING }
 		},
+		--[[
 		test = {
 			function(req, msg)
 				print('on test')
 				return ubus.STATUS_OK
 			end, { id = ubus.INT32, msg = ubus.STRING }
 		},
+		]]--
 		info = {
-			function(req, msg)
+			function(req, msg, response)
+				local info = {}
+				info.version = sysinfo.version()
+				info.skynet_version = sysinfo.skynet_version()
+				info.firmware_version = sysinfo.firmware_version()
+				info.cpu_arch = sysinfo.cpu_arch()
+				info.platform = sysinfo.platform()
+				info.id = ioe.id()
+				info.hw_id = ioe.hw_id()
+				info.beta = ioe.beta
+				response(info)
+				return ubus.STATUS_OK
 			end, {}
 		},
 		apps = {
@@ -83,7 +96,7 @@ function create_methods(bus)
 					return ubus.INVALID_ARGUMENT
 				end
 				local appmgr = snax.queryservice('appmgr')
-				local r, err = appmgr.req.stop(msg.inst)
+				local r, err = appmgr.req.stop(msg.inst, 'stop from ubus')
 				response( {result = r, msg = err} )
 				return ubus.STATUS_OK
 			end, {inst=ubus.STRING}
