@@ -304,8 +304,9 @@ function ubus:__send_reply(req, obj_id, data)
 end
 
 function ubus:__request(func, req, obj_id, msg)
-	local r, ret, data = pcall(func, self, req, obj_id, msg)
+	local r, ret, data = xpcall(func, debug.traceback, self, req, obj_id, msg)
 	if not r then
+		skynet.error(tostring(ret))
 		ret = ubus.STATUS_UNKNOWN_ERROR
 		data = nil
 	end
@@ -316,8 +317,9 @@ function ubus:__request(func, req, obj_id, msg)
 	end
 
 	if data and type(data) == 'table' then
-		local r, err = pcall(self.__send_reply, self, req, obj_id, data)
+		local r, err = xpcall(self.__send_reply, debug.traceback, self, req, obj_id, data)
 		if not r then
+			skynet.error(tostring(ret))
 			ret = ubus.STATUS_UNKNOWN_ERROR
 		end
 	end
