@@ -199,19 +199,18 @@ local msg_handler = {
 		if action == 'data/flush' then
 			snax.self().post.data_flush(args.id)
 		end
+		if action == "data/snapshot" then
+			snax.self().post.fire_data_snapshot()
+		end
+		if action == "data/query" then
+			snax.self().post.data_query(args.id, args.data)
+		end
 	end,
 	output = function(topic, data, qos, retained)
 		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
 		local oi = cjson.decode(data)
 		if oi and oi.id then
 			snax.self().post.output_to_device(oi.id, oi.data)
-		end
-	end,
-	input = function(topic, data, qos, retained)
-		local args = assert(cjson.decode(data))
-		local action = args.action or topic
-		if action == "snapshot" then
-			snax.self().post.fire_data_snapshot()
 		end
 	end,
 	command = function(topic, data, qos, retained)
@@ -818,6 +817,13 @@ function response.get_status()
 end
 
 function accept.enable_data(id, enable)
+	if enable then
+		if enable_data_one_short_cancel then
+			enable_data_one_short_cancel()
+			enable_data_one_short_cancel = nil
+		end
+	end
+
 	enable_data_upload = enable
 	datacenter.set("CLOUD", "DATA_UPLOAD", enable)
 	if not enable then
@@ -832,14 +838,26 @@ function accept.enable_data(id, enable)
 end
 
 function accept.enable_data_one_short(id, period)
+	if not enable_data_one_short_cancel and enable_data_upload then
+		if id then
+			snax.self().post.action_result('sys', id, false, "Cloud data upload is already enabled!")
+		end
+		return
+	end
+
 	if enable_data_one_short_cancel then
 		enable_data_one_short_cancel()
+		enable_data_one_short_cancel = nil
 	end
 
 	enable_data_upload = true
 	log.debug("Cloud data one-short upload enabled!")
-	snax.self().post.action_result('sys', id, true, "Done")
-	snax.self().post.fire_data_snapshot()
+
+	if id then
+		--- only enable one short if no id
+		snax.self().post.action_result('sys', id, true, "Done")
+		snax.self().post.fire_data_snapshot()
+	end
 
 	local period = tonumber(period) or 300
 	enable_data_one_short_cancel = cancelable_timeout(period * 100, function()
@@ -927,7 +945,7 @@ function accept.set_cloud_conf(id, args)
 		datacenter.set("CLOUD", string.upper(k), v)
 	end
 	snax.self().post.action_result('sys', id, true, "Done! System will be reboot to table those changes")
-	snax.self().post.sys_quit(args.id, args.data)
+	snax.self().post.sys_quit(id, data)
 end
 
 function accept.download_cfg(id, args)
@@ -938,7 +956,6 @@ end
 function accept.upload_cfg(id, args)
 	local r, err = skynet.call(".cfg", "lua", "upload", args.host)
 	snax.self().post.action_result('sys', id, r, err or "Done")
-	return r, err
 end
 
 
@@ -950,7 +967,7 @@ function accept.log(ts, lvl, ...)
 end
 
 ---
--- Fire data snapshot
+-- Fire data snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_data_snapshot()
 	local now = skynet.time()
@@ -965,10 +982,11 @@ function accept.fire_data_snapshot()
 			publish_data(key, value, timestamp or now, quality or 0)
 		end)
 	end
+	snax.self().post.action_result('input', id, r, err or "Done")
 end
 
 ---
--- Fire stat snapshot
+-- Fire stat snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_stat_snapshot()
 	local now = skynet.time()
@@ -1226,15 +1244,47 @@ function accept.sys_reboot(id, args)
 	skynet.call(".upgrader", "lua", "system_reboot", id, {})
 end
 
+--- Flush buffered period data
 function accept.data_flush(id)
 	if pb then
 		pb:fire_all()
+	else
+		--- If upload period is not enabled then fire snapshot?
+		snax.self().post.fire_data_snapshot()
 	end
+
 	if id then
 		snax.self().post.action_result('sys', id, true, "Done")
 	end
 end
 
+---
+-- Query specified device data
+--
+function accept.data_query(id, dev_sn)
+	if not dev_sn then
+		return snax.self().post.action_result('input', id, false, "Device sn is required!")
+	end
+	local dev, err = api:get_device(device)
+	if not dev then
+		return snax.self().post.action_result('input', id, false, err)
+	end
+
+	--- Enable data upload one short for one minute
+	if not enable_data_upload then
+		snax.self().post.enable_data_one_short(nil, 60)
+	end
+
+	--- let device object fires its all input data
+	dev:flush_data()
+
+	--- Flush period buffer
+	snax.self().post.fire_data_snapshot()
+	snax.self().post.action_result('sys', id, true, "Done")
+end
+
+---
+-- Fire device output
 function accept.output_to_device(id, info)
 	local device = info.device
 	if not device then
@@ -1252,6 +1302,8 @@ function accept.output_to_device(id, info)
 	snax.self().post.action_result('output', id, r, err or "Done")
 end
 
+---
+-- Fire device command
 function accept.command_to_device(id, cmd)
 	local device = cmd.device
 	if device then
@@ -1315,6 +1367,7 @@ function exit(...)
 
 	if enable_data_one_short_cancel then
 		enable_data_one_short_cancel()
+		enable_data_one_short_cancel = nil
 	end
 	connect_log_server(false)
 	fire_device_timer = nil

@@ -175,6 +175,16 @@ function device:data()
 	return dc.get('INPUT', self._sn)
 end
 
+function device:flush_data()
+	for _, v in ipairs(self._props.inputs or {}) do
+		local props = dc.get('INPUT', self._sn, v.name)
+		for prop, val in pairs(props or {}) do
+			self._data_chn:publish('input', self._app_name, self._sn, v.name, prop, val.value, val.timestamp, val.quality)
+		end
+	end
+	return true
+end
+
 function device:dump_comm(dir, ...)
 	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
 end
