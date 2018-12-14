@@ -48,3 +48,8 @@ v1.2.2 (2018-12-11)
 ------------------
 * Fixed ubus detection
 
+v1.2.3 ()
+------------------
+* Improve ubus service
+* Fixed app create event assert
+

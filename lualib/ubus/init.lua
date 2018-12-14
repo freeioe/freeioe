@@ -304,7 +304,11 @@ function ubus:__send_reply(req, obj_id, data)
 end
 
 function ubus:__request(func, req, obj_id, msg)
-	local ret, data = func(self, req, obj_id, msg)
+	local r, ret, data = pcall(func, self, req, obj_id, msg)
+	if not r then
+		ret = ubus.STATUS_UNKNOWN_ERROR
+		data = nil
+	end
 
 	local no_reply = msg:data(ubus.ATTR_NO_REPLY)
 	if no_reply and no_reply ~= 0 then
@@ -312,7 +316,10 @@ function ubus:__request(func, req, obj_id, msg)
 	end
 
 	if data and type(data) == 'table' then
-		self.__send_reply(req, obj_id, data)
+		local r, err = pcall(self.__send_reply, self, req, obj_id, data)
+		if not r then
+			ret = ubus.STATUS_UNKNOWN_ERROR
+		end
 	end
 
 	return self:__fire_status(req, obj_id, ret)
