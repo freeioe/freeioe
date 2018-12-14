@@ -137,7 +137,7 @@ function blob_msg.static:from_lua(blob_info, name, val)
 			end
 		end
 	else
-		assert(false, "Unknown lua type")
+		assert(false, "Unknown lua type "..val_type.." name: "..self._name)
 	end
 
 	return self

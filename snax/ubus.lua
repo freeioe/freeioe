@@ -35,7 +35,7 @@ function create_methods(bus)
 	return {
 		ping = { 
 			function(req, msg, resp)
-				resp({id=msg.id, msg=msg})
+				resp({id=msg.id or 'empty id', msg=msg.msg or 'empty message' })
 				return ubus.STATUS_OK
 			end, { id = ubus.INT32, msg = ubus.STRING }
 		},
@@ -57,7 +57,7 @@ function create_methods(bus)
 				info.platform = sysinfo.platform()
 				info.id = ioe.id()
 				info.hw_id = ioe.hw_id()
-				info.beta = ioe.beta
+				info.beta = ioe.beta()
 				response(info)
 				return ubus.STATUS_OK
 			end, {}
