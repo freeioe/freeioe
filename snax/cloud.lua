@@ -83,12 +83,7 @@ local log_callback = function(level, ...)
 end
 
 --- Wild topics match to subscribe messages from cloud
-local wildtopics = {
-	"app/#",
-	"sys/#",
-	"output/#",
-	"command/#",
-}
+local wildtopics = { "app/#", "sys/#", "output/#", "command/#" }
 
 --- MQTT Publish Message Handler
 local msg_handler = {
@@ -221,11 +216,14 @@ local msg_handler = {
 	end,
 }
 
+---
+-- MQTT Message Callback
+--
 local msg_callback = function(packet_id, topic, data, qos, retained)
 	log.notice("msg_callback", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
-		log.error("msg_callback recevied incorrect topic message")
+		log.error("::CLOUD:: msg_callback recevied incorrect topic message")
 		return
 	end
 	if id and t then
@@ -236,11 +234,12 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 			end
 			f(sub, data, qos, retained)
 		else
-			log.error("msg_callback cannot find handler", id, t)
+			log.error("::CLOUD:: msg_callback cannot find handler", id, t)
 		end
 	end
 end
 
+--- Listen to logger service used to forward logs
 local function connect_log_server(enable)
 	local logger = snax.queryservice('logger')
 	local obj = snax.self()
@@ -251,75 +250,80 @@ local function connect_log_server(enable)
 	end
 end
 
+local total_compressed = 0
+local total_uncompressed = 0
+local function calc_compress(bytes_in, bytes_out, count)
+	total_compressed = total_compressed + bytes_out
+	total_uncompressed = total_uncompressed + bytes_in
+	local total_rate = (total_compressed/total_uncompressed) * 100
+	local current_rate = (bytes_out/bytes_in) * 100
+	log.trace('::CLOUD:: Count '..count..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
+end
+
+--- MQTT Publish with zip if it has
 local function mqtt_publish(topic, data, qos, retained)
+	local topic = assert(topic)
+	if not mqtt_client then
+		return nil, "MQTT connection lost!"
+	end
+
 	local value, err = cjson.encode(data)
 	if not value then
+		log.warning('Failed cjson encode', err)
 		return nil, err
 	end
 
-	if not zlib_loaded then
-		if mqtt_client then
-			return mqtt_client:publish(topic, value, qos, retained)
-		else
-			return nil, "MQTT connection lost!"
-		end
-	else
+	if zlib_loaded then
 		-- Compresss data
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
 		if not deflated then
 			return nil, eof, bytes_in, bytes_out
 		end
-
-		if mqtt_client then
-			return mqtt_client:publish(topic.."_gz", deflated, qos, retained)
-		else
-			return nil, "MQTT connection lost!"
-		end
+		calc_compress(bytes_in, bytes_out, 1)
+		value = deflated
+		topic = topic.."_gz"
 	end
+	return mqtt_client:publish(topic, value, qos, retained)
 end
 
+--- Publish data without push to period buffer
 local function publish_data_no_pb(key, value, timestamp, quality)
-	--log.trace('publish_data begin', mqtt_client, key, value)
-	if not mqtt_client then
-		return
-	end
-
 	--log.trace("Publish data", key, value, timestamp, quality)
-	local val, err = cjson.encode({ key, timestamp, value, quality})
-	if val then
-		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-	else
-		log.warning('Failed cjson encode', err)
-		return nil, err
-	end
-end
-
-local function publish_data(key, value, timestamp, quality)
-	--log.trace('publish_data begin', mqtt_client, key, value)
+	assert(key)
 	if not mqtt_client then
-		return
+		return nil, "MQTT connection lost!"
 	end
 
-	--log.trace("Publish data", key, value, timestamp, quality)
 	local val, err = cjson.encode({ key, timestamp, value, quality})
 	if not val then
 		log.warning('Failed cjson encode', err)
 		return nil, err
 	end
-	if not pb then
-		return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
-	else
+
+	return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+end
+
+local function publish_data(key, value, timestamp, quality)
+	if pb then
 		--log.trace('publish_data turn period buffer')
 		pb:handle(key, timestamp, value, quality)
 		return true
+	else
+		return publish_data_no_pb(key, value, timestamp, quality)
 	end
 end
 
 local function publish_stat(key, value, timestamp, quality)
 	--log.trace('publish_stat begin', mqtt_client, key, value)
 	if not mqtt_client then
-		return
+		return nil, "MQTT connection lost!"
+	end
+
+	if stat_pb then
+		--log.trace('publish_stat turn period buffer')
+		stat_pb:handle(key, timestamp, value, quality)
+		return true
 	end
 
 	--log.trace("Publish stat", key, value, timestamp)
@@ -329,22 +333,15 @@ local function publish_stat(key, value, timestamp, quality)
 		return nil, err
 	end
 
-	if not stat_pb then
-		return mqtt_client:publish(mqtt_id.."/stat", val, 1, false)
-	else
-		--log.trace('publish_stat turn period buffer')
-		stat_pb:handle(key, timestamp, value, quality)
-		return true
-	end
+	return mqtt_client:publish(mqtt_id.."/stat", val, 1, false)
 end
 
-local total_compressed = 0
-local total_uncompressed = 0
 local function publish_data_list_impl(val_list, topic)
 	assert(val_list, topic)
+	local val_count = #val_list
 	--log.trace('publish_data_list begin', mqtt_client, #val_list)
-	if not mqtt_client or #val_list == 0 then
-		return
+	if not mqtt_client or val_count == 0 then
+		return nil, val_count == 0 and "Empty data list" or "MQTT connection lost!"
 	end
 
 	local val, err = cjson.encode(val_list)
@@ -355,12 +352,7 @@ local function publish_data_list_impl(val_list, topic)
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
 		if mqtt_client then
-			total_compressed = total_compressed + bytes_out
-			total_uncompressed = total_uncompressed + bytes_in
-			local total_rate = (total_compressed/total_uncompressed) * 100
-			local current_rate = (bytes_out/bytes_in) * 100
-			log.trace('Count '..#val_list..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
-
+			calc_compress(bytes_in, bytes_out, val_count)
 			local topic = mqtt_id.."/"..topic
 			return mqtt_client:publish(topic, deflated, 1, false)
 		end
@@ -375,6 +367,9 @@ local publish_stat_list = function(val_list)
 	return publish_data_list_impl(val_list, 'stat_gz')
 end
 
+---
+-- Load and initialize the COV objects(data,stat)
+--
 local function load_cov_conf()
 	local enable_cov = datacenter.get("CLOUD", "COV") or true
 	local default_ttl = 300 -- five minutes
@@ -453,7 +448,7 @@ local function load_cov_conf()
 	end)
 end
 
-
+--- Load period buffer objects (data,stat)
 local function load_pb_conf()
 	if not zlib_loaded then
 		return
@@ -462,12 +457,11 @@ local function load_pb_conf()
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 1000)-- period in ms
 
 	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
-	if not enable_data_upload then
-		period = 60 * 1000
-	end
+	period = enable_data_upload and period or (60 * 1000)
 
 	log.notice('Loading period buffer, period:', period)
 	if period >= 1000 then
+		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / 10)
 
 		pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
@@ -475,6 +469,7 @@ local function load_pb_conf()
 		stat_pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
 		stat_pb:start(publish_stat_list)
 	else
+		--- Period buffer disabled
 		if pb then
 			pb:stop()
 			pb = nil
@@ -486,17 +481,17 @@ local function load_pb_conf()
 	end
 end
 
---
---[[
+----
 -- loading configruation from datacenter
---]]
+--
 local function load_conf()
 	mqtt_id = ioe.id() --datacenter.get("CLOUD", "ID") or datacenter.wait("SYS", "ID")
 	mqtt_host = datacenter.get("CLOUD", "HOST")
 	mqtt_port = datacenter.get("CLOUD", "PORT")
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
 	mqtt_secret = datacenter.get("CLOUD", "SECRET")
-	log.notice("MQTT:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
+
+	log.notice("::CLOUD:: ", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
@@ -504,8 +499,9 @@ local function load_conf()
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
 	enable_event_upload = tonumber(datacenter.get("CLOUD", "EVENT_UPLOAD"))
 
+	--- For communication data applications list
 	enable_comm_upload_apps = datacenter.get("CLOUD", "COMM_UPLOAD_APPS") or {}
-	local changed = false
+	local changed = false --- This will help avoid file(cfg.json) writing caused by only table/cjson sorts
 	for k,v in pairs(enable_comm_upload_apps) do
 		if v < skynet.time() then
 			enable_comm_upload_apps[k] = nil
@@ -522,19 +518,19 @@ end
 
 local function publish_comm(app, sn, dir, ts, content)
 	if not mqtt_client then
-		return
+		return nil, "MQTT connection lost!"
 	end
 
-	local key = mqtt_id.."/comm"
+	local topic = mqtt_id.."/comm"
 	local msg = { (sn or app).."/"..dir, ts, content }
-	--log.trace('publish comm', key, table.concat(msg))
+	--log.trace('publish comm', topic, table.concat(msg))
 
 	if enable_comm_upload and ts < enable_comm_upload then
-		return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+		return mqtt_client:publish(topic, cjson.encode(msg), 1, false)
 	end
 
 	if enable_comm_upload_apps[app] and ts < enable_comm_upload_apps[app] then
-		return mqtt_client:publish(key, cjson.encode(msg), 1, false)
+		return mqtt_client:publish(topic, cjson.encode(msg), 1, false)
 	end
 
 	return true
@@ -542,21 +538,20 @@ end
 
 local function publish_log(ts, lvl, ...)
 	if not mqtt_client then
-		return
+		return nil, "MQTT connection lost!"
 	end
-	if (enable_log_upload and ts < enable_log_upload) then
-		return mqtt_client:publish(mqtt_id.."/log", cjson.encode({lvl, ts, ...}), 1, false)
+	if not enable_log_upload or ts > enable_log_upload then
+		return true
 	end
-	return true
+	return mqtt_client:publish(mqtt_id.."/log", cjson.encode({lvl, ts, ...}), 1, false)
 end
 
 local function publish_event(sn, level, type_, info, data, timestamp)
 	local event = { level = level, ['type'] = type_, info = info, data = data }
-	if mqtt_client then
-		return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, event, timestamp}), 1, false)
-	else
-		return false
+	if not mqtt_client then
+		return nil, "MQTT connection lost!"
 	end
+	return mqtt_client:publish(mqtt_id.."/event", cjson.encode({sn, event, timestamp}), 1, false)
 end
 
 function load_buffers()
@@ -573,7 +568,9 @@ function load_buffers()
 				if r then
 					gap = 500
 				else
+					--- If you see this trace
 					log.trace('buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
+					log.warning("::CLOUD:: Failed to fire comm or log or event")
 				end
 			end
 			skynet.sleep(gap)
@@ -586,71 +583,58 @@ end
 --]]
 local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
-		--local hex = crypt.hexencode(table.concat({...}, '\t'))
-		--hex = string.gsub(hex, "%w%w", "%1 ")
-		--log.trace('on_comm', app, sn, dir, ts, hex)
 		local content = crypt.base64encode(table.concat({...}, '\t'))
+		--local hex = string.gsub(content, "%w%w", "%1 ")
+		--log.trace('::CLOUD:: on_comm', app, sn, dir, ts, hex)
 		comm_buffer:handle(publish_comm, app, sn, dir, ts, content)
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
-		--print(app, sn, stat, prop, value, timestamp)
+		--log.trace('::CLOUD:: on_state', app, sn, stat, prop, value, timestamp)
 		if not enable_stat_upload then
-			return
+			return --- If not enable stat data upload will skip cov
 		end
 
 		local key = table.concat({sn, stat, prop}, '/')
-		local timestamp = timestamp or skynet.time()
-		local quality = 0
-
-		stat_cov:handle(publish_stat, key, value, timestamp, quality)
+		stat_cov:handle(publish_stat, key, value, timestamp or skynet.time(), quality or 0)
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
+		log.trace('::CLOUD:: on_event', app, sn, level, type_, info) --, data, timestamp)
 		if not enable_event_upload or (tonumber(level) < enable_event_upload)  then
-			return
+			return --- If not enable event data upload will skip event buffer
 		end
 		event_buffer:handle(publish_event, sn, level, type_, info, data, timestamp)
 	end,
 	on_add_device = function(app, sn, props)
-		log.trace('on_add_device', app, sn, props)
+		log.trace('::CLOUD:: on_add_device', app, sn, props)
 		snax.self().post.device_add(app, sn, props)
 	end,
 	on_del_device = function(app, sn)
-		log.trace('on_del_device', app, sn)
+		log.trace('::CLOUD:: on_del_device', app, sn)
 		snax.self().post.device_del(app, sn)
 	end,
 	on_mod_device = function(app, sn, props)
-		log.trace('on_mod_device', app, sn, props)
+		log.trace('::CLOUD::: on_mod_device', app, sn, props)
 		snax.self().post.device_mod(app, sn, props)
 	end,
 	on_input = function(app, sn, input, prop, value, timestamp, quality)
-		--log.trace('on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
-		--local key = table.concat({app, sn, intput, prop}, '/')
-
+		--log.trace('::CLOUD:: on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
 		--- disable data upload from the very begining here.
 		if not enable_data_upload and sn ~= mqtt_id then
-			-- Skip data
-			return
+			return  -- Skip data
 		end
 
 		local key = table.concat({sn, input, prop}, '/')
-		local timestamp = timestamp or skynet.time()
-		local quality = quality or 0
-
-		cov:handle(publish_data, key, value, timestamp, quality)
+		cov:handle(publish_data, key, value, timestamp or skynet.time(), quality or 0)
 	end,
 	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
-		log.trace('on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
+		log.trace('::CLOUD:: on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
 		if not enable_data_upload and sn ~= mqtt_id then
-			-- Skip data
-			return
+			return -- Skip data
 		end
 
 		local key = table.concat({sn, input, prop}, '/')
-		local timestamp = timestamp or skynet.time()
-		local quality = quality or 0
-
 		--cov:handle(publish_data_no_pb, key, value, timestamp, quality)
-		publish_data_no_pb(key, value, timestamp, quality)
+		publish_data_no_pb(key, value, timestamp or skynet.time(), quality or 0)
 	end
 }
 
@@ -673,31 +657,37 @@ local function start_reconnect()
 
 end
 
+---
+-- Connection process function
+--
 connect_proc = function(clean_session, username, password)
 	local clean_session = clean_session or true
 	local client = assert(mosq.new(mqtt_id, clean_session))
-	client:version_set(mosq.PROTOCOL_V311)
+	client:version_set(mosq.PROTOCOL_V311) --- Set the protocol version
 	if username then
-		client:login_set(username, password)
+		client:login_set(username, password) --- Set login by username/password
 	else
-		local id = "dev="..mqtt_id.."|time="..os.time()
-		local pwd = hmac:new(sha1, mqtt_secret, id):hexdigest()
-		client:login_set(id, pwd)
+		local id = "dev="..mqtt_id.."|time="..os.time() --- id is device id and current time
+		local pwd = hmac:new(sha1, mqtt_secret, id):hexdigest() --- hash the id as password
+		client:login_set(id, pwd) --- Set the login
 	end
+	--- on connect result callback
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
-			log.notice("ON_CONNECT", success, rc, msg) 
+			log.notice("::CLOUD:: ON_CONNECT", success, rc, msg) 
 			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			mqtt_client = client
 			mqtt_client_last = skynet.time()
+			--- Subscribe topics
 			for _, v in ipairs(wildtopics) do
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
 			mqtt_reconnect_timeout = 100
+
 			-- Only fire apps and device once
 			if not apps_devices_fired then
-				log.trace("ON_CONNECT fire devices and apps")
+				log.trace("::CLOUD:: ON_CONNECT fire devices and apps")
 				apps_devices_fired = true
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
@@ -706,12 +696,12 @@ connect_proc = function(clean_session, username, password)
 				end
 			end
 		else
-			log.warning("ON_CONNECT", success, rc, msg) 
+			log.warning("::CLOUD:: ON_CONNECT", success, rc, msg) 
 			start_reconnect()
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
-		log.warning("ON_DISCONNECT", success, rc, msg) 
+		log.warning("::CLOUD:: ON_DISCONNECT", success, rc, msg) 
 		if not enable_async and mqtt_client then
 			mqtt_client_last = skynet.time()
 			start_reconnect()
@@ -721,6 +711,7 @@ connect_proc = function(clean_session, username, password)
 	client.ON_LOG = log_callback
 	client.ON_MESSAGE = msg_callback
 
+	--- Tell mqtt backends that this device is online
 	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
 
 	if enable_async then
@@ -816,6 +807,7 @@ function response.get_status()
 	return mqtt_client ~= nil, mqtt_client_last
 end
 
+--- Enable data upload
 function accept.enable_data(id, enable)
 	if enable then
 		if enable_data_one_short_cancel then
@@ -834,13 +826,15 @@ function accept.enable_data(id, enable)
 	else
 		snax.self().post.fire_data_snapshot()
 	end
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
+--- Enable data upload for a short time (specified by period in seconds, 300 by default)
 function accept.enable_data_one_short(id, period)
 	if not enable_data_one_short_cancel and enable_data_upload then
 		if id then
-			snax.self().post.action_result('sys', id, false, "Cloud data upload is already enabled!")
+			local err = "Cloud data upload is already enabled!"
+			snax.self().post.action_result('sys', id, false, err)
 		end
 		return
 	end
@@ -854,8 +848,8 @@ function accept.enable_data_one_short(id, period)
 	log.debug("Cloud data one-short upload enabled!")
 
 	if id then
-		--- only enable one short if no id
-		snax.self().post.action_result('sys', id, true, "Done")
+		--- only fire action result and data snapshot if has id
+		snax.self().post.action_result('sys', id, true)
 		snax.self().post.fire_data_snapshot()
 	end
 
@@ -880,7 +874,7 @@ function accept.enable_stat(id, enable)
 	else
 		snax.self().post.fire_stat_snapshot()
 	end
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
 function accept.enable_log(id, sec)
@@ -897,15 +891,14 @@ function accept.enable_log(id, sec)
 		enable_log_upload = nil
 	end
 	datacenter.set("CLOUD", "LOG_UPLOAD", enable_log_upload)
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
 function accept.enable_comm(id, sec)
 	local sec = tonumber(sec)
 	if sec > max_enable_comm_upload then
 		local err = "Comm upload period cannot be bigger than "..max_enable_comm_upload
-		snax.self().post.action_result('sys', id, false, err)
-		return
+		return snax.self().post.action_result('sys', id, false, err)
 	end
 
 	if sec and sec > 0 then
@@ -914,11 +907,12 @@ function accept.enable_comm(id, sec)
 		enable_comm_upload = nil
 	end
 	datacenter.set("CLOUD", "COMM_UPLOAD", enable_comm_upload)
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
 function accept.enable_beta(id, enable)
 	if not enable then
+		log.warning("Using beta is disabled from cloud!")
 		ioe.set_beta(false)
 	else
 		local r, err = skynet.call(".upgrader", "lua", "pkg_enable_beta")
@@ -926,36 +920,36 @@ function accept.enable_beta(id, enable)
 			log.warning("Using beta is enabled from cloud!")
 			ioe.set_beta(true)
 		else
-			log.warning("Cannot enable beta", err)
-			snax.self().post.action_result('sys', id, false, err)
-			return
+			local msg = "Cannot enable beta. Error: "..err
+			return snax.self().post.action_result('sys', id, false, msg)
 		end
 	end
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
 function accept.enable_event(id, level)
 	enable_event_upload = math.floor(tonumber(level))
 	datacenter.set('CLOUD', 'EVENT_UPLOAD', enable_event_upload)
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
 function accept.set_cloud_conf(id, args)
 	for k, v in pairs(args) do
 		datacenter.set("CLOUD", string.upper(k), v)
 	end
-	snax.self().post.action_result('sys', id, true, "Done! System will be reboot to table those changes")
+	local msg = "Done! System will be reboot to table those changes"
+	snax.self().post.action_result('sys', id, true, msg)
 	snax.self().post.sys_quit(id, data)
 end
 
 function accept.download_cfg(id, args)
 	local r, err = skynet.call(".cfg", "lua", "download", args.name, args.host)
-	snax.self().post.action_result('sys', id, r, err or "Done")
+	snax.self().post.action_result('sys', id, r, err)
 end
 
 function accept.upload_cfg(id, args)
 	local r, err = skynet.call(".cfg", "lua", "upload", args.host)
-	snax.self().post.action_result('sys', id, r, err or "Done")
+	snax.self().post.action_result('sys', id, r, err)
 end
 
 
@@ -982,7 +976,7 @@ function accept.fire_data_snapshot()
 			publish_data(key, value, timestamp or now, quality or 0)
 		end)
 	end
-	snax.self().post.action_result('input', id, r, err or "Done")
+	snax.self().post.action_result('input', id, r, err)
 end
 
 ---
@@ -1006,7 +1000,7 @@ end
 local fire_device_timer = nil
 function accept.fire_devices(timeout)
 	local timeout = timeout or 50
-	log.notice("Cloud fire devices, timeout", timeout)
+	log.notice("::CLOUD:: Cloud fire devices, timeout", timeout)
 	if fire_device_timer then
 		return
 	end
@@ -1055,7 +1049,7 @@ end
 local fire_app_timer = nil
 function accept.fire_apps(timeout)
 	local timeout = timeout or 50
-	log.notice("Cloud fire applications, timeout", timeout)
+	log.notice("::CLOUD:: Cloud fire applications, timeout", timeout)
 	if fire_app_timer then
 		return
 	end
@@ -1092,40 +1086,34 @@ function accept.app_upgrade(id, args)
 end
 
 function accept.app_start(id, args)
-	local inst = args.inst
-	local conf = args.conf
 	local appmgr = snax.queryservice('appmgr')
-	local r, err = appmgr.req.start(inst, conf)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	local r, err = appmgr.req.start(args.inst, args.conf)
+	snax.self().post.action_result('app', id, r, err)
 end
 
 function accept.app_stop(id, args)
-	local inst = args.inst
-	local reason = args.reason
 	local appmgr = snax.queryservice('appmgr')
-	local r, err = appmgr.req.stop(inst, reason)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	local r, err = appmgr.req.stop(args.inst, args.reason)
+	snax.self().post.action_result('app', id, r, err)
 end
 
 function accept.app_restart(id, args)
-	local inst = args.inst
-	local reason = args.reason
 	local appmgr = snax.queryservice('appmgr')
-	local r, err = appmgr.req.restart(inst, reason)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	local r, err = appmgr.req.restart(args.inst, args.reason)
+	snax.self().post.action_result('app', id, r, err)
 end
 
 function accept.app_conf(id, args)
 	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.set_conf(args.inst, args.conf)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.action_result('app', id, r, err)
 end
 
 function accept.app_list(id, args)
 	local apps, err = skynet.call(".upgrader", "lua", "list_app")
 	-- Fire action result if id is not empty
 	if id then
-		snax.self().post.action_result('app', id, apps, err or "Done")
+		snax.self().post.action_result('app', id, apps, err)
 	end
 
 	if apps then
@@ -1147,19 +1135,19 @@ function accept.app_list(id, args)
 end
 
 function accept.app_query_log(id, args)
-	local log_reader = require 'log_reader'
-	local app = args.inst
+	local inst = args.inst
 	--[[
+	local log_reader = require 'log_reader'
 	local max_count = tonumber(args.max_count) or 60
-	local log, err = log_reader.by_app(app, max_count) 
+	local log, err = log_reader.by_app(inst, max_count) 
 	]]--
 	local buffer = snax.queryservice('buffer')
-	local logs, err = buffer.req.get_log(app)
-	snax.self().post.action_result('app', id, logs, err or "Done")
+	local logs, err = buffer.req.get_log(inst)
+	snax.self().post.action_result('app', id, logs, err)
 	if logs then
 		for _, log in ipairs(logs) do
 			if mqtt_client then
-				mqtt_client:publish(mqtt_id.."/app_log", cjson.encode({name=app, log=log}), 1, false)
+				mqtt_client:publish(mqtt_id.."/app_log", cjson.encode({name=inst, log=log}), 1, false)
 			end
 			skynet.sleep(0)
 		end
@@ -1167,15 +1155,14 @@ function accept.app_query_log(id, args)
 end
 
 function accept.app_query_comm(id, args)
-	local log_reader = require 'log_reader'
-	local app = args.inst
+	local inst = args.inst
 	local buffer = snax.queryservice('buffer')
-	local comms, err = buffer.req.get_comm(app)
-	snax.self().post.action_result('app', id, comms, err or "Done")
+	local comms, err = buffer.req.get_comm(inst)
+	snax.self().post.action_result('app', id, comms, err)
 	if comms then
 		for _, comm in ipairs(comms) do
 			if mqtt_client then
-				mqtt_client:publish(mqtt_id.."/app_comm", cjson.encode({name=app, comm=comm}), 1, false)
+				mqtt_client:publish(mqtt_id.."/app_comm", cjson.encode({name=inst, comm=comm}), 1, false)
 			end
 			skynet.sleep(0)
 		end
@@ -1183,30 +1170,30 @@ function accept.app_query_comm(id, args)
 end
 
 function accept.app_upload_comm(id, args)
-	local app = args.inst
+	local inst = args.inst
 	local sec = tonumber(args.sec)
-	if not app then
+	if not inst then
 		return snax.self().post.action_result('app', id, false, "Applicaiton instance missing!")
 	end
 	if sec and sec > 0 and sec < max_enable_comm_upload then
-		enable_comm_upload_apps[app] = math.floor(skynet.time()) + sec
+		enable_comm_upload_apps[inst] = math.floor(skynet.time()) + sec
 	else
-		enable_comm_upload_apps[app] = nil
+		enable_comm_upload_apps[inst] = nil
 	end
 	datacenter.set("CLOUD", "COMM_UPLOAD_APPS", enable_comm_upload_apps)
-	snax.self().post.action_result('app', id, true, "Done")
+	snax.self().post.action_result('app', id, true)
 end
 
 function accept.app_option(id, args)
 	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.app_option(args.inst, args.option, args.value)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.action_result('app', id, r, err)
 end
 
 function accept.app_rename(id, args)
 	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.app_rename(args.inst, args.new_name)
-	snax.self().post.action_result('app', id, r, err or "Done")
+	snax.self().post.action_result('app', id, r, err)
 end
 
 function accept.sys_upgrade(id, args)
@@ -1219,7 +1206,7 @@ end
 
 function accept.ext_list(id, args)
 	local exts, err = skynet.call(".ioe_ext", "lua", "list")
-	snax.self().post.action_result('app', id, exts, err or "Done")
+	snax.self().post.action_result('app', id, exts, err)
 	if exts then
 		mqtt_publish(mqtt_id.."/exts", exts, 1, true)
 	end
@@ -1230,7 +1217,7 @@ function accept.ext_upgrade(id, args)
 end
 
 function accept.batch_script(id, script)
-	log.debug("Cloud batch script received", id, script)
+	log.debug("::CLOUD::: Cloud batch script received", id, script)
 	datacenter.set("BATCH", id, "script", script)
 	local runner = skynet.newservice("run_batch", id)
 	datacenter.set("BATCH", id, "inst", runner)
@@ -1254,7 +1241,7 @@ function accept.data_flush(id)
 	end
 
 	if id then
-		snax.self().post.action_result('sys', id, true, "Done")
+		snax.self().post.action_result('sys', id, true)
 	end
 end
 
@@ -1280,7 +1267,7 @@ function accept.data_query(id, dev_sn)
 
 	--- Flush period buffer
 	snax.self().post.fire_data_snapshot()
-	snax.self().post.action_result('sys', id, true, "Done")
+	snax.self().post.action_result('sys', id, true)
 end
 
 ---
@@ -1288,39 +1275,48 @@ end
 function accept.output_to_device(id, info)
 	local device = info.device
 	if not device then
-		log.warning("device is missing in data")
-		return
+		return snax.self().post.action_result('ouput', id, false, "Device is missing in data")
 	end
+
 	local dev, err = api:get_device(device)
 	if not dev then
 		return snax.self().post.action_result('ouput', id, false, err)
 	end
+
 	if type(info.value) == 'table' then
 		info.value = cjson.encode(info.value)
 	end
+
 	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
-	snax.self().post.action_result('output', id, r, err or "Done")
+	snax.self().post.action_result('output', id, r, err)
 end
 
 ---
 -- Fire device command
 function accept.command_to_device(id, cmd)
 	local device = cmd.device
-	if device then
-		local dev, err = api:get_device(device)
-		if not dev then
-			return snax.self().post.action_result('command', id, false, err)
-		end
-		if type(cmd.param) == 'table' then
-			cmd.param = cjson.encode(cmd.param)
-		end
-		local r, err = dev:send_command(cmd.cmd, cmd.param)
-		snax.self().post.action_result('command', id, r, err or "OK")
+	if not device then
+		return snax.self().post.action_result('ouput', id, false, "Device is missing in data")
 	end
+
+	local dev, err = api:get_device(device)
+	if not dev then
+		return snax.self().post.action_result('command', id, false, err)
+	end
+
+	if type(cmd.param) == 'table' then
+		cmd.param = cjson.encode(cmd.param)
+	end
+
+	local r, err = dev:send_command(cmd.cmd, cmd.param)
+	snax.self().post.action_result('command', id, r, err)
 end
 
+---
+-- Fire action resuult
 function accept.action_result(action, id, result, message)
 	local result = result and true or false
+	local message = message or ( result and "Done" or "Error" )
 	if mqtt_client then
 		local r = {
 			id = id,
@@ -1329,7 +1325,11 @@ function accept.action_result(action, id, result, message)
 			timestamp = skynet.time(),
 			timestamp_str = os.date(),
 		}
-		log.notice("action_result", action, id, result, message)
+		if result then
+			log.notice("::CLOUD:: Action Result: ", action, id, result, message)
+		else
+			log.warning("::CLOUD:: Action Result: ", action, id, result, message)
+		end
 		mqtt_client:publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
@@ -1337,7 +1337,7 @@ end
 function init()
 	zlib_loaded, zlib = pcall(require, 'zlib')
 	if not zlib_loaded then
-		log.warning("Cannot load zlib module, data compressing cannot be performed on this device")
+		log.warning("::CLOUD:: Cannot load zlib module, data compressing disabled!!")
 	end
 
 	mqtt_client_last = skynet.time()
