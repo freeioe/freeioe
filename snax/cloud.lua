@@ -88,10 +88,10 @@ local wildtopics = { "app/#", "sys/#", "output/#", "command/#" }
 --- MQTT Publish Message Handler
 local msg_handler = {
 	data = function(topic, data, qos, retained)
-		--log.trace('MSG.DATA', topic, data, qos, retained)
+		--log.trace('::CLOUD:: MSG.DATA', topic, data, qos, retained)
 	end,
 	app = function(topic, data, qos, retained)
-		log.info('MSG.APP', topic, data, qos, retained)
+		log.info('::CLOUD:: MSG.APP', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -136,7 +136,7 @@ local msg_handler = {
 		end
 	end,
 	sys = function(topic, data, qos, retained)
-		log.info('MSG.SYS', topic, data, qos, retained)
+		log.info('::CLOUD:: MSG.SYS', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -202,7 +202,7 @@ local msg_handler = {
 		end
 	end,
 	output = function(topic, data, qos, retained)
-		--log.trace('MSG.OUTPUT', topic, data, qos, retained)
+		--log.trace('::CLOUD:: MSG.OUTPUT', topic, data, qos, retained)
 		local oi = cjson.decode(data)
 		if oi and oi.id then
 			snax.self().post.output_to_device(oi.id, oi.data)
@@ -220,7 +220,7 @@ local msg_handler = {
 -- MQTT Message Callback
 --
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	log.notice("msg_callback", packet_id, topic, data, qos, retained)
+	log.notice("::CLOUD::: msg_callback", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		log.error("::CLOUD:: msg_callback recevied incorrect topic message")
@@ -269,7 +269,7 @@ local function mqtt_publish(topic, data, qos, retained)
 
 	local value, err = cjson.encode(data)
 	if not value then
-		log.warning('Failed cjson encode', err)
+		log.warning('::CLOUD:: cjson encode failure. error: ', err)
 		return nil, err
 	end
 
@@ -289,7 +289,7 @@ end
 
 --- Publish data without push to period buffer
 local function publish_data_no_pb(key, value, timestamp, quality)
-	--log.trace("Publish data", key, value, timestamp, quality)
+	--log.trace("::CLOUD:: Publish data", key, value, timestamp, quality)
 	assert(key)
 	if not mqtt_client then
 		return nil, "MQTT connection lost!"
@@ -297,7 +297,7 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 
 	local val, err = cjson.encode({ key, timestamp, value, quality})
 	if not val then
-		log.warning('Failed cjson encode', err)
+		log.warning('::CLOUD:: cjson encode failure. error: ', err)
 		return nil, err
 	end
 
@@ -306,7 +306,7 @@ end
 
 local function publish_data(key, value, timestamp, quality)
 	if pb then
-		--log.trace('publish_data turn period buffer')
+		--log.trace('::CLOUD:: publish_data turn period buffer')
 		pb:handle(key, timestamp, value, quality)
 		return true
 	else
@@ -315,21 +315,21 @@ local function publish_data(key, value, timestamp, quality)
 end
 
 local function publish_stat(key, value, timestamp, quality)
-	--log.trace('publish_stat begin', mqtt_client, key, value)
+	--log.trace('::CLOUD:: publish_stat begin', mqtt_client, key, value)
 	if not mqtt_client then
 		return nil, "MQTT connection lost!"
 	end
 
 	if stat_pb then
-		--log.trace('publish_stat turn period buffer')
+		--log.trace('::CLOUD:: publish_stat turn period buffer')
 		stat_pb:handle(key, timestamp, value, quality)
 		return true
 	end
 
-	--log.trace("Publish stat", key, value, timestamp)
+	--log.trace("::CLOUD:: Publish stat", key, value, timestamp)
 	local val, err = cjson.encode({ key, timestamp, value, quality})
 	if not val then
-		log.warning('Failed cjson encode', err)
+		log.warning('::CLOUD:: cjson encode failure. error: ', err)
 		return nil, err
 	end
 
@@ -339,16 +339,16 @@ end
 local function publish_data_list_impl(val_list, topic)
 	assert(val_list, topic)
 	local val_count = #val_list
-	--log.trace('publish_data_list begin', mqtt_client, #val_list)
+	--log.trace('::CLOUD:: publish_data_list begin', mqtt_client, #val_list)
 	if not mqtt_client or val_count == 0 then
 		return nil, val_count == 0 and "Empty data list" or "MQTT connection lost!"
 	end
 
 	local val, err = cjson.encode(val_list)
 	if not val then
-		log.error('JSON Encoding Error:', err)
+		log.warning('::CLOUD:: cjson encode failure. error: ', err)
 	else
-		--log.trace('Publish data in array and compress the json')
+		--log.trace('::CLOUD:: Publish data in array and compress the json')
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
 		if mqtt_client then
@@ -459,7 +459,7 @@ local function load_pb_conf()
 	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
 	period = enable_data_upload and period or (60 * 1000)
 
-	log.notice('Loading period buffer, period:', period)
+	log.notice('::CLOUD:: Loading period buffer, period:', period)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / 10)
@@ -523,7 +523,7 @@ local function publish_comm(app, sn, dir, ts, content)
 
 	local topic = mqtt_id.."/comm"
 	local msg = { (sn or app).."/"..dir, ts, content }
-	--log.trace('publish comm', topic, table.concat(msg))
+	--log.trace('::CLOUD:: publish comm', topic, table.concat(msg))
 
 	if enable_comm_upload and ts < enable_comm_upload then
 		return mqtt_client:publish(topic, cjson.encode(msg), 1, false)
@@ -569,7 +569,7 @@ function load_buffers()
 					gap = 500
 				else
 					--- If you see this trace
-					log.trace('buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
+					log.trace('::CLOUD:: buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
 					log.warning("::CLOUD:: Failed to fire comm or log or event")
 				end
 			end
@@ -724,7 +724,7 @@ connect_proc = function(clean_session, username, password)
 		while not r do
 			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 			if not r then
-				log.error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+				log.error(string.format("::CLOUD::: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
 				skynet.sleep(ts * 500)
 				ts = ts * 2
 				if ts >= 64 then
@@ -750,7 +750,7 @@ connect_proc = function(clean_session, username, password)
 		end
 		if client then
 			client:disconnect()
-			log.notice("Cloud Connection Closed!")
+			log.notice("::CLOUD:: Connection Closed!")
 			client:destroy()
 		end
 	end
@@ -758,14 +758,14 @@ end
 
 function response.disconnect()
 	local client = mqtt_client
-	log.debug("Cloud Connection Closing!")
+	log.debug("::CLOUD:: Connection Closing!")
 
 	if enable_async then
 		mqtt_client = nil
 		client:disconnect()
 		client:loop_stop()
 		client:destory()
-		log.notice("Cloud Connection Closed!")
+		log.notice("::CLOUD:: Connection Closed!")
 	else
 		close_connection = true
 	end
@@ -822,7 +822,7 @@ function accept.enable_data(id, enable)
 		if cov then
 			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
-		log.debug("Cloud data upload disabled!", enable)
+		log.debug("::CLOUD:: data upload disabled!", enable)
 	else
 		snax.self().post.fire_data_snapshot()
 	end
@@ -845,7 +845,7 @@ function accept.enable_data_one_short(id, period)
 	end
 
 	enable_data_upload = true
-	log.debug("Cloud data one-short upload enabled!")
+	log.debug("::CLOUD::: data one-short upload enabled!")
 
 	if id then
 		--- only fire action result and data snapshot if has id
@@ -859,7 +859,7 @@ function accept.enable_data_one_short(id, period)
 		if cov then
 			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
-		log.debug("Cloud data one-short upload disabled!")
+		log.debug("::CLOUD:: data one-short upload disabled!")
 	end)
 end
 
@@ -870,7 +870,7 @@ function accept.enable_stat(id, enable)
 		if stat_cov then
 			stat_cov:clean()
 		end
-		log.debug("Cloud stat data upload disabled!", enable)
+		log.debug("::CLOUD:: stat data upload disabled!", enable)
 	else
 		snax.self().post.fire_stat_snapshot()
 	end
@@ -912,12 +912,12 @@ end
 
 function accept.enable_beta(id, enable)
 	if not enable then
-		log.warning("Using beta is disabled from cloud!")
+		log.warning("::CLOUD:: Using beta is disabled from cloud!")
 		ioe.set_beta(false)
 	else
 		local r, err = skynet.call(".upgrader", "lua", "pkg_enable_beta")
 		if r then
-			log.warning("Using beta is enabled from cloud!")
+			log.warning("::CLOUD:: Using beta is enabled from cloud!")
 			ioe.set_beta(true)
 		else
 			local msg = "Cannot enable beta. Error: "..err
