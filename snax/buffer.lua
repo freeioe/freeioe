@@ -180,7 +180,7 @@ local function connect_log_server(enable)
 end
 
 function init()
-	log.notice("System buffer service started!")
+	log.notice("::BUFFER:: System buffer service started!")
 	skynet.fork(function()
 		connect_log_server(true)
 	end)
@@ -193,5 +193,5 @@ end
 
 function exit(...)
 	connect_log_server(false)
-	log.notice("System buffer service stoped!")
+	log.notice("::BUFFER:: System buffer service stoped!")
 end

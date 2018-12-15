@@ -31,11 +31,11 @@ local function is_inst_name_reserved(inst)
 	end
 end
 
-local function action_result(channel, id, result, ...)
+local function action_result(channel, id, result, info, ...)
 	if result then
-		log.info(...)
+		log.info("::UPGRADER:: "..info, ...)
 	else
-		log.error(...)
+		log.error("::UPGRADER:: "..info, ...)
 	end
 
 	if id and id ~= 'from_web' then
@@ -145,7 +145,7 @@ function command.upgrade_app(id, args)
 
 	local download_version = editor and version..".editor" or version
 	return create_app_download(inst_name, name, download_version, function(path)
-		log.notice("Download application finished", name)
+		log.notice("::UPGRADER:: Download application finished", name)
 		local appmgr = snax.queryservice("appmgr")
 		local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
 		if not r then
@@ -204,7 +204,7 @@ function command.install_app(id, args)
 
 	local download_version = editor and version..".editor" or version
 	local r, err = create_app_download(inst_name, name, download_version, function(info)
-		log.notice("Download application finished", name)
+		log.notice("::UPGRADER:: Download application finished", name)
 		local target_folder = get_target_folder(inst_name)
 		lfs.mkdir(target_folder)
 		os.execute("unzip -oq "..info.." -d "..target_folder)
@@ -295,7 +295,7 @@ function command.install_local_app(id, args)
 
 	-- Reserve app instance name
 	datacenter.set("APPS", inst_name, {name=name, version=0, sn=sn, conf=conf, islocal=1, auto=0})
-	log.notice("Install local application package", file_path)
+	log.notice("::UPGRADER:: Install local application package", file_path)
 
 	local target_folder = get_target_folder(inst_name)
 	os.execute("unzip -oq "..file_path.." -d "..target_folder)
@@ -310,7 +310,7 @@ function command.install_local_app(id, args)
 	appmgr.post.app_event('create', inst_name)
 
 	--[[
-	log.notice("Try to start application", inst_name)
+	log.notice("::UPGRADER:: Try to start application", inst_name)
 	appmgr.post.app_start(inst_name)
 	]]--
 
@@ -608,7 +608,7 @@ function command.upgrade_core(id, args)
 		lfs.mkdir(base_dir.."/ipt")
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
-			log.error("Create upgrade_no_ack failed", status, code)
+			log.error("::UPGRADER:: Create upgrade_no_ack failed", status, code)
 			return false, "Failed to create upgrade_no_ack file!"
 		end
 	end

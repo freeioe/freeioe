@@ -36,7 +36,7 @@ skynet.start(function()
 		while processing do
 			local ts = skynet.now() - processing
 			if ts > 500 then
-				log.trace('Web process timeout', processing, skynet.now())
+				log.trace('::LWF:: Web process timeout', processing, skynet.now())
 				break
 			end
 			skynet.sleep(20)
@@ -46,7 +46,7 @@ skynet.start(function()
 
 		-- limit request body size to 8192 (you can pass nil to unlimit)
 		local code, url, method, header, body, httpver = httpd.read_request(sockethelper.readfunc(id), 8192)
-		log.trace('Web access', httpver, method, url, code)
+		log.trace('::LWF:: Web access', httpver, method, url, code)
 		if code then
 			if code ~= 200 then
 				response(id, code)

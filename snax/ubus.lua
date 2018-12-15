@@ -186,7 +186,7 @@ function init(...)
 	--bus:connect("/tmp/ubus.sock")
 	local s, err = bus:status()
 	if not s then
-		log.error('Cannot connect to ubusd', err, ...)
+		log.error('::UBUS:: Cannot connect to ubusd', err, ...)
 		return
 	end
 
@@ -195,7 +195,7 @@ function init(...)
 		print('subscribe cb', ...)
 	end)
 
-	log.notice("System ubus service started!")
+	log.notice("::UBUS:: System ubus service started!")
 	skynet.fork(function()
 		api = app_api:new('UBUS')
 		api:set_handler(Handler, true)
@@ -203,5 +203,5 @@ function init(...)
 end
 
 function exit(...)
-	log.notice("System ubus service stoped!")
+	log.notice("::UBUS:: System ubus service stoped!")
 end

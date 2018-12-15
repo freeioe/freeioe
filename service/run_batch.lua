@@ -11,7 +11,7 @@ local batch_id = arg[1]
 local tasks = {}
 
 local function gen_task_id(cate, info)
-	log.info('BatchScript Create sub task: ', info)
+	log.info('::RunBatch:: BatchScript Create sub task: ', info)
 	local id = batch_id .. '.' .. #tasks
 	tasks[#tasks + 1] = {
 		id = id,
@@ -38,7 +38,7 @@ local batch_env = {
 			sn = sn
 		})
 		if not r then
-			local err = "Call install_app failed. "..err
+			local err = "::RunBatch:: Call install_app failed. "..err
 			log.error(err)
 		end
 	end,
@@ -48,7 +48,7 @@ local batch_env = {
 			inst = inst,
 		})
 		if not r then
-			local err = "Call uninstall_app failed. "..err
+			local err = "::RunBatch:: Call uninstall_app failed. "..err
 			log.error(err)
 		end
 	end,
@@ -61,7 +61,7 @@ local batch_env = {
 			conf = conf
 		})
 		if not r then
-			local err = "Call upgrade_app failed. "..err
+			local err = "::RunBatch:: Call upgrade_app failed. "..err
 			log.error(err)
 		end
 	end,
@@ -96,7 +96,7 @@ local batch_env = {
 			version = version,
 		})
 		if not r then
-			local err = "Call upgrade_ext failed. "..err
+			local err = "::RunBatch:: Call upgrade_ext failed. "..err
 			log.error(err)
 		end
 	end,
@@ -114,21 +114,21 @@ local batch_env = {
 			skynet = skynet_args,
 		})
 		if not r then
-			local err = "Call upgrade_core failed. "..err
+			local err = "::RunBatch:: Call upgrade_core failed. "..err
 			log.error(err)
 		end
 	end,
 	TEST = function(...)
 		print(...)
-		log.debug(...)
+		log.debug("::RunBatch::", ...)
 	end,
 	LOG = function(level, ...)
-		log[level](...)
+		log[level]("::RunBatch::", ...)
 	end,
 }
 
 skynet.start(function()
-	log.notice("Batch script: ", batch_id)
+	log.notice("::RunBatch:: Batch script: ", batch_id)
 	local script = arg.n == 2 and arg[2] or datacenter.get("BATCH", batch_id, "script")
 	assert(script)
 
@@ -136,13 +136,13 @@ skynet.start(function()
 	local f, err = load(script, nil, "bt", batch_env)
 	local cloud = snax.queryservice('cloud')
 	if not f then
-		local err = "Loading batch script failed. "..err
+		local err = "::RunBatch:: Loading batch script failed. "..err
 		log.error(err)
 		cloud.post.action_result("batch_script", batch_id, false, err)
 	else
 		local r, err = xpcall(f, debug.traceback)
 		if not r then
-			log.warning("BATCH run error", err)
+			log.warning("::RunBatch:: BATCH run error", err)
 			cloud.post.action_result("batch_script", batch_id, false, err)
 		else
 			cloud.post.action_result("batch_script", batch_id, true, tasks)
