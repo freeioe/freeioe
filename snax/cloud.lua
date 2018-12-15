@@ -88,10 +88,10 @@ local wildtopics = { "app/#", "sys/#", "output/#", "command/#" }
 --- MQTT Publish Message Handler
 local msg_handler = {
 	data = function(topic, data, qos, retained)
-		--log.trace('::CLOUD:: MSG.DATA', topic, data, qos, retained)
+		--log.trace('::CLOUD:: Data message:', topic, data, qos, retained)
 	end,
 	app = function(topic, data, qos, retained)
-		log.info('::CLOUD:: MSG.APP', topic, data, qos, retained)
+		log.trace('::CLOUD:: App control:', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -136,7 +136,7 @@ local msg_handler = {
 		end
 	end,
 	sys = function(topic, data, qos, retained)
-		log.info('::CLOUD:: MSG.SYS', topic, data, qos, retained)
+		log.trace('::CLOUD:: System control:', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -202,13 +202,14 @@ local msg_handler = {
 		end
 	end,
 	output = function(topic, data, qos, retained)
-		--log.trace('::CLOUD:: MSG.OUTPUT', topic, data, qos, retained)
+		log.trace('::CLOUD:: Device output:', topic, data, qos, retained)
 		local oi = cjson.decode(data)
 		if oi and oi.id then
 			snax.self().post.output_to_device(oi.id, oi.data)
 		end
 	end,
 	command = function(topic, data, qos, retained)
+		log.trace('::CLOUD:: Device command:', topic, data, qos, retained)
 		local cmd = cjson.decode(data)
 		if cmd and cmd.id then
 			snax.self().post.command_to_device(cmd.id, cmd.data)
@@ -220,7 +221,7 @@ local msg_handler = {
 -- MQTT Message Callback
 --
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	log.notice("::CLOUD::: msg_callback", packet_id, topic, data, qos, retained)
+	log.info("::CLOUD::: message:", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		log.error("::CLOUD:: msg_callback recevied incorrect topic message")
