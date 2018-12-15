@@ -34,7 +34,7 @@ function response.start(name, conf)
 
 	local r, err = inst.req.start()
 	if not r then
-		local info = "Failed to start app "..name..". Error: "..tostring(err)
+		local info = "::AppMgr:: Failed to start app "..name..". Error: "..tostring(err)
 		log.error(info)
 		fire_exception_event(name, "Failed to start app "..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")
@@ -63,7 +63,7 @@ function response.stop(name, reason)
 
 	if app.inst then
 		local force_kill = function()
-			log.warning("Force to kill app "..name.." as it is not closed within 10 seconds")
+			log.warning("::AppMgr:: Force to kill app "..name.." as it is not closed within 10 seconds")
 			skynet.kill(app.inst.handle)
 
 			app.inst = nil
@@ -175,7 +175,7 @@ function response.get_channel(name)
 end
 
 function accept.app_modified(inst, from)
-	log.warning("Application has modified from "..from)
+	log.warning("::AppMgr:: Application has modified from "..from)
 	local app = applist[inst]
 	if not app then
 		return
@@ -219,7 +219,7 @@ function accept.app_event(event, inst_name, ...)
 end
 
 function accept.app_heartbeat(inst, time)
-	--log.debug("Application heartbeat received from", inst, time)
+	--log.debug("::AppMgr:: Application heartbeat received from", inst, time)
 	if applist[inst] then
 		applist[inst].last = time or skynet.time()
 	end
@@ -256,7 +256,7 @@ function accept.unlisten(handle)
 end
 
 function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
-	log.trace("AppMgr fire_event", app_name, sn, level, type_, info, data, timestamp)
+	log.trace("::AppMgr:: fire_event", app_name, sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)
 	local event_chn = mc_map.EVENT
 	if event_chn then
@@ -267,7 +267,7 @@ function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
 end
 
 function init(...)
-	log.info("AppMgr service starting...")
+	log.info("::AppMgr:: service starting...")
 
 	local chn = mc.new()
 	dc.set("MC", "APP", "DATA", chn.channel)
@@ -330,5 +330,5 @@ function exit(...)
 	end
 	mc_map = {}
 	listeners = {}
-	log.info("AppMgr service closed!")
+	log.info("::AppMgr:: service closed!")
 end

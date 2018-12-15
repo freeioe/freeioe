@@ -4,15 +4,17 @@ local formatter = require 'log.formatter.concat'.new()
 
 local logger = class("APP_MGR_LOG")
 
-function logger:initialize(log)
+function logger:initialize(log, name)
 	self._log = log
 	self._log_buf = {}
+	self._name = name
 end
 
-function logger:log(level, ...)
+function logger:log(level, info, ...)
 	--lvl = log.lvl2number(level)
 
-	local s = formatter(...)
+	local info = self._name and '::'..self._name..':: '..info or info
+	local s = formatter(info, ...)
 	local now = os.time()
 	local los = self._log_buf[level]
 	if los then
@@ -44,10 +46,11 @@ function logger:log(level, ...)
 	return f(...)
 end
 
-function logger:debug_log(level, ...)
+function logger:debug_log(level, info, ...)
+	local info = self._name and '::'..self._name..':: '..info or info
 	--lvl = log.lvl2number(level)
 	local f = assert(self._log[level])
-	return f(...)
+	return f(info, ...)
 end
 
 local function make_func(logger, name)

@@ -202,7 +202,7 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._app_name = app_name
 	self._data_api = api:new(app_name, mgr_snax)
 	self._app_sn = nil
-	self._logger = logger:new(log)
+	self._logger = logger:new(log, app_name)
 end
 
 function sys:cleanup()

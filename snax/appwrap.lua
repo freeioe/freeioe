@@ -3,11 +3,11 @@ local snax = require 'skynet.snax'
 local cache = require "skynet.codecache"
 local app_sys = require 'app.sys'
 local event = require 'app.event'
-local log = require 'utils.log'
 local ioe = require 'ioe'
 
 local app = nil
 local app_name = "UNKNOWN"
+local app_log = nil
 local mgr_snax = nil
 local sys_api = nil
 
@@ -62,7 +62,7 @@ local function work_proc()
 			timeout = t // 10
 		else
 			if err then
-				log.warning('APP.run return error', err)
+				app_log:warning('App.run return error:', err)
 				fire_exception_event('Application run loop error!', { err=err }, event.LEVEL_WARNING)
 				timeout = timeout * 2
 
@@ -134,26 +134,26 @@ end
 
 function accept.app_post(msg, ...)
 	if not app then
-		log.warning("app is nil when fire event", msg)
+		app_log:warning("app is nil when fire event", msg)
 		return false
 	end
 
 	if app.accept then
 		local r, err = protect_call(app, 'accept', msg, ...)
 		if not r and err then
-			log.warning("Failed to call accept function in application for msg", msg)
-			log.trace(err)
+			app_log:warning("Failed to call accept function for msg", msg)
+			app_log:trace(err)
 		end
 	else
 		local msg = 'on_post_'..msg
 		if app[msg] then
 			local r, err = protect_call(app, msg, ...)
 			if not r and err then
-				log.warning("Failed to call accept function in application for msg", msg)
-				log.trace(err)
+				app_log:warning("Failed to call accept function in application for msg", msg)
+				app_log:trace(err)
 			end
 		else
-			log.warning("no handler for post message "..msg)
+			app_log:warning("no handler for post message "..msg)
 		end
 	end
 end
@@ -165,14 +165,15 @@ function init(name, conf, mgr_handle, mgr_type)
 	app_name = name
 	mgr_snax = snax.bind(mgr_handle, mgr_type)
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
+	app_log = sys_api:logger()
 
-	log.info("App "..app_name.." starting")
+	app_log:info("App starting...")
 	package.path = package.path..";./ioe/apps/"..name.."/?.lua;./ioe/apps/"..name.."/?.luac"..";./ioe/apps/"..name.."/lualib/?.lua;./ioe/apps/"..name.."/lualib/?.luac"
 	package.cpath = package.cpath..";./ioe/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
 	local f, err = io.open("./ioe/apps/"..name.."/app.lua", "r")
 	if not f then
-		log.warning("Application does not exits!, Try to install it")	
+		app_log:warning("App's app.lua does not exits!, Try to install it")
 		skynet.call(".upgrader", "lua", "install_missing_app", name)
 		return nil, "App does not exits!"
 	end
@@ -180,7 +181,7 @@ function init(name, conf, mgr_handle, mgr_type)
 
 	local r, err = skynet.call(".ioe_ext", "lua", "install_depends", name)
 	if not r then
-		log.error("Failed to install depends for ", name, "error:", err)
+		app_log:error("Failed to install depends for ", name, "error:", err)
 		local info = "Failed to start app. install depends failed"
 		fire_exception_event(info, {ext=name, err=err})
 		return nil, info
@@ -189,14 +190,14 @@ function init(name, conf, mgr_handle, mgr_type)
 	local lf, err = loadfile("./ioe/apps/"..name.."/app.lua")
 	if not lf then
 		local info = "Loading app failed."
-		log.error(info, err)
+		app_log:error(info, err)
 		fire_exception_event(info, {err=err})
 		return nil, err
 	end
 	local r, m = xpcall(lf, debug.traceback)
 	if not r then
 		local info = "Loading app failed."
-		log.error(info, m)
+		app_log:error(info, m)
 		fire_exception_event(err, {err=m})
 		return nil, m
 	end
@@ -204,18 +205,18 @@ function init(name, conf, mgr_handle, mgr_type)
 	if m.API_VER and (m.API_VER < app_sys.API_MIN_VER or m.API_VER > app_sys.API_VER) then
 		local s = string.format("API Version required is out of range. Required: %d. Current %d-%d",
 								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
-		log.error(s)
+		app_log:error(s)
 		fire_exception_event(s, {sys_min_ver=app_sys.API_MIN_VER, sys_ver=ap_sys.API_VER, ver=m.API_VER})
 		return nil, s
 	else
 		if not m.API_VER then
-			log.warning("API Version is not specified, please use it only for development")
+			app_log:warning("API Version is not specified, please use it only for development")
 		end
 	end
 
 	r, err = xpcall(m.new, debug.traceback, m, app_name, sys_api, conf)
 	if not r then
-		log.error("Create App instance failed.", err)
+		app_log:error("Create App instance failed.", err)
 		fire_exception_event("Create App instance failed.", {err=err})
 		return nil, err
 	end
@@ -223,15 +224,15 @@ function init(name, conf, mgr_handle, mgr_type)
 end
 
 function exit(...)
-	log.info("App "..app_name.." closing...")
+	app_log:info("App closing...")
 	if cancel_ping_timer then
 		cancel_ping_timer()
 		cancel_ping_timer = nil
 	end
 	local r, err = on_close(...)
 	if not r then
-		log.error(err or 'Unknown closed error')
+		app_log:error(err or 'Unknown closed error')
 		--fire_exception_event("App closed failure.", {err=err})
 	end
-	log.info("App "..app_name.." closed!")
+	app_log:info("App closed!")
 end
