@@ -331,7 +331,7 @@ local function connect_buffer_service(enable)
 	local obj = snax.self()
 	if enable then
 		buffer.post.listen(obj.handle, obj.type)
-		appmgr.post.listen(obj.handle, obj.type, true)
+		appmgr.post.listen(obj.handle, obj.type, true) -- Listen on application events
 	else
 		logger.post.unlisten(obj.handle)
 		appmgr.post.unlisten(obj.handle)

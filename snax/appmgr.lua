@@ -238,6 +238,9 @@ function accept.app_heartbeat_check()
 end
 
 ---- for event stuff
+-- @handle source snax handle
+-- @handle source snax type
+-- @fire_list fire application list inside post
 function accept.listen(handle, type, fire_list)
 	local snax_inst = snax.bind(handle, type)
 	listeners[handle] = snax_inst

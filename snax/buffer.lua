@@ -171,7 +171,7 @@ local function connect_log_server(enable)
 	if enable then
 		logger.post.listen(obj.handle, obj.type)
 		skynet.call(".logger", "lua", "listen", obj.handle, obj.type)
-		appmgr.post.listen(obj.handle, obj.type, true)
+		appmgr.post.listen(obj.handle, obj.type, true) --- Listen on application events
 	else
 		logger.post.unlisten(obj.handle)
 		skynet.call(".logger", "lua", "unlisten", obj.handle)

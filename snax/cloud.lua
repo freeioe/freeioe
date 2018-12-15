@@ -1357,7 +1357,7 @@ function init()
 
 		local appmgr = snax.queryservice('appmgr')
 		local obj = snax.self()
-		appmgr.post.listen(obj.handle, obj.type)
+		appmgr.post.listen(obj.handle, obj.type) -- Listen application event
 	end)
 end
 
