@@ -195,7 +195,7 @@ local msg_handler = {
 			snax.self().post.data_flush(args.id)
 		end
 		if action == "data/snapshot" then
-			snax.self().post.fire_data_snapshot()
+			snax.self().post.fire_data_snapshot(args.id)
 		end
 		if action == "data/query" then
 			snax.self().post.data_query(args.id, args.data)
@@ -964,7 +964,7 @@ end
 ---
 -- Fire data snapshot (skip peroid buffer if zlib loaded)
 ---
-function accept.fire_data_snapshot()
+function accept.fire_data_snapshot(id)
 	local now = skynet.time()
 	if zlib_loaded then
 		local val_list = {}
@@ -977,7 +977,9 @@ function accept.fire_data_snapshot()
 			publish_data(key, value, timestamp or now, quality or 0)
 		end)
 	end
-	snax.self().post.action_result('input', id, r, err)
+	if id then
+		snax.self().post.action_result('input', id, true)
+	end
 end
 
 ---
