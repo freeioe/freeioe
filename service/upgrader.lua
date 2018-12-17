@@ -25,9 +25,17 @@ local function get_ioe_dir()
 	return os.getenv('IOE_DIR') or lfs.currentdir().."/.."
 end
 
+local reserved_list = { 
+	"ioe", "ioe_frpc", "ioe_symlink", 
+	"UBUS", "CLOUD", "AppMgr", "CFG", "LWF", "EXT", 
+	"RunBatch", "BUFFER", "UPGRADER"
+}
+
 local function is_inst_name_reserved(inst)
-	if inst == 'ioe' or inst == 'ioe_frpc' or inst == 'ioe_symlink' then
-		return true
+	for _, v in ipairs(reserved_list) do
+		if v == inst then
+			return true
+		end
 	end
 end
 

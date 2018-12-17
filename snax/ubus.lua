@@ -198,7 +198,7 @@ function init(...)
 	log.notice("::UBUS:: System ubus service started!")
 	skynet.fork(function()
 		api = app_api:new('UBUS')
-		api:set_handler(Handler, true)
+		api:set_handler(Handler)
 	end)
 end
 
