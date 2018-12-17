@@ -52,4 +52,4 @@ v1.2.3 ()
 ------------------
 * Improve ubus service
 * Fixed app create event assert
-
+* Added log prefix for all services and apps
