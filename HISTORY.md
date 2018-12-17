@@ -53,3 +53,5 @@ v1.2.3 ()
 * Improve ubus service
 * Fixed app create event assert
 * Added log prefix for all services and apps
+* Added more reserved app instance names for log prefix
+* Support download application via websocket (VSCode extension)

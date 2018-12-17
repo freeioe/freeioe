@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 local snax = require "skynet.snax"
 local socket = require "skynet.socket"
+local crypt = require 'skynet.crypt'
 local ioe = require 'ioe'
 local websocket = require "websocket"
 local httpd = require "http.httpd"
@@ -127,8 +128,8 @@ function handler.on_message(ws, message)
 			if not r then
 				log.error(string.format("::WS:: Call msg_handler[%s]", msg.code), result)
 				return client:send({
-					id = id,
-					code = code,
+					id = msg.id,
+					code = msg.code,
 					data = {
 						result = false,
 						message = result
@@ -207,6 +208,26 @@ function msg_handler.app_stop(client, id, code, data)
 	local appmgr = snax.queryservice('appmgr')
 	local r, err = appmgr.req.stop(data.inst, data.reason)
 	return __fire_result(client, id, code, r, err)
+end
+
+function msg_handler.app_download(client, id, code, data)
+	local post_ops = app_file_editor.post_ops
+	local inst = data.inst
+	local version = tonumber(data.version)
+	local path, err = post_ops.pack_app(inst, version)
+	if not path then
+		return __fire_result(client, id, code, false, err)
+	end
+
+	local f, err = io.open(app_file_editor.app_pack_path..path, "rb")
+	if not f then
+		return __fire_result(client, id, code, false, err)
+	end
+
+	local data = f:read('*a')
+	f:close()
+	local content = crypt.base64encode(data)
+	return client:send({id = id, code = code, data = { result = true, content = content}})
 end
 
 function msg_handler.app_list(client, id, code, data)

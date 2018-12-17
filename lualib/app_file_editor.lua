@@ -1,4 +1,5 @@
 local snax = require 'skynet.snax'
+local dc = require 'skynet.datacenter'
 local uuid = require 'uuid'
 local lfs = require 'lfs'
 local ioe = require 'ioe'
@@ -271,4 +272,5 @@ local post_ops = {
 return {
 	get_ops = get_ops,
 	post_ops = post_ops,
+	app_pack_path = pack_target_path,
 }

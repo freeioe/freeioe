@@ -20,9 +20,8 @@ return {
 		ngx.req.read_body()
 		local post = ngx.req.get_post_args()
 		local inst = post.app
-		local version = tonumber(post.version) or uuid.new()
-		assert(inst and version)
-		assert(string.len(inst) > 0)
+		local version = tonumber(post.version)
+		assert(inst and string.len(inst) > 0)
 		local r, err = afe.post_ops.pack_app(inst, version)
 
 		if r then
