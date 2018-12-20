@@ -1,10 +1,10 @@
 --- Load configuration
 -- conf_cfg.port
 --
-local getopt = require 'utils.getopt'
+local alt_getopt = require 'alt_getopt'
 local log = require 'utils.log'
 
-local arg = arg or {}
+local arg = arg or {...}
 local log_trace = log.trace
 local log_info = log.info
 
@@ -55,7 +55,7 @@ end
 -- @tparam string opt_sub_key default option table takes conf_(.+), by setting this it will be conf_<name>_(.+)
 local function load_cfg(name, opts, no_name_replace, opt_sub_key)
 	--- parse opts
-	local opts = opts or getopt(arg, 'c')
+	local opts = opts or alt_getopt.get_opts(arg, 'c:', {conf= 'c'})
 	--- loading conf.logger.lua
 	local pkg = 'conf.'..(opts.c or opts.conf or name or '__error')
 	if no_name_replace then
