@@ -106,7 +106,7 @@ local batch_env = {
 			post_action_result('app', id, false, "Version is required!")
 			return 
 		end
-		local no_ack = need_ack and true or false
+		local no_ack = not need_ack
 		local skynet_args = skynet_version and {version=skynet_version} or nil
 		local r, err = skynet.call(".upgrader", "lua", "upgrade_core", id, {
 			version = version,

@@ -44,6 +44,9 @@ function api:version()
 	end
 end
 
+---
+-- Get application configuration/template data by version
+--
 function api:data(version)
 	local version = version
 	if type(version) == 'number' then

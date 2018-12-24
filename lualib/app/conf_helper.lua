@@ -67,7 +67,7 @@ function helper:_real_fetch()
 		local not_finished = false
 		for _, tpl in ipairs(templates) do
 			if not self._templates[tpl.name] then
-				local r, version = self:download_tpl(tpl)
+				local r, version = self:_download_tpl(tpl)
 				if r and version == tonumber(tpl.ver) then
 					self._templates[tpl.name] = {
 						id = tpl.id,
@@ -135,7 +135,7 @@ function helper:devices()
 	return devices
 end
 
-function helper:download_tpl(tpl)
+function helper:_download_tpl(tpl)
 	log.debug("conf_helper download template", tpl.id, tpl.name, tpl.ver)
 	local api = self._sys:conf_api(tpl.id, self._templates_ext, self._templates_dir)
 	local data, version = api:data(tpl.ver)
