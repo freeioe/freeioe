@@ -29,7 +29,7 @@ end
 -- Check application configuration update
 -- @treturn number(int) Latest version
 function api:version()
-	local url = '/conf_center/app_conf_version'
+	local url = '/conf_center/get_latest_version'
 	local query = { sn = self._sn, app = self._app, conf = self._conf }
 	local status, header, body = httpdown.get(self._host, url, api_header, query)
 	log.debug('conf_api.version', self._host..url, status, body or header)
