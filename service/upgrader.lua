@@ -53,6 +53,12 @@ local function action_result(channel, id, result, info, ...)
 	return result, ...
 end
 
+local function fire_warning_event(info, data)
+	local appmgr = snax.queryservice("appmgr")
+	local event = require 'app.event'
+	appmgr.post.fire_event('ioe', ioe.id(), event.LEVEL_WARNING, event.EVENT_SYS, info, data)
+end
+
 local function xpcall_ret(channel, id, ok, ...)
 	if ok then
 		return action_result(channel, id, ...)
@@ -687,6 +693,8 @@ local function rollback_co()
 
 	local do_rollback = nil
 	do_rollback = function()
+		local wd = { version=sysinfo.version(), skynet_version=sysinfo.skynet_version() }
+		fire_warning_event('System will be rollback now!', wd)
 		log.error("::UPGRADER:: System will be rollback now!")
 		aborting = true
 		skynet.sleep(100)
