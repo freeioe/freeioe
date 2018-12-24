@@ -39,7 +39,11 @@ function api:version()
 		if not msg.message then
 			return nil, "No version found!"
 		end
-		return math.tointeger(msg.message.version)
+		if type(msg.message.version) == 'table' then
+			return math.tointeger(msg.message.version)
+		else
+			return math.tointeger(msg.message)
+		end
 	else
 		return nil, body
 	end
