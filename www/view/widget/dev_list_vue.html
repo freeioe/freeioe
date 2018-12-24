@@ -12,6 +12,30 @@
 {-raw-}
 		<div class="content">
 			<div class="accordion">
+				<div v-if="dev.props.meta">
+					<div class="title">
+						<i class="dropdown icon"></i>
+						{{_("Meta Information")}}
+					</div>
+					<div class="content">
+						<table class="ui celled basic table">
+							<thead>
+								<tr>
+									<th>{{_("Name")}}</th>
+									<th>{{_("Value")}}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{-raw-}
+								<tr v-for="(value, key, index) in dev.props.meta">
+									<td>{{key}} </td>
+									<td>{{value}} </td>
+								</tr>
+								{-raw-}
+							</tbody>
+						</table>
+					</div>
+				</div>
 				<div v-if="dev.props.inputs">
 					<div class="title">
 						<i class="dropdown icon"></i>

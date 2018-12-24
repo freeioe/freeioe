@@ -271,6 +271,9 @@ msgstr ""
 msgid "FreeIOE System API"
 msgstr "FreeIOE系统接口"
 
+msgid "FreeIOE Uptime"
+msgstr "FreeIOE 运行时长"
+
 msgid "FreeIOE device in not in beta mode!"
 msgstr "FreeIOE设备并不是Beta模式!"
 
@@ -352,6 +355,9 @@ msgstr "日志"
 msgid "MQTT"
 msgstr ""
 
+msgid "Meta Information"
+msgstr "元信息"
+
 msgid "More Information"
 msgstr "更多信息"
 
@@ -361,6 +367,9 @@ msgstr "名称"
 msgid "New Application"
 msgstr "新应用"
 
+msgid "New Instance Name"
+msgstr "新示例名"
+
 msgid "New application"
 msgstr "新应用"
 
@@ -369,6 +378,9 @@ msgstr "否"
 
 msgid "OS"
 msgstr "操作系统"
+
+msgid "OS Uptime"
+msgstr "OS 运行时长"
 
 msgid "Offline"
 msgstr "离线"
@@ -441,6 +453,12 @@ msgstr "关闭Web映射"
 
 msgid "Remove SymLink Connect"
 msgstr "删除SymLink连接"
+
+msgid "Rename Application"
+msgstr "重命名应用"
+
+msgid "Rename application"
+msgstr "重命名应用"
 
 msgid "Restart"
 msgstr "重启"
@@ -583,9 +601,6 @@ msgstr "翻译中心"
 msgid "UNAME"
 msgstr ""
 
-msgid "UPTIME"
-msgstr "启动时间"
-
 msgid "UUID Module"
 msgstr "UUID模块"
 
@@ -657,6 +672,9 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "UPTIME"
+#~ msgstr "启动时间"
 
 #~ msgid "PKG"
 #~ msgstr "软件包"

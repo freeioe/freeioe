@@ -362,6 +362,10 @@ msgid "FreeIOE System API"
 msgstr ""
 
 
+msgid "FreeIOE Uptime"
+msgstr ""
+
+
 msgid "FreeIOE device in not in beta mode!"
 msgstr ""
 
@@ -470,6 +474,10 @@ msgid "MQTT"
 msgstr ""
 
 
+msgid "Meta Information"
+msgstr ""
+
+
 msgid "More Information"
 msgstr ""
 
@@ -482,6 +490,10 @@ msgid "New Application"
 msgstr ""
 
 
+msgid "New Instance Name"
+msgstr ""
+
+
 msgid "New application"
 msgstr ""
 
@@ -491,6 +503,10 @@ msgstr ""
 
 
 msgid "OS"
+msgstr ""
+
+
+msgid "OS Uptime"
 msgstr ""
 
 
@@ -587,6 +603,14 @@ msgstr ""
 
 
 msgid "Remove SymLink Connect"
+msgstr ""
+
+
+msgid "Rename Application"
+msgstr ""
+
+
+msgid "Rename application"
 msgstr ""
 
 
@@ -775,10 +799,6 @@ msgstr ""
 
 
 msgid "UNAME"
-msgstr ""
-
-
-msgid "UPTIME"
 msgstr ""
 
 
