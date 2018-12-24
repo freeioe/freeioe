@@ -16,6 +16,10 @@ function helper:initialize(sys_api, conf, templates_ext, templates_dir, template
 
 	self._templates = {}
 	self._devices = {}
+
+	if not lfs.attributes(self._templates_dir, "mode") then
+		lfs.mkdir(self._templates_dir)
+	end
 end
 
 function helper:_load_conf()

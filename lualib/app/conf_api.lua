@@ -4,6 +4,7 @@ local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local ioe = require 'ioe'
+local lfs = require 'lfs'
 
 local api = class("APP_CONF_CENTER_API")
 
@@ -23,6 +24,9 @@ function api:initialize(app, conf, ext, dir)
 	self._conf = conf
 	self._ext = ext or 'csv'
 	self._dir = dir or 'tpl'
+	if not lfs.attributes(self._dir, "mode") then
+		lfs.mkdir(self._dir)
+	end
 end
 
 ---
