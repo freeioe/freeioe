@@ -1,6 +1,5 @@
 local class = require 'middleclass'
 local skynet = require 'skynet'
-local conf_api = require 'app.conf_api'
 local log = require 'utils.log'
 local cjson = require 'cjson.safe'
 

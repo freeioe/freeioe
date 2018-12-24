@@ -3,6 +3,7 @@ local cjson = require 'cjson.safe'
 local httpdown = require 'httpdown'
 local log = require 'utils.log'
 local class = require 'middleclass'
+local ioe = require 'ioe'
 
 local api = class("APP_CONF_CENTER_API")
 
@@ -17,7 +18,7 @@ local api_header = {
 -- @tparam string dir Application template file saving directory. full path.
 function api:initialize(app, conf, ext, dir)
 	-- Service host (ip or domain)
-	self._host = datacenter.wait("CLOUD", "CNF_HOST_URL")
+	self._host = ioe.cnf_host_url() --datacenter.wait("CLOUD", "CNF_HOST_URL")
 	self._app = app
 	self._conf = conf
 	self._ext = ext or 'csv'

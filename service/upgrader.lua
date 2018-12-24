@@ -689,7 +689,7 @@ local function check_rollback()
 end
 
 local function rollback_co()
-	log.notice("::UPGRADER:: Rollback will be applied in five minutes")
+	log.warning("::UPGRADER:: Rollback will be applied in five minutes")
 
 	local do_rollback = nil
 	do_rollback = function()
