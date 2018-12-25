@@ -32,6 +32,7 @@ function response.start(name, conf)
 	local s = snax.self()
 	local inst, err = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
 	app.inst = inst
+	app.last = skynet.time()
 
 	local r, err = inst.req.start()
 	if not r then
@@ -238,7 +239,7 @@ end
 function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
-			if v.last - skynet.time() > 60 then
+			if skynet.time() - v.last > 60 then
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
 				snax.self().post.fire_event(sys_app, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, 'heartbeat timeout', data)
 				snax.self().req.restart(k, 'heartbeat timeout')
