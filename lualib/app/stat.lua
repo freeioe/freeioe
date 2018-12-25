@@ -1,4 +1,5 @@
 local skynet = require 'skynet'
+local ioe = require 'ioe'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
@@ -72,7 +73,7 @@ function stat:inc(prop, value)
 	value = value + self:get(prop)
 
 	dc.set('STAT', self._sn, self._name, prop, value)
-	self._stat_chn:publish(self._app_name, self._sn, self._name, prop, value, skynet.time())
+	self._stat_chn:publish(self._app_name, self._sn, self._name, prop, value, ioe.time())
 	return true
 end
 
@@ -84,7 +85,7 @@ function stat:set(prop, value)
 	end
 
 	dc.set('STAT', self._sn, self._name, prop, value)
-	self._stat_chn:publish(self._app_name, self._sn, self._name, prop, value, skynet.time())
+	self._stat_chn:publish(self._app_name, self._sn, self._name, prop, value, ioe.time())
 	return true
 end
 

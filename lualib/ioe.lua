@@ -1,3 +1,4 @@
+local skynet = require 'skynet'
 local dc = require 'skynet.datacenter'
 
 local _M = {}
@@ -50,5 +51,8 @@ end
 _M.set_cfg_auto_upload = function(value)
 	dc.set('SYS', 'CFG_AUTO_UPLOAD', value)
 end
+
+_M.time = skynet.time
+_M.starttime = skynet.starttime
 
 return _M

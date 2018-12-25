@@ -397,12 +397,12 @@ local function load_cov_conf()
 			local gap = nil
 			if zlib_loaded then
 				local list = {}
-				gap = cov:timer(skynet.time(), function(key, value, timestamp, quality) 
+				gap = cov:timer(ioe.time(), function(key, value, timestamp, quality) 
 					list[#list+1] = {key, timestamp, value, quality}
 				end)
 				publish_data_list(list)
 			else
-				gap = cov:timer(skynet.time(), publish_data)
+				gap = cov:timer(ioe.time(), publish_data)
 			end
 
 			--- Make sure sleep not less than min gap
@@ -432,12 +432,12 @@ local function load_cov_conf()
 			local gap = nil
 			if zlib_loaded then
 				local list = {}
-				gap = stat_cov:timer(skynet.time(), function(key, value, timestamp, quality)
+				gap = stat_cov:timer(ioe.time(), function(key, value, timestamp, quality)
 					list[#list+1] = {key, timestamp, value, quality}
 				end)
 				publish_stat_list(list)
 			else
-				gap = stat_cov:timer(skynet.time(), publish_stat)
+				gap = stat_cov:timer(ioe.time(), publish_stat)
 			end
 
 			--- Make sure sleep not less than min gap
@@ -596,7 +596,7 @@ local Handler = {
 		end
 
 		local key = table.concat({sn, stat, prop}, '/')
-		stat_cov:handle(publish_stat, key, value, timestamp or skynet.time(), quality or 0)
+		stat_cov:handle(publish_stat, key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
 		log.trace('::CLOUD:: on_event', app, sn, level, type_, info) --, data, timestamp)
@@ -625,7 +625,7 @@ local Handler = {
 		end
 
 		local key = table.concat({sn, input, prop}, '/')
-		cov:handle(publish_data, key, value, timestamp or skynet.time(), quality or 0)
+		cov:handle(publish_data, key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
 		log.trace('::CLOUD:: on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
@@ -635,7 +635,7 @@ local Handler = {
 
 		local key = table.concat({sn, input, prop}, '/')
 		--cov:handle(publish_data_no_pb, key, value, timestamp, quality)
-		publish_data_no_pb(key, value, timestamp or skynet.time(), quality or 0)
+		publish_data_no_pb(key, value, timestamp or ioe.time(), quality or 0)
 	end
 }
 
@@ -965,7 +965,7 @@ end
 -- Fire data snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_data_snapshot(id)
-	local now = skynet.time()
+	local now = ioe.time()
 	if zlib_loaded then
 		local val_list = {}
 		cov:fire_snapshot(function(key, value, timestamp, quality)
@@ -986,7 +986,7 @@ end
 -- Fire stat snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_stat_snapshot()
-	local now = skynet.time()
+	local now = ioe.time()
 	if zlib_loaded then
 		local val_list = {}
 		stat_cov:fire_snapshot(function(key, value, timestamp, quality)
@@ -1122,7 +1122,7 @@ function accept.app_list(id, args)
 	if apps then
 		local appmgr = snax.queryservice('appmgr')
 		local app_list = appmgr.req.list()
-		local now_time = skynet.time()
+		local now_time = ioe.time()
 		for k, v in pairs(apps) do
 			local app = app_list[k]
 			if app and app.inst then
@@ -1325,7 +1325,7 @@ function accept.action_result(action, id, result, message)
 			id = id,
 			result = result,
 			message = message,
-			timestamp = skynet.time(),
+			timestamp = ioe.time(),
 			timestamp_str = os.date(),
 		}
 		if result then

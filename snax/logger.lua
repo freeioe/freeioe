@@ -1,5 +1,6 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
+local ioe = require 'ioe'
 
 local LOG
 local listeners = {}
@@ -11,7 +12,7 @@ function accept.log(lvl, ...)
 	end
 	f(...)
 	for handle, srv in pairs(listeners) do
-		srv.post.log(skynet.time(), lvl, ...)
+		srv.post.log(ioe.time(), lvl, ...)
 	end
 end
 

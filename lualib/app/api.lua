@@ -1,5 +1,6 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
+local ioe = require 'ioe'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
@@ -240,13 +241,13 @@ end
 
 function api:_dump_comm(sn, dir, ...)
 	assert(sn)
-	return self._comm_chn:publish(self._app_name, sn, dir, skynet.time(), ...)
+	return self._comm_chn:publish(self._app_name, sn, dir, ioe.time(), ...)
 end
 
 function api:_fire_event(sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)
 	local type_ = app_event.type_to_string(type_)
-	return self._event_chn:publish(self._app_name, sn, level, type_, info, data or {}, timestamp or skynet.time())
+	return self._event_chn:publish(self._app_name, sn, level, type_, info, data or {}, timestamp or ioe.time())
 end
 
 return api

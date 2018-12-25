@@ -229,7 +229,7 @@ function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
 			if v.last - skynet.time() > 60 then
-				local data = {app=k, inst=v.inst, last=v.last, time=skynet.time()}
+				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
 				snax.self().post.fire_event(sys_app, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, 'heartbeat timeout', data)
 				snax.self().req.restart(k, 'heartbeat timeout')
 			end
@@ -261,7 +261,7 @@ function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
 	local event_chn = mc_map.EVENT
 	if event_chn then
 		skynet.timeout(200, function()
-			event_chn:publish(app_name, sn, level, type_, info, data or {}, timestamp or skynet.time())
+			event_chn:publish(app_name, sn, level, type_, info, data or {}, timestamp or ioe.time())
 		end)
 	end
 end

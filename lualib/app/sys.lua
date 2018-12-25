@@ -27,7 +27,7 @@ function sys:dump_comm(sn, dir, ...)
 end
 
 function sys:fire_event(sn, level, type_, info, data, timestamp)
-	return self._data_api:_fire_event(sn or self:app_sn(), level, type_, info, data or {}, timestamp or skynet.time())
+	return self._data_api:_fire_event(sn or self:app_sn(), level, type_, info, data or {}, timestamp or ioe.time())
 end
 
 function sys:fork(func, ...)
@@ -75,12 +75,12 @@ end
 
 -- seconds (UTC now)
 function sys:time()
-	return skynet.time()
+	return ioe.time()
 end
 
 -- seconds (UTC system start time)
 function sys:start_time()
-	return skynet.starttime()
+	return ioe.starttime()
 end
 
 function sys:yield()

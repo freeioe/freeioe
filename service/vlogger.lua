@@ -1,6 +1,7 @@
 local skynet = require "skynet.manager"
 local snax = require 'skynet.snax'
 local log = require 'log'
+local ioe = require 'ioe'
 
 local LOG = nil
 local listeners = {}
@@ -29,7 +30,7 @@ skynet.register_protocol {
 		local content = string.format("[%08x]: %s", address, msg)
 		LOG.notice(content)
 		for handle, srv in pairs(listeners) do
-			srv.post.log(skynet.time(), 'notice', content)
+			srv.post.log(ioe.time(), 'notice', content)
 		end
 	end
 }

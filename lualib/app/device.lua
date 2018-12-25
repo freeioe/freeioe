@@ -1,4 +1,5 @@
 local skynet = require 'skynet'
+local ioe = require 'ioe'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
@@ -118,7 +119,7 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
-	local timestamp = timestamp or skynet.time()
+	local timestamp = timestamp or ioe.time()
 	local quality = quality or 0
 
 	dc.set('INPUT', self._sn, input, prop, {value=value, timestamp=timestamp, quality=quality})
@@ -132,7 +133,7 @@ function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	end
-	local timestamp = timestamp or skynet.time()
+	local timestamp = timestamp or ioe.time()
 	local quality = quality or 0
 
 	self._data_chn:publish('input_em', self._app_name, self._sn, input, prop, value, timestamp, quality)
@@ -148,7 +149,7 @@ end
 function device:set_output_prop(output, prop, value)
 	for _, v in ipairs(self._props.outputs or {}) do
 		if v.name == output then
-			local timestamp = skynet.time()
+			local timestamp = ioe.time()
 			dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
 			self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp)
 			return true
@@ -186,13 +187,13 @@ function device:flush_data()
 end
 
 function device:dump_comm(dir, ...)
-	return self._comm_chn:publish(self._app_name, self._sn, dir, skynet.time(), ...)
+	return self._comm_chn:publish(self._app_name, self._sn, dir, ioe.time(), ...)
 end
 
 function device:fire_event(level, type_, info, data, timestamp)
 	assert(level and type_ and info)
 	local type_ = app_event.type_to_string(type_)
-	return self._event_chn:publish(self._app_name, self._sn, level, type_, info, data or {}, timestamp or skynet.time())
+	return self._event_chn:publish(self._app_name, self._sn, level, type_, info, data or {}, timestamp or ioe.time())
 end
 
 function device:stat(name)
