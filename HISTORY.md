@@ -1,25 +1,37 @@
-v1.0.1 (2018-8-8)
------------
-* Fixed devices data infinitely.
-* Improved serial driver/channel.
 
-v1.0.0 (2018-8-1)
+---
+
+Release history
+
+
+v1.2.3 ()
 ------------------
 
-* First release version.
+* Improve ubus service
+* Fixed app create event assert
+* Added log prefix for all services and apps
+* Added more reserved app instance names for log prefix
+* Support download application via websocket (VSCode extension)
 
-v1.1.0 (2018-9-11)
+
+v1.2.2 (2018-12-11)
 ------------------
 
-* Support VS Code extension with WebSocket
-* Fixed a few bugs
+* Fixed ubus detection
 
-v1.1.1 (2018-9-25)
+
+v1.2.1 (2018-12-10)
+------------------
+* Fixed ubus call parameter issue
+
+
+v1.2.0 (2018-12-10)
 ------------------
 
-* Fixed beta flag reading issue
-* Reading system firmware/os version
-* Migrate cloud host to thingsroot.com
+* Support ubus based on lsocket
+* Create ubus service when OS is OpenWRT
+* Upload data within one second when connected to cloud
+
 
 v1.1.2 (2018-11-23)
 ------------------
@@ -33,25 +45,30 @@ v1.1.2 (2018-11-23)
 * Improving upgrader and ioe\_ext service
 * Bug fixes
 
-v1.2.0 (2018-12-10)
+
+v1.1.1 (2018-9-25)
 ------------------
 
-* Support ubus based on lsocket
-* Create ubus service when OS is OpenWRT
-* Upload data within one second when connected to cloud
+* Fixed beta flag reading issue
+* Reading system firmware/os version
+* Migrate cloud host to thingsroot.com
 
-v1.2.1 (2018-12-10)
-------------------
-* Fixed ubus call parameter issue
 
-v1.2.2 (2018-12-11)
+v1.1.0 (2018-9-11)
 ------------------
-* Fixed ubus detection
 
-v1.2.3 ()
+* Support VS Code extension with WebSocket
+* Fixed a few bugs
+
+
+v1.0.1 (2018-8-8)
+-----------
+* Fixed devices data infinitely.
+* Improved serial driver/channel.
+
+
+v1.0.0 (2018-8-1)
 ------------------
-* Improve ubus service
-* Fixed app create event assert
-* Added log prefix for all services and apps
-* Added more reserved app instance names for log prefix
-* Support download application via websocket (VSCode extension)
+
+* First release version.
+
