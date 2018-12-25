@@ -1,7 +1,7 @@
 
 ---
 
-Release history
+# Release history
 
 
 v1.2.3 ()
