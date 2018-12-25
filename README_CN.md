@@ -20,7 +20,7 @@ FreeIOE 开源社区.
 
 ### 文档
 
-* [FreeIOE 应用开发指南](https://freeioe.gitbooks.io/doc/)  
+* [FreeIOE 应用开发指南](https://freeioe.gitbook.io/doc/)  
 应用开发接口说明，以及应用开发入门介绍等。
 
 
@@ -52,7 +52,7 @@ FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 
 ## 购买FreeIOE 物联网智能网关
 
-* [冬笋ThingsLink智能网关](https://thingsroot.com/product/)
+* [冬笋ThingsLink智能网关](https://www.thingsroot.com/product/)
 * [旋思SymLink智能网关](http://www.symid.com/)
 
 
@@ -61,3 +61,7 @@ FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 * FreeIOE 新版本中有文件被移除，在升级时并未移除本地文件.
 > 1. 本地遗留有之前版本的一些文件，在新版中这些文件已经被删除
 > 2. 同名目录不能被文件或者软链接替换
+
+## 授权协议
+
+MIT

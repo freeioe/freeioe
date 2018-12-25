@@ -20,7 +20,7 @@ The discussion forum
 
 ### Documents
 
-* [FreeIOE Application Guide](https://freeioe.gitbooks.io/doc/)
+* [FreeIOE Application Guide](https://freeioe.gitbook.io/doc/)
 
 
 ### Examples
