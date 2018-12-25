@@ -31,6 +31,7 @@ function response.start(name, conf)
 
 	local s = snax.self()
 	local inst, err = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
+	app.inst = inst
 
 	local r, err = inst.req.start()
 	if not r then
@@ -38,10 +39,10 @@ function response.start(name, conf)
 		log.error(info)
 		fire_exception_event(name, "Failed to start app "..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")
+		app.inst = nil
 		return nil, info
 	end
 
-	app.inst = inst
 	app.last = skynet.time()
 
 	for handle, srv in pairs(listeners) do
@@ -192,8 +193,17 @@ end
 
 function accept.app_start(inst)
 	local v = dc.get("APPS", inst)
+	if not v then return end
 	skynet.fork(function()
 		snax.self().req.start(inst, v.conf or {})
+	end)
+end
+
+function accept.app_stop(inst, reason)
+	local v = dc.get("APPS", inst)
+	if not v then return end
+	skynet.fork(function()
+		snax.self().req.stop(inst, reason or 'stop application from accept.app_stop') 
 	end)
 end
 

@@ -200,14 +200,23 @@ end
 
 function msg_handler.app_start(client, id, code, data)
 	local appmgr = snax.queryservice('appmgr')
-	local r, err = appmgr.req.start(data.inst)
+	--[[
+	local r, err = appmgr.post.start(data.inst)
 	return __fire_result(client, id, code, r, err)
+	]]--
+	appmgr.post.app_start(data.inst)
+	return __fire_result(client, id, code, true)
 end
 
 function msg_handler.app_stop(client, id, code, data)
 	local appmgr = snax.queryservice('appmgr')
+	--[[
 	local r, err = appmgr.req.stop(data.inst, data.reason)
 	return __fire_result(client, id, code, r, err)
+	]]--
+
+	appmgr.post.app_stop(data.inst, data.reason)
+	return __fire_result(client, id, code, true)
 end
 
 function msg_handler.app_download(client, id, code, data)
