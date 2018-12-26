@@ -52,8 +52,8 @@ FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 
 ## 购买FreeIOE 物联网智能网关
 
-* [冬笋ThingsLink智能网关](https://www.thingsroot.com/product/)
-* [旋思SymLink智能网关](http://www.symid.com/)
+* 冬笋科技: [ThingsLink系列](https://www.thingsroot.com/product/)
+* 旋思科技: [SymLink系列](http://www.symid.com/)
 
 
 ## 已知问题

@@ -4,7 +4,7 @@
 # Release history
 
 
-v1.2.3 ()
+v1.2.3 (2018-12-26)
 ------------------
 
 * Improve ubus service
@@ -12,6 +12,9 @@ v1.2.3 ()
 * Added log prefix for all services and apps
 * Added more reserved app instance names for log prefix
 * Support download application via websocket (VSCode extension)
+* Fixed local appliation install from web
+* Fixed set configuration from web does not apply to app inst
+* Fixed data one short will disable data upload
 
 
 v1.2.2 (2018-12-11)

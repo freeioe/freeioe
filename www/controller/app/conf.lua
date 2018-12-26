@@ -15,10 +15,6 @@ return {
 
 		local appmgr = snax.queryservice('appmgr')
 		local conf = appmgr.req.get_conf(app)
-		if not conf then
-			conf = dc.get("APPS", app, 'conf')
-		end
-
 		lwf.json(self, conf)
 	end,
 	post = function(self)
@@ -40,21 +36,11 @@ return {
 			end
 		end
 		local appmgr = snax.queryservice('appmgr')
-		local inst = appmgr.req.app_inst(post.inst)
-		if not inst then
-			if dc.get("APPS", post.inst) then
-				dc.set("APPS", post.inst, 'conf', post.conf)
-				ngx.print(_('Application configuration changed!'))
-			else
-				ngx.print(_('Application does not exist! Instance: ')..post.inst)
-			end
+		local r, err = appmgr.req.set_conf(post.inst, post.conf)
+		if r then
+			ngx.print(_('Application configuration changed!'))
 		else
-			local r, err = appmgr.req.set_conf(post.inst, post.conf)
-			if r then
-				ngx.print(_('Application configuration changed!'))
-			else
-				ngx.print(_(err))
-			end
+			ngx.print(_(err))
 		end
 	end,
 }

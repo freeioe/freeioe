@@ -34,7 +34,14 @@ function response.start(name, conf)
 	app.inst = inst
 	app.last = skynet.time()
 
-	local r, err = inst.req.start()
+	local pr, r, err = pcall(inst.req.start)
+	if not pr then
+		local info = "::AppMgr:: Failed during start app "..name..". Error: "..tostring(r)
+		log.error(info)
+		fire_exception_event(name, "Failed during start app "..name, {info=app, err=r})
+		app.inst = nil
+		return nil, info
+	end
 	if not r then
 		local info = "::AppMgr:: Failed to start app "..name..". Error: "..tostring(err)
 		log.error(info)
@@ -120,11 +127,17 @@ end
 
 function response.set_conf(inst, conf)
 	local app = applist[inst]
-	if not app or not app.inst then
+	if not app then
 		return nil, "There is no app instance name is "..inst
 	end
 
 	app.conf = conf or {}
+	dc.set("APPS", inst, 'conf', app.conf)
+	if not app.inst then
+		snax.self().post.app_event('conf', inst, conf)
+		return true
+	end
+
 	local r, err = app.inst.req.set_conf(conf)
 	if r then
 		snax.self().post.app_event('conf', inst, conf)
@@ -134,7 +147,7 @@ end
 
 function response.get_conf(inst)
 	local app = applist[inst]
-	if not app or not app.inst then
+	if not app then
 		return nil, "There is no app instance name is "..inst
 	end
 	return app.conf

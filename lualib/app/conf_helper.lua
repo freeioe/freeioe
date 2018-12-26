@@ -8,6 +8,7 @@ local helper = class("APP_CONF_API_HELPER")
 function helper:initialize(sys_api, conf, templates_ext, templates_dir, templates_node, devices_node)
 	assert(sys_api and conf)
 	self._sys = sys_api
+	self._log = sys_api:logger()
 	self._conf = conf
 	self._templates_ext = templates_ext or "csv"
 	self._templates_dir = templates_dir or "tpl"
@@ -33,18 +34,18 @@ function helper:_load_conf()
 	if not version then
 		local ver, err = api:version()
 		if not ver then
-			log.warning("Get cloud configuration version failed", err)
+			self._log:warning("Get cloud configuration version failed", err)
 			return {}
 		end
 		version = ver
 	end
 
 	--- Fetch configuration now!
-	log.notice("Loading cloud configuration", conf_name, version)
+	self._log:notice("Loading cloud configuration", conf_name, version)
 
 	local config, err = api:data(version)
 	if not config then
-		log.warning("Cloud configuration loading failed", err)
+		self._log:warning("Cloud configuration loading failed", err)
 		return {}
 	end
 	-- Decode as json
@@ -60,6 +61,7 @@ function helper:_real_fetch()
 	local devices = self._conf[self._devices_node] or {}
 
 	if #templates == 0 then
+		self._log:warning('Cannot detect template list from configuration, by node name', self._templates_node)
 		for _, dev in ipairs(devices) do
 			self._devices[dev.name] = dev
 		end
@@ -72,6 +74,7 @@ function helper:_real_fetch()
 			if not self._templates[tpl.name] then
 				local r, version = self:_download_tpl(tpl)
 				if r and version == tonumber(tpl.ver) then
+					self._log:info('download template finished. template:', tpl.id, tpl.ver)
 					self._templates[tpl.name] = {
 						id = tpl.id,
 						name = tpl.name,
@@ -80,17 +83,17 @@ function helper:_real_fetch()
 					}
 				else
 					not_finished = true
-					log.warning('Cannot fetch app_conf', version)
+					self._log:warning('Cannot fetch app_conf', version)
 				end
 			end
 		end
 		for _, dev in ipairs(devices) do
 			if not self._devices[dev.name] then
 				if self._templates[dev.tpl] then
-					log.debug(string.format('Device [%s] with template [%s] is ready!!', dev.name, dev.tpl))
+					self._log:info(string.format('Device [%s] with template [%s] is ready!!', dev.name, dev.tpl))
 					self._devices[dev.name] = dev
 				else
-					log.warning(string.format('Cannot create device [%s] as template [%s] is not ready', dev.name, dev.tpl))
+					self._log:warning(string.format('Cannot create device [%s] as template [%s] is not ready', dev.name, dev.tpl))
 				end
 			end
 		end
@@ -139,7 +142,7 @@ function helper:devices()
 end
 
 function helper:_download_tpl(tpl)
-	log.debug("conf_helper download template", tpl.id, tpl.name, tpl.ver)
+	self._log:debug("conf_helper download template", tpl.id, tpl.name, tpl.ver)
 	local api = self._sys:conf_api(tpl.id, self._templates_ext, self._templates_dir)
 	local data, version = api:data(tpl.ver)
 	if not data then

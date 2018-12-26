@@ -40,6 +40,7 @@ local function is_inst_name_reserved(inst)
 end
 
 local function action_result(channel, id, result, info, ...)
+	local info = info or (result and 'Done [UNKNOWN]' or 'Error! [UNKNOWN]')
 	if result then
 		log.info("::UPGRADER:: "..info, ...)
 	else
