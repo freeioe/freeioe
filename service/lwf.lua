@@ -7,6 +7,8 @@ local urllib = require "http.url"
 local table = table
 local string = string
 
+local option_web = true
+
 local mode = ...
 
 if mode == "agent" then
@@ -76,6 +78,14 @@ assert(arg.n <= 2)
 skynet.start(function()
 	local ip = (arg.n == 2 and arg[1] or "0.0.0.0")
 	local port = tonumber(arg[arg.n] or 8080)
+
+	if option_web then
+		local lfs = require 'lfs'
+		if not lfs.attributes(lfs.currentdir().."/ioe/www", "mode") then
+			skynet.error("Web not detected, web server closed!!")
+			skynet.exit()
+		end
+	end
 
 	local agent = {}
 	for i= 1, 2 do
