@@ -28,6 +28,7 @@ mkdir __install
 git archive HEAD | tar -x -C __install
 rm -rf __install/examples
 rm -rf __install/scripts
+# rm -rf __install/www
 
 # Echo version
 echo $VERSION > __install/version

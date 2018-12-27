@@ -32,15 +32,13 @@
   local math     = math
   local os       = os
   local unpack   = unpack or table.unpack
-  local pack     = table.pack or function(...) return { n = select('#', ...), ... } end
   local setmetatable = setmetatable
   local getmetatable = getmetatable
 --[[ EXTRA FUNCTIONS ]]--
   local fmt  = string.format
   local lwr  = string.lower
-  local upr  = string.upper
   local rep  = string.rep
-  local len  = string.len
+  local len  = string.len  -- luacheck: ignore
   local sub  = string.sub
   local gsub = string.gsub
   local gmatch = string.gmatch or string.gfind
@@ -54,10 +52,6 @@
   local function fix(n) n = tonumber(n) return n and ((n > 0 and floor or ceil)(n)) end
   -- returns the modulo n % d;
   local function mod(n,d) return n - d*floor(n/d) end
-  -- rounds a number;
-  local function round(n, d) d=d^10 return floor((n*d)+.5)/d end
-  -- rounds a number to whole;
-  local function whole(n)return floor(n+.5)end
   -- is `str` in string list `tbl`, `ml` is the minimun len
   local function inlist(str, tbl, ml, tn)
     local sl = len(str)
@@ -71,7 +65,6 @@
     end
   end
   local function fnil() end
-  local function fret(x)return x;end
 --[[ DATE FUNCTIONS ]]--
   local DATE_EPOCH -- to be set later
   local sl_weekdays = {
@@ -138,9 +131,9 @@
     local y = (n400*400) + (n100*100) + (n004*4) + n001  - ((n001 == 4 or n100 == 4) and 1 or 0)
     local d = g - dayfromyear(y)
     local mi = floor((100*d + 52)/3060)
-    return (floor((mi + 2)/12) + y), mod(mi + 2,12), (d - floor((mi*306 + 5)/10) + 1)    
+    return (floor((mi + 2)/12) + y), mod(mi + 2,12), (d - floor((mi*306 + 5)/10) + 1)
   end
-  ]]    
+  ]]
   -- day fraction from time
   local function makedayfrc(h,r,s,t)
     return ((h*60 + r)*60 + s)*TICKSPERSEC + t
@@ -215,10 +208,6 @@
   local function date_new(dn, df)
     return setmetatable({daynum=dn, dayfrc=df}, dobj)
   end
-  -- is `v` a date object?
-  local function date_isdobj(v)
-    return (type(v) == 'table' and getmetatable(v) == dobj) and v
-  end
 
 --#if not NO_LOCAL_TIME_SUPPORT then
   -- magic year table
@@ -226,8 +215,9 @@
   local function getequivyear(y)
     assert(not yt)
     yt = {}
-    local de, dw, dy = date_epoch:copy()
-    for i = 0, 3000 do
+    local de = date_epoch:copy()
+    local dw, dy
+    for _ = 0, 3000 do
       de:setyear(de:getyear() + 1, 1, 1)
       dy = de:getyear()
       dw = de:getweekday() * (isleapyear(dy) and  -1 or 1)
@@ -237,10 +227,6 @@
         return getequivyear(y)
       end
     end
-  end
-  -- TimeValue from daynum and dayfrc
-  local function dvtotv(dn, df)
-    return fix(dn - DATE_EPOCH) * SECPERDAY  + (df/1000)
   end
   -- TimeValue from date and time
   local function totv(y,m,d,h,r,s)
@@ -309,7 +295,7 @@
     if is then self.e, self.i = self.i, 1+ie; if f then f(unpack(self)) end return self end
   end
    local function date_parse(str)
-    local y,m,d, h,r,s,  z,  w,u, j,  e,  k,  x,v,c,  chkfin,  dn,df;
+    local y,m,d, h,r,s,  z,  w,u, j,  e,  x,c,  dn,df
     local sw = newstrwalker(gsub(gsub(str, "(%b())", ""),"^(%s*)","")) -- remove comment, trim leading space
     --local function error_out() print(y,m,d,h,r,s) end
     local function error_dup(q) --[[error_out()]] error("duplicate value: " .. (q or "") .. sw:aimchr()) end
@@ -332,7 +318,7 @@
       or sw:finish() or (sw"^%s*$" or sw"^%s*[Zz]%s*$" or sw("^%s-([%+%-])(%d%d):?(%d%d)%s*$",setzc) or sw("^%s*([%+%-])(%d%d)%s*$",setzn))
       )  )
     then --print(y,m,d,h,r,s,z,w,u,j)
-    sw:restart(); y,m,d,h,r,s,z,w,u,j = nil;
+    sw:restart(); y,m,d,h,r,s,z,w,u,j = nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
       repeat -- print(sw:aimchr())
         if sw("^[tT:]?%s*(%d%d?):",seth) then --print("$Time")
           _ = sw("^%s*(%d%d?)",setr) and sw("^%s*:%s*(%d%d?)",sets) and sw("^(%.%d+)",adds)
@@ -351,9 +337,7 @@
           elseif inlist(x, sl_timezone, 2, sw) then
             c = fix(sw[0]) -- ignore gmt and utc
             if c ~= 0 then setz(c, x) end
-          elseif inlist(x, sl_weekdays, 2, sw) then
-            k = sw[0]
-          else
+          elseif not inlist(x, sl_weekdays, 2, sw) then
             sw:back()
             -- am pm bce ad ce bc
             if sw("^([bB])%s*(%.?)%s*[Cc]%s*(%2)%s*[Ee]%s*(%2)%s*") or sw("^([bB])%s*(%.?)%s*[Cc]%s*(%2)%s*") then
@@ -403,10 +387,9 @@
     return (o and o:normalize() or error"invalid date time value"), r -- if r is true then o is a reference to a date obj
   end
 --#end -- not DATE_OBJECT_AFX
-  local function date_from(...)
-    local arg = pack(...)
-    local y, m, d = fix(arg[1]), getmontharg(arg[2]), fix(arg[3])
-    local h, r, s, t = tonumber(arg[4] or 0), tonumber(arg[5] or 0), tonumber(arg[6] or 0), tonumber(arg[7] or 0)
+  local function date_from(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    local y, m, d = fix(arg1), getmontharg(arg2), fix(arg3)
+    local h, r, s, t = tonumber(arg4 or 0), tonumber(arg5 or 0), tonumber(arg6 or 0), tonumber(arg7 or 0)
     if y and m and d and h and r and s and t then
       return date_new(makedaynum(y, m, d), makedayfrc(h, r, s, t)):normalize()
     else
@@ -599,7 +582,7 @@
     -- Year, if year is in BCE, prints the BCE Year representation, otherwise result is similar to "%Y" (1 BCE, 40 BCE)
     ['%\b']=function(self) local x = self:getyear() return fmt("%.4d%s", x>0 and x or (-x+1), x>0 and "" or " BCE") end,
     -- Seconds including fraction (59.998, 01.123)
-    ['%\f']=function(self) local x = self:getfracsec() return fmt("%s%.9g",x >= 10 and "" or "0", x) end,
+    ['%\f']=function(self) local x = self:getfracsec() return fmt("%s%.9f",x >= 10 and "" or "0", x) end,
     -- percent character %
     ['%%']=function(self) return "%" end,
     -- Group Spec --
@@ -701,11 +684,11 @@
     end
   end
 
-  function date:__call(...)
-    local arg = pack(...)
-    if arg.n  > 1 then return (date_from(...))
-    elseif arg.n == 0 then return (date_getdobj(false))
-    else local o, r = date_getdobj(arg[1]);  return r and o:copy() or o end
+  function date:__call(arg1, ...)
+    local arg_count = select("#", ...) + (arg1 == nil and 0 or 1)
+    if arg_count  > 1 then return (date_from(arg1, ...))
+    elseif arg_count == 0 then return (date_getdobj(false))
+    else local o, r = date_getdobj(arg1);  return r and o:copy() or o end
   end
 
   date.diff = dobj.__sub
