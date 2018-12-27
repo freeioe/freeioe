@@ -43,6 +43,7 @@ FreeIOE 开源社区.
 
 FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 > 可以从它的[wiki](https://github.com/cloudwu/skynet/wiki) 获取更多信息。
+> FreeIOE使用的[skynet](https://github.com/srdgame/skynet) 具有更多的C扩展模块
 
 
 ## 提交问题

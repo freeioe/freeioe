@@ -1,7 +1,7 @@
 FreeIOE
 ===================
 
-**[FreeIOE](http://freeioe.org)** is an framework for building IOE (Internet Of Everything) gateway device. [Chinese|中文](/README_CN.md)
+**[FreeIOE](http://freeioe.org)** is a framework for building IOE (Internet Of Everything) gateway device. [Chinese|中文](/README_CN.md)
 
 
 ## How To Use
@@ -42,6 +42,7 @@ Includes:
 
 FreeIOE is based on [Skynet](https://github.com/cloudwu/skynet) framework.
 > More information can be found in its [wiki](https://github.com/cloudwu/skynet/wiki)
+> FreeIOE works with on [skynet](https://github.com/srdgame/skynet) with a few more lua C modules
 
 
 ## Report Issues
