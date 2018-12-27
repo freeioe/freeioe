@@ -1,34 +1,53 @@
-# 云配置接口帮助接口
+
+---
+
+# 云配置帮助接口
+
 
 本接口为采集类应用封装了从云配置服务中加载设备模板的逻辑。帮助用户快速使用云配置服务。
 
-* helper:initialize\(sys\_api, conf, templates\_ext, templates\_dir, templates\_node, devices\_node\)
+
+### initialize
+> function helper:initialize(sys_api, conf, templates_ext, templates_dir, templates_node, devices_node)
 
 构造函数。参数:
-sys\_api - 应用系统接口 app.sys
-conf - 应用配置数据 (table数据或者\<CNF\_NAME>.\<VERSION\>字符串)
-templates\_ext - 设备模板文件本地存储的扩展名。默认为csv
-templates\_dir - 设备模板文件本地存储的子目录名。 默认为tpl
-templates\_node - 应用配置数据中模板列表节点名称。默认为tpls。如果该节点为空，则不进行模板下载。
-devices\_node - 应用配置数据中设备列表节点名称。默认为devs
 
-注:
-1. 当conf为字符串时，helper会从云配置接口获取对应的配置文件，然后使用json格式解析后当作应用配置数据使用。
-2. 当conf字符串中不包含version时，如"CNF000000001"，helper会从云配置服务中获取最新版本进行下载
+* sys_api - 应用系统接口 app.sys
+* conf - 应用配置数据 (table数据或者{CNF_NAME}.{VERSION}字符串)
+* templates_ext - 设备模板文件本地存储的扩展名。默认为csv
+* templates_dir - 设备模板文件本地存储的子目录名。 默认为tpl
+* templates_node - 应用配置数据中模板列表节点名称。默认为tpls。如果该节点为空，则不进行模板下载。
+* devices_node - 应用配置数据中设备列表节点名称。默认为devs
 
-* api:fetch\(async\)
+
+> 注:
+> 1. 当conf为字符串时，helper会从云配置接口获取对应的配置文件，然后使用json格式解析后当作应用配置数据使用。
+> 2. 当conf字符串中不包含version时，如"CNF000000001"，helper会从云配置服务中获取最新版本进行下载
+>
+
+
+### fetch
+> function api:fetch(async)
 
 获取所有设备模板数据文件。async为true时将开启异步获取模式。
 
-* api:templates\(\)
+
+### templates
+> function api:templates()
 
 获取已经完成获取的模板列表
 
-* api:devices\(\)
+
+### devices
+> function api:devices()
 
 获取已经完成设备模板的设备列表
 
-使用代码示例：
+
+### 使用代码示例：
+
+代码:
+
 ``` lua
 	local config = self._conf or {}
 	--[[
@@ -84,7 +103,8 @@ tpl/
  
 ```
 
-应用配置数据示例\(CNF000000001\):
+应用配置数据示例(CNF000000001):
+
 ``` json
 {
 	"opt": {
@@ -119,7 +139,8 @@ tpl/
 }
 ```
 
-设备模板示例\(TPL000000001\)：
+设备模板示例(TPL000000001)：
+
 ``` csv
 COMMENT,name,description,series,,,,
 META,S2,Supper Meter Device,v1,,,,

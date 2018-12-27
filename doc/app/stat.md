@@ -1,24 +1,36 @@
+
+---
+
 # 应用开发接口（STAT接口）
 
 统计数据接口
 
-* stat:cleanup\(\)
 
-接口清理接口
-
-* stat:get\(prop\)
+### get
+> function stat:get(prop)
 
 获取统计属性当前值
 
-* stat:reset\(prop\)
+
+### reset
+> function stat:reset(prop)
 
 重置统计属性值
 
-* stat:inc\(prop, value\)
+
+### inc
+> function stat:inc(prop, value)
 
 累加统计属性当前值
 
-* stat:set\(prop, value\)
+
+### set
+> function stat:set(prop, value)
 
 设定统计属性值
 
+
+### cleanup
+> function stat:cleanup()
+
+接口清理接口(内部使用)
