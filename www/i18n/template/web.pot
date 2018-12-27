@@ -66,6 +66,10 @@ msgid "Application List"
 msgstr ""
 
 
+msgid "Application Store"
+msgstr ""
+
+
 msgid "Application configuration changed!"
 msgstr ""
 
@@ -719,6 +723,10 @@ msgstr ""
 
 
 msgid "SocketChannel"
+msgstr ""
+
+
+msgid "Source Code"
 msgstr ""
 
 
