@@ -52,9 +52,6 @@ msgstr "应用列表"
 msgid "Application configuration changed!"
 msgstr "应用配置已更改!"
 
-msgid "Application does not exist! Instance: "
-msgstr "应用不存在!实例名:"
-
 msgid "Application option changed!"
 msgstr "应用设定已修改!"
 
@@ -75,6 +72,12 @@ msgstr "Beta版本使用警告"
 
 msgid "CLA"
 msgstr ""
+
+msgid "CONF_API"
+msgstr "云配置接口"
+
+msgid "CONF_HELPER"
+msgstr "云配置帮助接口"
 
 msgid "COV TTL"
 msgstr "变化传输快照间隔"
@@ -199,6 +202,9 @@ msgstr "文档索引"
 msgid "Documents"
 msgstr "文档"
 
+msgid "EVENT"
+msgstr "事件类型和等级"
+
 msgid "Enable Cloud Web Mapping"
 msgstr "开启Web映射"
 
@@ -266,7 +272,7 @@ msgid "Forum"
 msgstr "社区"
 
 msgid "FreeIOE"
-msgstr ""
+msgstr "FreeIOE"
 
 msgid "FreeIOE System API"
 msgstr "FreeIOE系统接口"
@@ -672,6 +678,9 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "Application does not exist! Instance: "
+#~ msgstr "应用不存在!实例名:"
 
 #~ msgid "UPTIME"
 #~ msgstr "启动时间"

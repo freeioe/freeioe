@@ -70,10 +70,6 @@ msgid "Application configuration changed!"
 msgstr ""
 
 
-msgid "Application does not exist! Instance: "
-msgstr ""
-
-
 msgid "Application option changed!"
 msgstr ""
 
@@ -99,6 +95,14 @@ msgstr ""
 
 
 msgid "CLA"
+msgstr ""
+
+
+msgid "CONF_API"
+msgstr ""
+
+
+msgid "CONF_HELPER"
 msgstr ""
 
 
@@ -263,6 +267,10 @@ msgstr ""
 
 
 msgid "Documents"
+msgstr ""
+
+
+msgid "EVENT"
 msgstr ""
 
 
