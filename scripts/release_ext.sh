@@ -62,6 +62,7 @@ if [ "$TARGET_TYPE" == "bin" ] ; then
 fi
 
 cd $RELEASE_DIR/$TARGET_FOLDER/temp
+find . -type f |xargs -I{} file "{}"|grep "ELF\|ar "|sed 's/\(.*\):.*/\1/'|xargs $STRIP
 
 tar czvf ../$VERSION.tar.gz * > /dev/null
 md5sum -b ../$VERSION.tar.gz > ../$VERSION.tar.gz.md5
