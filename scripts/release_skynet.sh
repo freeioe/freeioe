@@ -62,8 +62,9 @@ cd - > /dev/null
 # Count the file sizes
 ################################
 du __install -sh
-find __install -type f |xargs -I{} file "{}"|grep "ELF\|ar "|sed 's/\(.*\):.*/\1/'|xargs $STRIP
-du __install -sh
+
+# find __install -type f |xargs -I{} file "{}"|grep "ELF\|ar "|sed 's/\(.*\):.*/\1/'|xargs $STRIP
+# du __install -sh
 
 ###################
 ##
