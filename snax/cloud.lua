@@ -246,8 +246,10 @@ local function connect_log_server(enable)
 	local obj = snax.self()
 	if enable then
 		logger.post.listen(obj.handle, obj.type)
+		skynet.call(".logger", "lua", "listen", obj.handle, obj.type)
 	else
 		logger.post.unlisten(obj.handle)
+		skynet.call(".logger", "lua", "unlisten", obj.handle)
 	end
 end
 

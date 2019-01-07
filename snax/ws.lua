@@ -363,7 +363,7 @@ local function connect_buffer_service(enable)
 		buffer.post.listen(obj.handle, obj.type)
 		appmgr.post.listen(obj.handle, obj.type, true) -- Listen on application events
 	else
-		logger.post.unlisten(obj.handle)
+		buffer.post.unlisten(obj.handle)
 		appmgr.post.unlisten(obj.handle)
 	end
 end
