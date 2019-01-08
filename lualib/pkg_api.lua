@@ -10,6 +10,9 @@ local ioe = require 'ioe'
 
 local _M = {}
 
+_M.url_base = '/download'
+_M.url_packages = '/download/packages'
+
 local api_header = {
 	Accpet="application/json"
 }
@@ -172,13 +175,20 @@ end
 
 function _M.create_download_func(inst_name, app_name, version, ext, is_extension)
 	local inst_name = inst_name
-	local app_name = app_name:gsub('%.', '/')
+	--local app_name = app_name:gsub('%.', '/')
+	local app_name = app_name
 	local version = version
 	local ext = ext
 	local is_extension = is_extension
 
 	if version == 'latest' and ioe.beta() then
 		version = 'latest.beta'
+	end
+
+	--- previously we using APP####### as appname
+	local url_base = _M.url_packages
+	if string.match(app_name, '^APP(%d+)$') then
+		url_base = _M.url_base
 	end
 
 	return function(success_callback)
@@ -192,10 +202,10 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 
 		local pkg_host = ioe.pkg_host_url()
 
-		local url = "/download/"..app_name.."/"..version..ext
+		local url = url_base.."/"..app_name.."/"..version..ext
 		if is_extension then
 			local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
-			url = "/download/ext/"..plat.."/"..app_name.."/"..version..ext
+			url = _M.url_packages.."/"..plat.."/"..app_name.."/"..version..ext
 		end
 
 		log.notice('Start download package '..app_name..' from: '..pkg_host..url)

@@ -9,6 +9,7 @@ v1.3.0 ()
 * Make the web pages be optional
 * Fixed event upload level missing
 * Fixed app.run called after app.close
+* New package name principle for application
 
 
 v1.2.3 (2018-12-26)
