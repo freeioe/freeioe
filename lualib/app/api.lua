@@ -202,7 +202,7 @@ local function valid_device_sn(sn)
 end
 
 function api:add_device(sn, meta, inputs, outputs, commands)
-	assert(sn, "Device Serial Number is required")
+	assert(sn and meta, "Device Serial Number and Meta Information is required!")
 	assert(valid_device_sn(sn), "Invalid sn: "..sn)
 	valid_device_meta(meta or default_meta())
 	meta.app_inst = self._app_name
@@ -227,6 +227,7 @@ end
 
 -- Get readonly device object to access input / fire command / output
 function api:get_device(sn)
+	assert(sn, "Device Serial Number is required!")
 	local props = dc.get('DEVICES', sn)
 	if not props then
 		return nil, string.format("Device %s does not exits", sn)
