@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.3.1 (2019-1-10)
+------------------
+
+* Fixed upgrade failure issue.
+
+
 v1.3.0 (2019-1-10)
 ------------------
 

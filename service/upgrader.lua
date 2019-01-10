@@ -583,6 +583,8 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	log.trace("::UPGRADER::", ioe_path, skynet_path)
 	--local ps_e = get_ps_e()
 
+	local base_dir = get_ioe_dir()
+
 	local str = string.format(rollback_sh_str, base_dir, "skynet", "freeioe")
 	local r, err = write_script(base_dir.."/ipt/rollback.sh.new", str)
 	if not r then
@@ -617,6 +619,7 @@ function command.upgrade_core(id, args)
 	local skynet_args = args.skynet
 
 	if args.no_ack then
+		local base_dir = get_ioe_dir()
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
 			log.error("::UPGRADER:: Create upgrade_no_ack failed", status, code)
@@ -728,8 +731,7 @@ skynet.start(function()
 	app_lock = lockable_queue(sys_lock, false)
 	task_lock = queue()
 
-	local base_dir = get_ioe_dir()
-	lfs.mkdir(base_dir.."/ipt")
+	lfs.mkdir(get_ioe_dir().."/ipt")
 
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.lower(cmd)]
