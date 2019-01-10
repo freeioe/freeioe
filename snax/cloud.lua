@@ -1241,12 +1241,11 @@ end
 
 --- Flush buffered period data
 function accept.data_flush(id)
-	log.notice("::CLOUD:: Flush all device data to cloud!", id)
 	if pb then
+		log.notice("::CLOUD:: Flush all data from period buffer to cloud!", id)
 		pb:fire_all()
 	else
-		--- If upload period is not enabled then fire snapshot?
-		snax.self().post.fire_data_snapshot()
+		log.notice("::CLOUD:: Period buffer not enabled, nothing to flush!", id)
 	end
 
 	if id then
@@ -1258,11 +1257,11 @@ end
 -- Query specified device data
 --
 function accept.data_query(id, dev_sn)
-	log.notice("::CLOUD:: Query device data", dev_sn, id)
+	log.notice("::CLOUD:: Query data from device", dev_sn, id)
 	if not dev_sn then
 		return snax.self().post.action_result('input', id, false, "Device sn is required!")
 	end
-	local dev, err = api:get_device(device)
+	local dev, err = api:get_device(dev_sn)
 	if not dev then
 		return snax.self().post.action_result('input', id, false, err)
 	end
@@ -1272,12 +1271,16 @@ function accept.data_query(id, dev_sn)
 		snax.self().post.enable_data_one_short(nil, 60)
 	end
 
-	--- let device object fires its all input data
-	dev:flush_data()
+	--- let device object fires its all input data to make sure cloud has it all data
+	-- Using list_inputs instead of using flush_data, flush_data here will be slow by multicast stuff
+	dev:list_inputs(function(input, prop, value, timestamp, quality)
+		print(input, prop, value, timestamp, quality)
+		local key = table.concat({dev_sn, input, prop}, '/')
+		cov:handle(publish_data, key, value, timestamp or ioe.time(), quality or 0)
+	end)
 
 	--- Flush period buffer
-	snax.self().post.fire_data_snapshot()
-	snax.self().post.action_result('sys', id, true)
+	snax.self().post.data_flush(id)
 end
 
 ---

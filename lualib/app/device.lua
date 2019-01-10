@@ -189,6 +189,16 @@ function device:list_props()
 	return self._props
 end
 
+function device:list_inputs(data_cb)
+	local inputs = self._props.inputs or {}
+	local input_vals = dc.get('INPUT', self._sn) or {}
+	for _, v in ipairs(inputs) do
+		for prop, val in pairs(input_vals[v.name] or {}) do
+			data_cb(v.name, prop, val.value, val.timestamp, val.quality)
+		end
+	end
+end
+
 function device:cov(opt)
 	assert(not self._readonly, "This is an readonly device!")
 	if not opt then
@@ -209,13 +219,9 @@ function device:data()
 end
 
 function device:flush_data()
-	for _, v in ipairs(self._props.inputs or {}) do
-		local props = dc.get('INPUT', self._sn, v.name)
-		for prop, val in pairs(props or {}) do
-			self._data_chn:publish('input', self._app_name, self._sn, v.name, prop, val.value, val.timestamp, val.quality)
-		end
-	end
-	return true
+	return self:list_inputs(function(input, prop, value, timestamp, quality)
+		self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
+	end)
 end
 
 function device:dump_comm(dir, ...)
