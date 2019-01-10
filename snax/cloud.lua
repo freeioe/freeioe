@@ -694,8 +694,11 @@ connect_proc = function(clean_session, username, password)
 				apps_devices_fired = true
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
-				if pb then
-					skynet.timeout(100, function() snax.self().post.data_flush() end)
+
+				--- Only flush data when period buffer enabled and period is bigger than 3 seconds
+				if pb and pb:period() > 3000 then
+					log.trace("::CLOUD:: Flush all device data within three seconds!")
+					skynet.timeout(300, function() snax.self().post.data_flush() end)
 				end
 			end
 		else
@@ -1238,6 +1241,7 @@ end
 
 --- Flush buffered period data
 function accept.data_flush(id)
+	log.notice("::CLOUD:: Flush all device data to cloud!", id)
 	if pb then
 		pb:fire_all()
 	else
@@ -1254,6 +1258,7 @@ end
 -- Query specified device data
 --
 function accept.data_query(id, dev_sn)
+	log.notice("::CLOUD:: Query device data", dev_sn, id)
 	if not dev_sn then
 		return snax.self().post.action_result('input', id, false, "Device sn is required!")
 	end

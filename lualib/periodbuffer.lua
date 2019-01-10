@@ -52,6 +52,14 @@ function pb:size()
 	return #self._buf
 end
 
+function pb:period()
+	return self._period
+end
+
+function pb:max_size()
+	return self._max_size
+end
+
 function pb:start(cb)
 	assert(cb)
 	self._stop = nil

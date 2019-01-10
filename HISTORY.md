@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.3.2 ()
+------------------
+
+* Flush data when period buffer enabled with longer period
+
+
 v1.3.1 (2019-1-10)
 ------------------
 
