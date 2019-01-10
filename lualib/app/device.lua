@@ -48,11 +48,15 @@ function device:_cleanup()
 	self._ctrl_chn = nil
 	self._comm_chn = nil
 	self._api = nil
+	self._cov = nil
 end
 
 function device:cleanup()
 	if self._readonly then
 		return
+	end
+	if self._cov then
+		self._cov:stop()
 	end
 	for _, s in ipairs(self._stats) do
 		s:cleanup()
@@ -74,7 +78,7 @@ function device:cleanup()
 end
 
 function device:mod(inputs, outputs, commands)
-	assert(not self._readonly, "This is not created device")
+	assert(not self._readonly, "This is an readonly device!")
 	self._props.inputs = inputs
 	self._props.outputs = outputs
 	self._props.comands = commands
@@ -84,13 +88,16 @@ function device:mod(inputs, outputs, commands)
 		self._inputs_map[t.name] = true
 	end
 	dc.set('DEVICES', self._sn, self._props)
+	if self._cov then
+		self._cov:clean()
+	end
 
 	self._data_chn:publish('mod_device', self._app_name, self._sn, self._props)
 	return true
 end
 
 function device:add(inputs, outputs, commands)
-	assert(not self._readonly, "This is not created device")
+	assert(not self._readonly, "This is an readonly device!")
 	local org_inputs = self._props.inputs
 	for _, v in ipairs(inputs or {}) do
 		org_inputs[#org_inputs + 1] = v
@@ -113,8 +120,12 @@ function device:get_input_prop(input, prop)
 	end
 end
 
+function device:_publish_input(input, prop, value, timestamp, quality)
+	return self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
+end
+
 function device:set_input_prop(input, prop, value, timestamp, quality)
-	assert(not self._readonly, "This is not created device")
+	assert(not self._readonly, "This is an readonly device!")
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
@@ -123,12 +134,18 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	local quality = quality or 0
 
 	dc.set('INPUT', self._sn, input, prop, {value=value, timestamp=timestamp, quality=quality})
-	self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
+	if not self._cov then
+		self:_publish_input(input, prop, value, timestamp, quality)
+	else
+		self._cov:handle(function(key, value, timestamp, quality)
+			self:_publish_input(input, prop, value, timestamp, quality)
+		end, input..'/'..prop, value, timestamp, quality)
+	end
 	return true
 end
 
 function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
-	assert(not self._readonly, "This is not created device")
+	assert(not self._readonly, "This is an readonly device!")
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
 	if not self._inputs_map[input] then
 		return nil, "Property "..input.." does not exits in device "..self._sn
@@ -170,6 +187,21 @@ end
 
 function device:list_props()
 	return self._props
+end
+
+function device:cov(opt)
+	assert(not self._readonly, "This is an readonly device!")
+	if not opt then
+		self._cov = nil
+	else
+		local COV = require 'cov'
+		self._cov = COV:new(opt)
+		self._cov:start(function(key, value, timestamp, quality)
+			local input, prop = string.match(key, '^(.+)/([^/]+)')
+			assert(input and prop, "Bug found matching input/prop key")
+			self:_publish_input(input, prop, value, timestamp, quality)
+		end)
+	end
 end
 
 function device:data()

@@ -1,5 +1,7 @@
 local class = require 'middleclass'
+local skynet = require 'skynet'
 local coroutine = require 'skynet.coroutine'
+local ioe = require 'ioe'
 
 local cov = class("_ChangeOnValue_LIB")
 
@@ -138,7 +140,7 @@ function cov:start(cb)
 	local min_ttl_gap = self._opt.min_ttl_gap
 	skynet.fork(function()
 		while not self._stop do
-			local gap = self:timer(skynet.time(), cb)
+			local gap = self:timer(ioe.time(), cb)
 			gap = math.floor(gap * 100)
 			if gap < min_ttl_gap then
 				gap = min_ttl_gap

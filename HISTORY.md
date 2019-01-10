@@ -10,6 +10,8 @@ v1.3.0 ()
 * Fixed event upload level missing
 * Fixed app.run called after app.close
 * New package name principle for application
+* A few version information in FreeIOE device meta
+* App API version 3, support COV on device object
 
 
 v1.2.3 (2018-12-26)
