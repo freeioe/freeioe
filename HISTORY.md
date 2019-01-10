@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.3.0 ()
+v1.3.0 (2019-1-10)
 ------------------
 
 * Make the web pages be optional
