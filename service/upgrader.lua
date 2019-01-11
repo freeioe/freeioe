@@ -664,7 +664,7 @@ function command.system_reboot(id, args)
 	aborting = true
 	local delay = args.delay or 5
 	skynet.timeout(delay * 100, function()
-		os.execute("reboot")
+		os.execute("reboot &")
 	end)
 	return true, "Device will reboot after "..delay.." seconds"
 end

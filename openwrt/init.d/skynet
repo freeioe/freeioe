@@ -2,6 +2,7 @@
 # Copyright (C) 2017 Symid.COM
 
 START=90
+STOP=90
 
 USE_PROCD=1
 
