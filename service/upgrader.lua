@@ -287,7 +287,7 @@ function command.create_app(id, args)
 	local appmgr = snax.queryservice("appmgr")
 	appmgr.post.app_event('create', inst_name)
 
-	return true
+	return true, "Create application is done!"
 end
 
 function command.install_local_app(id, args)
@@ -329,7 +329,7 @@ function command.install_local_app(id, args)
 	appmgr.post.app_start(inst_name)
 	]]--
 
-	return true
+	return true, "Install location application done!"
 end
 
 function command.rename_app(id, args)
@@ -359,7 +359,7 @@ function command.rename_app(id, args)
 	local appmgr = snax.queryservice("appmgr")
 	appmgr.post.app_event('rename', inst_name, new_name)
 
-	return true
+	return true, "Rename application is done!"
 end
 
 function command.install_missing_app(inst_name)
@@ -378,7 +378,7 @@ function command.install_missing_app(inst_name)
 			force = true
 		})
 	end)
-	return true
+	return true, "Install missing application "..inst_name.." done!"
 end
 
 function command.uninstall_app(id, args)
@@ -397,7 +397,7 @@ function command.uninstall_app(id, args)
 		return false, "Application uninstall failed, Error: "..err
 	end
 
-	return true
+	return true, "Application has been uninstalled!"
 end
 
 function command.list_app()
@@ -666,7 +666,7 @@ function command.system_reboot(id, args)
 	skynet.timeout(delay * 100, function()
 		os.execute("reboot")
 	end)
-	return true
+	return true, "Device will reboot after "..delay.." seconds"
 end
 
 function command.system_quit(id, args)
@@ -675,7 +675,7 @@ function command.system_quit(id, args)
 	skynet.timeout(delay * 100, function()
 		skynet.abort()
 	end)
-	return true
+	return true, "FreeIOE will reboot after "..delay.." seconds"
 end
 
 local function check_rollback()

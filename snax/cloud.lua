@@ -1232,10 +1232,12 @@ function accept.batch_script(id, script)
 end
 
 function accept.sys_quit(id, args)
+	skynet.call(".cfg", "lua", "save")
 	skynet.call(".upgrader", "lua", "system_quit", id, {})
 end
 
 function accept.sys_reboot(id, args)
+	skynet.call(".cfg", "lua", "save")
 	skynet.call(".upgrader", "lua", "system_reboot", id, {})
 end
 
