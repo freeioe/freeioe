@@ -241,8 +241,9 @@ function command.install_app(id, args)
 
 			return true, "Application installtion is done"
 		else
-			datacenter.set("APPS", inst_name, nil)
-			os.execute("rm -rf "..target_folder)
+			-- Keep the application there.
+			-- datacenter.set("APPS", inst_name, nil)
+			-- os.execute("rm -rf "..target_folder)
 			return false, "Failed to start App. Error: "..err
 		end
 	end)

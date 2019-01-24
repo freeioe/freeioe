@@ -15,6 +15,7 @@ local EVENTS = {
 	'EVENT_APP',
 }
 
+--[[
 local EVENT_NAMES = {
 	"系统",
 	"设备",
@@ -22,6 +23,8 @@ local EVENT_NAMES = {
 	"数据",
 	"应用",
 }
+]]--
+local EVENT_NAMES = {}
 
 local function type_to_string(type_)
 	if type(type_) == 'number' then
@@ -35,6 +38,7 @@ end
 local _M = {}
 for i,v in ipairs(EVENTS) do
 	_M[v] = i
+	EVENT_NAMES[i] = string.sub(i, string.len('EVENT_') + 1)
 end
 
 for k,v in pairs(LEVELS) do
