@@ -205,7 +205,7 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 		local url = url_base.."/"..app_name.."/"..version..ext
 		if is_extension then
 			local plat = sysinfo.os_id()..'/'..sysinfo.cpu_arch()
-			url = _M.url_packages.."/"..plat.."/"..app_name.."/"..version..ext
+			url = _M.url_packages.."/ext/"..plat.."/"..app_name.."/"..version..ext
 		end
 
 		log.notice('Start download package '..app_name..' from: '..pkg_host..url)
