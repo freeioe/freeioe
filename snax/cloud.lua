@@ -401,6 +401,7 @@ local function load_cov_conf()
 				local list = {}
 				gap = cov:timer(ioe.time(), function(key, value, timestamp, quality) 
 					list[#list+1] = {key, timestamp, value, quality}
+					return true
 				end)
 				publish_data_list(list)
 			else
@@ -436,6 +437,7 @@ local function load_cov_conf()
 				local list = {}
 				gap = stat_cov:timer(ioe.time(), function(key, value, timestamp, quality)
 					list[#list+1] = {key, timestamp, value, quality}
+					return true
 				end)
 				publish_stat_list(list)
 			else
