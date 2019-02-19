@@ -422,7 +422,7 @@ local function load_cov_conf()
 	else
 		stat_cov_opt.ttl = ttl
 		--- if data is not upload to our cloud, then take default ttl always.
-		if enable_stat_upload then
+		if not enable_stat_upload then
 			stat_cov_opt.ttl = default_ttl
 		end
 	end
