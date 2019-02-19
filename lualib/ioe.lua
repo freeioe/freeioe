@@ -55,4 +55,14 @@ end
 _M.time = skynet.time
 _M.starttime = skynet.starttime
 
+--[[
+_M.datacenter = dc
+_M.skynet = skynet
+_M.cjson = require 'cjson'
+_M.curl = require 'curl'
+_M.serialchannel = require 'serialchannel'
+_M.socketchannel = require 'socketchannel'
+_M.basexx = require 'basexx'
+]]--
+
 return _M
