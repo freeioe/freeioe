@@ -138,7 +138,7 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 		self:_publish_input(input, prop, value, timestamp, quality)
 	else
 		self._cov:handle(function(key, value, timestamp, quality)
-			self:_publish_input(input, prop, value, timestamp, quality)
+			return self:_publish_input(input, prop, value, timestamp, quality)
 		end, input..'/'..prop, value, timestamp, quality)
 	end
 	return true

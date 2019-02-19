@@ -467,7 +467,7 @@ local function load_pb_conf()
 	log.notice('::CLOUD:: Loading period buffer, period:', period)
 	if period >= 1000 then
 		--- Period buffer enabled
-		cov_min_timer_gap = math.floor(period / 10)
+		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
 		pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
 		pb:start(publish_data_list)
@@ -1278,7 +1278,6 @@ function accept.data_query(id, dev_sn)
 	--- let device object fires its all input data to make sure cloud has it all data
 	-- Using list_inputs instead of using flush_data, flush_data here will be slow by multicast stuff
 	dev:list_inputs(function(input, prop, value, timestamp, quality)
-		print(input, prop, value, timestamp, quality)
 		local key = table.concat({dev_sn, input, prop}, '/')
 		cov:handle(publish_data, key, value, timestamp or ioe.time(), quality or 0)
 	end)
