@@ -9,6 +9,7 @@ v1.3.2 ()
 * Flush data when period buffer enabled with longer period
 * Fixed query data takes too much time issue
 * Delay gcom reading as it takes too much time (app.ioe)
+* Fixed COV TTL issue
 
 
 v1.3.1 (2019-1-10)
