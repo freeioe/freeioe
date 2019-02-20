@@ -110,7 +110,7 @@ end
 function cov:timer(now, cb)
 	local opt = self._opt
 	local opt_ttl = opt.ttl
-	local next_loop = math.floor(opt_ttl / 10)
+	local next_loop = opt_ttl
 	-- Loop all inputs
 	for key, v in pairs(self._retained_map) do
 		-- Get current input next ttl fire time gap
