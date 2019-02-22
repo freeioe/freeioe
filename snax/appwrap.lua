@@ -220,6 +220,17 @@ function init(name, conf, mgr_handle, mgr_type)
 		end
 	end
 
+	if not m.new and m.App then
+		r, err = xpcall(m.App.new, debug.traceback, app_name, sys_api, conf)
+		if not r then
+			app_log:error("Create App instance failed.", err)
+			fire_exception_event("Create App instance failed.", {err=err})
+			return nil, err
+		end
+		app = err
+		return
+	end
+
 	r, err = xpcall(m.new, debug.traceback, m, app_name, sys_api, conf)
 	if not r then
 		app_log:error("Create App instance failed.", err)
