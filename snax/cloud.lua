@@ -682,7 +682,7 @@ connect_proc = function(clean_session, username, password)
 			log.notice("::CLOUD:: ON_CONNECT", success, rc, msg) 
 			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			mqtt_client = client
-			local force_fire_data = mqtt_client_last and ( matt_client_last - skynet.time() > 60 )
+			local mqtt_last = mqtt_client_last or 0
 			mqtt_client_last = skynet.time()
 			--- Subscribe topics
 			for _, v in ipairs(wildtopics) do
@@ -695,11 +695,14 @@ connect_proc = function(clean_session, username, password)
 			if not apps_devices_fired then
 				log.trace("::CLOUD:: ON_CONNECT fire devices and apps")
 				apps_devices_fired = true
+				mqtt_last = 0
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
+			end
 
+			if mqtt_client_last - mqtt_last > 60 then
 				--- Only flush data when period buffer enabled and period is bigger than 3 seconds
-				if force_fire_data or (pb and pb:period() > 3000) then
+				if pb and pb:period() > 3000 then
 					log.trace("::CLOUD:: Flush all device data within three seconds!")
 					skynet.timeout(300, function() snax.self().post.data_flush() end)
 				end
