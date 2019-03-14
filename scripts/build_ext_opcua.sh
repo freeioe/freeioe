@@ -19,6 +19,7 @@ toolchains["openwrt/mips_24kc"]="Toolchain-mips_24kc-openwrt-linux-gcc.cmake"
 toolchains["openwrt/x86_64"]="Toolchain-x86_64-openwrt-linux-gcc.cmake"
 toolchains["openwrt/aarch64_cortex-a53"]="Toolchain-aarch64-openwrt-linux-gcc.cmake"
 toolchains["openwrt/arm_cortex-a7_neon-vfpv4"]="Toolchain-arm-openwrt-linux-gcc.cmake"
+toolchains["android/arm"]="Toolchain-arm-androideabi-gcc.cmake"
 
 cd $SOURCE_DIR
 

@@ -10,6 +10,7 @@ v1.3.2 ()
 * Fixed query data takes too much time issue
 * Delay gcom reading as it takes too much time (app.ioe)
 * Fixed COV TTL issue
+* Force data flush when offline more than 60 seconds
 
 
 v1.3.1 (2019-1-10)

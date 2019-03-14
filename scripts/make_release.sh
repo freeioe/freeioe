@@ -67,7 +67,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh focas
 
 # Validate platform name
-PLAT_NAMES="linux/x86_64 openwrt/arm_cortex-a9_neon openwrt/mips_24kc openwrt/x86_64 openwrt/aarch64_cortex-a53 openwrt/arm_cortex-a7_neon-vfpv4"
+PLAT_NAMES="linux/x86_64 openwrt/arm_cortex-a9_neon openwrt/mips_24kc openwrt/x86_64 openwrt/aarch64_cortex-a53 openwrt/arm_cortex-a7_neon-vfpv4 android/arm"
 
 # Release Extensions
 for plat in $PLAT_NAMES; do
