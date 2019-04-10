@@ -137,9 +137,7 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	if not self._cov then
 		self:_publish_input(input, prop, value, timestamp, quality)
 	else
-		self._cov:handle(function(key, value, timestamp, quality)
-			return self:_publish_input(input, prop, value, timestamp, quality)
-		end, input..'/'..prop, value, timestamp, quality)
+		self._cov:handle(input..'/'..prop, value, timestamp, quality)
 	end
 	return true
 end
@@ -205,12 +203,14 @@ function device:cov(opt)
 		self._cov = nil
 	else
 		local COV = require 'cov'
-		self._cov = COV:new(opt)
-		self._cov:start(function(key, value, timestamp, quality)
+
+		self._cov = COV:new(function(key, value, timestamp, quality)
 			local input, prop = string.match(key, '^(.+)/([^/]+)')
 			assert(input and prop, "Bug found matching input/prop key")
-			self:_publish_input(input, prop, value, timestamp, quality)
-		end)
+			return self:_publish_input(input, prop, value, timestamp, quality)
+		end, opt)
+
+		self._cov:start()
 	end
 end
 

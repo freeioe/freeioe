@@ -391,30 +391,7 @@ local function load_cov_conf()
 			opt.ttl = default_ttl
 		end
 	end
-	cov = cov_m:new(opt)
-
-	skynet.fork(function()
-		while not service_stop do
-			--- Trigger cov timer
-			local gap = nil
-			if zlib_loaded then
-				local list = {}
-				gap = cov:timer(ioe.time(), function(key, value, timestamp, quality) 
-					list[#list+1] = {key, timestamp, value, quality}
-					return true
-				end)
-				publish_data_list(list)
-			else
-				gap = cov:timer(ioe.time(), publish_data)
-			end
-
-			--- Make sure sleep not less than min gap
-			if gap < cov_min_timer_gap then
-				gap = cov_min_timer_gap
-			end
-			skynet.sleep(math.floor(gap * 100))
-		end
-	end)
+	cov = cov_m:new(publish_data, opt)
 
 	--- Stat data cov stuff
 	local stat_cov_opt = {}
@@ -427,30 +404,7 @@ local function load_cov_conf()
 			stat_cov_opt.ttl = default_ttl
 		end
 	end
-	stat_cov = cov_m:new(opt)
-
-	skynet.fork(function()
-		while not service_stop do
-			--- Trigger cov timer
-			local gap = nil
-			if zlib_loaded then
-				local list = {}
-				gap = stat_cov:timer(ioe.time(), function(key, value, timestamp, quality)
-					list[#list+1] = {key, timestamp, value, quality}
-					return true
-				end)
-				publish_stat_list(list)
-			else
-				gap = stat_cov:timer(ioe.time(), publish_stat)
-			end
-
-			--- Make sure sleep not less than min gap
-			if gap < cov_min_timer_gap then
-				gap = cov_min_timer_gap
-			end
-			skynet.sleep(math.floor(gap * 100))
-		end
-	end)
+	stat_cov = cov_m:new(publish_stat, opt)
 end
 
 --- Load period buffer objects (data,stat)
@@ -600,7 +554,7 @@ local Handler = {
 		end
 
 		local key = table.concat({sn, stat, prop}, '/')
-		stat_cov:handle(publish_stat, key, value, timestamp or ioe.time(), quality or 0)
+		stat_cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
 		log.trace('::CLOUD:: on_event', app, sn, level, type_, info) --, data, timestamp)
@@ -629,7 +583,7 @@ local Handler = {
 		end
 
 		local key = table.concat({sn, input, prop}, '/')
-		cov:handle(publish_data, key, value, timestamp or ioe.time(), quality or 0)
+		cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
 		log.trace('::CLOUD:: on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
@@ -638,7 +592,7 @@ local Handler = {
 		end
 
 		local key = table.concat({sn, input, prop}, '/')
-		--cov:handle(publish_data_no_pb, key, value, timestamp, quality)
+		--cov:handle(key, value, timestamp, quality)
 		publish_data_no_pb(key, value, timestamp or ioe.time(), quality or 0)
 	end
 }
@@ -976,18 +930,7 @@ end
 -- Fire data snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_data_snapshot(id)
-	local now = ioe.time()
-	if zlib_loaded then
-		local val_list = {}
-		cov:fire_snapshot(function(key, value, timestamp, quality)
-			val_list[#val_list + 1] = {key, timestamp or now, value, quality or 0}
-		end)
-		publish_data_list(val_list)
-	else
-		cov:fire_snapshot(function(key, value, timestamp, quality)
-			publish_data(key, value, timestamp or now, quality or 0)
-		end)
-	end
+	cov:fire_snapshot()
 	if id then
 		snax.self().post.action_result('input', id, true)
 	end
@@ -996,18 +939,10 @@ end
 ---
 -- Fire stat snapshot (skip peroid buffer if zlib loaded)
 ---
-function accept.fire_stat_snapshot()
-	local now = ioe.time()
-	if zlib_loaded then
-		local val_list = {}
-		stat_cov:fire_snapshot(function(key, value, timestamp, quality)
-			val_list[#val_list + 1] = {key, timestamp or now, value, quality or 0}
-		end)
-		publish_stat_list(val_list)
-	else
-		stat_cov:fire_snapshot(function(key, value, timestamp, quality)
-			publish_stat(key, value, timestamp or now, quality or 0)
-		end)
+function accept.fire_stat_snapshot(id)
+	stat_cov:fire_snapshot()
+	if id then
+		snax.self().post.action_result('input', id, true)
 	end
 end
 
@@ -1035,10 +970,15 @@ function accept.fire_devices(timeout)
 end
 
 local function clean_cov_by_device_sn(sn)
+	local len = string.len(sn) + 1
+	local msn = sn..'/'
 	if cov then
-		local len = string.len(sn) + 1
-		local msn = sn..'/'
 		cov:clean_with_match(function(key)
+			return key:sub(1, len) == msn
+		end)
+	end
+	if stat_cov then
+		stat_cov:clean_with_match(function(key)
 			return key:sub(1, len) == msn
 		end)
 	end
@@ -1283,7 +1223,7 @@ function accept.data_query(id, dev_sn)
 	-- Using list_inputs instead of using flush_data, flush_data here will be slow by multicast stuff
 	dev:list_inputs(function(input, prop, value, timestamp, quality)
 		local key = table.concat({dev_sn, input, prop}, '/')
-		cov:handle(publish_data, key, value, timestamp or ioe.time(), quality or 0)
+		cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end)
 
 	--- Flush period buffer
