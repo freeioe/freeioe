@@ -73,9 +73,13 @@ local function set_cloud_defaults(data)
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
 	end
+	--- symgrid.com domain hacks
 	if string.match(data.HOST, 'symgrid.com') then
 		data.HOST = defaults.HOST
 	end
+	--- export host to /tmp/sysinfo/cloud
+	os.execute('mkdir -p /tmp/sysinfo')
+	os.execute('echo "'..data.HOST..'" > /tmp/sysinfo/cloud')
 	return data
 end
 

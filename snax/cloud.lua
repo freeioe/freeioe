@@ -310,11 +310,11 @@ end
 --- Push data to period buffer or publish to MQTT dirtectly
 local function publish_data(key, value, timestamp, quality)
 	if pb then
-		log.trace('::CLOUD:: publish_data turn period buffer', key, value, timestamp, quality)
+		--log.trace('::CLOUD:: publish_data turn period buffer', key, value, timestamp, quality)
 		pb:handle(key, timestamp, value, quality)
 		return true
 	else
-		log.trace('::CLOUD:: publish_data', key, value, timestamp)
+		--log.trace('::CLOUD:: publish_data', key, value, timestamp)
 		return publish_data_no_pb(key, value, timestamp, quality)
 	end
 end
