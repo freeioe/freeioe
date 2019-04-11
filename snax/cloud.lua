@@ -263,7 +263,7 @@ local function calc_compress(bytes_in, bytes_out, count)
 	log.trace('::CLOUD:: Count '..count..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
 end
 
---- MQTT Publish with zip if it has
+--- MQTT Publish (not for data) with zip if it has
 local function mqtt_publish(topic, data, qos, retained)
 	local topic = assert(topic)
 	if not mqtt_client then
@@ -290,7 +290,7 @@ local function mqtt_publish(topic, data, qos, retained)
 	return mqtt_client:publish(topic, value, qos, retained)
 end
 
---- Publish data without push to period buffer
+--- Publish data without push to period buffer (no zip compress either)
 local function publish_data_no_pb(key, value, timestamp, quality)
 	--log.trace("::CLOUD:: Publish data", key, value, timestamp, quality)
 	assert(key)
@@ -307,16 +307,19 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 	return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
 end
 
+--- Push data to period buffer or publish to MQTT dirtectly
 local function publish_data(key, value, timestamp, quality)
 	if pb then
-		--log.trace('::CLOUD:: publish_data turn period buffer')
+		log.trace('::CLOUD:: publish_data turn period buffer', key, value, timestamp, quality)
 		pb:handle(key, timestamp, value, quality)
 		return true
 	else
+		log.trace('::CLOUD:: publish_data', key, value, timestamp)
 		return publish_data_no_pb(key, value, timestamp, quality)
 	end
 end
 
+--- Push stat data to period buffer or publish to MQTT dirtectly
 local function publish_stat(key, value, timestamp, quality)
 	--log.trace('::CLOUD:: publish_stat begin', mqtt_client, key, value)
 	if not mqtt_client then
@@ -339,6 +342,7 @@ local function publish_stat(key, value, timestamp, quality)
 	return mqtt_client:publish(mqtt_id.."/stat", val, 1, false)
 end
 
+--- The implementation for publish data in list (zip compressing required)
 local function publish_data_list_impl(val_list, topic)
 	assert(val_list, topic)
 	local val_count = #val_list
@@ -351,7 +355,7 @@ local function publish_data_list_impl(val_list, topic)
 	if not val then
 		log.warning('::CLOUD:: cjson encode failure. error: ', err)
 	else
-		--log.trace('::CLOUD:: Publish data in array and compress the json')
+		--log.trace('::CLOUD:: Publish data in array and compress the json for topic:', topic)
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
 		if mqtt_client then
@@ -362,10 +366,12 @@ local function publish_data_list_impl(val_list, topic)
 	end
 end
 
+--- For data array publish
 local publish_data_list = function(val_list)
 	return publish_data_list_impl(val_list, 'data_gz')
 end
 
+--- For stat data array publish
 local publish_stat_list = function(val_list)
 	return publish_data_list_impl(val_list, 'stat_gz')
 end
