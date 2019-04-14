@@ -100,8 +100,8 @@ function sys:self_co()
 	return coroutine.running()
 end
 
-function sys:wait()
-	return skynet.wait()
+function sys:wait(token)
+	return skynet.wait(token)
 end
 
 function sys:wakeup(co)

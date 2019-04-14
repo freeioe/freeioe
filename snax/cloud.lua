@@ -35,7 +35,7 @@ local mqtt_reconnect_timeout = 100
 --- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
 --- Close connection flag in block mode
-local close_connection = false
+local close_connection = nil
 --- App devices data fire flag to prevent fire data when reconnected
 local apps_devices_fired = false
 
@@ -612,7 +612,6 @@ end
 
 local connect_proc = nil
 local function start_reconnect()
-	close_connection = true
 	mqtt_client = nil
 	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
@@ -690,7 +689,6 @@ connect_proc = function(clean_session, username, password)
 		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
 		client:loop_start()
 	else
-		close_connection = false
 		local r, err
 		local ts = 1
 		while not r do
@@ -709,10 +707,8 @@ connect_proc = function(clean_session, username, password)
 			end
 		end
 
-		mqtt_client = client
-
 		--- Worker thread
-		while mqtt_client and not close_connection do
+		while client and close_connection == nil do
 			skynet.sleep(0)
 			if client then
 				client:loop(50, 1)
@@ -724,6 +720,9 @@ connect_proc = function(clean_session, username, password)
 			client:disconnect()
 			log.notice("::CLOUD:: Connection Closed!")
 			client:destroy()
+		end
+		if close_connection then
+			skynet.wakeup(close_connection)
 		end
 	end
 end
@@ -739,7 +738,9 @@ function response.disconnect()
 		client:destory()
 		log.notice("::CLOUD:: Connection Closed!")
 	else
-		close_connection = true
+		close_connection = {}
+		skynet.wait(close_connection)
+		close_connection = nil
 	end
 	return true
 end

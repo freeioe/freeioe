@@ -45,7 +45,8 @@ cp -rL lualib/resty __install/lualib/resty
 # Compile lua files
 # ./scripts/compile_lua.sh 
 
-# Release example (modbus)
+# Release Applications
+
 # Release ioe
 ./scripts/release_app.sh ioe
 #./scripts/release_app.sh bms
@@ -65,6 +66,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh dlt645
 ./scripts/release_app.sh sim_tank
 ./scripts/release_app.sh focas
+./scripts/release_app.sh telit_cloud
 
 # Validate platform name
 PLAT_NAMES="linux/x86_64 openwrt/arm_cortex-a9_neon openwrt/mips_24kc openwrt/x86_64 openwrt/aarch64_cortex-a53 openwrt/arm_cortex-a7_neon-vfpv4 android/arm"
