@@ -16,6 +16,7 @@ function device:initialize(api, sn, props, readonly)
 	self._props = props
 	if readonly then
 		self._app_name = dc.get('DEV_IN_APP', sn) or api._app_name
+		self._props = dc.get('DEVICES', sn) or {}
 	else
 		self._app_name = api._app_name
 	end
@@ -79,9 +80,9 @@ end
 
 function device:mod(inputs, outputs, commands)
 	assert(not self._readonly, "This is an readonly device!")
-	self._props.inputs = inputs
-	self._props.outputs = outputs
-	self._props.comands = commands
+	self._props.inputs = inputs or self._props.inputs
+	self._props.outputs = outputs or self._props.outputs
+	self._props.commands = commands or self._props.commands
 
 	self._inputs_map = {}
 	for _, t in ipairs(inputs or {}) do
