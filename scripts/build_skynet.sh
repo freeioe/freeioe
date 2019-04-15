@@ -26,11 +26,7 @@ else
 	source ~/toolchains/$TOOLCHAIN
 	echo $CC
 	echo "========================"
-	if [ "$TOOLCHAIN" == "android_arm.sh" ]; then
-		make android
-	else
-		make openwrt
-	fi
+	make openwrt
 fi
 
 file $SKYNET_DIR/skynet

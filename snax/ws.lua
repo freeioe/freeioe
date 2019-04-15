@@ -52,8 +52,8 @@ function client_class:id()
 end
 
 local function handle_socket(id)
-    -- limit request body size to 1024 * 1024 (you can pass nil to unlimit)
-    local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 1024 * 1024)
+    -- limit request body size to 8 * 1024 * 1024 (you can pass nil to unlimit)
+    local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8 * 1024 * 1024)
     if code then
         if header.upgrade == "websocket" then
             local ws = websocket.new(id, header, handler)
