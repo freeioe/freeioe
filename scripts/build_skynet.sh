@@ -19,7 +19,10 @@ echo "Make Clean Up"
 make cleanall
 
 if [ "$TOOLCHAIN" == "native" ]; then
-	echo $CC
+	unset CC
+	unset CXX
+	unset AR
+	unset STRIP
 	make linux
 else
 	echo "=== export toolchain ==="
