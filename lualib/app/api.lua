@@ -202,6 +202,7 @@ local function valid_device_sn(sn)
 end
 
 function api:add_device(sn, meta, inputs, outputs, commands)
+	assert(self._handler, "Cannot add device before initialize your API handler by calling set_handler")
 	assert(sn and meta, "Device Serial Number and Meta Information is required!")
 	assert(valid_device_sn(sn), "Invalid sn: "..sn)
 	valid_device_meta(meta or default_meta())
