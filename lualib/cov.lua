@@ -161,7 +161,7 @@ end
 function cov:stop()
 	if not self._stop then
 		self._stop = true
-		skynet.wakeup(self)
+		--skynet.wakeup(self)
 	end
 end
 

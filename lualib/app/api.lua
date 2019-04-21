@@ -198,13 +198,22 @@ function api:default_meta()
 end
 
 local function valid_device_sn(sn)
-	return nil == string.find(sn, '%s')
+	--return nil == string.find(sn, '%s')
+	return nil == string.find(sn, "[^%w_-%.]")
+end
+
+local function valid_prop_name(name)
+	return nil == string.find(name, "[^%w_]")
 end
 
 function api:add_device(sn, meta, inputs, outputs, commands)
 	assert(self._handler, "Cannot add device before initialize your API handler by calling set_handler")
 	assert(sn and meta, "Device Serial Number and Meta Information is required!")
 	assert(valid_device_sn(sn), "Invalid sn: "..sn)
+	for _, v in ipairs(inputs or {}) do assert(valid_prop_name(v.name)) end
+	for _, v in ipairs(outputs or {}) do assert(valid_prop_name(v.name)) end
+	for _, v in ipairs(commands or {}) do assert(valid_prop_name(v.name)) end
+
 	valid_device_meta(meta or default_meta())
 	meta.app_inst = self._app_name
 	meta.app = dc.get('APPS', self._app_name, 'name') or 'FreeIOE'

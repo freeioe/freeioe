@@ -1,0 +1,252 @@
+local class = require 'middleclass'
+local ioe = require 'ioe'
+
+local calc = class("APP_UTILS_CALC")
+
+function calc:initialize(sys, api, logger)
+	self._sys = sys
+	self._api = api
+	self._log = logger
+	self._triggers = {} --- all triggers key by trigger name
+	self._watch_map = {}  -- key is: sn/input/prop
+	self._cycle_triggers = {} -- key by trigger name
+end
+
+---
+-- name: Trigger name(unique)
+-- inputs: input array. e.g { {sn='xxxx', input='xxxx', prop='value', default=0} }
+-- trigger_cb: your trigger callback function
+-- cycle_time: if you want to cycle calling your callback during a time. integer in seconds
+function calc:add(name, inputs, trigger_cb, cycle_time)
+	assert(self._triggers[name] == nil)
+	local cycle_time =math.tointeger(cycle_time)
+	assert(cycle_time)
+
+	local trigger = {
+		name = name,
+		inputs = inputs,
+		callback = trigger_cb
+	}
+
+	for _, v in ipairs(inputs) do
+		assert(v.sn and v.input and v.prop)
+		self:_add_watch(trigger, v)
+	end
+
+	self._triggers[name] = trigger
+
+	self:_complete_trigger(trigger)
+	
+	if cycle_time then
+		trigger.cycle =  {
+			next_time = (ioe.time() // 1) + cycle_time,
+			cycle_time = cycle_time,
+		}
+		self._cycle_triggers[name] = trigger
+	end
+end
+
+function calc:remove(name)
+	self._triggers[name] = nil
+	-- TODO: cleanup watch_map and _cycle_triggers
+end
+
+function calc:_watch_key(sn, input, prop)
+	local prop = prop or 'value'
+	return sn.."/"..input.."/"..prop
+end
+
+function calc:_add_watch(trigger, input)
+	assert(input.sn and input.input and input.prop)
+	--- Set values buffer
+	local key = self:_watch_key(input.sn, input.input, input.prop)
+	input._key = key
+
+	if default ~= nil then
+		trigger.values[key] = default
+	end
+
+	local watch = self._watch_map[key] or {
+		device = self._api:get_device(input.sn),
+		triggers = {}
+	}
+
+	table.insert(watch.triggers, trigger)
+	self._watch_map[key] = watch
+
+	if not watch.device then
+		return 
+	end
+
+	input.value = watch.device:get_input_prop(input.input, input.prop)
+end
+
+function calc:_complete_trigger(trigger)
+	local inputs = trigger.inputs
+	local values = {}
+	for _, v in ipairs(inputs) do
+		local val = v.value or v.default
+		if not val then
+			self._log:trace("Missing input", self:_watch_key(v.sn, v.input, v.prop))
+			return
+		end
+		table.insert(values, val)
+	end
+	self._log:trace("Ready for trigger", trigger.name)
+	return self:_complete_call(trigger, table.unpack(values))
+end
+
+function calc:_complete_call(trigger, ...)
+	local f= trigger.callback
+	assert(f)
+
+	local r, er, err = xpcall(f, debug.traceback, ...)
+	if not r then
+		self._log:warning('Calc Callback bug', er, err)
+		return nil, er and tostring(er) or nil
+	end
+	return er, er and tostring(err) or nil
+end
+
+function calc:_clean_watch(key)
+	local watch = self._watch_map[key]
+
+	for _, trigger in ipairs(watch.triggers) do
+		for _, input in ipairs(trigger.inputs) do
+			if key == input._key then
+				self._log:trace("Clean input value", key, trigger.name)
+				input.value = nil
+			end
+		end
+	end
+end
+
+function calc:_on_add_device(app_src, sn, props)
+	--[[
+	local inputs = props.inputs or {}
+	for _, v in ipairs(inputs) do
+		local key = sn.."/"..input.."/"
+		for k, v in ipairs(self._watch_map) do
+			if k:sub(1, len) == key then
+				self:_clean_watch(key)
+			end
+		end
+	end
+	]]--
+end
+
+function calc:_on_del_device(app_src, sn)
+	local inputs = props.inputs or {}
+	for _, v in ipairs(inputs) do
+		local key = sn.."/"..v.name.."/"
+		for k, v in ipairs(self._watch_map) do
+			if k:sub(1, len) == key then
+				self._log:trace("Clean device input", key)
+				self:_clean_watch(key)
+			end
+		end
+	end
+end
+
+function calc:_on_mod_device(app_src, sn, props)
+	self._on_del_device(app_src, sn)
+	self._on_add_device(app_src, sn, props)
+end
+
+function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
+	if quality ~= nil and quality ~= 0 then
+		self._log:trace("Skip none qualitied value", app_src, sn, input, prop, value, timestamp, quality)
+		return
+	end
+
+	local key = self:_watch_key(sn, input, prop)
+
+	if not self._watch_map[key] then
+		--self._log:trace("Skip none watched value", app_src, sn, input, prop, value, timestamp, quality)
+		return
+	end
+
+	self._log:trace("Got watched value", app_src, sn, input, prop, value, timestamp, quality)
+	local watch = self._watch_map[key]
+
+	for _, trigger in ipairs(watch.triggers) do
+		for _, input in ipairs(trigger.inputs) do
+			if key == input._key then
+				input.value = value
+			end
+		end
+		self:_complete_trigger(trigger)
+	end
+end
+
+local function create_handler(calc)
+	local calc = calc
+	return {
+		--- 处理设备对象添加消息
+		on_add_device = function(app_src, sn, props)
+			--- 获取对象目录
+			calc:_on_add_device(app_src, sn, props)
+		end,
+		--- 处理设备对象删除消息
+		on_del_device = function(app_src, sn)
+			calc:_on_del_device(app_src, sn)
+		end,
+		--- 处理设备对象修改消息
+		on_mod_device = function(app_src, sn, props)
+			calc:_on_mod_device(app_src, sn, props)
+		end,
+		--- 处理设备输入项数值变更消息
+		on_input = function(app_src, sn, input, prop, value, timestamp, quality)
+			calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
+		end
+	}
+end
+
+function calc:_map_handler_func(handler, calc_handler, func)
+	local hf = handler[func] or function() end
+	local calc_func = calc_handler[func]
+	local map_f = function(...)
+		local r, er, err = xpcall(calc_func, debug.traceback, ...)
+		if not r then
+			self._log:warning('Calc bug:', er, err)
+		end
+		return hf(...)
+	end
+	handler[func] = map_f
+end
+
+function calc:map_handler(handler)
+	local calc_handler = create_handler(self)
+	self:_map_handler_func(handler, calc_handler, 'on_add_device')
+	self:_map_handler_func(handler, calc_handler, 'on_del_device')
+	self:_map_handler_func(handler, calc_handler, 'on_mod_device')
+	self:_map_handler_func(handler, calc_handler, 'on_input')
+	return handler
+end
+
+function calc:start()
+	skynet.fork(function()
+		while not self._stop do
+			local now = ioe.time()
+			for name, trigger in pairs(self._cycle_triggers) do
+				local cycle = trigger.cycle
+				if cycle and cycle.next_time <= now then
+					self:_complete_trigger(trigger)
+					cycle.next_time = cycle.next_time + cycle.cycle_time
+				end
+			end
+
+			self._sys:sleep(1000)
+		end
+	end)
+end
+
+function calc:stop()
+	if not self._stop then
+		self._stop = true
+		--skynet.wakeup(self)
+	end
+end
+
+
+return calc
