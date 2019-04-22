@@ -69,7 +69,6 @@ end
 -- @treturn number CPU Temperature
 _M.cpu_temperature = function()
 	local temp = try_read_cpu_temp_by_sysinfo() or try_read_cpu_temp_by_sys_thermal()
-	print(temp)
 	if temp then
 		return temp
 	end
