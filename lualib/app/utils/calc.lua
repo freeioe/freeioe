@@ -1,5 +1,6 @@
 local class = require 'middleclass'
 local ioe = require 'ioe'
+local cov = require 'cov'
 
 local calc = class("APP_UTILS_CALC")
 
@@ -10,6 +11,7 @@ function calc:initialize(sys, api, logger)
 	self._triggers = {} --- all triggers key by trigger name
 	self._watch_map = {}  -- key is: sn/input/prop
 	self._cycle_triggers = {} -- key by trigger name
+	self._cov = nil
 end
 
 ---
@@ -70,7 +72,7 @@ function calc:_add_watch(trigger, input)
 	table.insert(triggers, trigger)
 	self._watch_map[key] = triggers
 
-	local device = self._api:get_device(input.sn),
+	local device = self._api:get_device(input.sn)
 	if not device then
 		return 
 	end
@@ -160,6 +162,16 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 	end
 
 	self._log:trace("Got watched value", app_src, sn, input, prop, value, timestamp, quality)
+
+	if self._cov then
+		-- If cov enabled
+		return self._cov:handle(key, value, timestamp, quality)
+	end
+
+	return self:_on_cov_input(key, value, timestamp, quality)
+end
+
+function calc:_on_cov_input(key, value, timestamp, quality)
 	local triggers = self._watch_map[key] or {}
 
 	for _, trigger in ipairs(triggers) do
@@ -218,6 +230,11 @@ function calc:map_handler(handler)
 end
 
 function calc:start()
+	self._cov = cov:new(function(...)
+		self._on_cov_input(...)
+	end)
+	self._cov:start()
+
 	skynet.fork(function()
 		while not self._stop do
 			local now = ioe.time()

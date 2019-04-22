@@ -144,6 +144,10 @@ end
 
 function cov:start(no_param)
 	assert(no_param == nil)
+	if not self._opt.ttl then
+		return
+	end
+
 	self._stop = nil
 	local min_ttl_gap = self._opt.min_ttl_gap
 	skynet.fork(function()
