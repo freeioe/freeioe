@@ -55,10 +55,21 @@ local try_read_cpu_temp_by_sysinfo = function()
 	end
 end
 
+local try_read_cpu_temp_by_sys_thermal = function()
+	local s, err = _M.exec('cat /sys/devices/virtual/thermal/thermal_zone0/temp')
+	if s and string.len(s) > 0 then
+		local temp = tonumber(s)
+		if temp then
+			return temp / 1000
+		end
+	end
+end
+
 --- Get the cpu temperature
 -- @treturn number CPU Temperature
 _M.cpu_temperature = function()
-	local temp = try_read_cpu_temp_by_sysinfo()
+	local temp = try_read_cpu_temp_by_sysinfo() or try_read_cpu_temp_by_sys_thermal()
+	print(temp)
 	if temp then
 		return temp
 	end

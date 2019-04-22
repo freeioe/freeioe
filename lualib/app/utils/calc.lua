@@ -19,8 +19,7 @@ end
 -- cycle_time: if you want to cycle calling your callback during a time. integer in seconds
 function calc:add(name, inputs, trigger_cb, cycle_time)
 	assert(self._triggers[name] == nil)
-	local cycle_time =math.tointeger(cycle_time)
-	assert(cycle_time)
+	local cycle_time = math.tointeger(cycle_time)
 
 	local trigger = {
 		name = name,
@@ -66,19 +65,17 @@ function calc:_add_watch(trigger, input)
 		trigger.values[key] = default
 	end
 
-	local watch = self._watch_map[key] or {
-		device = self._api:get_device(input.sn),
-		triggers = {}
-	}
+	local triggers = self._watch_map[key] or {}
 
-	table.insert(watch.triggers, trigger)
-	self._watch_map[key] = watch
+	table.insert(triggers, trigger)
+	self._watch_map[key] = triggers
 
-	if not watch.device then
+	local device = self._api:get_device(input.sn),
+	if not device then
 		return 
 	end
 
-	input.value = watch.device:get_input_prop(input.input, input.prop)
+	input.value = device:get_input_prop(input.input, input.prop)
 end
 
 function calc:_complete_trigger(trigger)
@@ -109,9 +106,9 @@ function calc:_complete_call(trigger, ...)
 end
 
 function calc:_clean_watch(key)
-	local watch = self._watch_map[key]
+	local triggers = self._watch_map[key] or {}
 
-	for _, trigger in ipairs(watch.triggers) do
+	for _, trigger in ipairs(triggers) do
 		for _, input in ipairs(trigger.inputs) do
 			if key == input._key then
 				self._log:trace("Clean input value", key, trigger.name)
@@ -127,8 +124,8 @@ function calc:_on_add_device(app_src, sn, props)
 	for _, v in ipairs(inputs) do
 		local key = sn.."/"..input.."/"
 		for k, v in ipairs(self._watch_map) do
-			if k:sub(1, len) == key then
-				self:_clean_watch(key)
+			if k == key then
+				-- TODO:
 			end
 		end
 	end
@@ -136,14 +133,10 @@ function calc:_on_add_device(app_src, sn, props)
 end
 
 function calc:_on_del_device(app_src, sn)
-	local inputs = props.inputs or {}
-	for _, v in ipairs(inputs) do
-		local key = sn.."/"..v.name.."/"
-		for k, v in ipairs(self._watch_map) do
-			if k:sub(1, len) == key then
-				self._log:trace("Clean device input", key)
-				self:_clean_watch(key)
-			end
+	for k, v in ipairs(self._watch_map) do
+		if k:sub(1, len) == key then
+			self._log:trace("Clean device input", key)
+			self:_clean_watch(key)
 		end
 	end
 end
@@ -167,9 +160,9 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 	end
 
 	self._log:trace("Got watched value", app_src, sn, input, prop, value, timestamp, quality)
-	local watch = self._watch_map[key]
+	local triggers = self._watch_map[key] or {}
 
-	for _, trigger in ipairs(watch.triggers) do
+	for _, trigger in ipairs(triggers) do
 		for _, input in ipairs(trigger.inputs) do
 			if key == input._key then
 				input.value = value
