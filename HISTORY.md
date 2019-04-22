@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.3.2 ()
+v1.3.2 (2019-4-22)
 ------------------
 
 * Flush data when period buffer enabled with longer period
@@ -11,6 +11,13 @@ v1.3.2 ()
 * Delay gcom reading as it takes too much time (app.ioe)
 * Fixed COV TTL issue
 * Force data flush when offline more than 60 seconds
+* Echo cloud information to /tmp/sysinfo folder
+* Create mqtt app helper
+* Improved COV and PeriodBuffer
+* Fixed mod_device will cleanup all device information
+* Cleanup input/output from datacenter when device removed
+* Create application calculation utility helper
+* Increate application api version to four(4)
 
 
 v1.3.1 (2019-1-10)
