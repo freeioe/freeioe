@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.3.4 (2019-4-24)
+------------------
+
+* Ergent fix about device serial number validation.
+
+
 v1.3.3 (2019-4-24)
 ------------------
 
