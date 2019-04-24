@@ -169,10 +169,9 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 		return
 	end
 
-	self._log:trace("Got watched value", app_src, sn, input, prop, value, timestamp, quality)
-
 	if self._cov then
 		-- If cov enabled
+		--self._log:trace("COV push watched value", key, value, timestamp, quality)
 		return self._cov:handle(key, value, timestamp, quality)
 	end
 
@@ -180,6 +179,7 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 end
 
 function calc:_on_cov_input(key, value, timestamp, quality)
+	self._log:trace("Value changed for watched key: "..key, value, timestamp, quality)
 	local triggers = self._watch_map[key] or {}
 
 	for _, trigger in ipairs(triggers) do
@@ -229,6 +229,7 @@ function calc:_map_handler_func(handler, calc_handler, func)
 end
 
 function calc:map_handler(handler)
+	assert(self._cov, "Calc util needs to be started and then map handler")
 	local calc_handler = create_handler(self)
 	self:_map_handler_func(handler, calc_handler, 'on_add_device')
 	self:_map_handler_func(handler, calc_handler, 'on_del_device')
@@ -239,11 +240,11 @@ end
 
 function calc:start()
 	self._cov = cov:new(function(...)
-		self._on_cov_input(...)
+		self:_on_cov_input(...)
 	end)
 	self._cov:start()
 
-	skynet.fork(function()
+	self._sys:fork(function()
 		while not self._stop do
 			local now = ioe.time()
 			for name, trigger in pairs(self._cycle_triggers) do
@@ -255,6 +256,11 @@ function calc:start()
 			end
 
 			self._sys:sleep(1000)
+		end
+
+		if self._cov then
+			self._cov:stop()
+			self._cov = nil
 		end
 	end)
 end
