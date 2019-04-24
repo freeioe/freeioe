@@ -3,6 +3,13 @@
 
 # Release history
 
+v1.3.3 (2019-4-24)
+------------------
+
+* Fixed cov assets in application calculation utility helper
+* Added unit for ioe device
+
+
 v1.3.2 (2019-4-22)
 ------------------
 
