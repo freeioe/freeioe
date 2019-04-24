@@ -199,7 +199,7 @@ end
 
 local function valid_device_sn(sn)
 	--return nil == string.find(sn, '%s')
-	return nil == string.find(sn, "[^%w_-%.]")
+	return nil == string.find(sn, "[^%w_%-%.]")
 end
 
 local function valid_prop_name(name)
