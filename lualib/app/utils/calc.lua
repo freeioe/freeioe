@@ -20,7 +20,7 @@ end
 -- trigger_cb: your trigger callback function
 -- cycle_time: if you want to cycle calling your callback during a time. integer in seconds
 function calc:add(name, inputs, trigger_cb, cycle_time)
-	assert(self._triggers[name] == nil)
+	assert(self._triggers[name] == nil, "Trigger "..name.." already exits!")
 	local cycle_time = math.tointeger(cycle_time)
 
 	local trigger = {
@@ -44,6 +44,14 @@ function calc:add(name, inputs, trigger_cb, cycle_time)
 			cycle_time = cycle_time,
 		}
 		self._cycle_triggers[name] = trigger
+	end
+
+	return function()
+		local trigger = self._triggers[name]
+		if not trigger then
+			return nil, "Trigger removed"
+		end
+		return self._complete_trigger(trigger)
 	end
 end
 
@@ -87,7 +95,7 @@ function calc:_complete_trigger(trigger)
 		local val = v.value or v.default
 		if not val then
 			self._log:trace("Missing input", self:_watch_key(v.sn, v.input, v.prop))
-			return
+			return nil, "missing input"
 		end
 		table.insert(values, val)
 	end
