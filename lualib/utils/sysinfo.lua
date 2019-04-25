@@ -420,11 +420,6 @@ _M.firmware_version = function()
 	end
 end
 
-local data_dir_list = {
-	tgw303x = '/root',
-	kooiot = '/mnt/data',
-}
-
 local try_list_mounts = function()
 	local s, err = _M.exec('mounts | grep /dev/mmcblk1p3')
 	if not s then
@@ -433,18 +428,28 @@ local try_list_mounts = function()
 	return string.match('^/dev/mmcblk1p3%s+(%w+)%s')
 end
 
+local data_dir_list = {
+	tgw303x = '/root',
+	kooiot = '/mnt/data',
+}
+
 _M.data_dir = function()
+	local os_id = _M.os_id()
 	if os_id ~= 'openwrt' then
 		return '/tmp'
 	end
 	local result = nil
 	local s, err = _M.cat_file('/tmp/sysinfo/board_name')
 	if s then
+		s = string.match(s, '^(%w+)')
 		result = data_dir_list[s]
-		if not result and string.find(s, '^kooiot,') then
-			result = data_dir_list.kooiot
+
+		if not result then
+			s = string.match(s, '^(%w+),.+')
+			result = data_dir_list[s]
 		end
 	end
+
 	return result or try_list_mounts() or '/tmp'
 end
 
