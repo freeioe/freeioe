@@ -28,19 +28,25 @@ function fb:push(...)
 end
 
 -- callback that return true/false
-function fb:start(callback)
-	assert(callback)
-	self._callback = callback
+function fb:start(data_callback, batch_callback)
+	assert(data_callback)
+	self._callback = data_callback
 	skynet.fork(function()
 		while not self._stop and self._callback do
-			if #self._files == 0 and #self._buffer == 0 then
+			if self:_empty() then
 				--- Sleep one second
 				skynet.sleep(100)
 			end
 
-			self:_try_fire_data()
+			if batch_callback then
+				self:_try_fire_data_batch(batch_callback)
+			else
+				self:_try_fire_data()
+			end
 
-			skynet.sleep(100)
+			if not self:_empty() then
+				skynet.sleep(100)
+			end
 		end
 	end)
 end
@@ -52,10 +58,17 @@ function fb:stop()
 	end
 end
 
+--- check if buffer empty
+function fb:_empty()
+	return #self._files == 0 and #self._buffer == 0 and #self._fire_buffer == 0
+end
+
+--- Create buffer file path
 function fb:_make_file_path(index)
 	return self._file_path.."."..index
 end
 
+---
 function fb:_dump_buffer_to_file(buffer)
 	local str, err = cjson.encode(buffer)
 	if not str then
@@ -198,13 +211,13 @@ function fb:_try_fire_data()
 			break
 		end
 
-		local r, rr, err = pcall(callback, table.unpack(data))
+		local r, done, err = pcall(callback, table.unpack(data))
 		if not r then
-			--print('Code bug', rr)
+			print('Code bug', done, err)
 			break
 		end
 
-		if not rr then
+		if not done then
 			--- Fire not available
 			break
 		end
@@ -213,7 +226,47 @@ function fb:_try_fire_data()
 	end
 end
 
-function fb:test()
+--- Fire data in batch array.
+function fb:_try_fire_data_batch(callback)
+	while not self:_empty() do
+		--- Make sure fire_buffer not changed
+		local working_index = self._fire_index
+
+		local r, done, err = pcall(callback, self._fire_buffer, self._fire_offset)
+		if not r then
+			print('Code bug', done, err)
+			break
+		end
+
+		if not done then
+			--- Fire not available
+			break
+		end
+
+		--print('done', done, ' from offset', self._fire_offset)
+
+		if working_index == self._fire_index then
+			self._fire_offset = self._fire_offset + tonumber(done)
+
+			--- if fire_buffer already done
+			if #self._fire_buffer < self._fire_offset then
+				self._fire_buffer = self:_load_next_file()
+				self._fire_offset = 1
+			end
+
+			--- swap buffer
+			if #self._fire_buffer == 0 then
+				if #self._buffer ~= 0 then
+					self._fire_buffer = self._buffer
+					self._fire_offset = 1
+					self._buffer = {}
+				end
+			end
+		end
+	end
+end
+
+function fb:__test_a()
 	local o = fb:new('/tmp/aaaaa', 10, 10)
 
 	local callback_ok = true
@@ -276,6 +329,94 @@ function fb:test()
 	print('after sleep')
 
 	o:stop()
+end
+
+function fb:__test_b()
+	local o = fb:new('/tmp/aaaaa', 10, 10)
+
+	local callback_ok = true
+	local callback_check = 0
+	local callback = function(data)
+		assert(callback_check == data, "callback_check: "..callback_check.." data: "..data)
+		if callback_ok then
+			print('single:', data)
+
+			callback_check = callback_check + 1
+			return true
+		end
+		return false
+	end
+
+	local callback_batch = function(data, offset)
+		local first_val = data[offset][1]
+		assert(callback_check == first_val, "callback_check: "..callback_check.." data: "..first_val)
+		if callback_ok then
+			print('batch:', cjson.encode(data))
+
+			local left = #data - offset + 1
+			print('batch start:', callback_check, 'left:', left)
+			assert(left > 0, "left zero data cout: "..#data.." offset: "..offset)
+			left = left < 3 and left or 3
+			callback_check = callback_check + left
+			print('batch check', callback_check)
+			return left
+		end
+		return nil
+	end
+	o:start(callback, callback_batch)
+	local data = 0
+	--- push 200 data, ok done
+	print('work', data)
+	while data < 200 do
+		o:push(data)
+		data = data + 1
+	end
+
+	print('enter sleep')
+	print(callback_check)
+	skynet.sleep(10)
+	assert(callback_check == 200, "callback_check: "..callback_check.." data: 200")
+	print('after sleep')
+
+	--- push 200 data, lost 100
+	callback_ok = false
+	print('work', data)
+	while data < 401 do
+		o:push(data)
+		data = data + 1
+	end
+
+	print('enter sleep')
+	print(callback_check)
+	skynet.sleep(10)
+	assert(callback_check == 200, "callback_check: "..callback_check.." data: 200")
+	print('after sleep')
+
+	--- callback ok
+	callback_check = 300
+	callback_ok = true
+	skynet.sleep(200)
+	assert(callback_check == 401, "callback_check: "..callback_check.." data: 401")
+
+	--- push another 200 data
+	print('work', data)
+	while data < 700 do
+		o:push(data)
+		data = data + 1
+	end
+
+	print('enter sleep')
+	print(callback_check)
+	skynet.sleep(10)
+	assert(callback_check == 700, "callback_check: "..callback_check.." data: 700")
+	print('after sleep')
+
+	o:stop()
+end
+
+function fb:__test()
+	self:__test_a()
+	self:__test_b()
 end
 
 return fb

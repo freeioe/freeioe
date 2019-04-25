@@ -1,5 +1,5 @@
 local cjson = require 'cjson.safe'
-local log_reader = require 'log_reader'
+local log_reader = require 'utils.log_reader'
 
 return {
 	get = function(self)

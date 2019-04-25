@@ -6,7 +6,7 @@ local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo' 
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
-local pkg_api = require 'pkg_api'
+local pkg_api = require 'utils.pkg_api'
 local ioe = require 'ioe'
 
 local sys_lock = nil

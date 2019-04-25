@@ -5,7 +5,7 @@ local datacenter = require 'skynet.datacenter'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
 local httpdown = require 'httpdown'
-local pkg_api = require 'pkg_api'
+local pkg_api = require 'utils.pkg_api'
 local lfs = require 'lfs'
 local ioe = require 'ioe'
 

@@ -1,6 +1,6 @@
 local skynet = require 'skynet'
-local fb = require 'utils.fb'
+local fb = require 'buffer.file'
 
 skynet.start(function()
-	fb:test()
+	fb:__test()
 end)

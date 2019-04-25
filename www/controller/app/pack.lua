@@ -2,7 +2,7 @@ local skynet = require 'skynet'
 local dc = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
 local ioe = require 'ioe'
-local afe = require 'app_file_editor'
+local afe = require 'utils.app_file_editor'
 
 return {
 	post = function(self)

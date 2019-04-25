@@ -1,7 +1,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
-local pkg_api = require 'pkg_api'
+local pkg_api = require 'utils.pkg_api'
 local ioe = require 'ioe'
 
 return {

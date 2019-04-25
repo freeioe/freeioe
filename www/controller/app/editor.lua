@@ -1,6 +1,6 @@
 local ioe = require 'ioe'
 
-local app_file_editor = require 'app_file_editor'
+local app_file_editor = require 'utils.app_file_editor'
 local get_ops = app_file_editor.get_ops
 local post_ops = app_file_editor.post_ops
 

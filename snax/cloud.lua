@@ -7,8 +7,8 @@ local datacenter = require 'skynet.datacenter'
 local ioe = require 'ioe'
 local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
-local cyclebuffer = require 'cyclebuffer'
-local periodbuffer = require 'periodbuffer'
+local cyclebuffer = require 'buffer.cycle'
+local periodbuffer = require 'buffer.period'
 local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
@@ -1098,7 +1098,7 @@ end
 function accept.app_query_log(id, args)
 	local inst = args.inst
 	--[[
-	local log_reader = require 'log_reader'
+	local log_reader = require 'utils.log_reader'
 	local max_count = tonumber(args.max_count) or 60
 	local log, err = log_reader.by_app(inst, max_count) 
 	]]--
