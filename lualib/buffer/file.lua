@@ -2,11 +2,13 @@ local class = require 'middleclass'
 local skynet = require 'skynet'
 local zlib_loaded, zlib = pcall(require, 'zlib')
 local cjson = require 'cjson.safe'
+local lfs = require 'lfs'
+local log = require 'utils.log'
 
 local fb = class("File_Buffer_Utils")
 
-function fb:initialize(file_path, data_count_per_file, max_file_count)
-	self._file_path = file_path
+function fb:initialize(file_folder, data_count_per_file, max_file_count)
+	self._file_folder = file_folder
 	self._data_count_per_file = data_count_per_file
 	self._max_file_count = max_file_count
 	self._files = {} -- file list that already in disk
@@ -31,6 +33,11 @@ end
 function fb:start(data_callback, batch_callback)
 	assert(data_callback)
 	self._callback = data_callback
+
+	--- make sure the folder exits
+	lfs.mkdir(self._file_folder)
+	assert(lfs.attributes(self._file_folder, 'mode') == 'directory')
+
 	skynet.fork(function()
 		while not self._stop and self._callback do
 			if batch_callback then
@@ -60,8 +67,9 @@ end
 
 function fb:size()
 	local fire_left = #self._fire_buffer - self._fire_offset + 1
+
 	local file_count = #self._files
-	if file_count > 0 and self._files[0] != self._fire_index then
+	if file_count > 0 and self._files[0] ~= self._fire_index then
 		file_count = file_count - 1
 	end
 
@@ -70,7 +78,7 @@ end
 
 --- Create buffer file path
 function fb:_make_file_path(index)
-	return self._file_path.."."..index
+	return self._file_folder.."/cache."..index
 end
 
 ---
@@ -81,12 +89,16 @@ function fb:_dump_buffer_to_file(buffer)
 	end
 
 	local index = ((self._fire_index or 1) + #self._files) % 0xFFFFFFFF
-	local f, err = io.open(self:_make_file_path(index), "w+")
+	local file_path = self:_make_file_path(index)
+	local f, err = io.open(file_path, "w+")
 	if not f then
 		return nil, err
 	end
 
+	str = self:_compress(str)
+
 	--print('dump', index, str)
+	log.debug("Saving data caches to file:", file_path, 'size:', string.len(str)) 
 
 	f:write(str)
 	f:close()
@@ -134,7 +146,10 @@ function fb:_load_next_file()
 
 		-- Open file
 		--print('load ', index)
-		local f, err = io.open(self:_make_file_path(index))
+		local file_path = self:_make_file_path(index)
+		log.debug("Loading data caches from file:", file_path) 
+
+		local f, err = io.open(file_path)
 		if f then
 			--- read all file
 			local str = f:read('a')
@@ -143,6 +158,7 @@ function fb:_load_next_file()
 			--- if previous reading file then remove it
 			if self._fire_index then
 				os.remove(self:_make_file_path(self._fire_index))
+				self._fire_index = nil
 			end
 
 			--- set the current index
@@ -150,6 +166,7 @@ function fb:_load_next_file()
 
 			if str then
 				--- if read ok decode content
+				str = self:_decompress(str)
 				local buffer, err = cjson.decode(str)
 				if buffer then
 					--- if decode ok return
@@ -269,6 +286,22 @@ function fb:_try_fire_data_batch(callback)
 			end
 		end
 	end
+end
+
+function fb:_compress(data)
+	if not zlib_loaded then
+		return data
+	end
+	local deflate = zlib.deflate()
+	return deflate(data, 'finish')
+end
+
+function fb:_decompress(data)
+	if not zlib_loaded then
+		return data
+	end
+	local inflate = zlib.inflate()
+	return inflate(data, "finish")
 end
 
 function fb:__test_a()

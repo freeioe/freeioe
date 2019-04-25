@@ -2,14 +2,15 @@ local class = require 'middleclass'
 
 local cb = class("_CycleBuffer_LIB")
 
-function cb:initialize(size)
-	assert(size)
+function cb:initialize(cb, size)
+	assert(cb and size)
+	self._cb = cb
 	self._max_size = size
 	self._buf = {}
 end
 
-function cb:handle(cb, ...)
-	local ne = self:fire_all(cb)
+function cb:push(...)
+	local ne = self:fire_all(self._cb)
 	if ne and cb(...) then
 		return
 	end
@@ -21,6 +22,7 @@ function cb:handle(cb, ...)
 end
 
 function cb:fire_all(cb)
+	local cb = cb or self._cb
 	local buf = self._buf
 	local ne = true
 	if #buf <= 0 then

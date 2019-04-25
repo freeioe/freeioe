@@ -12,7 +12,7 @@ function pb:initialize(period, size)
 	self._cb = nil
 end
 
-function pb:handle(...)
+function pb:push(...)
 	self._buf[#self._buf + 1] = {...}
 	--print('pb size', self:size())
 

@@ -1,7 +1,7 @@
 local class = require 'middleclass'
 local mosq = require 'mosquitto'
 local cjson = require 'cjson.safe'
-local periodbuffer = require 'periodbuffer'
+local periodbuffer = require 'buffer.period'
 local ioe = require 'ioe'
 local cov = require 'cov'
 
@@ -354,7 +354,7 @@ return function(app_class, api_ver)
 		if not pb then
 			return safe_call(self.publish_data, self, ...)
 		else
-			return pb:handle(...)
+			return pb:push(...)
 		end
 	end
 

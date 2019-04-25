@@ -305,7 +305,7 @@ local function read_os_id()
 		local id = string.match(l, '^ID="*(.-)"*$')
 		if id then
 			f:close()
-			return id
+			return string.lower(id)
 		end
 	end
 	f:close()
@@ -418,6 +418,34 @@ _M.firmware_version = function()
 			return string.match(s, 'PRETTY_NAME="([^"]+)"')
 		end
 	end
+end
+
+local data_dir_list = {
+	tgw303x = '/root',
+	kooiot = '/mnt/data',
+}
+
+local try_list_mounts = function()
+	local s, err = _M.exec('mounts | grep /dev/mmcblk1p3')
+	if not s then
+		return nil, err
+	end
+	return string.match('^/dev/mmcblk1p3%s+(%w+)%s')
+end
+
+_M.data_dir = function()
+	if os_id ~= 'openwrt' then
+		return '/tmp'
+	end
+	local result = nil
+	local s, err = _M.cat_file('/tmp/sysinfo/board_name')
+	if s then
+		result = data_dir_list[s]
+		if not result and string.find(s, '^kooiot,') then
+			result = data_dir_list.kooiot
+		end
+	end
+	return result or try_list_mounts() or '/tmp'
 end
 
 return _M

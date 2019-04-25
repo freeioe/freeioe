@@ -9,6 +9,7 @@ local app_api = require 'app.api'
 local cjson = require 'cjson.safe'
 local cyclebuffer = require 'buffer.cycle'
 local periodbuffer = require 'buffer.period'
+local filebuffer = require 'buffer.file'
 local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
@@ -55,6 +56,8 @@ local cov = nil					--- COV helper
 local cov_min_timer_gap = 10	--- COV min timer gap which will be set to period / 10 if upload period enabled
 local pb = nil					--- Upload period buffer helper
 local stat_pb = nil				--- Upload period buffer helper for stat data
+local pb_file = nil				--- file saving the dropped data
+local pb_file_fire_gap = 1000	--- fire cached file min gap (ms)
 local log_buffer = nil			--- Cycle buffer for logs
 local event_buffer = nil		--- Cycle buffer for events
 local comm_buffer = nil			--- Cycle buffer for communication data
@@ -311,7 +314,7 @@ end
 local function publish_data(key, value, timestamp, quality)
 	if pb then
 		--log.trace('::CLOUD:: publish_data turn period buffer', key, value, timestamp, quality)
-		pb:handle(key, timestamp, value, quality)
+		pb:push(key, timestamp, value, quality)
 		return true
 	else
 		--log.trace('::CLOUD:: publish_data', key, value, timestamp)
@@ -346,7 +349,7 @@ end
 local function publish_data_list_impl(val_list, topic)
 	assert(val_list, topic)
 	local val_count = #val_list
-	--log.trace('::CLOUD:: publish_data_list begin', mqtt_client, #val_list)
+	--log.trace('::CLOUD:: publish_data_list begin', mqtt_id..'/'..topic, #val_list)
 	if not mqtt_client or val_count == 0 then
 		return nil, val_count == 0 and "Empty data list" or "MQTT connection lost!"
 	end
@@ -361,6 +364,7 @@ local function publish_data_list_impl(val_list, topic)
 		if mqtt_client then
 			calc_compress(bytes_in, bytes_out, val_count)
 			local topic = mqtt_id.."/"..topic
+			--log.trace('::CLOUD:: publish_data_list', topic, #val_list)
 			return mqtt_client:publish(topic, deflated, 1, false)
 		end
 	end
@@ -371,9 +375,30 @@ local publish_data_list = function(val_list)
 	return publish_data_list_impl(val_list, 'data_gz')
 end
 
+local publish_cached_data_list = function(val_list)
+	skynet.sleep(pb_file_fire_gap // 10) -- delay by gap
+	if mqtt_client then
+		log.debug('::CLOUD:: Uploading cached data! Count:', #val_list)
+	end
+
+	local r, err = publish_data_list_impl(val_list, 'cached_data_gz')
+	if not r then
+		return nil, err
+	end
+
+	return #val_list
+end
+
 --- For stat data array publish
 local publish_stat_list = function(val_list)
 	return publish_data_list_impl(val_list, 'stat_gz')
+end
+
+---
+local push_to_pb_file = function(...)
+	if pb_file then
+		pb_file:push(...)
+	end
 end
 
 ---
@@ -397,6 +422,7 @@ local function load_cov_conf()
 			opt.ttl = default_ttl
 		end
 	end
+	log.notice('::CLOUD:: COV option:', enable_cov, ttl, enable_data_upload)
 	cov = cov_m:new(publish_data, opt)
 
 	--- Stat data cov stuff
@@ -419,20 +445,36 @@ local function load_pb_conf()
 		return
 	end
 
-	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD")  or 1000)-- period in ms
+	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
+	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 4096) -- pack limit
 
 	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
 	period = enable_data_upload and period or (60 * 1000)
 
-	log.notice('::CLOUD:: Loading period buffer, period:', period)
+	log.notice('::CLOUD:: Loading period buffer! Period:', period)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
-		pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
-		pb:start(publish_data_list)
-		stat_pb = periodbuffer:new(period, math.floor((1024 * period) / 1000))
+		pb = periodbuffer:new(period, period_pl)
+		pb:start(publish_data_list, push_to_pb_file)
+		stat_pb = periodbuffer:new(period, period_pl * 10)  --- there is no buffer for stat
 		stat_pb:start(publish_stat_list)
+
+		--- file buffer
+		local sysinfo = require 'utils.sysinfo'
+		local cache_folder = sysinfo.data_dir().."/cloud_cache"
+		log.notice('::CLOUD:: Data cache folder:', cache_folder)
+		local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024) -- should be more less than period_pl
+		local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) -- about 240M in disk
+		pb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
+		log.notice('::CLOUD:: Cache option:', data_per_file, data_max_count, pb_file_fire_gap)
+
+		pb_file = filebuffer:new(cache_folder, data_per_file, data_max_count) 
+		pb_file:start(function(...) 
+			-- Disable one data fire
+			return false 
+		end, publish_cached_data_list)
 	else
 		--- Period buffer disabled
 		if pb then
@@ -456,7 +498,7 @@ local function load_conf()
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
 	mqtt_secret = datacenter.get("CLOUD", "SECRET")
 
-	log.notice("::CLOUD:: ", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
+	log.notice("::CLOUD:: Connection: ", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
@@ -481,20 +523,20 @@ local function load_conf()
 	load_cov_conf()
 end
 
-local function publish_comm(app, sn, dir, ts, content)
+local function publish_comm(app_src, sn, dir, ts, content)
 	if not mqtt_client then
 		return nil, "MQTT connection lost!"
 	end
 
 	local topic = mqtt_id.."/comm"
-	local msg = { (sn or app).."/"..dir, ts, content }
+	local msg = { (sn or app_src).."/"..dir, ts, content }
 	--log.trace('::CLOUD:: publish comm', topic, table.concat(msg))
 
 	if enable_comm_upload and ts < enable_comm_upload then
 		return mqtt_client:publish(topic, cjson.encode(msg), 1, false)
 	end
 
-	if enable_comm_upload_apps[app] and ts < enable_comm_upload_apps[app] then
+	if enable_comm_upload_apps[app_src] and ts < enable_comm_upload_apps[app_src] then
 		return mqtt_client:publish(topic, cjson.encode(msg), 1, false)
 	end
 
@@ -511,7 +553,7 @@ local function publish_log(ts, lvl, ...)
 	return mqtt_client:publish(mqtt_id.."/log", cjson.encode({lvl, ts, ...}), 1, false)
 end
 
-local function publish_event(sn, level, type_, info, data, timestamp)
+local function publish_event(app_src, sn, level, type_, info, data, timestamp)
 	local event = { level = level, ['type'] = type_, info = info, data = data }
 	if not mqtt_client then
 		return nil, "MQTT connection lost!"
@@ -520,21 +562,23 @@ local function publish_event(sn, level, type_, info, data, timestamp)
 end
 
 function load_buffers()
-	comm_buffer = cyclebuffer:new(32, "COMM")
-	log_buffer = cyclebuffer:new(128, "LOG")
-	event_buffer = cyclebuffer:new(16, "EVENT")
+	comm_buffer = cyclebuffer:new(publish_comm, 32)
+	log_buffer = cyclebuffer:new(publish_log, 128)
+	event_buffer = cyclebuffer:new(publish_event, 16)
+
+	--- the run loop to fire those buffers
 	skynet.fork(function()
 		while not service_stop do
 			local gap = 100
 			if mqtt_client then
-				local r = comm_buffer:fire_all(publish_comm)
-					and log_buffer:fire_all(publish_log)
-					and event_buffer:fire_all(publish_event)
+				local r = comm_buffer:fire_all()
+					and log_buffer:fire_all()
+					and event_buffer:fire_all()
 				if r then
 					gap = 500
 				else
 					--- If you see this trace
-					log.trace('::CLOUD:: buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
+					log.trace('::CLOUD:: Buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
 					log.warning("::CLOUD:: Failed to fire comm or log or event")
 				end
 			end
@@ -551,7 +595,7 @@ local Handler = {
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		--local hex = string.gsub(content, "%w%w", "%1 ")
 		--log.trace('::CLOUD:: on_comm', app, sn, dir, ts, hex)
-		comm_buffer:handle(publish_comm, app, sn, dir, ts, content)
+		comm_buffer:push(app, sn, dir, ts, content)
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
 		--log.trace('::CLOUD:: on_state', app, sn, stat, prop, value, timestamp)
@@ -567,7 +611,7 @@ local Handler = {
 		if not enable_event_upload or (tonumber(level) < enable_event_upload)  then
 			return --- If not enable event data upload will skip event buffer
 		end
-		event_buffer:handle(publish_event, sn, level, type_, info, data, timestamp)
+		event_buffer:push(app, sn, level, type_, info, data, timestamp)
 	end,
 	on_add_device = function(app, sn, props)
 		log.trace('::CLOUD:: on_add_device', app, sn, props)
@@ -930,7 +974,7 @@ end
 -- When register to logger service, this is used to handle the log messages
 --
 function accept.log(ts, lvl, ...)
-	log_buffer:handle(publish_log, ts, lvl, ...)
+	log_buffer:push(ts, lvl, ...)
 end
 
 ---
