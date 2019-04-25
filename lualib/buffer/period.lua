@@ -4,12 +4,10 @@ local skynet = require 'skynet'
 local pb = class("_PERIOD_CONSUMER_LIB")
 
 -- Period in ms
-function pb:initialize(period, size, name)
+function pb:initialize(period, size)
 	assert(period and size)
-
 	self._period = period
 	self._max_size = size
-	self._name = name or "unknown period consumer"
 	self._buf = {}
 	self._cb = nil
 end
@@ -23,6 +21,10 @@ function pb:handle(...)
 	end
 
 	if #self._buf > self._max_size then
+		if self._full_cb then
+			local data = self._buf[1]
+			self._full_cb(table.unpack(data))
+		end
 		table.remove(self._buf, 1)	
 	end
 end
@@ -60,23 +62,25 @@ function pb:max_size()
 	return self._max_size
 end
 
-function pb:start(cb)
+function pb:start(cb, full_cb)
 	assert(cb)
 	self._stop = nil
 	self._cb = cb
+	self._full_cb = full_cb
 	skynet.fork(function()
 		while not self._stop do
 			self:fire_all(cb)
 			--print(math.floor(self._period / 10))
 			skynet.sleep(math.floor(self._period / 10), self)
 		end
+		skynet.wakeup(self)
 	end)
 end
 
 function pb:stop()
 	if not self._stop then
 		self._stop = true
-		skynet.wakeup(self)
+		skynet.wait(self)
 	end
 end
 

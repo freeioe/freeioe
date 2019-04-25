@@ -159,13 +159,14 @@ function cov:start(no_param)
 			end
 			skynet.sleep(gap)
 		end
+		skynet.wakeup(self)
 	end)
 end
 
 function cov:stop()
 	if not self._stop then
 		self._stop = true
-		--skynet.wakeup(self)
+		skynet.wait(self)
 	end
 end
 

@@ -262,13 +262,14 @@ function calc:start()
 			self._cov:stop()
 			self._cov = nil
 		end
+		skynet.wakeup(self)
 	end)
 end
 
 function calc:stop()
 	if not self._stop then
 		self._stop = true
-		--skynet.wakeup(self)
+		skynet.wait(self)
 	end
 end
 

@@ -18,7 +18,7 @@ function fb:initialize(file_path, data_count_per_file, max_file_count)
 end
 
 function fb:push(...)
-	if #self._files == 0 and #self._buffer == 0 then
+	if self:empty() then
 		if self._callback(...) then
 			return true
 		end
@@ -33,34 +33,39 @@ function fb:start(data_callback, batch_callback)
 	self._callback = data_callback
 	skynet.fork(function()
 		while not self._stop and self._callback do
-			if self:_empty() then
-				--- Sleep one second
-				skynet.sleep(100)
-			end
-
 			if batch_callback then
-				self:_try_fire_data_batch(batch_callback)
+				sleep_gap = self:_try_fire_data_batch(batch_callback)
 			else
-				self:_try_fire_data()
+				sleep_gap = self:_try_fire_data()
 			end
 
-			if not self:_empty() then
-				skynet.sleep(100)
-			end
+			skynet.sleep(sleep_gap or 100)
 		end
+
+		skynet.wakeup(self)
 	end)
 end
 
 function fb:stop()
 	if not self._stop then
 		self._stop = true
-		-- TODO:
+		skynet.wait(self)
 	end
 end
 
 --- check if buffer empty
-function fb:_empty()
+function fb:empty()
 	return #self._files == 0 and #self._buffer == 0 and #self._fire_buffer == 0
+end
+
+function fb:size()
+	local fire_left = #self._fire_buffer - self._fire_offset + 1
+	local file_count = #self._files
+	if file_count > 0 and self._files[0] != self._fire_index then
+		file_count = file_count - 1
+	end
+
+	return #self._buffer + fire_left + (file_count  * self._data_count_per_file)
 end
 
 --- Create buffer file path
@@ -228,7 +233,7 @@ end
 
 --- Fire data in batch array.
 function fb:_try_fire_data_batch(callback)
-	while not self:_empty() do
+	while not self:empty() do
 		--- Make sure fire_buffer not changed
 		local working_index = self._fire_index
 
