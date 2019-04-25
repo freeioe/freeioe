@@ -126,6 +126,8 @@ function fb:_push(...)
 	--- append to buffer
 	self._buffer[#self._buffer + 1] = {...}
 
+	-- print(#self._buffer)
+
 	--- dump to file if data count reach
 	if #self._buffer >= self._data_count_per_file then
 		self:_dump_buffer_to_file(self._buffer)
@@ -172,10 +174,10 @@ function fb:_load_next_file()
 					--- if decode ok return
 					return buffer
 				else
-					print('decode error ', index)
+					log.error('Decode data caches error! Index: ', index)
 				end
 			else
-				print('read error ', index)
+				log.error('Read data caches file error! Index: ', index)
 			end
 		end
 		
@@ -221,7 +223,7 @@ function fb:_try_fire_data()
 	local callback = self._callback
 	local first = true
 
-	while true do
+	while not self:empty() do
 		local data = self:_pop(first)
 		if not data then
 			assert(self._fire_index == nil)
@@ -235,7 +237,7 @@ function fb:_try_fire_data()
 
 		local r, done, err = pcall(callback, table.unpack(data))
 		if not r then
-			print('Code bug', done, err)
+			log.warning('Buffer_file callback bug', done, err)
 			break
 		end
 
@@ -254,9 +256,17 @@ function fb:_try_fire_data_batch(callback)
 		--- Make sure fire_buffer not changed
 		local working_index = self._fire_index
 
+		--- dump current buffer to file and fire them
+		if not working_index and #self._files == 0 then
+			self:_dump_buffer_to_file(self._buffer)
+			self._buffer = {}
+			working_index = self._fire_index
+		end
+
+		--- callback
 		local r, done, err = pcall(callback, self._fire_buffer, self._fire_offset)
 		if not r then
-			print('Code bug', done, err)
+			log.warning('Buffer_file callback bug', done, err)
 			break
 		end
 
@@ -267,6 +277,7 @@ function fb:_try_fire_data_batch(callback)
 
 		--print('done', done, ' from offset', self._fire_offset)
 
+		--- if index equal means the self._fire_buffer is valid one
 		if working_index == self._fire_index then
 			self._fire_offset = self._fire_offset + tonumber(done)
 
@@ -275,15 +286,7 @@ function fb:_try_fire_data_batch(callback)
 				self._fire_buffer = self:_load_next_file()
 				self._fire_offset = 1
 			end
-
-			--- swap buffer
-			if #self._fire_buffer == 0 then
-				if #self._buffer ~= 0 then
-					self._fire_buffer = self._buffer
-					self._fire_offset = 1
-					self._buffer = {}
-				end
-			end
+			--- only process the dumped files buffer and the current buffer will be dumped in nex loop
 		end
 	end
 end
