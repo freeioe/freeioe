@@ -72,6 +72,7 @@ return function(app_class, api_ver)
 
 		self._close_connection = nil
 		self._mqtt_reconnect_timeout = 1000
+		self._max_mqtt_reconnect_timeout = 512 * 1000 -- about 8.5 minutes
 
 		zlib_loaded, zlib = pcall(require, 'zlib')
 
@@ -203,7 +204,7 @@ return function(app_class, api_ver)
 		self._mqtt_client = nil
 		self._sys:timeout(self._mqtt_reconnect_timeout, function() self:_connect_proc() end)
 		self._mqtt_reconnect_timeout = self._mqtt_reconnect_timeout * 2
-		if self._mqtt_reconnect_timeout > 10 * 60 * 1000 then
+		if self._mqtt_reconnect_timeout > self._max_mqtt_reconnect_timeout then
 			self._mqtt_reconnect_timeout = 1000
 		end
 	end
@@ -272,22 +273,11 @@ return function(app_class, api_ver)
 			end
 		end
 
-		local r, err
-		local ts = 1
-		while not r do
-			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
-			if not r then
-				log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
-				sys:sleep(ts * 500)
-				ts = ts * 2
-				if ts >= 64 then
-					client:destroy()
-					sys:timeout(100, function() self:_connect_proc() end)
-					-- We meet bug that if client reconnect to broker with lots of failures, it's socket will be broken. 
-					-- So we will re-create the client
-					return
-				end
-			end
+		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+		if not r then
+			log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+			client:destroy()
+			return self:_start_reconnect()
 		end
 
 		--- Worker thread

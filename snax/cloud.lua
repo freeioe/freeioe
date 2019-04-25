@@ -32,6 +32,7 @@ local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
 
 --- Next reconnect timeout which will be multi by two until a max time
 local mqtt_reconnect_timeout = 100
+local max_mqtt_reconnect_timeout = 512 * 100 --- about 8.5 minutes
 
 --- Whether using the async mode (which cause crashes for now -_-!)
 local enable_async = false
@@ -455,9 +456,9 @@ local function load_pb_conf()
 
 	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
 	period = enable_data_upload and period or (60 * 1000)
-	period_pl = period_pl * (period // 100)
+	period_pl = period_pl * (period // 1000)
 
-	log.notice('::CLOUD:: Loading period buffer! Period:', period)
+	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_pl)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
@@ -665,7 +666,7 @@ local function start_reconnect()
 	mqtt_client = nil
 	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
-	if mqtt_reconnect_timeout > 10 * 60 * 100 then
+	if mqtt_reconnect_timeout > max_mqtt_reconnect_timeout then
 		mqtt_reconnect_timeout = 100
 	end
 
@@ -739,22 +740,11 @@ connect_proc = function(clean_session, username, password)
 		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
 		client:loop_start()
 	else
-		local r, err
-		local ts = 1
-		while not r do
-			r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
-			if not r then
-				log.error(string.format("::CLOUD::: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
-				skynet.sleep(ts * 500)
-				ts = ts * 2
-				if ts >= 64 then
-					client:destroy()
-					skynet.timeout(100, function() connect_proc() end)
-					-- We meet bug that if client reconnect to broker with lots of failures, it's socket will be broken. 
-					-- So we will re-create the client
-					return
-				end
-			end
+		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+		if not r then
+			log.error(string.format("::CLOUD::: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+			client:destroy()
+			return start_reconnect()
 		end
 
 		--- Worker thread
