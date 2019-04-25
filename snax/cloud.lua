@@ -57,8 +57,8 @@ local cov = nil					--- COV helper
 local cov_min_timer_gap = 10	--- COV min timer gap which will be set to period / 10 if upload period enabled
 local pb = nil					--- Upload period buffer helper
 local stat_pb = nil				--- Upload period buffer helper for stat data
-local pb_file = nil				--- file saving the dropped data
-local pb_file_fire_gap = 1000	--- fire cached file min gap (ms)
+local fb_file = nil				--- file saving the dropped data
+local fb_file_fire_gap = 1000	--- fire cached file min gap (ms)
 local log_buffer = nil			--- Cycle buffer for logs
 local event_buffer = nil		--- Cycle buffer for events
 local comm_buffer = nil			--- Cycle buffer for communication data
@@ -377,7 +377,7 @@ local publish_data_list = function(val_list)
 end
 
 local publish_cached_data_list = function(val_list)
-	skynet.sleep(pb_file_fire_gap // 10) -- delay by gap
+	skynet.sleep(fb_file_fire_gap // 10) -- delay by gap
 	if mqtt_client then
 		log.debug('::CLOUD:: Uploading cached data! Count:', #val_list)
 	end
@@ -397,13 +397,13 @@ end
 
 ---
 local warning_upload_period = 0
-local push_to_pb_file = function(...)
-	if pb_file then
+local push_to_fb_file = function(...)
+	if fb_file then
 		if mqtt_client and skynet.time() > warning_upload_period  then
 			warning_upload_period = skynet.time() + 5 * 60 * 100 --- 5 minutes
 			log.warning('::CLOUD:: ***Make sure you have proper upload period if you read this***!!!')
 		end
-		pb_file:push(...)
+		fb_file:push(...)
 	end
 end
 
@@ -445,6 +445,31 @@ local function load_cov_conf()
 	stat_cov = cov_m:new(publish_stat, opt)
 end
 
+--- Load file buffer objects
+local function load_fb_conf()
+	local enable_fb = tonumber(datacenter.get("CLOUD", "DATA_CACHE") or 0)
+	if enable_fb == 0 then
+		return
+	end
+
+	--- file buffer
+	local sysinfo = require 'utils.sysinfo'
+	local cache_folder = sysinfo.data_dir().."/cloud_cache"
+	log.notice('::CLOUD:: Data cache folder:', cache_folder)
+
+	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024) -- should be more less than period_pl
+	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) -- about 240M in disk
+	fb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
+
+	log.notice('::CLOUD:: Cache option:', data_per_file, data_max_count, fb_file_fire_gap)
+
+	fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count) 
+	fb_file:start(function(...) 
+		-- Disable one data fire
+		return false 
+	end, publish_cached_data_list)
+end
+
 --- Load period buffer objects (data,stat)
 local function load_pb_conf()
 	if not zlib_loaded then
@@ -464,24 +489,9 @@ local function load_pb_conf()
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
 		pb = periodbuffer:new(period, period_pl)
-		pb:start(publish_data_list, push_to_pb_file)
+		pb:start(publish_data_list, push_to_fb_file)
 		stat_pb = periodbuffer:new(period, period_pl * 10)  --- there is no buffer for stat
 		stat_pb:start(publish_stat_list)
-
-		--- file buffer
-		local sysinfo = require 'utils.sysinfo'
-		local cache_folder = sysinfo.data_dir().."/cloud_cache"
-		log.notice('::CLOUD:: Data cache folder:', cache_folder)
-		local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024) -- should be more less than period_pl
-		local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) -- about 240M in disk
-		pb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
-		log.notice('::CLOUD:: Cache option:', data_per_file, data_max_count, pb_file_fire_gap)
-
-		pb_file = filebuffer:new(cache_folder, data_per_file, data_max_count) 
-		pb_file:start(function(...) 
-			-- Disable one data fire
-			return false 
-		end, publish_cached_data_list)
 	else
 		--- Period buffer disabled
 		if pb then
@@ -526,6 +536,7 @@ local function load_conf()
 		datacenter.set('CLOUD', 'COMM_UPLOAD_APPS', enable_comm_upload_apps)
 	end
 
+	load_fb_conf()
 	load_pb_conf()
 	load_cov_conf()
 end
@@ -664,6 +675,8 @@ end
 local connect_proc = nil
 local function start_reconnect()
 	mqtt_client = nil
+
+	log.debug('::CLOUD:: Start reconnect to cloud after '..(mqtt_reconnect_timeout/100)..' seconds')
 	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
 	if mqtt_reconnect_timeout > max_mqtt_reconnect_timeout then
