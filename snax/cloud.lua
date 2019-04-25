@@ -395,8 +395,13 @@ local publish_stat_list = function(val_list)
 end
 
 ---
+local warning_upload_period = 0
 local push_to_pb_file = function(...)
 	if pb_file then
+		if mqtt_client and skynet.time() > warning_upload_period  then
+			warning_upload_period = skynet.time() + 5 * 60 * 100 --- 5 minutes
+			log.warning('::CLOUD:: ***Make sure you have proper upload period if you read this***!!!')
+		end
 		pb_file:push(...)
 	end
 end
