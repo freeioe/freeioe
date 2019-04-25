@@ -703,7 +703,13 @@ connect_proc = function(clean_session, username, password)
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
 			log.notice("::CLOUD:: ON_CONNECT", success, rc, msg) 
-			client:publish(mqtt_id.."/status", "ONLINE", 1, true)
+			local r, err = client:publish(mqtt_id.."/status", "ONLINE", 1, true)
+			if not r then
+				client:disconnect()
+				log.warning("::CLOUD:: Publish status failed", rc, err) 
+				return start_reconnect()
+			end
+
 			mqtt_client = client
 			local mqtt_last = mqtt_client_last or 0
 			mqtt_client_last = skynet.time()
