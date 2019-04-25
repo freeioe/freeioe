@@ -446,10 +446,11 @@ local function load_pb_conf()
 	end
 
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
-	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 4096) -- pack limit
+	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 512) -- pack limit per second
 
 	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
 	period = enable_data_upload and period or (60 * 1000)
+	period_pl = period_pl * (period // 100)
 
 	log.notice('::CLOUD:: Loading period buffer! Period:', period)
 	if period >= 1000 then

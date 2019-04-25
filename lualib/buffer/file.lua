@@ -98,7 +98,7 @@ function fb:_dump_buffer_to_file(buffer)
 	str = self:_compress(str)
 
 	--print('dump', index, str)
-	log.debug("Saving data caches to file:", file_path, 'size:', string.len(str)) 
+	log.debug("Saving data caches to file:", file_path, 'count:', #buffer, 'size:', string.len(str)) 
 
 	f:write(str)
 	f:close()
