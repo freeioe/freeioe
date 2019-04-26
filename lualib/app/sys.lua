@@ -73,7 +73,14 @@ function sys:now()
 end
 
 function sys:fix_time()
-	skynet.fix_time()
+	if skynet.fix_time then
+		skynet.fix_time()
+	else
+		self._logger:error("Reboot FreeIOE after 5 seconds for fix time diff!")
+		self:timeout(5000, function()
+			self:abort()
+		end)
+	end
 end
 
 -- seconds (UTC now)
