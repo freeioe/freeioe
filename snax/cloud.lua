@@ -224,7 +224,7 @@ local msg_handler = {
 -- MQTT Message Callback
 --
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	log.info("::CLOUD::: message:", packet_id, topic, data, qos, retained)
+	log.info("::CLOUD:: message:", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		log.error("::CLOUD:: msg_callback recevied incorrect topic message")
@@ -460,7 +460,7 @@ local function load_fb_conf()
 	local cache_folder = sysinfo.data_dir().."/cloud_cache"
 	log.notice('::CLOUD:: Data caches folder:', cache_folder)
 
-	-- should be more less than period_pl
+	-- should be more less than period_max
 	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 4096)
 	-- about 240M in disk
 	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 1024)
@@ -483,16 +483,16 @@ local function load_pb_conf()
 	end
 
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
-	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 10240) -- pack limit
+	local period_max = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_MAX") or 10240) -- pack limit
 
-	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_pl)
+	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_max)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
-		pb = periodbuffer:new(period, period_pl, max_data_upload_dpp)
+		pb = periodbuffer:new(period, period_max, max_data_upload_dpp)
 		pb:start(publish_data_list, push_to_fb_file)
-		stat_pb = periodbuffer:new(period, period_pl * 10, max_data_upload_dpp)  --- there is no buffer for stat
+		stat_pb = periodbuffer:new(period, period_max * 10, max_data_upload_dpp)  --- there is no buffer for stat
 		stat_pb:start(publish_stat_list)
 	else
 		--- Period buffer disabled
@@ -644,7 +644,7 @@ local Handler = {
 		snax.self().post.device_del(app, sn)
 	end,
 	on_mod_device = function(app, sn, props)
-		log.trace('::CLOUD::: on_mod_device', app, sn, props)
+		log.trace('::CLOUD:: on_mod_device', app, sn, props)
 		snax.self().post.device_mod(app, sn, props)
 	end,
 	on_input = function(app, sn, input, prop, value, timestamp, quality)
@@ -800,14 +800,14 @@ connect_proc = function(clean_session, username, password)
 	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	local ts = 100
 	while not r do
-		log.error(string.format("::CLOUD::: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+		log.error(string.format("::CLOUD:: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
 
 		ts = ts * 2
 		skynet.sleep(ts)
 
 		--- Reach max reconnect timeout then destroy current client
 		if ts > max_mqtt_reconnect_timeout then
-			log.error("::CLOUD::: Destroy client and reconnect!")
+			log.error("::CLOUD:: Destroy client and reconnect!")
 			client:destroy()  -- destroy client
 			mqtt_reconnect_timeout = 100 -- reset the reconnect timeout
 			return start_reconnect()
@@ -929,7 +929,7 @@ function accept.enable_data_one_short(id, period)
 	end
 
 	enable_data_upload = true
-	log.debug("::CLOUD::: data one-short upload enabled!")
+	log.debug("::CLOUD:: data one-short upload enabled!")
 
 	if id then
 		--- only fire action result and data snapshot if has id
@@ -1317,7 +1317,7 @@ function accept.ext_upgrade(id, args)
 end
 
 function accept.batch_script(id, script)
-	log.debug("::CLOUD::: Cloud batch script received", id, script)
+	log.debug("::CLOUD:: Cloud batch script received", id, script)
 	datacenter.set("BATCH", id, "script", script)
 	local runner = skynet.newservice("run_batch", id)
 	datacenter.set("BATCH", id, "inst", runner)

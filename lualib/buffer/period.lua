@@ -1,5 +1,6 @@
 local class = require 'middleclass'
 local skynet = require 'skynet'
+local log = require 'utils.log'
 
 local pb = class("_PERIOD_CONSUMER_LIB")
 
@@ -15,54 +16,73 @@ function pb:initialize(period, max_buf_size, max_batch_size)
 	self._cb = nil
 end
 
+--- Push one data into buffer
 function pb:push(...)
+	-- Append to buffer
 	self._buf[#self._buf + 1] = {...}
 	--print('pb size', self:size())
 
+	--- Check max size
 	if not self._max_size then
 		return
 	end
 
+	--- Drop data if bigger than size
 	while #self._buf > self._max_size do
+		--- Call data drop callback if has
 		if self._drop_cb then
 			local data = self._buf[1]
 			self._drop_cb(table.unpack(data))
 		end
+
+		--log.trace("Drop one data")
 		table.remove(self._buf, 1)	
 	end
 end
 
 function pb:_push_front(val_list)
+	--log.trace("_push_front", #self._buf, #val_list)
+	-- If there is no new data 
 	if #self._buf == 0 then
 		self._buf = val_list
+		return
 	end
 
-	--- merge list
-	for _, v in ipairs(self._buf) do
-		val_list[#val_list + 1] = v
+	--- merge data list
+	val_list = table.move(self._buf, 1, #self._buf, #val_list + 1, val_list)
+
+	--log.trace("_push_front", #self._buf, #val_list)
+
+	--- Check max size
+	if #val_list <= self._max_size then
+		self._buf = val_list
+		return
 	end
 
-	local droped = {}
-	while #val_list > self._max_size do
-		droped = val_list[0]
-		table.remove(val_list, 1)
-	end
-	self._buf = val_list
+	--- Drop data
+	local drop_size = #val_list - self._max_size
+	--log.trace("Drop data count", drop_size)
+
+	--- Update buffer
+	self._buf = table.move(val_list, drop_size + 1, #val_list, 1, {})
 
 	if not self._drop_cb then
 		return
 	end
 
-	for _, v in ipairs(droped) do
-		self._drop_cb(table.unpack(v))
+	--- Call data drop callback
+	for i = 1, drop_size do
+		self._drop_cb(table.unpack(val_list[i]))
 	end
 end
 
+--- Fire all data
 function pb:fire_all(cb)
 	local cb = cb or self._cb
 	assert(cb)
+	--log.trace("Buffer size", #self._buf)
 
-	--- swap buffer
+	--- swap buffer in case callback will pause
 	local buf = self._buf
 	self._buf = {}
 
@@ -72,6 +92,7 @@ function pb:fire_all(cb)
 
 	local max_batch_size = self._max_batch_size
 
+	--- No more than max batch call once
 	if #buf <= max_batch_size then
 		--- less than max batch
 		if cb(buf) then
@@ -83,20 +104,24 @@ function pb:fire_all(cb)
 		end
 	end
 
+	--log.trace("Sperate buffer", #buf)
 	--- create sub list and push to callback
 	while #buf > 0 do
 		--- max_batch_size
 		local data = table.move(buf, 1, max_batch_size, 1, {})
+		--log.trace("Sperated data", #data)
 		if not cb(data) then
 			break
 		end
 		--- remove the fired data
-		buf = table.move(buf, max_batch_size + 1, #buf - max_batch_size, 1, {})
+		buf = table.move(buf, max_batch_size + 1, #buf, 1, {})
+		--log.trace("Left buffer", #buf)
 	end
 
 	if #buf > 0 then
 		---- push back the unfired data
 		self:_push_front(buf)
+		--log.trace("Now buffer size", #self._buf)
 		return false
 	end
 
