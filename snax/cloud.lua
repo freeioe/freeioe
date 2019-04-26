@@ -34,8 +34,6 @@ local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
 local mqtt_reconnect_timeout = 100
 local max_mqtt_reconnect_timeout = 512 * 100 --- about 8.5 minutes
 
---- Whether using the async mode (which cause crashes for now -_-!)
-local enable_async = false
 --- Close connection flag in block mode
 local close_connection = nil
 --- App devices data fire flag to prevent fire data when reconnected
@@ -448,20 +446,24 @@ end
 --- Load file buffer objects
 local function load_fb_conf()
 	local enable_fb = tonumber(datacenter.get("CLOUD", "DATA_CACHE") or 0)
-	if enable_fb == 0 then
+	if not pb or enable_fb == 0 then
+		log.notice('::CLOUD:: Data caches disabled')
 		return
 	end
 
 	--- file buffer
 	local sysinfo = require 'utils.sysinfo'
 	local cache_folder = sysinfo.data_dir().."/cloud_cache"
-	log.notice('::CLOUD:: Data cache folder:', cache_folder)
+	log.notice('::CLOUD:: Data caches folder:', cache_folder)
 
-	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024) -- should be more less than period_pl
-	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) -- about 240M in disk
+	-- should be more less than period_pl
+	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024) 
+	-- about 240M in disk
+	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) 
+	-- Upload cached data one per gap time
 	fb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
 
-	log.notice('::CLOUD:: Cache option:', data_per_file, data_max_count, fb_file_fire_gap)
+	log.notice('::CLOUD:: Data caches option:', data_per_file, data_max_count, fb_file_fire_gap)
 
 	fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count) 
 	fb_file:start(function(...) 
@@ -477,11 +479,7 @@ local function load_pb_conf()
 	end
 
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
-	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 512) -- pack limit per second
-
-	-- If data is not upload to our cloud, then take pre-defined period (60 seconds)
-	period = enable_data_upload and period or (60 * 1000)
-	period_pl = period_pl * (period // 1000)
+	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 10240) -- pack limit
 
 	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_pl)
 	if period >= 1000 then
@@ -536,9 +534,9 @@ local function load_conf()
 		datacenter.set('CLOUD', 'COMM_UPLOAD_APPS', enable_comm_upload_apps)
 	end
 
-	load_fb_conf()
 	load_pb_conf()
 	load_cov_conf()
+	load_fb_conf()
 end
 
 local function publish_comm(app_src, sn, dir, ts, content)
@@ -674,78 +672,115 @@ end
 
 local connect_proc = nil
 local function start_reconnect()
-	mqtt_client = nil
+	if mqtt_client then
+		log.error('::CLOUD:: ****Cannot start reconnection when client is there!****')
+		return
+	end
 
-	log.debug('::CLOUD:: Start reconnect to cloud after '..(mqtt_reconnect_timeout/100)..' seconds')
+	log.notice('::CLOUD:: Start reconnect to cloud after '..(mqtt_reconnect_timeout/100)..' seconds')
+
 	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
 	if mqtt_reconnect_timeout > max_mqtt_reconnect_timeout then
 		mqtt_reconnect_timeout = 100
 	end
-
 end
 
 ---
 -- Connection process function
 --
 connect_proc = function(clean_session, username, password)
+	if mqtt_client then
+		log.warning("::CLOUD:: There is one client exits!")
+		return
+	end
+
 	local clean_session = clean_session or true
 	local client = assert(mosq.new(mqtt_id, clean_session))
-	client:version_set(mosq.PROTOCOL_V311) --- Set the protocol version
+	local close_client = false -- set will close the connection work loop
+
+	--- Set the protocol version
+	client:version_set(mosq.PROTOCOL_V311) 
+
+	--- Set login by username/password
 	if username then
-		client:login_set(username, password) --- Set login by username/password
+		client:login_set(username, password) 
 	else
 		local id = "dev="..mqtt_id.."|time="..os.time() --- id is device id and current time
 		local pwd = hmac:new(sha1, mqtt_secret, id):hexdigest() --- hash the id as password
 		client:login_set(id, pwd) --- Set the login
 	end
+
 	--- on connect result callback
 	client.ON_CONNECT = function(success, rc, msg) 
 		if success then
 			log.notice("::CLOUD:: ON_CONNECT", success, rc, msg) 
+
+			--- Check mqtt_client
+			if mqtt_client then
+				log.warning("::CLOUD:: There is one client exits!")
+				close_client = true --- close current one
+				return
+			end
+
+			--- Publish online status message
 			local r, err = client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			if not r then
-				client:disconnect()
 				log.warning("::CLOUD:: Publish status failed", rc, err) 
+				close_client = true --- close current one
 				return start_reconnect()
 			end
 
+			--- Set mqtt_client and last time
 			mqtt_client = client
-			local mqtt_last = mqtt_client_last or 0
+			local mqtt_last = mqtt_client_last or 0 -- remember last
 			mqtt_client_last = skynet.time()
+			--- Reset the reconnection timeout
+			mqtt_reconnect_timeout = 100
+
 			--- Subscribe topics
 			for _, v in ipairs(wildtopics) do
 				--client:subscribe("ALL/"..v, 1)
 				client:subscribe(mqtt_id.."/"..v, 1)
 			end
-			mqtt_reconnect_timeout = 100
 
 			-- Only fire apps and device once
 			if not apps_devices_fired then
-				log.trace("::CLOUD:: ON_CONNECT fire devices and apps")
+				log.info("::CLOUD:: ON_CONNECT fire devices and apps")
 				apps_devices_fired = true
-				mqtt_last = 0
+				mqtt_last = 0  -- reset last
 				snax.self().post.fire_devices()
 				snax.self().post.fire_apps()
 			end
 
-			if mqtt_client_last - mqtt_last > 60 then
+			-- If we disconnected more than minute
+			if mqtt_client_last - mqtt_last > 60 * 100 then
 				--- Only flush data when period buffer enabled and period is bigger than 3 seconds
 				if pb and pb:period() > 3000 then
-					log.trace("::CLOUD:: Flush all device data within three seconds!")
+					log.info("::CLOUD:: Flush all device data within three seconds!")
 					skynet.timeout(300, function() snax.self().post.data_flush() end)
 				end
 			end
+			log.notice("::CLOUD:: Connection is ready!!", client:socket()) 
 		else
-			log.warning("::CLOUD:: ON_CONNECT", success, rc, msg) 
+			log.warning("::CLOUD:: ON_CONNECT FAILED", success, rc, msg) 
+			close_client = true --- close current one
 			start_reconnect()
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log.warning("::CLOUD:: ON_DISCONNECT", success, rc, msg) 
-		if not enable_async and mqtt_client then
+		close_client = true --- close current one
+
+		-- If client is current connection
+		if mqtt_client == client then
 			mqtt_client_last = skynet.time()
-			start_reconnect()
+			mqtt_client = nil -- clear the client object as it wil cleaned by others
+
+			-- If client is not asking to be closed then reconnect to cloud
+			if close_connection == nil then
+				start_reconnect()
+			end
 		end
 	end
 
@@ -755,52 +790,62 @@ connect_proc = function(clean_session, username, password)
 	--- Tell mqtt backends that this device is online
 	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
 
-	if enable_async then
-		local r, err = client:connect_async(mqtt_host, mqtt_port, mqtt_keepalive)
-		client:loop_start()
-	else
-		local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
-		if not r then
-			log.error(string.format("::CLOUD::: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
-			client:destroy()
+	--- Loop until we connected to cloud or start the resonnection
+	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+	local ts = 100
+	while not r do
+		log.error(string.format("::CLOUD::: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+
+		ts = ts * 2
+		skynet.sleep(ts)
+
+		--- Reach max reconnect timeout then destroy current client
+		if ts > max_mqtt_reconnect_timeout then
+			log.error("::CLOUD::: Destroy client and reconnect!")
+			client:destroy()  -- destroy client
+			mqtt_reconnect_timeout = 100 -- reset the reconnect timeout
 			return start_reconnect()
 		end
 
-		--- Worker thread
-		while client and close_connection == nil do
-			skynet.sleep(0)
-			if client then
-				client:loop(50, 1)
-			else
-				skynet.sleep(50)
-			end
-		end
+		r, err = client:reconnect()
+	end
+
+	--- Worker thread 
+	while client and not close_client and close_connection == nil do
+		skynet.sleep(0)
 		if client then
-			client:disconnect()
-			log.notice("::CLOUD:: Connection Closed!")
-			client:destroy()
-		end
-		if close_connection then
-			skynet.wakeup(close_connection)
+			client:loop(50, 1)
+		else
+			skynet.sleep(50)
 		end
 	end
+
+	--- disconnect client and destory it
+	client:disconnect()
+	log.notice("::CLOUD:: Connection Closed!")
+	client:destroy()
+	log.notice("::CLOUD:: Client Destroyed!")
+
+	--- wakeup close connection waitor
+	if close_connection then
+		skynet.wakeup(close_connection)
+	end
+	--- Done here!!
 end
 
 function response.disconnect()
 	local client = mqtt_client
-	log.debug("::CLOUD:: Connection Closing!")
+	log.notice("::CLOUD:: Try to close connection!")
 
-	if enable_async then
-		mqtt_client = nil
-		client:disconnect()
-		client:loop_stop()
-		client:destory()
-		log.notice("::CLOUD:: Connection Closed!")
-	else
-		close_connection = {}
-		skynet.wait(close_connection)
-		close_connection = nil
+	if close_connection ~= nil then
+		log.notice("::CLOUD:: Connection is closing!")
+		return nil, "Connection is closing!"
 	end
+	close_connection = {}
+	skynet.wait(close_connection)
+	close_connection = nil
+
+	log.notice("::CLOUD:: Connection Closed!")
 	return true
 end
 
@@ -1014,6 +1059,11 @@ end
 
 local fire_device_timer = nil
 function accept.fire_devices(timeout)
+	if not mqtt_client then
+		apps_devices_fired = nil -- wait untils the connection
+		return
+	end
+
 	local timeout = timeout or 50
 	log.notice("::CLOUD:: Cloud fire devices, timeout", timeout)
 	if fire_device_timer then
@@ -1068,6 +1118,11 @@ end
 -- Delay application list post
 local fire_app_timer = nil
 function accept.fire_apps(timeout)
+	if not mqtt_client then
+		apps_devices_fired = nil -- wait untils the connection
+		return
+	end
+
 	local timeout = timeout or 50
 	log.notice("::CLOUD:: Cloud fire applications, timeout", timeout)
 	if fire_app_timer then
