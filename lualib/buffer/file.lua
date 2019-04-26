@@ -16,7 +16,6 @@ function fb:initialize(file_folder, data_count_per_file, max_file_count)
 	self._fire_buffer = {}
 	self._fire_offset = 1 -- buffer offset. 
 	self._fire_index = nil -- file index. nil means there is no fire_buffer (file or buffer)
-	self._stop = false
 end
 
 function fb:push(...)
@@ -33,6 +32,7 @@ end
 function fb:start(data_callback, batch_callback)
 	assert(data_callback)
 	self._callback = data_callback
+	self._stop = nil
 
 	--- make sure the folder exits
 	lfs.mkdir(self._file_folder)
@@ -49,14 +49,14 @@ function fb:start(data_callback, batch_callback)
 			skynet.sleep(sleep_gap or 100)
 		end
 
-		skynet.wakeup(self)
+		skynet.wakeup(self._stop)
 	end)
 end
 
 function fb:stop()
 	if not self._stop then
-		self._stop = true
-		skynet.wait(self)
+		self._stop = {}
+		skynet.wait(self._stop)
 	end
 end
 

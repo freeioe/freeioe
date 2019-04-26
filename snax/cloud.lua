@@ -457,7 +457,7 @@ local function load_fb_conf()
 	log.notice('::CLOUD:: Data caches folder:', cache_folder)
 
 	-- should be more less than period_pl
-	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024) 
+	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_DPP") or 1024) 
 	-- about 240M in disk
 	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) 
 	-- Upload cached data one per gap time
@@ -480,15 +480,16 @@ local function load_pb_conf()
 
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
 	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 10240) -- pack limit
+	local upload_dpp = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_DPP") or 1024) 
 
 	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_pl)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
-		pb = periodbuffer:new(period, period_pl)
+		pb = periodbuffer:new(period, period_pl, upload_dpp)
 		pb:start(publish_data_list, push_to_fb_file)
-		stat_pb = periodbuffer:new(period, period_pl * 10)  --- there is no buffer for stat
+		stat_pb = periodbuffer:new(period, period_pl * 10, upload_dpp)  --- there is no buffer for stat
 		stat_pb:start(publish_stat_list)
 	else
 		--- Period buffer disabled
