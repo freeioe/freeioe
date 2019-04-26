@@ -446,9 +446,12 @@ end
 
 --- Load file buffer objects
 local function load_fb_conf()
-	local enable_fb = tonumber(datacenter.get("CLOUD", "DATA_CACHE") or 0)
-	if not pb or enable_fb == 0 then
+	if not pb or not enable_data_cache then
 		log.notice('::CLOUD:: Data caches disabled')
+		return
+	end
+
+	if fb_file then
 		return
 	end
 
@@ -458,9 +461,9 @@ local function load_fb_conf()
 	log.notice('::CLOUD:: Data caches folder:', cache_folder)
 
 	-- should be more less than period_pl
-	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 10240)
+	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 4096)
 	-- about 240M in disk
-	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096)
+	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 1024)
 	-- Upload cached data one per gap time
 	fb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
 
@@ -517,6 +520,7 @@ local function load_conf()
 	log.notice("::CLOUD:: Connection: ", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
+	enable_data_cache = datacenter.get("CLOUD", "DATA_CACHE")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
@@ -809,7 +813,8 @@ connect_proc = function(clean_session, username, password)
 			return start_reconnect()
 		end
 
-		r, err = client:reconnect()
+		-- r, err = client:reconnect()
+		r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	end
 
 	--- Worker thread 
@@ -940,6 +945,24 @@ function accept.enable_data_one_short(id, period)
 		end
 		log.debug("::CLOUD:: data one-short upload disabled!")
 	end)
+end
+
+function accept.enable_cache(id, enable)
+	enable_data_cache = enable
+	datacenter.set("CLOUD", "DATA_CACHE", enable)
+	if not enable then
+		log.debug("::CLOUD:: Data caches disabled!", enable)
+		if fb_file then
+			fb_file:stop()
+			fb_file = nil
+		end
+	else
+		if not fb_file then
+			load_fb_conf()		
+		end
+	end
+
+	snax.self().post.action_result('sys', id, true)
 end
 
 function accept.enable_stat(id, enable)

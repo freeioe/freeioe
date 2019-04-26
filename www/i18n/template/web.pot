@@ -122,6 +122,10 @@ msgid "CPU Model"
 msgstr ""
 
 
+msgid "Caches Fire Per Time"
+msgstr ""
+
+
 msgid "Cannot enable beta. Error: %s"
 msgstr ""
 
@@ -146,7 +150,15 @@ msgid "Cloud"
 msgstr ""
 
 
+msgid "Cloud Host"
+msgstr ""
+
+
 msgid "Cloud ID"
+msgstr ""
+
+
+msgid "Cloud Port"
 msgstr ""
 
 
@@ -154,7 +166,11 @@ msgid "Cloud Settings"
 msgstr ""
 
 
-msgid "Cloud option is changed, you need restart system to apply changes!"
+msgid "Cloud Tiemout"
+msgstr ""
+
+
+msgid "Cloud option is changed, you need restart FreeIOE to apply changes!"
 msgstr ""
 
 
@@ -186,6 +202,10 @@ msgid "Control"
 msgstr ""
 
 
+msgid "Count Per File"
+msgstr ""
+
+
 msgid "Create"
 msgstr ""
 
@@ -207,6 +227,14 @@ msgstr ""
 
 
 msgid "Dashboard"
+msgstr ""
+
+
+msgid "Data Caches"
+msgstr ""
+
+
+msgid "Data Caches Options"
 msgstr ""
 
 
@@ -370,6 +398,10 @@ msgid "FreeIOE"
 msgstr ""
 
 
+msgid "FreeIOE Cloud Settings"
+msgstr ""
+
+
 msgid "FreeIOE System API"
 msgstr ""
 
@@ -403,10 +435,6 @@ msgstr ""
 
 
 msgid "Home"
-msgstr ""
-
-
-msgid "Host"
 msgstr ""
 
 
@@ -479,10 +507,6 @@ msgstr ""
 
 
 msgid "Logs"
-msgstr ""
-
-
-msgid "MQTT"
 msgstr ""
 
 
@@ -571,10 +595,6 @@ msgstr ""
 
 
 msgid "Password updated!!"
-msgstr ""
-
-
-msgid "Port"
 msgstr ""
 
 
@@ -746,10 +766,6 @@ msgid "Sys Logs"
 msgstr ""
 
 
-msgid "System"
-msgstr ""
-
-
 msgid "System Control"
 msgstr ""
 
@@ -786,6 +802,18 @@ msgid "The COV TTL cannot be less than 60 seconds"
 msgstr ""
 
 
+msgid "The Data Cache Fire Gap  cannot more than 1000"
+msgstr ""
+
+
+msgid "The Data Cache Per File cannot be less than 1024"
+msgstr ""
+
+
+msgid "The Data Cache Per File cannot more than 4096"
+msgstr ""
+
+
 msgid "The upload period cannot be less than 1000 ms (one second)"
 msgstr ""
 
@@ -798,11 +826,11 @@ msgid "This will delete all local changes! Are you sure?"
 msgstr ""
 
 
-msgid "Tiemout"
+msgid "Timestamp"
 msgstr ""
 
 
-msgid "Timestamp"
+msgid "Total File Limit"
 msgstr ""
 
 

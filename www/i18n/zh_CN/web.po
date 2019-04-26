@@ -91,6 +91,9 @@ msgstr "CPU架构"
 msgid "CPU Model"
 msgstr "CPU型号"
 
+msgid "Caches Fire Per Time"
+msgstr "缓存发送周期"
+
 msgid "Cannot enable beta. Error: %s"
 msgstr "不能开启使用Beta版本。错误："
 
@@ -109,14 +112,23 @@ msgstr "检查更新完成！"
 msgid "Cloud"
 msgstr "云"
 
+msgid "Cloud Host"
+msgstr "云服务器"
+
 msgid "Cloud ID"
 msgstr "云ID"
+
+msgid "Cloud Port"
+msgstr "云服务器端口"
 
 msgid "Cloud Settings"
 msgstr "云平台配置"
 
-msgid "Cloud option is changed, you need restart system to apply changes!"
-msgstr "云平台设定已修改，重启后才能使之生效!"
+msgid "Cloud Tiemout"
+msgstr "超时时间"
+
+msgid "Cloud option is changed, you need restart FreeIOE to apply changes!"
+msgstr "云平台设定已修改，重启FreeIOE网关后才能使之生效!"
 
 msgid "Comm Data Watcher"
 msgstr "报文监视"
@@ -139,6 +151,9 @@ msgstr "共享"
 msgid "Control"
 msgstr "控制项"
 
+msgid "Count Per File"
+msgstr "文件数据量"
+
 msgid "Create"
 msgstr "创建"
 
@@ -156,6 +171,12 @@ msgstr "设备"
 
 msgid "Dashboard"
 msgstr "仪表盘"
+
+msgid "Data Caches"
+msgstr "断线缓存"
+
+msgid "Data Caches Options"
+msgstr "断线缓存选项"
 
 msgid "Data Upload"
 msgstr "数据上送"
@@ -277,6 +298,9 @@ msgstr "社区"
 msgid "FreeIOE"
 msgstr "FreeIOE"
 
+msgid "FreeIOE Cloud Settings"
+msgstr "FreeIOE 云配置"
+
 msgid "FreeIOE System API"
 msgstr "FreeIOE系统接口"
 
@@ -303,9 +327,6 @@ msgstr "帮助改进FreeIOE"
 
 msgid "Home"
 msgstr "主页"
-
-msgid "Host"
-msgstr "主机"
 
 msgid "ID"
 msgstr "序列号"
@@ -360,9 +381,6 @@ msgstr "登出"
 
 msgid "Logs"
 msgstr "日志"
-
-msgid "MQTT"
-msgstr "MQTT"
 
 msgid "Meta Information"
 msgstr "元信息"
@@ -429,9 +447,6 @@ msgstr "两次密码不一致"
 
 msgid "Password updated!!"
 msgstr "密码已修改"
-
-msgid "Port"
-msgstr "端口"
 
 msgid "Profile"
 msgstr "资料"
@@ -559,9 +574,6 @@ msgstr "停止应用"
 msgid "Sys Logs"
 msgstr "SKYNET日志"
 
-msgid "System"
-msgstr "系统"
-
 msgid "System Control"
 msgstr "系统控制"
 
@@ -589,6 +601,15 @@ msgstr "测试浏览页面"
 msgid "The COV TTL cannot be less than 60 seconds"
 msgstr "变化传输的快照间隔不能低于60秒"
 
+msgid "The Data Cache Fire Gap cannot more than 1000 ms"
+msgstr "断线缓存发送周期不能小于1000毫秒"
+
+msgid "The Data Cache Per File cannot be less than 1024"
+msgstr "断线缓存文件数据容量不能小于1024"
+
+msgid "The Data Cache Per File cannot more than 4096"
+msgstr "断线缓存文件总数不能大于4096"
+
 msgid "The upload period cannot be less than 1000 ms (one second)"
 msgstr "周期上送的时间不能低于1000毫秒"
 
@@ -598,11 +619,11 @@ msgstr "未检测到系统更新"
 msgid "This will delete all local changes! Are you sure?"
 msgstr "删除本地所有的改动，是否确认?"
 
-msgid "Tiemout"
-msgstr "超时"
-
 msgid "Timestamp"
 msgstr "时间戳"
+
+msgid "Total File Limit"
+msgstr "总数限制"
 
 msgid "Total Memory"
 msgstr "全部内存"
@@ -684,6 +705,24 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "Cloud option is changed, you need restart system to apply changes!"
+#~ msgstr "云平台设定已修改，重启后才能使之生效!"
+
+#~ msgid "Host"
+#~ msgstr "主机"
+
+#~ msgid "MQTT"
+#~ msgstr "MQTT"
+
+#~ msgid "Port"
+#~ msgstr "端口"
+
+#~ msgid "System"
+#~ msgstr "系统"
+
+#~ msgid "Tiemout"
+#~ msgstr "超时"
 
 #~ msgid "Application does not exist! Instance: "
 #~ msgstr "应用不存在!实例名:"

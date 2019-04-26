@@ -36,6 +36,8 @@ return {
 			elseif option == 'stat' then
 				--print(option, post.enable=='true')
 				cloud.post.enable_stat(id, post.enable == 'true')
+			elseif option == 'cache' then
+				cloud.post.enable_cache(id, post.enable == 'true')
 			elseif option == 'log' then
 				--print(option, tonumber(post.enable) or 0)
 				cloud.post.enable_log(id, tonumber(post.enable) or 0)
@@ -55,13 +57,13 @@ return {
 			if string.upper(option) == 'DATA_UPLOAD_PERIOD' then
 				value = math.floor(tonumber(value))
 				if value > 0 and value < 1000 then
-					ngx.print(_('The upload period cannot be less than 1000 ms (one second)'))
+					return ngx.print(_('The upload period cannot be less than 1000 ms (one second)'))
 				end
 			end
 			if string.upper(option) == 'COV_TTL' then
 				value = math.floor(tonumber(value))
 				if value < 60 then
-					ngx.print(_('The COV TTL cannot be less than 60 seconds'))
+					return ngx.print(_('The COV TTL cannot be less than 60 seconds'))
 				end
 			end
 			if string.upper(option) == 'ID' then
@@ -69,9 +71,28 @@ return {
 					value = nil
 				end
 			end
+			if string.upper(option) == 'DATA_CACHE_PER_FILE' then
+				value = math.abs(math.floor(tonumber(value)))
+				if value < 1024 then
+					return ngx.print(_('The Data Cache Per File cannot be less than 1024'))
+				end
+			end
+			if string.upper(option) == 'DATA_CACHE_LIMIT' then
+				value = math.abs(math.floor(tonumber(value)))
+				if value > 4096  then
+					return ngx.print(_('The Data Cache Per File cannot more than 4096'))
+				end
+			end
+			if string.upper(option) == 'DATA_CACHE_FIRE_GAP' then
+				value = math.abs(math.floor(tonumber(value)))
+				if value < 1000  then
+					return ngx.print(_('The Data Cache Fire Gap cannot more than 1000 ms'))
+				end
+			end
+
 			--print(option, value)
 			dc.set('CLOUD', string.upper(option), value)
-			ngx.print(_('Cloud option is changed, you need restart system to apply changes!'))
+			ngx.print(_('Cloud option is changed, you need restart FreeIOE to apply changes!'))
 		end
 	end
 }

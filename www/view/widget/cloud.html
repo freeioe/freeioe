@@ -1,9 +1,12 @@
-<h3 class="ui header">{{_("System")}} </h3>
+<h3 class="ui header">{{_("FreeIOE Cloud Settings")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
 			<th>{{_("ID")}}</th>
 			<th>{{_("Cloud ID")}}</th>
+			<th>{{_("Cloud Host")}}</th>
+			<th>{{_("Cloud Port")}}</th>
+			<th>{{_("Cloud Tiemout")}}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -24,21 +27,6 @@
 					{% end %}
 				</div>
 			</td>
-		</tr>
-	</tbody>
-</table>
-
-<h3 class="ui header">{{_("MQTT")}} </h3>
-<table class="ui celled basic table">
-	<thead>
-		<tr>
-			<th>{{_("Host")}}</th>
-			<th>{{_("Port")}}</th>
-			<th>{{_("Tiemout")}}</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
 			<td>
 				<div class="ui action input">
 					{% if edit_enable then %}
@@ -132,6 +120,67 @@
 		</tr>
 	</tbody>
 </table>
+
+<h3 class="ui header">{{_("Data Caches Options")}} </h3>
+<table class="ui celled basic table">
+	<thead>
+		<tr>
+			<th>{{_("Data Caches")}}</th>
+			{% if cfg.DATA_CACHE then %}
+			<th>{{_("Count Per File")}}</th>
+			<th>{{_("Total File Limit")}}</th>
+			<th>{{_("Caches Fire Per Time")}} (ms)</th>
+			{% end %}
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>
+				{% if cfg.DATA_CACHE then %}
+				<div class="ui fitted toggle checked checkbox">
+					<input id="data_cache" type="checkbox" checked="true">
+					<label></label>
+				</div>
+				{% else %}
+				<div class="ui fitted toggle checkbox">
+					<input id="data_cache" type="checkbox">
+					<label></label>
+				</div>
+				{% end %}
+			</td>
+			{% if cfg.DATA_CACHE then %}
+			<td>
+				<div class="ui action input">
+					<input id="data_cache_per_file" value="{{cfg.DATA_CACHE_PER_FILE or 10240}}" type="number">
+					<button id="data_cache_per_file_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="data_cache_limit" value="{{cfg.DATA_CACHE_LIMIT or 4096}}" type="number">
+					<button id="data_cache_limit_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
+			<td>
+				<div class="ui action input">
+					<input id="data_cache_fire_gap" value="{{cfg.DATA_CACHE_FIRE_GAP or 1000}}" type="number">
+					<button id="data_cache_fire_gap_btn" class="ui yellow right labeled icon button">
+						<i class="check icon"></i>
+						{{_("Change")}}
+					</button>
+				</div>
+			</td>
+			{% end %}
+		</tr>
+	</tbody>
+</table>
+
 
 <h3 class="ui header">{{_("Upload Settings")}} </h3>
 <table class="ui celled basic table">

@@ -86,6 +86,10 @@ $(document).ready(function(){
 		var enable = $('#data_upload').is(':checked');
 		enable_option('data', enable);
 	});
+	$("#data_cache").change(function() {
+		var enable = $('#data_cache').is(':checked');
+		enable_option('cache', enable);
+	});
 	$("#event_upload_btn").click(function() {
 		var value = $('#event_upload').val();
 		enable_option('event', value);
@@ -133,6 +137,18 @@ $(document).ready(function(){
 	$("#data_upload_period_btn").click(function() {
 		var value = $('#data_upload_period').val();
 		cloud_option('data_upload_period', value);
+	});
+	$("#data_cache_per_file_btn").click(function() {
+		var value = $('#data_cache_per_file').val();
+		cloud_option('data_cache_per_file', value);
+	});
+	$("#data_cache_limit_btn").click(function() {
+		var value = $('#data_cache_limit').val();
+		cloud_option('data_cache_limit', value);
+	});
+	$("#data_cache_fire_gap_btn").click(function() {
+		var value = $('#data_cache_fire_gap').val();
+		cloud_option('data_cache_fire_gap', value);
 	});
 });
 </script>
