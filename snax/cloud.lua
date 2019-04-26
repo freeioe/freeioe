@@ -458,7 +458,7 @@ local function load_fb_conf()
 	log.notice('::CLOUD:: Data caches folder:', cache_folder)
 
 	-- should be more less than period_pl
-	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024)
+	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 10240)
 	-- about 240M in disk
 	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096)
 	-- Upload cached data one per gap time
