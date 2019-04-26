@@ -7,10 +7,11 @@ local log = require 'utils.log'
 
 local fb = class("File_Buffer_Utils")
 
-function fb:initialize(file_folder, data_count_per_file, max_file_count)
+function fb:initialize(file_folder, data_count_per_file, max_file_count, max_batch_size)
 	self._file_folder = file_folder
 	self._data_count_per_file = data_count_per_file
 	self._max_file_count = max_file_count
+	self._max_batch_size = max_batch_size
 	self._files = {} -- file list that already in disk
 	self._buffer = {} -- data buffer list
 	self._fire_buffer = {}
@@ -264,7 +265,14 @@ function fb:_try_fire_data_batch(callback)
 		end
 
 		--- callback
-		local r, done, err = pcall(callback, self._fire_buffer, self._fire_offset)
+		local buf = self._fire_buffer
+		local offset = self._fire_offset
+		if self._max_batch_size and self._max_batch_size < #buf then
+			buf = table.move(buf, 1, self._max_batch_size, 1, {})
+			offset = 1
+		end
+
+		local r, done, err = pcall(callback, buf, offset)
 		if not r then
 			log.warning('Buffer_file callback bug', done, err)
 			break

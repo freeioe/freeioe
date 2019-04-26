@@ -49,6 +49,7 @@ local enable_comm_upload_apps = {}			--- Whether upload communication data for s
 local max_enable_comm_upload = 60 * 10		--- Max upload communication data period
 local enable_log_upload = nil				--- Whether upload logs (time)
 local max_enable_log_upload = 60 * 10		--- Max upload logs period
+local max_data_upload_dpp = 1024			--- Max data upload data count per packet
 
 local api = nil					--- App API object to access devices
 local cov = nil					--- COV helper
@@ -457,15 +458,15 @@ local function load_fb_conf()
 	log.notice('::CLOUD:: Data caches folder:', cache_folder)
 
 	-- should be more less than period_pl
-	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_DPP") or 1024) 
+	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 1024)
 	-- about 240M in disk
-	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096) 
+	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 4096)
 	-- Upload cached data one per gap time
 	fb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
 
-	log.notice('::CLOUD:: Data caches option:', data_per_file, data_max_count, fb_file_fire_gap)
+	log.notice('::CLOUD:: Data caches option:', data_per_file, data_max_count, fb_file_fire_gap, max_data_upload_dpp)
 
-	fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count) 
+	fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count, max_data_upload_dpp) 
 	fb_file:start(function(...) 
 		-- Disable one data fire
 		return false 
@@ -480,16 +481,15 @@ local function load_pb_conf()
 
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
 	local period_pl = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_PL") or 10240) -- pack limit
-	local upload_dpp = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_DPP") or 1024) 
 
 	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_pl)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
-		pb = periodbuffer:new(period, period_pl, upload_dpp)
+		pb = periodbuffer:new(period, period_pl, max_data_upload_dpp)
 		pb:start(publish_data_list, push_to_fb_file)
-		stat_pb = periodbuffer:new(period, period_pl * 10, upload_dpp)  --- there is no buffer for stat
+		stat_pb = periodbuffer:new(period, period_pl * 10, max_data_upload_dpp)  --- there is no buffer for stat
 		stat_pb:start(publish_stat_list)
 	else
 		--- Period buffer disabled
@@ -521,6 +521,7 @@ local function load_conf()
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
 	enable_event_upload = tonumber(datacenter.get("CLOUD", "EVENT_UPLOAD"))
+	max_data_upload_dpp = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_MAX_DPP") or 1024)
 
 	--- For communication data applications list
 	enable_comm_upload_apps = datacenter.get("CLOUD", "COMM_UPLOAD_APPS") or {}
