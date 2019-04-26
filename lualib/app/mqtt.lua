@@ -25,7 +25,8 @@ return function(app_class, api_ver)
 	-- pack_devices -- 当上述设备回调不存在，会调用此接口进行设备描述打包，不存在则忽略设备上送
 	-- pack_key -- 用于打包: src_app:采集应用名称 sn:采集设备序列号 input: 输入项迷宫昵称
 	-- publish_data -- 用于未开启PB时的但数据点回调 (key, value, timestamp, quality)
-	-- publish_data_list -- 用于开启PB后，打包上送 (list --成员为 [key, value, timestamp, quality])
+	-- publish_data_list -- 用于开启PB后，打包上送 (list --成员为 [key, value, timestamp, quality]), 成功返回true
+	-- publish_cached_data_list -- 用于开启断缓后，打包上送 同PB, 返回上送数据的个数
 	-- on_connect_ok -- 用于MQTT连接成功回调
 	--
 	-- The function from this helper
@@ -66,9 +67,18 @@ return function(app_class, api_ver)
 		self._mqtt_port = conf.port or "1883"
 
 		-- COV and PB
-		self._period = tonumber(conf.period) or 60
-		self._ttl = tonumber(conf.ttl) or 300
+		self._period = tonumber(conf.period) or 60 -- seconds
+		self._ttl = tonumber(conf.ttl) or 300 --- seconds
 		self._float_threshold = tonumber(conf.float_threshold) or 0.000001
+		self._max_data_upload_dpp = tonumber(conf.data_upload_dpp) or 1024
+		self._max_data_buffer = tonumber(conf.data_upload_buffer) or 10240
+		self._enable_data_cache = conf.enable_data_cache
+		self._data_per_file = tonumber(conf.cache_per_file) or 4096
+		self._data_per_file = self._data_per_file < 4096 and 4096 or self._data_per_file
+		self._data_per_file = self._data_per_file < 4096 and 4096 or self._data_per_file
+		self._data_max_count = tonumber(conf.data_cache_limit) or 128
+		self._data_max_count = self._data_max_count > 256 and 256 or self._data_max_count
+		self._data_cache_fire_gap = tonumber(conf.data_cache_fire_gap) or 1000 -- ms
 
 		self._close_connection = nil
 		self._mqtt_reconnect_timeout = 1000
@@ -201,7 +211,9 @@ return function(app_class, api_ver)
 	end
 
 	function app:_start_reconnect()
-		self._mqtt_client = nil
+		if self._mqtt_client then
+			self._log:error('****Cannot start reconnection when client is there!****')
+		end
 		self._sys:timeout(self._mqtt_reconnect_timeout, function() self:_connect_proc() end)
 		self._mqtt_reconnect_timeout = self._mqtt_reconnect_timeout * 2
 		if self._mqtt_reconnect_timeout > self._max_mqtt_reconnect_timeout then
@@ -223,6 +235,7 @@ return function(app_class, api_ver)
 		-- 创建MQTT客户端实例
 		log:info("MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, username, password)
 		local client = assert(mosq.new(mqtt_id, clean_session))
+		local close_client = false
 		client:version_set(mosq.PROTOCOL_V311)
 		client:login_set(username, password)
 		if self._enable_tls then
@@ -233,26 +246,39 @@ return function(app_class, api_ver)
 		client.ON_CONNECT = function(success, rc, msg) 
 			if success then
 				log:notice("ON_CONNECT", success, rc, msg) 
-				if self.on_connect_ok then
-					-- client:subscribe("/"..v, 1)
-					--client:publish("/status", cjson.encode({device=mqtt_id, status="ONLINE"}), 1, true)
-					safe_call(self.on_connect_ok, self)
+				if self._mqtt_client then
+					self._log:warning("There is one client already connected!")
+					close_client = true
+					return
 				end
 
 				self._mqtt_client = client
 				self._mqtt_client_last = sys:time()
 				self._mqtt_reconnect_timeout = 100
 
+				if self.on_connect_ok then
+					-- client:subscribe("/"..v, 1)
+					--client:publish("/status", cjson.encode({device=mqtt_id, status="ONLINE"}), 1, true)
+					safe_call(self.on_connect_ok, self)
+				end
+
 				self:_fire_devices(1000)
 			else
 				log:warning("ON_CONNECT", success, rc, msg) 
+				close_client = true
 				self:_start_reconnect()
 			end
 		end
 		client.ON_DISCONNECT = function(success, rc, msg) 
 			log:warning("ON_DISCONNECT", success, rc, msg) 
-			if self._mqtt_client then
-				self:_start_reconnect()
+			close_client = true
+
+			if self._mqtt_client == client then
+				self._mqtt_client_last = sys:time()
+				self._mqtt_client = nil
+				if self._close_connection == nil then
+					self:_start_reconnect()
+				end
 			end
 		end
 		client.ON_LOG = function(...)
@@ -281,7 +307,7 @@ return function(app_class, api_ver)
 		end
 
 		--- Worker thread
-		while client and self._close_connection == nil do
+		while client and not close_client and self._close_connection == nil do
 			sys:sleep(0)
 			if client then
 				client:loop(50, 1)
@@ -290,11 +316,10 @@ return function(app_class, api_ver)
 			end
 		end
 
-		if client then
-			client:disconnect()
-			log:notice("Cloud Connection Closed!")
-			client:destroy()
-		end
+		client:disconnect()
+		log:notice("Cloud Connection Closed!")
+		client:destroy()
+		log:notice("::CLOUD:: Client Destroyed!")
 
 		if self._close_connection then
 			sys:wakeup(self._close_connection)
@@ -312,11 +337,11 @@ return function(app_class, api_ver)
 
 	function app:_fire_devices(timeout)
 		local timeout = timeout or 1000
-		if not self.pack_devices then
+		if not self.pack_devices or not self._mqtt_client then
 			return
 		end
 
-		if self._fire_device_timer  then
+		if self._fire_device_timer then
 			return
 		end
 
@@ -365,14 +390,46 @@ return function(app_class, api_ver)
 			return
 		end
 
-		local period = self._period * 1000 -- seconds
+		local period = self._period * 1000 -- seconds to ms
 
-		self._pb = periodbuffer:new(period, 1024 * 1024 * 4) -- 4M data points
+		self._log:notice('Loading period buffer! Period:', period, self._max_data_buffer, self._max_data_upload_dpp)
+		self._pb = periodbuffer:new(period, self._max_data_buffer, self._max_data_upload_dpp) 
+
 		self._pb:start(function(...)
 			if not self._mqtt_client then
 				return nil, "MQTT not connected"
 			end
 			return safe_call(self.publish_data_list, self, ...)
+		end, function(...)
+			if self._fb_file then
+				self._data_cache_used = true
+				self._fb_file:push(...)
+			end
+		end)
+	end
+
+	function app:_init_fb()
+		if not self._enable_data_cache or self._fb_file then
+			return
+		end
+
+		--- file buffer
+		local sysinfo = require 'utils.sysinfo'
+		local cache_folder = sysinfo.data_dir().."/app_cache_"..self._name
+		self._log:notice('Data caches folder:', cache_folder)
+
+		log:notice('Data caches option:', 
+			self._data_per_file, 
+			self._data_max_count, 
+			self._data_cache_fire_gap,
+			self._max_data_upload_dpp)
+
+		self._fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count, max_data_upload_dpp)
+		self._fb_file:start(function(...)
+			-- Disable one data fire
+			return false
+		end, function(...) 
+			return safe_call(self.publish_cached_data_list, self, ...)
 		end)
 	end
 
@@ -384,6 +441,7 @@ return function(app_class, api_ver)
 
 		self:_init_cov()
 		self:_init_pb()
+		self:_init_fb()
 
 		if self.app_start then
 			local r, err = safe_call(self.app_start, self)

@@ -92,7 +92,7 @@ local function get_app_depends(app_inst)
 	if f then
 		for line in f:lines() do
 			local name, version = string.match(line, '^([^:]+):(%d+)$')
-			name = name or line
+			name = name or string.match(line, '^(%w+)')
 			version = version or 'latest'
 			table.insert(exts, { name = name, version = version})
 		end

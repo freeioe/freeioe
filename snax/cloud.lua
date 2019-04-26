@@ -485,7 +485,7 @@ local function load_pb_conf()
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
 	local period_max = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_MAX") or 10240) -- pack limit
 
-	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_max)
+	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_max, max_data_upload_dpp)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))

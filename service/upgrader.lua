@@ -244,13 +244,15 @@ function command.install_app(id, args)
 			-- Keep the application there.
 			-- datacenter.set("APPS", inst_name, nil)
 			-- os.execute("rm -rf "..target_folder)
+			--
+			datacenter.set("APPS", inst_name, 'auto', 0)
+
+			appmgr.post.app_event('install', inst_name)
+
 			return false, "Failed to start App. Error: "..err
 		end
 	end)
 
-	if not r then
-		datacenter.set("APPS", inst_name, nil)
-	end
 	return r, err
 end
 
