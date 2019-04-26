@@ -72,6 +72,9 @@ function sys:now()
 	return skynet.now() * 10
 end
 
+function sys:fix_time()
+	skynet.fix_time()
+end
 
 -- seconds (UTC now)
 function sys:time()
