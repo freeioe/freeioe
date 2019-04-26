@@ -10,8 +10,8 @@ function cb:initialize(cb, size)
 end
 
 function cb:push(...)
-	local ne = self:fire_all(self._cb)
-	if ne and cb(...) then
+	local ne = self:fire_all()
+	if ne and self._cb(...) then
 		return
 	end
 
