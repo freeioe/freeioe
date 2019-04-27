@@ -268,8 +268,9 @@ function fb:_try_fire_data_batch(callback)
 		local buf = self._fire_buffer
 		local offset = self._fire_offset
 		if self._max_batch_size and self._max_batch_size < #buf then
-			buf = table.move(buf, 1, self._max_batch_size, 1, {})
+			buf = table.move(buf, offset, offset + self._max_batch_size, 1, {})
 			offset = 1
+			assert(#buf <= self._max_batch_size)
 		end
 
 		local r, done, err = pcall(callback, buf, offset)
