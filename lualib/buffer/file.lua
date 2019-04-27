@@ -17,6 +17,34 @@ function fb:initialize(file_folder, data_count_per_file, max_file_count, max_bat
 	self._fire_buffer = {}
 	self._fire_offset = 1 -- buffer offset. 
 	self._fire_index = nil -- file index. nil means there is no fire_buffer (file or buffer)
+	self._hash = 'FILE_BUF_UTILS_V1'
+end
+
+function fb:dump_index()
+	return cjson.encode({
+		hash = self._hash,
+		fire_index = self._fire_index,
+		fire_offset = self._fire_offset,
+		files = self._files,
+	})
+end
+
+function fb:load_index(string)
+	local data = cjson.decode(string)
+	if data.hash != self._hash then
+		return nil, "Not valid hash readed!"
+	end
+
+	self._files = data.files
+	self._buffer = self._load_next_file()
+	if not self._fire_index == data.fire_index then
+		self._fire_offset = data.fire_offset
+	else
+		log.warning("Loaded different file index, reset offset.", self._fire_index, data.fire_index, data.fire_offset)
+		self._fire_offset = 1
+	end
+
+	return true
 end
 
 function fb:push(...)
@@ -99,7 +127,7 @@ function fb:_dump_buffer_to_file(buffer)
 	str = self:_compress(str)
 
 	--print('dump', index, str)
-	log.debug("Saving data caches to file:", file_path, 'count:', #buffer, 'size:', string.len(str)) 
+	log.debug("Saving data cache to file:", file_path, 'count:', #buffer, 'size:', string.len(str))
 
 	f:write(str)
 	f:close()
@@ -151,7 +179,7 @@ function fb:_load_next_file()
 		-- Open file
 		--print('load ', index)
 		local file_path = self:_make_file_path(index)
-		log.debug("Loading data caches from file:", file_path) 
+		log.debug("Loading data cache from file:", file_path)
 
 		local f, err = io.open(file_path)
 		if f then
@@ -170,10 +198,10 @@ function fb:_load_next_file()
 					--- if decode ok return
 					return buffer
 				else
-					log.error('Decode data caches error! Index: ', index)
+					log.error('Decode data cache error! Index: ', index)
 				end
 			else
-				log.error('Read data caches file error! Index: ', index)
+				log.error('Read data cache file error! Index: ', index)
 			end
 		end
 		
@@ -264,7 +292,7 @@ function fb:_try_fire_data_batch(callback)
 		local buf = self._fire_buffer
 		local offset = self._fire_offset
 		if self._max_batch_size and self._max_batch_size < #buf then
-			buf = table.move(buf, offset, offset + self._max_batch_size, 1, {})
+			buf = table.move(buf, offset, offset + self._max_batch_size - 1, 1, {})
 			offset = 1
 			assert(#buf <= self._max_batch_size)
 		end

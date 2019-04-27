@@ -106,19 +106,22 @@ function pb:fire_all(cb)
 
 	--log.trace("Sperate buffer", #buf)
 	--- create sub list and push to callback
-	while #buf > 0 do
+	local offset = 1
+	while #buf >= offset do
 		--- max_batch_size
-		local data = table.move(buf, 1, max_batch_size, 1, {})
+		local data = table.move(buf, offset, offset + max_batch_size - 1, 1, {})
+		assert(#data <= max_batch_size)
 		--log.trace("Sperated data", #data)
 		if not cb(data) then
 			break
 		end
-		--- remove the fired data
-		buf = table.move(buf, max_batch_size + 1, #buf, 1, {})
-		--log.trace("Left buffer", #buf)
+		offset = offset + max_batch_size
 	end
 
-	if #buf > 0 then
+	if #buf >= offset then
+		if offset != 1 then
+			buf = table.move(buf, offset, #buf, 1, {})
+		end
 		---- push back the unfired data
 		self:_push_front(buf)
 		--log.trace("Now buffer size", #self._buf)
