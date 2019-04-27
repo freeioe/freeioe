@@ -119,7 +119,7 @@ function pb:fire_all(cb)
 	end
 
 	if #buf >= offset then
-		if offset != 1 then
+		if offset ~= 1 then
 			buf = table.move(buf, offset, #buf, 1, {})
 		end
 		---- push back the unfired data

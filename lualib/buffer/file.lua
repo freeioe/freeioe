@@ -31,7 +31,7 @@ end
 
 function fb:load_index(string)
 	local data = cjson.decode(string)
-	if data.hash != self._hash then
+	if data.hash ~= self._hash then
 		return nil, "Not valid hash readed!"
 	end
 
