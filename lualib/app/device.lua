@@ -164,22 +164,22 @@ function device:get_output_prop(output, prop)
 	return t.value, t.timestamp
 end
 
-function device:set_output_prop(output, prop, value)
+function device:set_output_prop(output, prop, value, timestamp, priv)
 	for _, v in ipairs(self._props.outputs or {}) do
 		if v.name == output then
-			local timestamp = ioe.time()
+			local timestamp = timestamp or ioe.time()
 			dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
-			self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp)
+			self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp, priv)
 			return true
 		end
 	end
 	return nil, "Output property "..output.." does not exits in device "..self._sn
 end
 
-function device:send_command(command, param)
+function device:send_command(command, param, priv)
 	for _, v in ipairs(self._props.commands or {}) do
 		if v.name == command then
-			self._ctrl_chn:publish("command", self._app_name, self._sn, command, param)
+			self._ctrl_chn:publish("command", self._app_name, self._sn, command, param, priv)
 			return true
 		end
 	end

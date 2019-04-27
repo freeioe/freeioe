@@ -36,6 +36,7 @@ end
 
 function api:ctrl_dispatch(channel, source, ctrl, app, sn, ...)
 	if app ~= self._app_name then
+		--- Skip the destination is other application one
 		return
 	end
 
@@ -106,7 +107,8 @@ function api:set_handler(handler, watch_data)
 				self:ctrl_dispatch(channel, source, ...)
 			end
 		})
-		if handler.on_ctrl or handler.on_output or handler.on_command then
+		if handler.on_ctrl or handler.on_output or handler.on_command or
+			handler.on_ctrl_result or handler.on_output_result or handler.on_command_result then
 			self._ctrl_chn:subscribe()
 		end
 	else
@@ -246,8 +248,21 @@ function api:get_device(sn)
 end
 
 -- Applicaiton control
-function api:send_ctrl(app, ctrl, params)
-	self._ctrl_chn:publish('ctrl', self._app_name, app, cmd, params)
+function api:send_ctrl(app, ctrl, params, priv)
+	self._ctrl_chn:publish('ctrl', self._app_name, app, ctrl, params, priv)
+end
+
+-- Application control result
+function api:send_ctrl_result(app, ctrl, result, err, priv)
+	self._ctrl_chn:publish('ctrl_result', self._app_name, app, ctrl, result, err, priv)
+end
+
+function api:send_command_result(app, cmd, result, err, priv)
+	self._ctrl_chn:publish('command_result', self._app_name, app, cmd, result, err, priv)
+end
+
+function api:send_output_result(app, output, prop, result, err, priv)
+	self._ctrl_chn:publish('output_result', self._app_name, app, cmd, result, err, priv)
 end
 
 function api:_dump_comm(sn, dir, ...)
