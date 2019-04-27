@@ -140,6 +140,7 @@ function fb:_load_next_file()
 	--- pop fired file
 	if self._fire_index and self._files[1] == self._fire_index then
 		table.remove(self._files, 1)
+		os.remove(self:_make_file_path(self._fire_index))
 	end
 
 	-- until we got one correct file
@@ -157,12 +158,6 @@ function fb:_load_next_file()
 			--- read all file
 			local str = f:read('a')
 			f:close()
-
-			--- if previous reading file then remove it
-			if self._fire_index then
-				os.remove(self:_make_file_path(self._fire_index))
-				self._fire_index = nil
-			end
 
 			--- set the current index
 			self._fire_index = index
@@ -184,6 +179,7 @@ function fb:_load_next_file()
 		
 		-- continue with next file
 		table.remove(self._files, 1)
+		os.remove(self:_make_file_path(index))
 	end
 
 	-- no next file
