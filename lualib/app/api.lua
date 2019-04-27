@@ -24,56 +24,72 @@ function api:cleanup()
 	self._devices = {}
 end
 
-function api:data_dispatch(channel, source, cmd, app, sn, ...)
-	--log.trace('Data Dispatch', channel, source, cmd, app, sn, ...)
+function api:data_dispatch(channel, source, cmd, app, ...)
+	--log.trace('Data Dispatch', channel, source, cmd, app, ...)
 	local f = self._handler['on_'..cmd]
 	if f then
-		return f(app, sn, ...)
+		return f(app, ...)
 	else
 		log.trace('No handler for '..cmd)
 	end
 end
 
-function api:ctrl_dispatch(channel, source, ctrl, app, sn, ...)
+function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 	if app ~= self._app_name then
 		--- Skip the destination is other application one
 		return
 	end
 
-	--log.trace('Ctrl Dispatch', channel, source, ctrl, app, sn, ...)
+	log.trace('Ctrl Dispatch', channel, source, ctrl, app_src, app, ...)
 	local f = self._handler['on_'..ctrl]
 	if f then
-		return f(app, sn, ...)
+		--- check if this is result dispatch
+		if string.match(ctrl, '(.+)_result$') then
+			skynet.fork(function(...)
+				f(app_src, ...)
+			end, ...)
+
+			return
+		end
+
+		--- priv is the end parameters
+		local priv = select(-1, ...)
+
+		--- create an new coroutine to execute the command/output/ctrl and wait for result
+		skynet.fork(function(...)
+			local results = {f(app_src, ...)}
+			self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, table.unpack(results))
+		end, ...)
 	else
 		log.trace('No handler for '..ctrl)
 	end
 end
 
-function api:comm_dispatch(channel, source, app, sn, ...)
+function api:comm_dispatch(channel, source, app, ...)
 	--log.trace('Comm Dispatch', channel, source, ...)
 	local f = self._handler.on_comm
 	if f then
-		return f(app, sn, ...)
+		return f(app, ...)
 	else
 		log.trace('No handler for on_comm')
 	end
 end
 
-function api:stat_dispatch(channel, source, app, sn, ...)
+function api:stat_dispatch(channel, source, app, ...)
 	--log.trace('Stat Dispatch', channel, source, ...)
 	local f = self._handler.on_stat
 	if f then
-		return f(app, sn, ...)
+		return f(app, ...)
 	else
 		log.trace('No handler for on_stat')
 	end
 end
 
-function api:event_dispatch(channel, source, app, sn, ...)
+function api:event_dispatch(channel, source, app, ...)
 	--log.trace('Event Dispatch', channel, source, ...)
 	local f = self._handler.on_event
 	if f then
-		return f(app, sn, ...)
+		return f(app, ...)
 	else
 		log.trace('No handler for on_event')
 	end
@@ -250,19 +266,6 @@ end
 -- Applicaiton control
 function api:send_ctrl(app, ctrl, params, priv)
 	self._ctrl_chn:publish('ctrl', self._app_name, app, ctrl, params, priv)
-end
-
--- Application control result
-function api:send_ctrl_result(app, ctrl, result, err, priv)
-	self._ctrl_chn:publish('ctrl_result', self._app_name, app, ctrl, result, err, priv)
-end
-
-function api:send_command_result(app, cmd, result, err, priv)
-	self._ctrl_chn:publish('command_result', self._app_name, app, cmd, result, err, priv)
-end
-
-function api:send_output_result(app, output, prop, result, err, priv)
-	self._ctrl_chn:publish('output_result', self._app_name, app, cmd, result, err, priv)
 end
 
 function api:_dump_comm(sn, dir, ...)

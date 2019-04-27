@@ -14,6 +14,7 @@ function device:initialize(api, sn, props, readonly)
 	self._api = api
 	self._sn = sn
 	self._props = props
+	self._app_src = api._app_name
 	if readonly then
 		self._app_name = dc.get('DEV_IN_APP', sn) or api._app_name
 		self._props = dc.get('DEVICES', sn) or {}
@@ -42,6 +43,7 @@ end
 function device:_cleanup()
 	self._readonly = true
 	self._app_name = nil
+	self._app_src = nil
 	self._sn = nil
 	self._props = nil
 	self._inputs_map = nil
@@ -169,7 +171,7 @@ function device:set_output_prop(output, prop, value, timestamp, priv)
 		if v.name == output then
 			local timestamp = timestamp or ioe.time()
 			dc.set('OUTPUT', self._sn, output, prop, {value=value, timestamp=timestamp})
-			self._ctrl_chn:publish('output', self._app_name, self._sn, output, prop, value, timestamp, priv)
+			self._ctrl_chn:publish('output', self._app_src, self._app_name, self._sn, output, prop, value, timestamp, priv)
 			return true
 		end
 	end
@@ -179,7 +181,7 @@ end
 function device:send_command(command, param, priv)
 	for _, v in ipairs(self._props.commands or {}) do
 		if v.name == command then
-			self._ctrl_chn:publish("command", self._app_name, self._sn, command, param, priv)
+			self._ctrl_chn:publish("command", self._app_src, self._app_name, self._sn, command, param, priv)
 			return true
 		end
 	end
@@ -222,22 +224,26 @@ function device:data()
 end
 
 function device:flush_data()
+	assert(not self._readonly, "This is an readonly device!")
 	return self:list_inputs(function(input, prop, value, timestamp, quality)
 		self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
 	end)
 end
 
 function device:dump_comm(dir, ...)
+	assert(not self._readonly, "This is an readonly device!")
 	return self._comm_chn:publish(self._app_name, self._sn, dir, ioe.time(), ...)
 end
 
 function device:fire_event(level, type_, info, data, timestamp)
+	assert(not self._readonly, "This is an readonly device!")
 	assert(level and type_ and info)
 	local type_ = app_event.type_to_string(type_)
 	return self._event_chn:publish(self._app_name, self._sn, level, type_, info, data or {}, timestamp or ioe.time())
 end
 
 function device:stat(name)
+	assert(not self._readonly, "This is an readonly device!")
 	local stat = stat_api:new(self._api, self._sn, name, self._readonly)
 	self._stats[#self._stats + 1] = stat
 	return stat

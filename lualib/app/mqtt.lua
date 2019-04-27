@@ -207,6 +207,18 @@ return function(app_class, api_ver)
 					return self:handle_stat(src_app, sn, stat, prop, value, timestamp)
 				end
 			end,
+			on_output_result = function(app_src, priv, result, err)
+				log:trace('on_output_result', app_src, priv, result, err)
+				if app.on_output_result then
+					app:on_output_result(app_src, priv, result, err)
+				end
+			end
+			on_command_result = function(app_src, priv, result, err)
+				log:trace('on_command_result', app_src, priv, result, err)
+				if app.on_command_result then
+					app:on_command_result(app_src, priv, result, err)
+				end
+			end,
 		}
 	end
 

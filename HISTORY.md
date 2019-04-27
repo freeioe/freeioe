@@ -9,6 +9,7 @@ v1.4.0 ()
 * Support cache data into file when mqtt connection is down.
 * Fix system time by added skynet.fix_time instead of restart
 * Limit the max data per packet in data upload
+* Command/Output/Ctrl result post to source application
 
 
 v1.3.4 (2019-4-24)

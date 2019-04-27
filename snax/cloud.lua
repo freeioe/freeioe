@@ -670,7 +670,15 @@ local Handler = {
 		local key = table.concat({sn, input, prop}, '/')
 		--cov:handle(key, value, timestamp, quality)
 		publish_data_no_pb(key, value, timestamp or ioe.time(), quality or 0)
-	end
+	end,
+	on_output_result = function(app_src, priv, result, err)
+		log.trace('::CLOUD:: on_output_result', app_src, priv, result, err)
+		snax.self().post.action_result('output', priv, result, err)
+	end,
+	on_command_result = function(app_src, priv, result, err)
+		log.trace('::CLOUD:: on_command_result', app_src, priv, result, err)
+		snax.self().post.action_result('command', priv, result, err)
+	end,
 }
 
 function response.ping()
@@ -1397,8 +1405,10 @@ function accept.output_to_device(id, info)
 		info.value = cjson.encode(info.value)
 	end
 
-	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value)
-	snax.self().post.action_result('output', id, r, err)
+	local r, err = dev:set_output_prop(info.output, info.prop or "value", info.value, ioe.time(), id)
+	if not r then
+		snax.self().post.action_result('output', id, false, err)
+	end
 end
 
 ---
@@ -1406,7 +1416,7 @@ end
 function accept.command_to_device(id, cmd)
 	local device = cmd.device
 	if not device then
-		return snax.self().post.action_result('ouput', id, false, "Device is missing in data")
+		return snax.self().post.action_result('command', id, false, "Device is missing in data")
 	end
 
 	local dev, err = api:get_device(device)
@@ -1418,8 +1428,10 @@ function accept.command_to_device(id, cmd)
 		cmd.param = cjson.encode(cmd.param)
 	end
 
-	local r, err = dev:send_command(cmd.cmd, cmd.param)
-	snax.self().post.action_result('command', id, r, err)
+	local r, err = dev:send_command(cmd.cmd, cmd.param, id)
+	if not r then
+		snax.self().post.action_result('command', id, false, err)
+	end
 end
 
 ---
