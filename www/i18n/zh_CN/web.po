@@ -91,8 +91,8 @@ msgstr "CPU架构"
 msgid "CPU Model"
 msgstr "CPU型号"
 
-msgid "Caches Fire Per Time"
-msgstr "缓存发送周期"
+msgid "Cache per File"
+msgstr "缓存单文件数据量"
 
 msgid "Cannot enable beta. Error: %s"
 msgstr "不能开启使用Beta版本。错误："
@@ -151,9 +151,6 @@ msgstr "共享"
 msgid "Control"
 msgstr "控制项"
 
-msgid "Count Per File"
-msgstr "文件数据量"
-
 msgid "Create"
 msgstr "创建"
 
@@ -172,10 +169,10 @@ msgstr "设备"
 msgid "Dashboard"
 msgstr "仪表盘"
 
-msgid "Data Caches"
+msgid "Data Cache"
 msgstr "断线缓存"
 
-msgid "Data Caches Options"
+msgid "Data Cache Options"
 msgstr "断线缓存选项"
 
 msgid "Data Upload"
@@ -292,6 +289,9 @@ msgstr "从服务器重新获取文件"
 msgid "File Editor"
 msgstr "文件编辑器"
 
+msgid "Fire Frequence"
+msgstr "发送周期"
+
 msgid "Forum"
 msgstr "社区"
 
@@ -381,6 +381,9 @@ msgstr "登出"
 
 msgid "Logs"
 msgstr "日志"
+
+msgid "Max File Count"
+msgstr "最大文件数量"
 
 msgid "Meta Information"
 msgstr "元信息"
@@ -601,14 +604,14 @@ msgstr "测试浏览页面"
 msgid "The COV TTL cannot be less than 60 seconds"
 msgstr "变化传输的快照间隔不能低于60秒"
 
-msgid "The Data Cache Fire Gap cannot more than 1000 ms"
+msgid "The Data Cache File count limit cannot more than 4096"
+msgstr "断线缓存文件总数不能大于4096"
+
+msgid "The Data Cache Fire Freq cannot more than 1000 ms"
 msgstr "断线缓存发送周期不能小于1000毫秒"
 
 msgid "The Data Cache Per File cannot be less than 1024"
 msgstr "断线缓存文件数据容量不能小于1024"
-
-msgid "The Data Cache Per File cannot more than 4096"
-msgstr "断线缓存文件总数不能大于4096"
 
 msgid "The upload period cannot be less than 1000 ms (one second)"
 msgstr "周期上送的时间不能低于1000毫秒"
@@ -621,9 +624,6 @@ msgstr "删除本地所有的改动，是否确认?"
 
 msgid "Timestamp"
 msgstr "时间戳"
-
-msgid "Total File Limit"
-msgstr "总数限制"
 
 msgid "Total Memory"
 msgstr "全部内存"
@@ -705,51 +705,3 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
-
-#~ msgid "Cloud option is changed, you need restart system to apply changes!"
-#~ msgstr "云平台设定已修改，重启后才能使之生效!"
-
-#~ msgid "Host"
-#~ msgstr "主机"
-
-#~ msgid "MQTT"
-#~ msgstr "MQTT"
-
-#~ msgid "Port"
-#~ msgstr "端口"
-
-#~ msgid "System"
-#~ msgstr "系统"
-
-#~ msgid "Tiemout"
-#~ msgstr "超时"
-
-#~ msgid "Application does not exist! Instance: "
-#~ msgstr "应用不存在!实例名:"
-
-#~ msgid "UPTIME"
-#~ msgstr "启动时间"
-
-#~ msgid "PKG"
-#~ msgstr "软件包"
-
-#~ msgid "PKG Host URL"
-#~ msgstr "软件包服务器地址"
-
-#~ msgid "Application Name"
-#~ msgstr "应用名称"
-
-#~ msgid "COV"
-#~ msgstr "变化传输"
-
-#~ msgid "ms"
-#~ msgstr "毫秒"
-
-#~ msgid "FreeIOE System DashBoard"
-#~ msgstr "FreeIOE系统仪表盘"
-
-#~ msgid "Messages"
-#~ msgstr "消息"
-
-#~ msgid "Platform"
-#~ msgstr "硬件平台"

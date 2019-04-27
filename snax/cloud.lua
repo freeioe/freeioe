@@ -41,6 +41,7 @@ local apps_devices_fired = false
 
 --- Cloud options
 local enable_data_upload = nil				--- Whether upload device data (boolean)
+local data_upload_max_dpp = 1024			--- Max data upload data count per packet
 local enable_data_one_short_cancel = nil	--- Whether enable data upload in one short time (time)
 local enable_stat_upload = nil				--- Whether upload device stat (boolean)
 local enable_event_upload = nil				--- Whether upload event data (level in number)
@@ -49,15 +50,14 @@ local enable_comm_upload_apps = {}			--- Whether upload communication data for s
 local max_enable_comm_upload = 60 * 10		--- Max upload communication data period
 local enable_log_upload = nil				--- Whether upload logs (time)
 local max_enable_log_upload = 60 * 10		--- Max upload logs period
-local max_data_upload_dpp = 1024			--- Max data upload data count per packet
 
 local api = nil					--- App API object to access devices
 local cov = nil					--- COV helper
 local cov_min_timer_gap = 10	--- COV min timer gap which will be set to period / 10 if upload period enabled
 local pb = nil					--- Upload period buffer helper
 local stat_pb = nil				--- Upload period buffer helper for stat data
-local fb_file = nil				--- file saving the dropped data
-local fb_file_fire_gap = 1000	--- fire cached file min gap (ms)
+local data_cache_fb = nil		--- file saving the dropped data
+local cache_fire_freq = 1000	--- fire cached data frequency
 local log_buffer = nil			--- Cycle buffer for logs
 local event_buffer = nil		--- Cycle buffer for events
 local comm_buffer = nil			--- Cycle buffer for communication data
@@ -376,7 +376,7 @@ local publish_data_list = function(val_list)
 end
 
 local publish_cached_data_list = function(val_list)
-	skynet.sleep(fb_file_fire_gap // 10) -- delay by gap
+	skynet.sleep(cache_fire_freq // 10) -- delay by gap
 	if mqtt_client then
 		log.debug('::CLOUD:: Uploading cached data! Count:', #val_list)
 	end
@@ -396,13 +396,13 @@ end
 
 ---
 local warning_upload_period = 0
-local push_to_fb_file = function(...)
-	if fb_file then
+local push_to_data_cache = function(...)
+	if data_cache_fb then
 		if mqtt_client and skynet.time() > warning_upload_period  then
 			warning_upload_period = skynet.time() + 5 * 60 * 100 --- 5 minutes
 			log.warning('::CLOUD:: ***Make sure you have proper upload period if you read this***!!!')
 		end
-		fb_file:push(...)
+		data_cache_fb:push(...)
 	end
 end
 
@@ -445,32 +445,33 @@ local function load_cov_conf()
 end
 
 --- Load file buffer objects
-local function load_fb_conf()
+local function load_data_cache_conf()
+	local enable_data_cache = datacenter.get("CLOUD", "DATA_CACHE")
 	if not pb or not enable_data_cache then
-		log.notice('::CLOUD:: Data caches disabled')
+		log.notice('::CLOUD:: Data cache disabled')
 		return
 	end
 
-	if fb_file then
+	if data_cache_fb then
 		return
 	end
 
 	--- file buffer
 	local sysinfo = require 'utils.sysinfo'
 	local cache_folder = sysinfo.data_dir().."/cloud_cache"
-	log.notice('::CLOUD:: Data caches folder:', cache_folder)
+	log.notice('::CLOUD:: Data cache folder:', cache_folder)
 
-	-- should be more less than period_max
-	local data_per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 4096)
+	-- should be more less than period_limit
+	local per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 4096)
 	-- about 240M in disk
-	local data_max_count = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 1024)
+	local limit = tonumber(datacenter.get("CLOUD", "DATA_CACHE_LIMIT") or 1024)
 	-- Upload cached data one per gap time
-	fb_file_fire_gap = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_GAP") or 1000)
+	cache_fire_freq = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_FREQ") or 1000)
 
-	log.notice('::CLOUD:: Data caches option:', data_per_file, data_max_count, fb_file_fire_gap, max_data_upload_dpp)
+	log.notice('::CLOUD:: Data cache option:', per_file, limit, cache_fire_freq, data_upload_max_dpp)
 
-	fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count, max_data_upload_dpp) 
-	fb_file:start(function(...) 
+	data_cache_fb = filebuffer:new(cache_folder, per_file, limit, data_upload_max_dpp)
+	data_cache_fb:start(function(...)
 		-- Disable one data fire
 		return false 
 	end, publish_cached_data_list)
@@ -482,17 +483,21 @@ local function load_pb_conf()
 		return
 	end
 
-	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000) -- period in ms
-	local period_max = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_MAX") or 10240) -- pack limit
+	--- Data Upload Period in ms
+	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000)
+	--- Data Upload Buffer Max Size
+	local period_limit = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_LIMIT") or 10240)
 
-	log.notice('::CLOUD:: Loading period buffer! Period:', period, period_max, max_data_upload_dpp)
+	log.notice('::CLOUD:: Period option:', period, period_limit, data_upload_max_dpp)
 	if period >= 1000 then
 		--- Period buffer enabled
 		cov_min_timer_gap = math.floor(period / (10 * 1000))
 
-		pb = periodbuffer:new(period, period_max, max_data_upload_dpp)
-		pb:start(publish_data_list, push_to_fb_file)
-		stat_pb = periodbuffer:new(period, period_max * 10, max_data_upload_dpp)  --- there is no buffer for stat
+		pb = periodbuffer:new(period, period_limit, data_upload_max_dpp)
+		pb:start(publish_data_list, push_to_data_cache)
+
+		--- there is no buffer for stat, so ten times for max buffer size
+		stat_pb = periodbuffer:new(period, period_limit * 10, data_upload_max_dpp)
 		stat_pb:start(publish_stat_list)
 	else
 		--- Period buffer disabled
@@ -520,12 +525,11 @@ local function load_conf()
 	log.notice("::CLOUD:: Connection: ", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
-	enable_data_cache = datacenter.get("CLOUD", "DATA_CACHE")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
 	enable_comm_upload = datacenter.get("CLOUD", "COMM_UPLOAD")
 	enable_log_upload = datacenter.get("CLOUD", "LOG_UPLOAD")
-	enable_event_upload = tonumber(datacenter.get("CLOUD", "EVENT_UPLOAD"))
-	max_data_upload_dpp = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_MAX_DPP") or 1024)
+	enable_event_upload = tonumber(datacenter.get("CLOUD", "EVENT_UPLOAD") or 99)
+	data_upload_max_dpp = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_MAX_DPP") or 1024)
 
 	--- For communication data applications list
 	enable_comm_upload_apps = datacenter.get("CLOUD", "COMM_UPLOAD_APPS") or {}
@@ -542,7 +546,7 @@ local function load_conf()
 
 	load_pb_conf()
 	load_cov_conf()
-	load_fb_conf()
+	load_data_cache_conf()
 end
 
 local function publish_comm(app_src, sn, dir, ts, content)
@@ -948,17 +952,17 @@ function accept.enable_data_one_short(id, period)
 end
 
 function accept.enable_cache(id, enable)
-	enable_data_cache = enable
+	local enable = enable and true or false
 	datacenter.set("CLOUD", "DATA_CACHE", enable)
 	if not enable then
-		log.debug("::CLOUD:: Data caches disabled!", enable)
-		if fb_file then
-			fb_file:stop()
-			fb_file = nil
+		log.debug("::CLOUD:: Data cache disabled!", enable)
+		if data_cache_fb then
+			data_cache_fb:stop()
+			data_cache_fb = nil
 		end
 	else
-		if not fb_file then
-			load_fb_conf()		
+		if not data_cache_fb then
+			load_data_cache_conf()
 		end
 	end
 
@@ -966,7 +970,7 @@ function accept.enable_cache(id, enable)
 end
 
 function accept.enable_stat(id, enable)
-	enable_stat_upload = enable
+	enable_stat_upload = enable and true or false
 	datacenter.set("CLOUD", "STAT_UPLOAD", enable)
 	if not enable then
 		if stat_cov then

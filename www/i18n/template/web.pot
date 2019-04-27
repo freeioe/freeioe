@@ -122,7 +122,7 @@ msgid "CPU Model"
 msgstr ""
 
 
-msgid "Caches Fire Per Time"
+msgid "Cache per File"
 msgstr ""
 
 
@@ -202,10 +202,6 @@ msgid "Control"
 msgstr ""
 
 
-msgid "Count Per File"
-msgstr ""
-
-
 msgid "Create"
 msgstr ""
 
@@ -230,11 +226,11 @@ msgid "Dashboard"
 msgstr ""
 
 
-msgid "Data Caches"
+msgid "Data Cache"
 msgstr ""
 
 
-msgid "Data Caches Options"
+msgid "Data Cache Options"
 msgstr ""
 
 
@@ -390,6 +386,10 @@ msgid "File Editor"
 msgstr ""
 
 
+msgid "Fire Frequence"
+msgstr ""
+
+
 msgid "Forum"
 msgstr ""
 
@@ -507,6 +507,10 @@ msgstr ""
 
 
 msgid "Logs"
+msgstr ""
+
+
+msgid "Max File Count"
 msgstr ""
 
 
@@ -802,15 +806,15 @@ msgid "The COV TTL cannot be less than 60 seconds"
 msgstr ""
 
 
-msgid "The Data Cache Fire Gap  cannot more than 1000"
+msgid "The Data Cache File count limit cannot more than 4096"
+msgstr ""
+
+
+msgid "The Data Cache Fire Freq cannot more than 1000 ms"
 msgstr ""
 
 
 msgid "The Data Cache Per File cannot be less than 1024"
-msgstr ""
-
-
-msgid "The Data Cache Per File cannot more than 4096"
 msgstr ""
 
 
@@ -827,10 +831,6 @@ msgstr ""
 
 
 msgid "Timestamp"
-msgstr ""
-
-
-msgid "Total File Limit"
 msgstr ""
 
 

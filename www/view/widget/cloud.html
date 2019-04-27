@@ -121,15 +121,15 @@
 	</tbody>
 </table>
 
-<h3 class="ui header">{{_("Data Caches Options")}} </h3>
+<h3 class="ui header">{{_("Data Cache Options")}} </h3>
 <table class="ui celled basic table">
 	<thead>
 		<tr>
-			<th>{{_("Data Caches")}}</th>
+			<th>{{_("Data Cache")}}</th>
 			{% if cfg.DATA_CACHE then %}
-			<th>{{_("Count Per File")}}</th>
-			<th>{{_("Total File Limit")}}</th>
-			<th>{{_("Caches Fire Per Time")}} (ms)</th>
+			<th>{{_("Cache per File")}}</th>
+			<th>{{_("Max File Count")}}</th>
+			<th>{{_("Fire Frequence")}} (ms)</th>
 			{% end %}
 		</tr>
 	</thead>
@@ -169,8 +169,8 @@
 			</td>
 			<td>
 				<div class="ui action input">
-					<input id="data_cache_fire_gap" value="{{cfg.DATA_CACHE_FIRE_GAP or 1000}}" type="number">
-					<button id="data_cache_fire_gap_btn" class="ui yellow right labeled icon button">
+					<input id="data_cache_fire_freq" value="{{cfg.DATA_CACHE_FIRE_FREQ or 1000}}" type="number">
+					<button id="data_cache_fire_freq_btn" class="ui yellow right labeled icon button">
 						<i class="check icon"></i>
 						{{_("Change")}}
 					</button>

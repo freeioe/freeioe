@@ -80,13 +80,13 @@ return {
 			if string.upper(option) == 'DATA_CACHE_LIMIT' then
 				value = math.abs(math.floor(tonumber(value)))
 				if value > 4096  then
-					return ngx.print(_('The Data Cache Per File cannot more than 4096'))
+					return ngx.print(_('The Data Cache File count limit cannot more than 4096'))
 				end
 			end
-			if string.upper(option) == 'DATA_CACHE_FIRE_GAP' then
+			if string.upper(option) == 'DATA_CACHE_FIRE_FREQ' then
 				value = math.abs(math.floor(tonumber(value)))
 				if value < 1000  then
-					return ngx.print(_('The Data Cache Fire Gap cannot more than 1000 ms'))
+					return ngx.print(_('The Data Cache Fire Freq cannot more than 1000 ms'))
 				end
 			end
 
