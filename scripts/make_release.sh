@@ -62,12 +62,11 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh aliyun
 ./scripts/release_app.sh baidu_cloud
 ./scripts/release_app.sh huawei_cloud
-# ./scripts/release_app.sh JC_T8600
 ./scripts/release_app.sh dlt645
 ./scripts/release_app.sh sim_tank
 ./scripts/release_app.sh focas
 ./scripts/release_app.sh telit_cloud
-./scripts/release_app.sh trigger
+./scripts/release_app.sh showbox 
 ./scripts/release_app.sh sim
 
 # Validate platform name

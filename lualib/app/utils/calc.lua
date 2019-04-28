@@ -228,7 +228,7 @@ function calc:_map_handler_func(handler, calc_handler, func)
 	handler[func] = map_f
 end
 
-function calc:map_handler(handler)
+function calc:_map_handler(handler)
 	assert(self._cov, "Calc util needs to be started and then map handler")
 	local calc_handler = create_handler(self)
 	self:_map_handler_func(handler, calc_handler, 'on_add_device')
@@ -238,7 +238,8 @@ function calc:map_handler(handler)
 	return handler
 end
 
-function calc:start()
+function calc:start(handler)
+	assert(handler, "Calc util need the api handler")
 	self._cov = cov:new(function(...)
 		self:_on_cov_input(...)
 	end)
@@ -262,14 +263,15 @@ function calc:start()
 			self._cov:stop()
 			self._cov = nil
 		end
-		skynet.wakeup(self)
+		self_sys:wakeup(self)
 	end)
+	return self:_map_handler(handler)
 end
 
 function calc:stop()
 	if not self._stop then
 		self._stop = true
-		skynet.wait(self)
+		self_sys:wait(self)
 	end
 end
 

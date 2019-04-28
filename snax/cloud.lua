@@ -10,6 +10,7 @@ local cjson = require 'cjson.safe'
 local cyclebuffer = require 'buffer.cycle'
 local periodbuffer = require 'buffer.period'
 local filebuffer = require 'buffer.file'
+local index_stack = require 'utils.index_stack'
 local uuid = require 'uuid'
 local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
@@ -29,6 +30,7 @@ local mqtt_port = nil			--1883
 local mqtt_keepalive = nil		--300
 local mqtt_client = nil			--- MQTT Client instance
 local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
+local qos_msg_buf = nil			--- MQTT QOS messages
 
 --- Next reconnect timeout which will be multi by two until a max time
 local mqtt_reconnect_timeout = 100
@@ -256,6 +258,26 @@ local function connect_log_server(enable)
 	end
 end
 
+--[[
+local function mqtt_client_publish(...)
+	return mqtt_client:publish(...)
+end
+]]--
+
+local function mqtt_client_publish(topic, data, qos, retained)
+	local mid, err = mqtt_client:publish(topic, data, qos, retained)
+	if qos == 1 and mid then
+		qos_msg_buf:push(mid, topic, data, qos, retained)
+	end
+	return mid, err
+end
+
+local function mqtt_resend_qos_msg()
+	skynet.fork(function()
+		qos_msg_buf:fire_all(mqtt_client_publish, 10, true)
+	end)
+end
+
 local total_compressed = 0
 local total_uncompressed = 0
 local function calc_compress(bytes_in, bytes_out, count)
@@ -307,7 +329,7 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 		return nil, err
 	end
 
-	return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+	return mqtt_client_publish(mqtt_id.."/data", val, 1, false)
 end
 
 --- Push data to period buffer or publish to MQTT dirtectly
@@ -365,7 +387,7 @@ local function publish_data_list_impl(val_list, topic)
 			calc_compress(bytes_in, bytes_out, val_count)
 			local topic = mqtt_id.."/"..topic
 			--log.trace('::CLOUD:: publish_data_list', topic, #val_list)
-			return mqtt_client:publish(topic, deflated, 1, false)
+			return mqtt_client_publish(topic, deflated, 1, false)
 		end
 	end
 end
@@ -779,6 +801,10 @@ connect_proc = function(clean_session, username, password)
 					skynet.timeout(300, function() snax.self().post.data_flush() end)
 				end
 			end
+
+			-- Check Qos message
+			mqtt_resend_qos_msg()
+
 			log.notice("::CLOUD:: Connection is ready!!", client:socket()) 
 		else
 			log.warning("::CLOUD:: ON_CONNECT FAILED", success, rc, msg) 
@@ -800,6 +826,10 @@ connect_proc = function(clean_session, username, password)
 				start_reconnect()
 			end
 		end
+	end
+	client.ON_PUBLISH = function(mid)
+		--log.trace("::CLOUD:: ON_PUBLISH", mid)
+		qos_msg_buf:remove(mid)
 	end
 
 	client.ON_LOG = log_callback
@@ -1452,7 +1482,7 @@ function accept.action_result(action, id, result, message)
 		else
 			log.warning("::CLOUD:: Action Result: ", action, id, result, message)
 		end
-		mqtt_client:publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
+		mqtt_client_publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
 
@@ -1461,6 +1491,9 @@ function init()
 	if not zlib_loaded then
 		log.warning("::CLOUD:: Cannot load zlib module, data compressing disabled!!")
 	end
+	qos_msg_buf = index_stack:new(1024, function(...)
+		log.error("::CLOUD:: MQTT QOS message droped!!!!")
+	end)
 
 	mqtt_client_last = skynet.time()
 	mosq.init()
