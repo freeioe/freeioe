@@ -10,6 +10,7 @@ v1.4.0 ()
 * Fix system time by added skynet.fix_time instead of restart
 * Limit the max data per packet in data upload
 * Command/Output/Ctrl result post to source application
+* Handle MQTT QOS message
 
 
 v1.3.4 (2019-4-24)

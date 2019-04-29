@@ -263,7 +263,7 @@ function calc:start(handler)
 			self._cov:stop()
 			self._cov = nil
 		end
-		self_sys:wakeup(self)
+		self._sys:wakeup(self)
 	end)
 	return self:_map_handler(handler)
 end
@@ -271,7 +271,7 @@ end
 function calc:stop()
 	if not self._stop then
 		self._stop = true
-		self_sys:wait(self)
+		self._sys:wait(self)
 	end
 end
 
