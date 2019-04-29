@@ -152,8 +152,8 @@ function calc:_on_del_device(app_src, sn)
 end
 
 function calc:_on_mod_device(app_src, sn, props)
-	self._on_del_device(app_src, sn)
-	self._on_add_device(app_src, sn, props)
+	self:_on_del_device(app_src, sn)
+	self:_on_add_device(app_src, sn, props)
 end
 
 function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
