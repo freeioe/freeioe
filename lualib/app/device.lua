@@ -167,6 +167,7 @@ function device:get_output_prop(output, prop)
 end
 
 function device:set_output_prop(output, prop, value, timestamp, priv)
+	local priv = priv or '__NO_RESULT__CALL__'
 	for _, v in ipairs(self._props.outputs or {}) do
 		if v.name == output then
 			local timestamp = timestamp or ioe.time()
@@ -179,6 +180,7 @@ function device:set_output_prop(output, prop, value, timestamp, priv)
 end
 
 function device:send_command(command, param, priv)
+	local priv = priv or '__NO_RESULT__CALL__'
 	for _, v in ipairs(self._props.commands or {}) do
 		if v.name == command then
 			self._ctrl_chn:publish("command", self._app_src, self._app_name, self._sn, command, param, priv)
