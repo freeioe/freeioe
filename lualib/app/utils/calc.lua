@@ -99,7 +99,7 @@ function calc:_complete_trigger(trigger)
 		end
 		table.insert(values, val)
 	end
-	--self._log:trace("Ready for trigger", trigger.name)
+	self._log:trace("Ready for trigger", trigger.name)
 	return self:_complete_call(trigger, table.unpack(values))
 end
 
@@ -259,6 +259,7 @@ function calc:start(handler)
 			self._sys:sleep(1000)
 		end
 
+		self._log:trace("Stop COV before quit trigger")
 		if self._cov then
 			self._cov:stop()
 			self._cov = nil

@@ -18,6 +18,8 @@ function fb:initialize(file_folder, data_count_per_file, max_file_count, max_bat
 	self._fire_offset = 1 -- buffer offset. 
 	self._fire_index = nil -- file index. nil means there is no fire_buffer (file or buffer)
 	self._hash = 'FILE_BUF_UTILS_V1'
+
+	self._stop = nil
 end
 
 function fb:dump_index()
@@ -75,17 +77,15 @@ function fb:start(data_callback, batch_callback)
 				sleep_gap = self:_try_fire_data()
 			end
 
-			skynet.sleep(sleep_gap or 100)
+			skynet.sleep(sleep_gap or 100, self)
 		end
-
-		skynet.wakeup(self._stop)
 	end)
 end
 
 function fb:stop()
 	if not self._stop then
 		self._stop = {}
-		skynet.wait(self._stop)
+		skynet.wakeup(self)
 	end
 end
 

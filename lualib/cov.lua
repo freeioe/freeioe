@@ -21,6 +21,8 @@ function cov:initialize(cb, opt)
 	self._cb = cb
 	self._opt = opt
 	self._retained_map = {}
+
+	self._stop = nil
 end
 
 function cov:clean()
@@ -157,16 +159,15 @@ function cov:start(no_param)
 			if gap < min_ttl_gap then
 				gap = min_ttl_gap
 			end
-			skynet.sleep(gap)
+			skynet.sleep(gap, self)
 		end
-		skynet.wakeup(self)
 	end)
 end
 
 function cov:stop()
 	if not self._stop then
 		self._stop = true
-		skynet.wait(self)
+		skynet.wakeup(self)
 	end
 end
 

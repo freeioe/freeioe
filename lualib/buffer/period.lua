@@ -162,14 +162,13 @@ function pb:start(cb, drop_cb)
 			--print(math.floor(self._period / 10))
 			skynet.sleep(math.floor(self._period / 10), self)
 		end
-		skynet.wakeup(self._stop)
 	end)
 end
 
 function pb:stop()
 	if not self._stop then
 		self._stop = {}
-		skynet.wait(self._stop)
+		skynet.wakeup(self)
 	end
 end
 
