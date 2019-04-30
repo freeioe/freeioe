@@ -51,7 +51,7 @@ function calc:add(name, inputs, trigger_cb, cycle_time)
 		if not trigger then
 			return nil, "Trigger removed"
 		end
-		return self._complete_trigger(trigger)
+		return self:_complete_trigger(trigger)
 	end
 end
 

@@ -57,8 +57,12 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 
 		--- create an new coroutine to execute the command/output/ctrl and wait for result
 		skynet.fork(function(...)
-			local results = {f(app_src, ...)}
-			self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, table.unpack(results))
+			local results = table.pack(xpcall(f, debug.traceback, app_src, ...))
+			if not results[1] then
+				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, false, results[2])
+			else
+				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, table.unpack(results, 2))
+			end
 		end, ...)
 	else
 		log.trace('No handler for '..ctrl)
