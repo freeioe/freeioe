@@ -99,7 +99,7 @@ function calc:_complete_trigger(trigger)
 		end
 		table.insert(values, val)
 	end
-	self._log:trace("Ready for trigger", trigger.name)
+	--self._log:trace("Ready for trigger", trigger.name)
 	return self:_complete_call(trigger, table.unpack(values))
 end
 
