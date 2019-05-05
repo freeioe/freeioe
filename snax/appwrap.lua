@@ -207,6 +207,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		fire_exception_event(err, {err=m})
 		return nil, m
 	end
+	assert(m, "Application class module not found!")
 
 	if m.API_VER and (m.API_VER < app_sys.API_MIN_VER or m.API_VER > app_sys.API_VER) then
 		local s = string.format("API Version required is out of range. Required: %d. Current %d-%d",

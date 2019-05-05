@@ -79,6 +79,10 @@ dev:set_input_prop("Temperature", "value", 10)
 
 发送设备控制指令
 
+### sn
+> function device:sn()
+
+获取当前设备实例的序列号
 
 ### list_props
 > function device:list_props()

@@ -190,6 +190,10 @@ function device:send_command(command, param, priv)
 	return nil, "Command "..command.." does not exits in device "..self._sn
 end
 
+function device:sn()
+	return self._sn
+end
+
 function device:list_props()
 	return self._props
 end
