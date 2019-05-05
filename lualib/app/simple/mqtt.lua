@@ -3,6 +3,7 @@ local cov = require 'cov'
 local periodbuffer = require 'buffer.period'
 local filebuffer = require 'buffer.file'
 local sysinfo = require 'utils.sysinfo'
+local index_stack = require 'utils.index_stack'
 local ioe = require 'ioe'
 local simple_app = require 'app.simple'
 
@@ -88,6 +89,10 @@ function app:initialize(name, sys, conf)
 
 	self._total_compressed = 0
 	self._total_uncompressed = 0
+
+	self._qos_msg_buf = index_stack:new(1024, function(...)
+		self._log:error("MQTT QOS message dropped!!")
+	end)
 end
 
 function app:connected()
@@ -95,13 +100,25 @@ function app:connected()
 end
 
 function app:publish(topic, data, qos, retained)
-	local qos = qos or 1
+	local qos = qos or 0
 	local retained = retained or false
 	if not self._mqtt_client then
 		return nil, "MQTT not connected!"
 	end
 
-	return self._mqtt_client:publish(topic, data, qos, retained)
+	local mid, err = self._mqtt_client:publish(topic, data, qos, retained)
+	if qos == 1 and mid then
+		self._qos_msg_buf:push(mid, topic, data, qos, retained)
+	end
+	return mid, err
+end
+
+function app:mqtt_resend_qos_msg()
+	self._sys:fork(function()
+		self._qos_msg_buf:fire_all(function(...)
+			self:publish(...)
+		end, 10, true)
+	end)
 end
 
 function app:subscribe(topic, qos)
@@ -194,7 +211,11 @@ end
 function app:_start_reconnect()
 	if self._mqtt_client then
 		self._log:error('****Cannot start reconnection when client is there!****')
+		return
 	end
+
+	self._log:notice('Start reconnect to cloud after '..(self._mqtt_reconnect_timeout/1000)..' seconds')
+
 	self._sys:timeout(self._mqtt_reconnect_timeout, function() self:_connect_proc() end)
 	self._mqtt_reconnect_timeout = self._mqtt_reconnect_timeout * 2
 	if self._mqtt_reconnect_timeout > self._max_mqtt_reconnect_timeout then
@@ -243,7 +264,7 @@ function app:_connect_proc()
 
 			self:_fire_devices(1000)
 		else
-			log:warning("ON_CONNECT", success, rc, msg) 
+			log:warning("ON_CONNECT FAILED", success, rc, msg) 
 			close_client = true
 			self:_start_reconnect()
 		end
@@ -261,6 +282,8 @@ function app:_connect_proc()
 		end
 	end
 	client.ON_PUBLISH = function (mid)
+		self._qos_msg_buf:remove(mid)
+
 		if self.on_mqtt_publish then
 			self.on_mqtt_publish(mid)
 		end
@@ -283,10 +306,20 @@ function app:_connect_proc()
 	end
 
 	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
-	if not r then
+	local ts = 1000
+	while not r do
 		log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
-		client:destroy()
-		return self:_start_reconnect()
+		ts = ts * 2
+		self._sys:sleep(ts)
+
+		if ts > self._max_mqtt_reconnect_timeout then
+			log:error("Destroy client and reconnect!")
+			client:destroy()
+			self._mqtt_reconnect_timeout = 1000
+			return self:_start_reconnect()
+		end
+
+		r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	end
 
 	--- Worker thread
@@ -302,7 +335,7 @@ function app:_connect_proc()
 	client:disconnect()
 	log:notice("Cloud Connection Closed!")
 	client:destroy()
-	log:notice("::CLOUD:: Client Destroyed!")
+	log:notice("Client Destroyed!")
 
 	if self._close_connection then
 		sys:wakeup(self._close_connection)

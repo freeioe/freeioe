@@ -23,7 +23,7 @@ end
 local function __map_handler(handler, app, func)
 	local f = app[func]
 	if f then
-		app._log:trace("Application has handler:", func)
+		--app._log:trace("Application has handler:", func)
 		handler[func] = function(...)
 			return f(app, ...)
 		end
