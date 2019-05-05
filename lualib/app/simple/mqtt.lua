@@ -12,8 +12,11 @@ local simple_app = require 'app.simple'
 -- client_id - MQTT client id (默认使用网关id)
 -- username - 认证时使用的用户名
 -- password - 认证时使用的密码
--- server - MQTT 服务器地址 (默认127.0.0.1)
--- port - MQTT服务器端口 (默认1883)
+-- server - MQTT 服务器地址
+-- port - MQTT服务器端口
+-- enable_tls - MQTT with TLS
+-- tls_cert - MQTT Server cert file
+--
 -- period - 周期上送的周期时间 (默认60秒)
 -- ttl - 变化传输的强制上传周期（数据不变，但是经过ttl的时间数据必须上传一次, 默认300秒)
 -- float_threshold - 变化传输浮点数据变化的最小量值 (默认0.0000001)
@@ -25,14 +28,15 @@ local simple_app = require 'app.simple'
 -- data_cache_fire_gap - 断线缓存上送时的包间隔时间默认 1000ms (1000 ~ nnnn)
 --
 -- Your handlers are:
--- pack_key [o] -- 用于打包: src_app:采集应用名称 sn:采集设备序列号 input: 输入项迷宫昵称
+-- pack_key [o] -- 用于打包: src_app:采集应用名称 sn:采集设备序列号 input: 输入项名称 prop: 属性名, return nil will skip data
 -- on_publish_devices [o] -- 打包所有设备信息上送回调
 -- on_publish_data -- 用于未开启PB时的但数据点回调 (key, value, timestamp, quality)
 -- on_publish_data_list -- 用于开启PB后，打包上送 (list --成员为 [key, value, timestamp, quality]), 成功返回true
 -- on_publish_cached_data_list [o] -- 用于开启断缓后，打包上送 同PB, 返回上送数据的个数
 --
+-- mqtt_auth [o] -- 用于更新认证信息
+-- mqtt_will [o] -- Will message
 -- on_mqtt_connect_ok [o] -- 用于MQTT连接成功回调
--- on_mqtt_will [o] -- Will message
 -- on_mqtt_message -- MQTT消息接收函数
 -- on_mqtt_publish -- MQTT发布回调， qos=1,2
 --
@@ -43,7 +47,7 @@ local simple_app = require 'app.simple'
 -- publish -- 发布MQTT消息
 -- compress -- 压缩数据
 -- decompress -- 解压数据
-
+--
 
 local app = simple_app:subclass("FREEIOE_EX_APP_MQTT_BASE")
 
@@ -63,8 +67,11 @@ function app:initialize(name, sys, conf)
 	self._mqtt_id = conf.client_id or sys:id()
 	self._mqtt_username = conf.username
 	self._mqtt_password = conf.password
-	self._mqtt_host = conf.server or "127.0.0.1"
-	self._mqtt_port = conf.port or "1883"
+	self._mqtt_host = conf.server or '127.0.0.0'
+	self._mqtt_port = conf.port or 1883
+	self._mqtt_enable_tls = conf.enable_tls
+	self._mqtt_tls_cert = conf.tls_cert
+	self._mqtt_clean_session = true
 
 	-- COV and PB
 	self._period = tonumber(conf.period) or 60 -- seconds
@@ -103,10 +110,12 @@ function app:publish(topic, data, qos, retained)
 	local qos = qos or 0
 	local retained = retained or false
 	if not self._mqtt_client then
+		self._log:trace("MQTT not connected!")
 		return nil, "MQTT not connected!"
 	end
 
 	local mid, err = self._mqtt_client:publish(topic, data, qos, retained)
+	--print(topic, mid, err)
 	if qos == 1 and mid then
 		self._qos_msg_buf:push(mid, topic, data, qos, retained)
 	end
@@ -188,15 +197,18 @@ function app:on_mod_device(src_app, sn, props)
 end
 
 --- 处理COV时需要打包app, sn, input到key
-function app:pack_key(app, sn, input)
-	return string.format("%s/%s", sn, input)
+function app:pack_key(app, sn, input, prop)
+	return string.format("%s/%s/%s", sn, input, prop)
 end
 
 --[[
 function app:on_mqtt_connect_ok()
 end
 
-function app:on_mqtt_will()
+function app:mqtt_auth()
+end
+
+function app:mqtt_will()
 end
 ]]---
 
@@ -227,12 +239,23 @@ function app:_connect_proc()
 	local log = self._log
 	local sys = self._sys
 
-	local mqtt_id = self._mqtt_id
-	local mqtt_host = self._mqtt_host
-	local mqtt_port = self._mqtt_port
-	local clean_session = self._clean_session or true
-	local username = self._mqtt_username
-	local password = self._mqtt_password
+	local info, err = nil, nil
+	if self.mqtt_auth then
+		info, err = self:mqtt_auth()
+		if not info then
+			log:error("ON_MQTT_PREPARE failed", err)
+			return self:_start_reconnect()
+		end
+	end
+
+	local mqtt_id = info and info.client_id or self._mqtt_id
+	local mqtt_host = info and info.host or self._mqtt_host
+	local mqtt_port = info and info.port or self._mqtt_port
+	local clean_session = info and info.clean_session or self._clean_session
+	local username = info and info.username or self._mqtt_username
+	local password = info and info.password or self._mqtt_password
+	local enable_tls = info and info.enable_tls or self._mqtt_enable_tls
+	local tls_cert = info and info.tls_cert or self._mqtt_tls_cert
 
 	-- 创建MQTT客户端实例
 	log:info("MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, username, password)
@@ -240,8 +263,8 @@ function app:_connect_proc()
 	local close_client = false
 	client:version_set(mosq.PROTOCOL_V311)
 	client:login_set(username, password)
-	if self._enable_tls then
-		client:tls_set(sys:app_dir().."/root_cert.pem")
+	if enable_tls then
+		client:tls_set(sys:app_dir().."/"..tls_cert)
 	end
 
 	-- 注册回调函数
@@ -282,6 +305,7 @@ function app:_connect_proc()
 		end
 	end
 	client.ON_PUBLISH = function (mid)
+		--print('on_publish', mid)
 		self._qos_msg_buf:remove(mid)
 
 		if self.on_mqtt_publish then
@@ -298,8 +322,8 @@ function app:_connect_proc()
 		end
 	end
 
-	if self.on_mqtt_will then
-		local topic, msg, qos, retained = self:on_mqtt_will()
+	if self.mqtt_will then
+		local topic, msg, qos, retained = self:mqtt_will()
 		if topic and msg then
 			client:will_set(topic, msg, qos or 1, retained == nil and true or false)
 		end
@@ -325,11 +349,7 @@ function app:_connect_proc()
 	--- Worker thread
 	while client and not close_client and self._close_connection == nil do
 		sys:sleep(0)
-		if client then
-			client:loop(50, 1)
-		else
-			sys:sleep(50)
-		end
+		client:loop(50, 1)
 	end
 
 	client:disconnect()
@@ -343,7 +363,7 @@ function app:_connect_proc()
 end
 
 function app:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
-	local key = self._safe_call(self.pack_key, self, src_app, sn, input)
+	local key = self._safe_call(self.pack_key, self, src_app, sn, input, prop)
 	if not key then
 		return
 	end
@@ -447,7 +467,6 @@ end
 
 --- 应用启动函数
 function app:on_start()
-	assert(self.on_publish_data, "on_publish_data missing!!!")
 	assert(self.on_publish_data, "on_publish_data missing!!!")
 	assert(self.on_publish_data_list, "on_publish_data_list missing!!!")
 
