@@ -37,8 +37,8 @@ local function sys_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
 	return {
 		ID = ioe_sn,
-		PKG_HOST_URL = "cloud.thingsroot.com",
-		CNF_HOST_URL = "cloud.thingsroot.com",
+		PKG_HOST_URL = "ioe.thingsroot.com",
+		CNF_HOST_URL = "ioe.thingsroot.com",
 		--CFG_AUTO_UPLOAD = true,
 	}
 end
@@ -46,7 +46,7 @@ end
 local function cloud_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
 	return {
-		HOST = "cloud.thingsroot.com",
+		HOST = "ioe.thingsroot.com",
 		PORT = 1883,
 		KEEPALIVE = 60,
 		DATA_UPLOAD = false,
@@ -75,6 +75,9 @@ local function set_cloud_defaults(data)
 	end
 	--- symgrid.com domain hacks
 	if string.match(data.HOST, 'symgrid.com') then
+		data.HOST = defaults.HOST
+	end
+	if string.match(data.HOST, 'cloud.thingsroot.com') then
 		data.HOST = defaults.HOST
 	end
 	--- export host to /tmp/sysinfo/cloud
