@@ -22,7 +22,7 @@ local simple_app = require 'app.simple'
 -- float_threshold - 变化传输浮点数据变化的最小量值 (默认0.0000001)
 -- data_upload_dpp - 数据上传单包最多的数据点数量(默认1024)
 -- data_upload_buffer - 周期上送最多缓存数据点数量(默认10240)
--- eanble_data_cache - 是否开启断线缓存(1开启，其他关闭)
+-- enable_data_cache - 是否开启断线缓存(1开启，其他关闭)
 -- cache_per_file - 断线缓存单文件数据点数量(默认4096) 1024 ~ 4096
 -- data_cache_limit - 断线缓存文件数量上限 1~ 256 默认128
 -- data_cache_fire_gap - 断线缓存上送时的包间隔时间默认 1000ms (1000 ~ nnnn)
@@ -45,6 +45,8 @@ local simple_app = require 'app.simple'
 -- connect -- 开启连接(应用启动会自动开启一次连接)
 -- disconnect -- 断开连接
 -- publish -- 发布MQTT消息
+-- subscribe
+-- unsubscribe
 -- compress -- 压缩数据
 -- decompress -- 解压数据
 --
@@ -220,6 +222,18 @@ function app:on_input(src_app, sn, input, prop, value, timestamp, quality)
 	return self:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
 end
 
+function app:on_input_em(src_app, sn, input, prop, value, timestamp, quality)
+	if not self.on_publish_data_em then
+		return
+	end
+
+	local key = self._safe_call(self.pack_key, self, src_app, sn, input, prop)
+	if not key then
+		return
+	end
+	return self:on_publish_data_em(key, value, timestamp, quality)
+end
+
 function app:_start_reconnect()
 	if self._mqtt_client then
 		self._log:error('****Cannot start reconnection when client is there!****')
@@ -286,6 +300,8 @@ function app:_connect_proc()
 			end
 
 			self:_fire_devices(1000)
+			---
+			self:mqtt_resend_qos_msg()
 		else
 			log:warning("ON_CONNECT FAILED", success, rc, msg) 
 			close_client = true
@@ -399,6 +415,9 @@ function app:_handle_cov_data(...)
 	--self._log:trace('_handle_cov_data', ...)
 	local pb = self._pb
 	if not pb then
+		if not self:connected() then
+			return nil, "MQTT not connected"
+		end
 		return self._safe_call(self.on_publish_data, self, ...)
 	else
 		return pb:push(...)
@@ -428,7 +447,7 @@ function app:_init_pb()
 	self._pb = periodbuffer:new(period, self._max_data_buffer, self._max_data_upload_dpp) 
 
 	self._pb:start(function(...)
-		if not self._mqtt_client then
+		if not self:connected() then
 			return nil, "MQTT not connected"
 		end
 		return self._safe_call(self.on_publish_data_list, self, ...)
@@ -460,6 +479,9 @@ function app:_init_fb()
 		-- Disable one data fire
 		return false
 	end, function(...) 
+		if not self:connected() then
+			return nil, "Not connected"
+		end
 		assert(self.on_publish_cached_data_list, "on_publish_cached_data_list missing!!")
 		return self._safe_call(self.on_publish_cached_data_list, self, ...)
 	end)
