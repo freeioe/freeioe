@@ -26,9 +26,12 @@ mkdir __install
 
 # Copy files
 git archive HEAD | tar -x -C __install
-rm -rf __install/examples
+rm -rf __install/test
 rm -rf __install/scripts
 # rm -rf __install/www
+
+rm -rf __install/doc/app/example_app.lua
+cp feeds/example_apps/sample/app.lua __install/doc/app/example_app.lua
 
 # Echo version
 echo $VERSION > __install/version
