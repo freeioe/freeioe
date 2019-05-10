@@ -11,6 +11,7 @@ v1.4.0 ()
 * Limit the max data per packet in data upload
 * Command/Output/Ctrl result post to source application
 * Handle MQTT QOS message
+* Improve the app.port modules
 
 
 v1.3.4 (2019-4-24)
