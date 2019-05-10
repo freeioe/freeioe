@@ -484,6 +484,7 @@ cd $IOE_DIR
 if [ -f $SKYNET_FILE ]
 then
 	cd $SKYNET_PATH
+	rm ./* -rf
 	tar xzf $SKYNET_FILE
 
 	if [ $? -eq 0 ]
@@ -501,6 +502,12 @@ cd "$IOE_DIR"
 if [ -f $FREEIOE_FILE ]
 then
 	cd $FREEIOE_PATH
+	rm ./www/* -rf
+	rm ./lualib/* -rf
+	rm ./snax/* -rf
+	rm ./test/* -rf
+	rm ./service/* -rf
+	rm ./ext/* -rf
 	tar xzf $FREEIOE_FILE
 
 	if [ $? -eq 0 ]
