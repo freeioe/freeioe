@@ -167,7 +167,7 @@ end
 
 function pb:stop()
 	if not self._stop then
-		self._stop = {}
+		self._stop = true
 		skynet.wakeup(self)
 	end
 end

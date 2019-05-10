@@ -19,14 +19,14 @@ local function agent_service(...)
 	local command = {}
 	local chn = serialchannel.channel(conf)
 
-	function command.request(request, response, padding)
+	function command.request(request, response, padding, ...)
 		local resp, err = assert(load(response))
 		if not resp then
 			return false, 'Response function code loading failed'
 		end
 
-		local r, data, err = skynet.pcall(function()
-			return chn:request(request, function(sock)
+		local r, data, err = skynet.pcall(function(...)
+			return chn:request(request, function(sock, ...)
 				local r, data, info = skynet.pcall(resp, sock)
 				if not r then
 					log.trace(data)
@@ -34,7 +34,7 @@ local function agent_service(...)
 				end
 				return data, info
 			end, padding)
-		end)
+		end, ...)
 		if not r then
 			log.trace(data)
 			return false, data
@@ -96,7 +96,7 @@ local function timeout_call(ti, ...)
 end
 
 function app_port:initialize(conf, share_name)
-	assert(conf)
+	assert(conf, "Serial port configuration missing")
 	self._name = share_name or uuid()
 	self._conf = conf
 	self._agent = service.new("APP.SERIAL_PORT."..self._name, agent_service, self._name, self._conf)
@@ -126,13 +126,13 @@ function app_port:timeout_call(timeout, func, ...)
 	return r, err
 end
 
-function app_port:request(request, response, padding, timeout)
+function app_port:request(request, response, padding, timeout, ...)
 	check(response)
 	local code = string.dump(response)
 	if timeout then
-		return self:timeout_call(timeout / 10, "request", request, code, padding)
+		return self:timeout_call(timeout / 10, "request", request, code, padding, ...)
 	else
-		return skynet.call(self._agent, "lua", "request", request, code, padding)
+		return skynet.call(self._agent, "lua", "request", request, code, padding, ...)
 	end
 end
 
