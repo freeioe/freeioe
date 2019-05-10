@@ -530,6 +530,9 @@ local function rs232_read(port, len, timeout)
 
 	local start = skynet.now()
 	while skynet.now() - start < timeout do
+		if not port._p then
+			return false, "Port closed!"
+		end
 		local ilen, err = port:in_queue()
 		if not ilen then
 			return false, err

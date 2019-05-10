@@ -24,7 +24,7 @@ function buffer:find(sk, ek)
 		return nil, "Buffer empty"
 	end
 
-	if #buf <= #sk + #ek then
+	if #buf <= #sk + (ek and #ek or 0) then
 		return nil, "Buffer not enough"
 	end
 
@@ -55,19 +55,19 @@ function buffer:find(sk, ek)
 	end
 
 	if not ek then
-		return true, buf, #buf
+		return buf, #buf
 	end
 
 	local pos = string.find(buf, ek, string.len(sk) + 1, true)
 
 	if pos then
-		local len = epos + #ek
+		local len = pos + #ek
 		local data = string.sub(buf, 1, len)
 		self._buf = { data }
 		if #data < #buf then
 			self._buf[#self._buf + 1] = string.sub(buf, len + 1)
 		end
-		return true, data, len
+		return data, len
 	end
 
 	if #buf > self._max_len then
@@ -115,7 +115,7 @@ function buffer:droped()
 end
 
 function buffer:append(data)
-	self._buf_list[#self._buf_list + 1] = data
+	self._buf[#self._buf + 1] = data
 end
 
 function buffer:clean()
