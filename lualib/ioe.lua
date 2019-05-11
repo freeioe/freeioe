@@ -1,4 +1,5 @@
 local skynet = require 'skynet'
+local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
 
 local _M = {}

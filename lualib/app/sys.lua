@@ -97,9 +97,9 @@ function sys:yield()
 	return skynet.yield()
 end
 
-function sys:sleep(ms)
+function sys:sleep(ms, token)
 	local ts = math.floor(ms / 10)
-	return skynet.sleep(ts)
+	return skynet.sleep(ts, token)
 end
 
 function sys:data_api()
@@ -114,8 +114,8 @@ function sys:wait(token)
 	return skynet.wait(token)
 end
 
-function sys:wakeup(co)
-	return skynet.wakeup(co)
+function sys:wakeup(token)
+	return skynet.wakeup(token)
 end
 
 function sys:app_dir()
@@ -205,6 +205,79 @@ function sys:post(msg, ...)
 	assert(self._wrap_snax)
 	return self._wrap_snax.post.app_post(msg, ...)
 end
+
+--- POST to cloud
+local CLOUD_WHITE_LIST_POST = {
+	'enable_data_one_short',
+	'enable_event',
+	'download_cfg',
+	'upload_cfg',
+	'fire_data_snapshot',
+	'batch_script',
+}
+function sys:cloud_post(func, ...)
+	local found = false
+	for _, v in ipairs(CLOUD_WHITE_LIST_POST) do
+		if v == func then
+			found = true
+			break
+		end
+	end
+	if not found then
+		return nil, "Not allowed post to "..func
+	end
+
+	local cloud, err = snax.queryservice('cloud')
+	if not cloud then
+		return nil, err
+	end
+
+	local id = string.format(':APP_CLOUD_POST:%s-%0.2f]', self._app_name, skynet.time())
+	cloud.post[func](id, ...)
+	return true
+end
+
+local CLOUD_WHILTE_LIST_REQ = {}
+function sys:cloud_req(func, ...)
+	local found = false
+	for _, v in ipairs(CLOUD_WHILTE_LIST_REQ) do
+		if v == func then
+			found = true
+		end
+	end
+	if not found then
+		return nil, "Not allowed post to "..func
+	end
+
+	local cloud, err = snax.queryservice('cloud')
+	if not cloud then
+		return nil, err
+	end
+	local id = string.format(':APP_CLOUD_POST:%s-%0.2f]', self._app_name, skynet.time())
+	return cloud.req[func](...)
+end
+
+local CFG_WHITE_LIST_CALL = {
+	'SAVE',
+}
+function sys:cfg_call(func, ...)
+	local found = false
+	for _, v in ipairs(CLOUD_WHILTE_LIST_REQ) do
+		if v == func then
+			found = true
+		end
+	end
+	if not found then
+		return nil, "Not allowed post to "..func
+	end
+
+	local cfg, err = skynet.queryservice('CFG')
+	if not cfg then
+		return nil, err
+	end
+	return skynet.call(cfg, "lua", func, ...)
+end
+
 
 function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
