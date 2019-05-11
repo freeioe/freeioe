@@ -21,6 +21,9 @@ local channel_serial_meta = {
 
 local serial_error = setmetatable({}, {__tostring = function() return "[Error: Serial]" end })	-- alias for error object
 serial_channel.error = serial_error
+local serial_timeout = setmetatable({}, {__tostring = function() return "[Timeout: Serial]" end })	-- alias for timeout object
+serial_channel.timeout = serial_timeout
+
 
 local function convert_number(val)
 	if type(val) == 'number' then
@@ -549,7 +552,7 @@ local function rs232_read(port, len, timeout)
 		return port:read(ilen >= len and len or ilen, 10)
 	end
 
-	return false, string.format("Serial read timeout! %d - %d", len, timeout)
+	return false, serial_timeout --string.format("Serial read timeout! %d - %d", len, timeout)
 	--[[
 	]]--
 end

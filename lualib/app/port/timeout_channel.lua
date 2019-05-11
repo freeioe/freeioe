@@ -9,20 +9,20 @@ local function port_request(chn, request, response, padding)
 	local r, data, err = skynet.pcall(chn.request, chn, request, function(sock)
 		local r, data, info = skynet.pcall(response, sock)
 		if not r then
-			log.trace(data)
+			--log.trace(data)
 			return false, data
 		end
 		return data, info
 	end, padding)
 
 	if not r then
-		log.trace(data)
+		--log.trace(data)
 		return false, data
 	end
 	return data, err
 end
 
-local timeout_error = setmetatable({}, {__tostring = function() return "[Error: serial timeout]" end })	-- alias for error object
+local timeout_error = setmetatable({}, {__tostring = function() return "[Error: channel timeout]" end })	-- alias for error object
 
 local function timeout_call(ti, f, ...)
 	local token = {}
@@ -42,7 +42,7 @@ local function timeout_call(ti, f, ...)
 		end
 	else
 		-- timeout
-		log.trace('timeout error')
+		--log.trace('timeout error')
 		return false, timeout_error
 	end
 end
