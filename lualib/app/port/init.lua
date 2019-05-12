@@ -26,7 +26,7 @@ function _M.new_serial(conf, name)
 end
 
 function _M.new_socket(conf, name)
-	return timeout_channel('serialchannel', conf, name)
+	return timeout_channel('socketchannel', conf, name)
 end
 
 

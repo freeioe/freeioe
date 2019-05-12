@@ -519,12 +519,13 @@ local function wrapper_serial_function(f)
 end
 
 local function rs232_read(port, len, timeout)
+	--print(port, len, timeout)
 	--[[
 	local timeout = timeout or 300
 	--return port:read(len, timeout * 10, 1)
 	local r, err = port:read(len, timeout * 10, 1)
 	if not r or string.len(r) == 0 then
-		return false, err or "Serial read timeout ..."
+		return false, err or serial_timeout 
 	end
 	return r, err
 	]]--
@@ -562,6 +563,7 @@ channel_serial.read = wrapper_serial_function(function(port, ...)
 end)
 
 channel_serial.write = wrapper_serial_function(function(port, ...)
+	--print('write', port, ...)
 	return port:write(...)
 end)
 

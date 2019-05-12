@@ -33,12 +33,13 @@ end
 -- @tparam dump Stream dump function. e.g. function(str) print(str) end
 -- @tparam timeout Reading timeout in ms. Default is 3000 ms
 function _M.read_serial(serial, len, dump, timeout)
+	--print(serial, len, dump, timeout)
 	local log = require 'utils.log'
-	log.trace('Start reading from serial port. required len:', len)
+	--log.trace('Start reading from serial port. required len:', len, 'timeout(ms):', timeout)
 
-	local str, err = serial:read(len, timeout)
-	if not str or string.len(str) == 0 then
-		return false, err or 'Serial read timeout'
+	local str, err = serial:read(len, timeout and timeout // 10 or nil)
+	if not str then
+		return nil, err
 	end
 
 	if dump then
