@@ -502,12 +502,12 @@ cd "$IOE_DIR"
 if [ -f $FREEIOE_FILE ]
 then
 	cd $FREEIOE_PATH
-	rm ./www/* -rf
-	rm ./lualib/* -rf
-	rm ./snax/* -rf
-	rm ./test/* -rf
-	rm ./service/* -rf
-	rm ./ext/* -rf
+	rm ./www -rf
+	rm ./lualib -rf
+	rm ./snax -rf
+	rm ./test -rf
+	rm ./service -rf
+	rm ./ext -rf
 	tar xzf $FREEIOE_FILE
 
 	if [ $? -eq 0 ]
