@@ -278,6 +278,9 @@ function sys:cfg_call(func, ...)
 	return skynet.call(cfg, "lua", func, ...)
 end
 
+function sys:set_event_threshold(count_per_min)
+	self._data_api:_set_event_threshold(count_per_min)
+end
 
 function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax

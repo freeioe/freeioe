@@ -7,6 +7,7 @@ local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local dev_api = require 'app.device'
 local app_event = require 'app.event'
+local threshold_buffer = require 'buffer.threshold'
 
 local api = class("APP_MGR_API")
 
@@ -15,6 +16,7 @@ function api:initialize(app_name, mgr_snax, cloud_snax)
 	self._mgr_snax = mgr_snax or snax.queryservice('appmgr')
 	self._cloud_snax = cloud_snax or snax.queryservice('cloud')
 	self._devices = {}
+	self._event_fire_buf = nil
 end
 
 function api:cleanup()
@@ -188,6 +190,7 @@ function api:set_handler(handler, watch_data)
 			self._event_chn = nil
 		end
 	end
+	self:_set_event_threshold(20)
 end
 
 --[[
@@ -277,10 +280,19 @@ function api:_dump_comm(sn, dir, ...)
 	return self._comm_chn:publish(self._app_name, sn, dir, ioe.time(), ...)
 end
 
+function api:_set_event_threshold(count_per_min)
+	assert(count_per_min > 0 and count_per_min < 128)
+	self._event_fire_buf = threshold_buffer:new(60, count_per_min, function(...)
+		return self._event_chn:publish(...)
+	end, function(...)
+		log.error('Event threshold reached:', ...)
+	end)
+end
+
 function api:_fire_event(sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)
 	local type_ = app_event.type_to_string(type_)
-	return self._event_chn:publish(self._app_name, sn, level, type_, info, data or {}, timestamp or ioe.time())
+	return self._event_fire_buf:push(self._app_name, sn, level, type_, info, data or {}, timestamp or ioe.time())
 end
 
 return api

@@ -5,7 +5,6 @@ local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local stat_api = require 'app.stat'
-local app_event = require 'app.event'
 
 local device = class("APP_MGR_DEV_API")
 
@@ -243,9 +242,7 @@ end
 
 function device:fire_event(level, type_, info, data, timestamp)
 	assert(not self._readonly, "This is an readonly device!")
-	assert(level and type_ and info)
-	local type_ = app_event.type_to_string(type_)
-	return self._event_chn:publish(self._app_name, self._sn, level, type_, info, data or {}, timestamp or ioe.time())
+	return self._api:_fire_event(self._sn, level, type_, info, data, timestamp)
 end
 
 function device:stat(name)
