@@ -484,7 +484,10 @@ cd $IOE_DIR
 if [ -f $SKYNET_FILE ]
 then
 	cd $SKYNET_PATH
-	rm ./* -rf
+	rm ./lualib -rf
+	rm ./luaclib -rf
+	rm ./service -rf
+	rm ./cservice -rf
 	tar xzf $SKYNET_FILE
 
 	if [ $? -eq 0 ]
