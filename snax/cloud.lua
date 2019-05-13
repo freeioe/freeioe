@@ -353,7 +353,7 @@ local function publish_stat(key, value, timestamp, quality)
 
 	if stat_pb then
 		--log.trace('::CLOUD:: publish_stat turn period buffer')
-		stat_pb:handle(key, timestamp, value, quality)
+		stat_pb:push(key, timestamp, value, quality)
 		return true
 	end
 
