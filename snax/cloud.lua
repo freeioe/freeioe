@@ -817,7 +817,7 @@ connect_proc = function(clean_session, username, password)
 		close_client = true --- close current one
 
 		-- If client is current connection
-		if mqtt_client == client then
+		if not mqtt_client or mqtt_client == client then
 			mqtt_client_last = skynet.time()
 			mqtt_client = nil -- clear the client object as it wil cleaned by others
 
