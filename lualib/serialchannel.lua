@@ -227,6 +227,8 @@ local function open_rs232(port, opt)
 	end
 	local ok, err = port:open()
 	if not ok then
+		port:close()
+		skynet.sleep(300)
 		return nil, tostring(err)
 	end
 	return port
