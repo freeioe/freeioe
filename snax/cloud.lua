@@ -808,8 +808,9 @@ connect_proc = function(clean_session, username, password)
 			log.notice("::CLOUD:: Connection is ready!!", client:socket()) 
 		else
 			log.warning("::CLOUD:: ON_CONNECT FAILED", success, rc, msg) 
-			close_client = true --- close current one
-			start_reconnect()
+			-- There is an ON_DISCONNECT after this on_connect so we do not need to reconnect here
+			--close_client = true --- close current one
+			--start_reconnect()
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 

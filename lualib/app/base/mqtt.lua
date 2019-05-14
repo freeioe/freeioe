@@ -304,15 +304,16 @@ function app:_connect_proc()
 			self:mqtt_resend_qos_msg()
 		else
 			log:warning("ON_CONNECT FAILED", success, rc, msg) 
-			close_client = true
-			self:_start_reconnect()
+			-- ON_DISCONNECT will be called soon
+			--close_client = true
+			--self:_start_reconnect()
 		end
 	end
 	client.ON_DISCONNECT = function(success, rc, msg) 
 		log:warning("ON_DISCONNECT", success, rc, msg) 
 		close_client = true
 
-		if self._mqtt_client == client then
+		if not self._mqtt_client or self._mqtt_client == client then
 			self._mqtt_client_last = sys:time()
 			self._mqtt_client = nil
 			if self._close_connection == nil then
