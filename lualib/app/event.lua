@@ -38,7 +38,7 @@ end
 local _M = {}
 for i,v in ipairs(EVENTS) do
 	_M[v] = i
-	EVENT_NAMES[i] = string.sub(i, string.len('EVENT_') + 1)
+	EVENT_NAMES[i] = string.sub(v, string.len('EVENT_') + 1)
 end
 
 for k,v in pairs(LEVELS) do

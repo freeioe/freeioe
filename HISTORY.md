@@ -12,6 +12,7 @@ v1.4.0 ()
 * Command/Output/Ctrl result post to source application
 * Handle MQTT QOS message
 * Improve the app.port modules
+* Fixed event type missing
 
 
 v1.3.4 (2019-4-24)
