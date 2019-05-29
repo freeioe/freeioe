@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.4.0 ()
+v1.4.0 (2019-5-29)
 ------------------
 
 * Support cache data into file when mqtt connection is down.
