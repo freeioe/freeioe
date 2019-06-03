@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.4.1 (2019-06-03)
+------------------
+
+* Fixed empty string instance name issue
+
+
 v1.4.0 (2019-5-29)
 ------------------
 
