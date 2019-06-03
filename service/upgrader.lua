@@ -145,6 +145,9 @@ function command.upgrade_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
+	if string.len(inst_name or '') == 0 then
+		return false, "Application instance cannot be am empty string"
+	end
 
 	local app = datacenter.get("APPS", inst_name)
 	if not app then
