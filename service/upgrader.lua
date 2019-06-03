@@ -49,7 +49,7 @@ local function action_result(channel, id, result, info, ...)
 
 	if id and id ~= 'from_web' then
 		local cloud = snax.queryservice('cloud')
-		cloud.post.action_result(channel, id, result, ...)
+		cloud.post.action_result(channel, id, result, info, ...)
 	end
 	return result, ...
 end
