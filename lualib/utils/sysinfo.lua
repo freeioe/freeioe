@@ -420,12 +420,12 @@ _M.firmware_version = function()
 	end
 end
 
-local try_list_mounts = function()
-	local s, err = _M.exec('mounts | grep /dev/mmcblk1p3')
+local try_list_mount = function()
+	local s, err = _M.exec('mount | grep /dev/mmcblk1p3')
 	if not s then
 		return nil, err
 	end
-	return string.match('^/dev/mmcblk1p3%s+(%w+)%s')
+	return string.match(s, '^/dev/mmcblk1p3%s+(%w+)%s')
 end
 
 local data_dir_list = {
@@ -450,7 +450,7 @@ _M.data_dir = function()
 		end
 	end
 
-	return result or try_list_mounts() or '/tmp'
+	return result or try_list_mount() or '/tmp'
 end
 
 return _M
