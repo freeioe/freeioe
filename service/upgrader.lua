@@ -145,8 +145,8 @@ function command.upgrade_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if string.len(inst_name or '') == 0 then
-		return false, "Application instance cannot be am empty string"
+	if not pkg_api.valid_inst(inst_name) then
+		return false, "Application instance name invalid!!"
 	end
 
 	local app = datacenter.get("APPS", inst_name)
@@ -205,8 +205,8 @@ function command.install_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if string.len(inst_name or '') == 0 then
-		return false, "Application instance cannot be am empty string"
+	if not pkg_api.valid_inst(inst_name) then
+		return false, "Application instance name invalid!!"
 	end
 
 	local sn = args.sn or gen_app_sn(inst_name)
@@ -270,6 +270,9 @@ function command.create_app(id, args)
 	if not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
+	if not pkg_api.valid_inst(inst_name) then
+		return false, "Application instance name invalid!!"
+	end
 
 	local sn = args.sn or gen_app_sn(inst_name)
 	local conf = args.conf or {}
@@ -309,6 +312,9 @@ function command.install_local_app(id, args)
 	if not ioe.beta() then
 		return nil, "Device is not in beta mode! Cannot install beta version"
 	end
+	if not pkg_api.valid_inst(inst_name) then
+		return false, "Application instance name invalid!!"
+	end
 
 	if is_inst_name_reserved(inst_name) then
 		return false, "Application instance name is reserved"
@@ -344,6 +350,9 @@ end
 function command.rename_app(id, args)
 	local inst_name = args.inst
 	local new_name = args.new_name
+	if not pkg_api.valid_inst(inst_name) or not pkg_api.valid_inst(new_name) then
+		return false, "Application instance name invalid!!"
+	end
 	if is_inst_name_reserved(inst_name) then
 		return nil, "Application instance name is reserved"
 	end
@@ -392,6 +401,9 @@ end
 
 function command.uninstall_app(id, args)
 	local inst_name = args.inst
+	if not pkg_api.valid_inst(inst_name) then
+		return false, "Application instance name invalid!!"
+	end
 
 	local appmgr = snax.queryservice("appmgr")
 	local target_folder = get_target_folder(inst_name)

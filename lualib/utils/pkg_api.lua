@@ -17,6 +17,17 @@ local api_header = {
 	Accpet="application/json"
 }
 
+--- trim instance name
+function _M.trim_inst(s)
+	return (string.gsub(s, "([^A-Za-z0-9_])", function(c)
+		return string.format("", string.byte(c))
+	end))
+end
+
+function _M.valid_inst(s)
+	return s and #s > 0 and s == self.trim_inst(s)
+end
+
 function _M.pkg_check_update(pkg_host, app, beta)
 	local url = '/pkg/check_update'
 	local query = { app = app }
