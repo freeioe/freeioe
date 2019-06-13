@@ -25,7 +25,7 @@ function _M.trim_inst(s)
 end
 
 function _M.valid_inst(s)
-	return s and #s > 0 and s == self.trim_inst(s)
+	return s and #s > 0 and s == _M.trim_inst(s)
 end
 
 function _M.pkg_check_update(pkg_host, app, beta)

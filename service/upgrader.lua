@@ -366,6 +366,8 @@ function command.rename_app(id, args)
 	if not app then
 		return nil, "Application instance not installed"
 	end
+	local appmgr = snax.queryservice("appmgr")
+	appmgr.req.stop(inst_name, "Renaming application")
 
 	local source_folder = get_target_folder(inst_name)
 	local target_folder = get_target_folder(new_name)
@@ -374,7 +376,7 @@ function command.rename_app(id, args)
 	datacenter.set("APPS", inst_name, nil)
 	datacenter.set("APPS", new_name, app)
 
-	local appmgr = snax.queryservice("appmgr")
+	--- rename event will start the application
 	appmgr.post.app_event('rename', inst_name, new_name)
 
 	return true, "Rename application is done!"
