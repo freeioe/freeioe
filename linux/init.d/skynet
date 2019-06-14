@@ -19,10 +19,14 @@ SKYNET_DIR=$BASE_DIR/skynet
 FREEIOE_DIR=$SKYNET_DIR/ioe
 
 SKYNET_BIN=$SKYNET_DIR/skynet
+SKYNET_PID=/var/run/skynet_real.pid
 STARTUP_SH=$FREEIOE_DIR/startup.sh
 
-DAEMON=$SKYNET_DIR/skynet
-DAEMON_OPTS="ioe/config"
+ARCH=`arch`
+DAEMON=$FREEIOE_DIR/linux/$ARCH/process-monitor
+DAEMON_OPTS="-d -p $SKYNET_PID -M 2 -D $SKYNET_DIR"
+STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
+
 export IOE_RUN_AS_DAEMON=1
 
 
@@ -54,7 +58,7 @@ start_skynet() {
 	sh $STARTUP_SH $BASE_DIR || return 1
 
 	start-stop-daemon --start --quiet --make-pidfile --pidfile $PID --background --chdir $SKYNET_DIR --exec $DAEMON -- \
-		$DAEMON_OPTS 2>/dev/null \
+		$DAEMON_OPTS -S "$STARTUP_OPTS" $SKYNET_BIN ioe/config 2>/dev/null \
 		|| return 2
 }
 
