@@ -24,7 +24,7 @@ STARTUP_SH=$FREEIOE_DIR/startup.sh
 
 ARCH=`arch`
 DAEMON=$FREEIOE_DIR/linux/$ARCH/process-monitor
-DAEMON_OPTS="-d -p $SKYNET_PID -M 2 -D $SKYNET_DIR"
+DAEMON_OPTS="-p $SKYNET_PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
 export IOE_RUN_AS_DAEMON=1
@@ -33,8 +33,6 @@ export IOE_RUN_AS_DAEMON=1
 if [ -r /etc/default/skynet ]; then
         . /etc/default/skynet
 fi
-
-STOP_SCHEDULE="${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}"
 
 skynet_missing() {
 	echo $DAEMON "is missing"
@@ -55,8 +53,6 @@ start_skynet() {
 	#   0 if daemon has been started
 	#   1 if daemon was already running
 	#   2 if daemon could not be started
-	sh $STARTUP_SH $BASE_DIR || return 1
-
 	start-stop-daemon --start --quiet --make-pidfile --pidfile $PID --background --chdir $SKYNET_DIR --exec $DAEMON -- \
 		$DAEMON_OPTS -S "$STARTUP_OPTS" $SKYNET_BIN ioe/config 2>/dev/null \
 		|| return 2
@@ -70,7 +66,7 @@ stop_skynet() {
 	#   1 if daemon was already stopped
 	#   2 if daemon could not be stopped
 	#   other if a failure occurred
-	start-stop-daemon --stop --quiet --retry=$STOP_SCHEDULE --pidfile $PID --name $NAME
+	start-stop-daemon --stop --quiet --pidfile $PID
 	RETVAL="$?"
 	sleep 1
 	return "$RETVAL"
@@ -78,7 +74,7 @@ stop_skynet() {
 
 reload_skynet() {
 	# Function that sends a SIGHUP to the daemon/service
-	start-stop-daemon --stop --signal HUP --quiet --pidfile $PID --name $NAME
+	start-stop-daemon --stop --signal HUP --quiet --pidfile $PID
 	return 0
 }
 
