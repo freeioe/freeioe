@@ -138,9 +138,10 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	else
 		if it.vt == 'int' then
 			value = math.floor(tonumber(value))
-		end
-		if it.vt == 'string' then
+		elseif it.vt == 'string' then
 			value = tostring(value)
+		else
+			value = tonumber(value)
 		end
 	end
 	local timestamp = timestamp or ioe.time()
