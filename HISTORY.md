@@ -7,6 +7,7 @@ v1.4.3 ()
 ------------------
 
 * Added limitation for the application instance name
+* Support automatic value type conversion
 
 
 v1.4.2 (2019-06-06)

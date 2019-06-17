@@ -29,7 +29,7 @@ function device:initialize(api, sn, props, readonly)
 	self._inputs_map = {}
 	for _, t in ipairs(props.inputs or {}) do
 		assert(self._inputs_map[t.name] == nil, "Duplicated input name ["..t.name.."] found")
-		self._inputs_map[t.name] = true
+		self._inputs_map[t.name] = t
 	end
 	self._stats = {}
 
@@ -89,7 +89,7 @@ function device:mod(inputs, outputs, commands)
 
 	self._inputs_map = {}
 	for _, t in ipairs(inputs or {}) do
-		self._inputs_map[t.name] = true
+		self._inputs_map[t.name] = t
 	end
 	dc.set('DEVICES', self._sn, self._props)
 	if self._cov then
@@ -131,8 +131,17 @@ end
 function device:set_input_prop(input, prop, value, timestamp, quality)
 	assert(not self._readonly, "This is an readonly device!")
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
-	if not self._inputs_map[input] then
+	local value = value
+	local it = self._inputs_map[input]
+	if not it then
 		return nil, "Property "..input.." does not exits in device "..self._sn
+	else
+		if it.vt == 'int' then
+			value = math.floor(tonumber(value))
+		end
+		if it.vt == 'string' then
+			value = tostring(value)
+		end
 	end
 	local timestamp = timestamp or ioe.time()
 	local quality = quality or 0
@@ -149,8 +158,17 @@ end
 function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
 	assert(not self._readonly, "This is an readonly device!")
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
-	if not self._inputs_map[input] then
+	local value = value
+	local it = self._inputs_map[input]
+	if not it then
 		return nil, "Property "..input.." does not exits in device "..self._sn
+	else
+		if it.vt == 'int' then
+			value = math.floor(tonumber(value))
+		end
+		if it.vt == 'string' then
+			value = tostring(value)
+		end
 	end
 	local timestamp = timestamp or ioe.time()
 	local quality = quality or 0
