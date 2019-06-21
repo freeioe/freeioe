@@ -80,6 +80,13 @@ local function set_cloud_defaults(data)
 	if string.match(data.HOST, 'cloud.thingsroot.com') then
 		data.HOST = defaults.HOST
 	end
+	if string.match(data.PKG_HOST_URL, 'cloud.thingsroot.com') then
+		data.PKG_HOST_URL = defaults.HOST
+	end
+	if string.match(data.CNF_HOST_URL, 'cloud.thingsroot.com') then
+		data.CNF_HOST_URL = defaults.HOST
+	end
+
 	--- export host to /tmp/sysinfo/cloud
 	os.execute('mkdir -p /tmp/sysinfo')
 	os.execute('echo "'..data.HOST..'" > /tmp/sysinfo/cloud')

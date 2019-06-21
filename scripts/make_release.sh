@@ -54,6 +54,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./scripts/release_app.sh ioe
 #./scripts/release_app.sh bms
 ./scripts/release_app.sh modbus_master
+./scripts/release_app.sh test_reboot 
 #./scripts/release_app.sh modbus_slave
 ./scripts/release_app.sh frpc
 ./scripts/release_app.sh opcua_server
