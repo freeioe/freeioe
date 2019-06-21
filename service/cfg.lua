@@ -58,6 +58,15 @@ end
 local function set_sys_defaults(data)
 	local data = data or {}
 	local defaults = sys_defaults()
+
+	--- Fix hacks
+	if string.match(data.PKG_HOST_URL, 'cloud.thingsroot.com') then
+		data.PKG_HOST_URL = nil
+	end
+	if string.match(data.CNF_HOST_URL, 'cloud.thingsroot.com') then
+		data.CNF_HOST_URL = nil
+	end
+
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
 	end
@@ -79,12 +88,6 @@ local function set_cloud_defaults(data)
 	end
 	if string.match(data.HOST, 'cloud.thingsroot.com') then
 		data.HOST = defaults.HOST
-	end
-	if string.match(data.PKG_HOST_URL, 'cloud.thingsroot.com') then
-		data.PKG_HOST_URL = defaults.HOST
-	end
-	if string.match(data.CNF_HOST_URL, 'cloud.thingsroot.com') then
-		data.CNF_HOST_URL = defaults.HOST
 	end
 
 	--- export host to /tmp/sysinfo/cloud
