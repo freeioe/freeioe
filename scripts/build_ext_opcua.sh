@@ -23,6 +23,11 @@ toolchains["android/arm"]="Toolchain-arm-androideabi-gcc.cmake"
 
 cd $SOURCE_DIR
 
+if [ ! -f ${SOURCE_DIR}/open62541.spec ]; then
+	echo "Incorrect build folder. You need to run build_ext_all in binding/lua"
+	exit -1
+fi
+
 if [ "$TOOLCHAIN" == "native" ]; then
 	rm build -rf
 	mkdir build/
