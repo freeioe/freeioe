@@ -5,7 +5,7 @@ local filebuffer = require 'buffer.file'
 local sysinfo = require 'utils.sysinfo'
 local index_stack = require 'utils.index_stack'
 local ioe = require 'ioe'
-local simple_app = require 'app.simple'
+local base_app = require 'app.base'
 
 ----
 -- Configuration:
@@ -51,11 +51,11 @@ local simple_app = require 'app.simple'
 -- decompress -- 解压数据
 --
 
-local app = simple_app:subclass("FREEIOE_EX_APP_MQTT_BASE")
+local app = base_app:subclass("FREEIOE_EX_APP_MQTT_BASE")
 
 ---
 function app:initialize(name, sys, conf)
-	simple_app.initialize(self, name, sys, conf)
+	base_app.initialize(self, name, sys, conf)
 
 	self._safe_call = function(f, ...)
 		local r, er, err = xpcall(f, debug.traceback, ...)
