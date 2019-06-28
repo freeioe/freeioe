@@ -1,3 +1,4 @@
+local skynet = require 'skynet'
 local class = require 'middleclass'
 
 local stack = class("UTILS_INDEX_STACK_LIB")
