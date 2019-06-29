@@ -1,11 +1,10 @@
+local skynet = require 'skynet'
 local class = require 'middleclass'
 local app_port = require 'app.port'
 
 local serial = class("PORT_TEST_PAIR_SERIAL")
 
-function serial:initialize(app)
-	self._app = app
-	self._sys = app._sys
+function serial:initialize()
 end
 
 ---- The port_a is serial options: e.g. { port = "/dev/ttymxc1", baudrate=115200 }
@@ -29,7 +28,7 @@ function serial:run(test_case)
 	end
 
 	while not self._abort and not test_case:finished() do
-		self._sys:sleep(1000, self)
+		skynet.sleep(100, self)
 	end
 	if self._abort then
 		test_case:stop()
@@ -43,7 +42,7 @@ end
 function serial:abort()
 	if not self._abort then
 		self._abort = true
-		self._sys:wakeup(self)
+		skynet.wakeup(self)
 		return true
 	end
 	return false, "Aborting"
