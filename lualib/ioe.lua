@@ -1,6 +1,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
+local tls_loaded, tls = pcall(require, "http.tlshelper")
 
 local _M = {}
 
@@ -29,8 +30,17 @@ _M.set_auto_code = function(value)
 	dc.set("SYS", "AUTH_CODE", value)
 end
 
+_M.make_url = function(url)
+	local protocol, _url = string.match(url, "^([^:]+)://(.+)$")
+	if protocol then
+		return url
+	end
+	return url
+	--return tls_loaded and "https://"..url
+end
+
 _M.pkg_host_url = function()
-	return dc.get("SYS", "PKG_HOST_URL")
+	return _M.make_url(dc.get("SYS", "PKG_HOST_URL"))
 end
 
 _M.set_pkg_host_url = function(value)
@@ -38,7 +48,7 @@ _M.set_pkg_host_url = function(value)
 end
 
 _M.cnf_host_url = function()
-	return dc.get("SYS", "CNF_HOST_URL")
+	return _M.make_url(dc.get("SYS", "CNF_HOST_URL"))
 end
 
 _M.set_cnf_host_url = function(value)

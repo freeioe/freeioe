@@ -9,6 +9,9 @@ v1.4.3 ()
 * Added limitation for the application instance name
 * Support automatic value type conversion
 * Fixed mqtt base application module
+* Added hardware tests modules for ThingsLink X1
+* Added GPIO control utils which similar as LEDS control utils module
+* Improve application release script
 
 
 v1.4.2 (2019-06-06)

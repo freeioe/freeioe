@@ -9,7 +9,7 @@ local function list_leds()
 	local list = {}
 	local os_id = sysinfo.os_id()
 	if os_id == 'openwrt' then
-		local leds_path = '/sys/devices/platform/leds/leds'
+		local leds_path = '/sys/class/leds'
 		if lfs.attributes(leds_path, 'mode') == 'directory' then
 			for filename in lfs.dir(leds_path) do
 				local id, color, short_name = string.match(filename, '^([^:]+):([^:]+):([^:]+)$')
@@ -64,11 +64,15 @@ function led_class:toggle()
 	end
 end
 
-function led_class:blink(sec, dark_sec)
+function led_class:cancel_blink()
 	if self._cancel_blink then
 		self._cancel_blink()
 		self._cancel_blink = nil
 	end
+end
+
+function led_class:blink(sec, dark_sec)
+	self:cancel_blink()
 	if not sec then
 		return
 	end
@@ -85,7 +89,7 @@ function led_class:blink(sec, dark_sec)
 		if dard_sec ~= nil and blink_state == 0 then
 			timeout = math.floor(dark_sec * 100)
 		end
-		self._cancel_trigger = cancelable_timeout(timeout, blink_func)
+		self._cancel_blink = cancelable_timeout(timeout, blink_func)
 	end
 
 	blink_func()

@@ -50,29 +50,7 @@ cp -rL lualib/resty __install/lualib/resty
 
 # Release Applications
 
-# Release ioe
-./scripts/release_app.sh ioe
-#./scripts/release_app.sh bms
-./scripts/release_app.sh modbus_master
-./scripts/release_app.sh test_reboot 
-#./scripts/release_app.sh modbus_slave
-./scripts/release_app.sh frpc
-./scripts/release_app.sh opcua_server
-./scripts/release_app.sh opcua_client
-./scripts/release_app.sh opcua_collect_example
-./scripts/release_app.sh symlink
-./scripts/release_app.sh network
-# Cloud connectors
-./scripts/release_app.sh aliyun
-./scripts/release_app.sh baidu_cloud
-./scripts/release_app.sh huawei_cloud
-./scripts/release_app.sh dlt645
-./scripts/release_app.sh sim_tank
-./scripts/release_app.sh focas
-./scripts/release_app.sh telit_cloud
-./scripts/release_app.sh showbox 
-./scripts/release_app.sh sim
-./scripts/release_app.sh port_test
+./feeds/example_apps/release.sh ./scripts/release_app.sh
 
 # Validate platform name
 PLAT_NAMES="linux/x86_64 openwrt/arm_cortex-a9_neon openwrt/mips_24kc openwrt/x86_64 openwrt/aarch64_cortex-a53 openwrt/arm_cortex-a7_neon-vfpv4"

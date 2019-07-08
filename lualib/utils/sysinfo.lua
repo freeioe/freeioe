@@ -122,15 +122,14 @@ _M.meminfo = function()
 end
 
 --- Get the system uptime
--- includes 'total' 'used' 'free'
--- @treturn table information struct {total=xx, used=xx, free=xx}
+-- @treturn number seconds since system boot
 _M.uptime = function()
 	local s, err = _M.cat_file('/proc/uptime')
 	if not s then
 		return nil, err
 	end
 
-	return string.match(s, "([%d%.]+)%s")
+	return tonumber(string.match(s, "([%d%.]+)%s"))
 end
 
 --- Get he loadavg
@@ -152,11 +151,11 @@ _M.loadavg = function()
 	local unpack = table.unpack or unpack
 	local lavg_1, lavg_5, lavg_15, nr_running, nr_threads, last_pid = unpack(avgs)
 	return {
-		lavg_1 = lavg_1,
-		lavg_5 = lavg_5,
-		lavg_15 = lavg_15,
-		nr_running = nr_running,
-		nr_threads = nr_threads,
+		lavg_1 = tonumber(lavg_1),
+		lavg_5 = tonumber(lavg_5),
+		lavg_15 = tonumber(lavg_15),
+		nr_running = tonumber(nr_running),
+		nr_threads = tonumber(nr_threads),
 		last_pid = last_pid
 	}
 end

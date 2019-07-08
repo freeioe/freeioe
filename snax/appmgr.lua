@@ -107,8 +107,13 @@ function response.restart(name, reason)
 	local name = name
 	local reason = reason or "Restart"
 	skynet.timeout(100, function()
-		snax.self().req.stop(name, reason)
-		snax.self().req.start(name)
+		local r, err = snax.self().req.stop(name, reason)
+		if not r then
+			log.warning("::AppMgr:: Failed to stop application when restart it")
+		else
+			--- Only start it if stop successfully
+			snax.self().req.start(name)
+		end
 	end)
 	return true
 end
