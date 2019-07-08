@@ -47,6 +47,11 @@ local function action_result(id, result, ...)
 	return result, ...
 end
 
+local function cloud_update_ext_list()
+	local cloud = snax.queryservice('cloud')
+	cloud.post.ext_list('__fake_id__from_freeioe_'..os.time(), {})
+end
+
 local function xpcall_ret(id, ok, ...)
 	if ok then
 		return action_result(id, ...)
@@ -237,6 +242,15 @@ end
 function command.install_ext(id, args)
 	local name = args.name
 	local version = args.version or 'latest'
+	--[[
+	if version == 'latest' then
+		version = command.pkg_latest_version(name, true)
+		version = tonumber(version) or 0
+		if version == 0 then
+			return false, "Extension "..name.." has no version file"
+		end
+	end
+	]]--
 	local inst = make_inst_name(name, version)
 	if installed[inst] then
 		return true, "Extension "..inst.." already installed"
@@ -255,6 +269,8 @@ function command.install_ext(id, args)
 				name = name,
 				version = version,
 			}
+			--- Trigger extension list upgrade
+			cloud_update_ext_list()
 			return true
 		else
 			return false, "failed to unzip Extension"
@@ -316,8 +332,21 @@ function command.pkg_check_version(ext, version)
 	return pkg_api.pkg_check_version(pkg_host, ext, version)
 end
 
+function command.pkg_latest_version(ext, beta)
+	local pkg_host = ioe.pkg_host_url()
+	local beta = beta and ioe.beta() 
+	local ext = 'ext/'..sysinfo.platform()..'/'..ext
+	return pkg_api.pkg_latest_version(pkg_host, ext, beta)
+end
+
+function command.auto_clean()
+	auto_clean_exts()
+	return true
+end
+
 map_result_action('upgrade_ext')
 map_result_action('install_ext')
+map_result_action('auto_clean')
 
 skynet.start(function()
 	ext_lock = queue()

@@ -532,7 +532,7 @@ local function rs232_read(port, len, timeout)
 	return r, err
 	]]--
 
-	local timeout = timeout or 300
+	local timeout = (timeout or 3000) / 10
 
 	local start = skynet.now()
 	while skynet.now() - start < timeout do

@@ -187,6 +187,9 @@ local msg_handler = {
 		if action == 'ext/upgrade' then
 			snax.self().post.ext_upgrade(args.id, args.data)
 		end
+		if action == 'ext/auto_clean' then
+			snax.self().post.ext_aut_clean(args.id, args.data)
+		end
 		if action == 'batch_script' then
 			snax.self().post.batch_script(args.id, args.data)
 		end
@@ -1359,6 +1362,10 @@ function accept.ext_upgrade(id, args)
 	skynet.call(".ioe_ext", "lua", "upgrade_ext", id, args)
 end
 
+function accept.ext_auto_clean(id, args)
+	skynet.call(".ioe_ext", "lua", "auto_clean", id, args)
+end
+
 function accept.batch_script(id, script)
 	log.debug("::CLOUD:: Cloud batch script received", id, script)
 	datacenter.set("BATCH", id, "script", script)
@@ -1455,8 +1462,8 @@ function accept.command_to_device(id, cmd)
 		return snax.self().post.action_result('command', id, false, err)
 	end
 
-	if type(cmd.param) == 'table' then
-		cmd.param = cjson.encode(cmd.param)
+	if type(cmd.param) == 'string' then
+		cmd.param = cjson.decode(cmd.param)
 	end
 
 	local r, err = dev:send_command(cmd.cmd, cmd.param, id)
