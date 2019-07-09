@@ -27,15 +27,30 @@ The discussion forum
 
 * [Example Applications](https://github.com/freeioe/freeioe_example_apps)  
 Includes:
-  * Modbus application with lua-modbus(libmodbus)
-  * Modbus application implemented in pure lua
-  * OpcUA Server/Client applications
+  * Modbus data collect application with lua-modbus(libmodbus)
+  * Modbus data collect application implemented in pure lua
+  * OpcUA Server/Client data provider applications
   * Socat/Frpc utils control applications
-  * Aliyun/Huawei/Baidu IOT cloud application (based on MQTT)
-  * DLT645 application implemented in pure lua
-  * Device network configuration application (based on uci)
+  * Aliyun/Huawei/Baidu IOT cloud connector (based on MQTT)
+  * DLT645 device data collection application implemented in pure lua
+  * Device network configuration collection application (based on uci)
   * SymLink connector with OpcUA
-  * Fanuc Focas CNC connector via ubus broker
+  * Fanuc Focas CNC device data collection via ubus broker
+  * Telit cloud integration application
+  * Yizumi UN200A5 data collection application (via OpcUa)
+  * Citic cloud integration application
+
+* [Thirdparty Applications](https://github.com/viccom/myfreeioe_apps)
+  * Modbus device data collection application with device template support
+  * Huawei UPS2000 data collection application (based on modbus)
+  * Huawei UPS2000 data to redis application
+  * Multiple gateway route management (auto switch ethernet and 4G link)
+  * Gateway network information collect application
+  * Netowork/Serial remote mapping application
+  * Semens S7 PLC connector (based on snap7 library)
+  * Device remote connect applications (Serial & Network)
+  * MQTT data upload application demo
+  * Huaraylaser 355 device connector
 
 
 ## Core Development
