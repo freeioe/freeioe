@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.4.3 ()
+v1.4.3 (2019-07-09)
 ------------------
 
 * Added limitation for the application instance name
@@ -12,6 +12,7 @@ v1.4.3 ()
 * Added hardware tests modules for ThingsLink X1
 * Added GPIO control utils which similar as LEDS control utils module
 * Improve application release script
+* Support Q204
 
 
 v1.4.2 (2019-06-06)
