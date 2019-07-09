@@ -40,6 +40,7 @@ function response.start(name, conf)
 		log.error(info)
 		fire_exception_event(name, "Failed during start app "..name, {info=app, err=r})
 		app.inst = nil
+		app.last = nil
 		return nil, info
 	end
 	if not r then
@@ -48,9 +49,11 @@ function response.start(name, conf)
 		fire_exception_event(name, "Failed to start app "..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")
 		app.inst = nil
+		app.last = nil
 		return nil, info
 	end
 
+	app.start = skynet.time()
 	app.last = skynet.time()
 
 	for handle, srv in pairs(listeners) do

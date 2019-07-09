@@ -1270,6 +1270,8 @@ function accept.app_list(id, args)
 			local app = app_list[k]
 			if app and app.inst then
 				v.running = now_time
+				v.start = app.start
+				v.last = app.last
 				if now_time - app.last > 5 then
 					v.blocked = app.last
 				end
