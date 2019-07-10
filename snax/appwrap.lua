@@ -120,7 +120,9 @@ function response.set_conf(conf)
 	if app.reload then
 		return protect_call(app, 'reload', conf)
 	end
-	return mgr_snax.req.restart(app_name, "Confiruation change restart")
+	--- This called from appmgr then we cannot call the mgr_snax.req.restart. so use post
+	mgr_snax.post.app_restart(app_name, "Confiruation change restart")
+	return true
 end
 
 function response.app_req(msg, ...)
