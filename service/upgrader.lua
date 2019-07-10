@@ -160,6 +160,7 @@ function command.upgrade_app(id, args)
 	end
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
+	local auto = args.auto
 
 	local download_version = editor and version..".editor" or version
 	return create_app_download(inst_name, name, download_version, function(path)
@@ -177,7 +178,7 @@ function command.upgrade_app(id, args)
 		if not version or version == 'latest' then
 			version = get_app_version(inst_name)
 		end
-		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, auto=auto})
 		if editor then
 			datacenter.set("APPS", inst_name, "islocal", 1)
 		end

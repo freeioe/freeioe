@@ -5,6 +5,7 @@ local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local ioe = require 'ioe'
 local event = require 'app.event'
+local cjson = require 'cjson.safe'
 
 local applist = {}
 local mc_map = {}
@@ -21,19 +22,28 @@ end
 ---
 -- Return instance id
 function response.start(name, conf)
-	local app = applist[name] or {}
+	-- Get application list item by name
+	applist[name] = applist[name] or {}
+	local app = applist[name]
 
+	--- check if already started
 	if app.inst then
 		return app.inst
 	end
-	app.conf = conf or app.conf
-	applist[name] = app
 
-	local s = snax.self()
-	local inst, err = snax.newservice("appwrap", name, app.conf, s.handle, s.type)
+	--- Set the configuration if it changed
+	app.conf = conf or app.conf
+
+	-- Create application instance
+	local mgr_snax = snax.self()
+	local inst, err = snax.newservice("appwrap", name, app.conf, mgr_snax.handle, mgr_snax.type)
+	assert(not app.inst, "Bug found when starting application!!")
+
+	--- Set the instance and last ping time
 	app.inst = inst
 	app.last = skynet.time()
 
+	--- Call the applicaiton start
 	local pr, r, err = pcall(inst.req.start)
 	if not pr then
 		local info = "::AppMgr:: Failed during start app "..name..". Error: "..tostring(r)
@@ -53,9 +63,16 @@ function response.start(name, conf)
 		return nil, info
 	end
 
+	if not app.inst then
+		-- Applicaiton stoped during starting
+		return
+	end
+
+	--- Set the proper start/last time
 	app.start = skynet.time()
 	app.last = skynet.time()
 
+	--- Tell the applicaiton status listeners
 	for handle, srv in pairs(listeners) do
 		srv.post.app_event('start', name, inst.handle)
 	end
@@ -109,16 +126,15 @@ end
 function response.restart(name, reason)
 	local name = name
 	local reason = reason or "Restart"
-	skynet.timeout(100, function()
-		local r, err = snax.self().req.stop(name, reason)
-		if not r then
-			log.warning("::AppMgr:: Failed to stop application when restart it")
-		else
-			--- Only start it if stop successfully
-			snax.self().req.start(name)
-		end
-	end)
-	return true
+
+	local r, err = snax.self().req.stop(name, reason)
+	if not r then
+		log.warning("::AppMgr:: Failed to stop application when restart it")
+		return false, "Failed to stop application"
+	else
+		--- Only start it if stop successfully
+		return snax.self().req.start(name)
+	end
 end
 
 function response.list()
@@ -229,6 +245,14 @@ function accept.app_stop(inst, reason)
 	end)
 end
 
+function accept.app_restart(inst, reason)
+	local v = dc.get("APPS", inst)
+	if not v then return end
+	skynet.fork(function()
+		snax.self().req.restart(inst, reason or 'restart application from accept.app_stop') 
+	end)
+end
+
 function accept.app_event(event, inst_name, ...)
 	if event == 'create' then
 		if not applist[inst_name] then
@@ -261,6 +285,7 @@ function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
 			if skynet.time() - v.last > 60 then
+				v.last = skynet.time() + 300 --- mark it as not timeout
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
 				snax.self().post.fire_event(sys_app, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, 'heartbeat timeout', data)
 				snax.self().req.restart(k, 'heartbeat timeout')
@@ -288,7 +313,7 @@ function accept.unlisten(handle)
 end
 
 function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
-	log.trace("::AppMgr:: fire_event", app_name, sn, level, type_, info, data, timestamp)
+	log.trace("::AppMgr:: fire_event", app_name, sn, level, type_, info, timestamp, cjson.encode(data))
 	assert(sn and level and type_ and info)
 	local event_chn = mc_map.EVENT
 	if event_chn then

@@ -346,6 +346,7 @@ function app:_connect_proc()
 		end
 	end
 
+	log:info('MQTT connectting...')
 	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	local ts = 1000
 	while not r do

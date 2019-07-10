@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.4.4 (2019-07-10)
+------------------
+
+* Fixed application will be restart more than one times when heartbeat timeout
+* Fixed application auto start will be reset when upgrade application
+
 v1.4.3 (2019-07-09)
 ------------------
 

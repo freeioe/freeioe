@@ -658,7 +658,7 @@ local Handler = {
 		stat_cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
-		log.trace('::CLOUD:: on_event', app, sn, level, type_, info) --, data, timestamp)
+		log.trace('::CLOUD:: on_event', app, sn, level, type_, info, timestamp, cjson.encode(data))
 		if not enable_event_upload or (tonumber(level) < enable_event_upload)  then
 			return --- If not enable event data upload will skip event buffer
 		end
