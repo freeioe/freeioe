@@ -6,14 +6,14 @@ FreeIOE
 
 ## How To Use
 
-* [Guick Guide](https://help.cloud.thingsroot.com)  
-Quick start guide (only in Chinese for now)
+* [Guick Guide](http://help.cloud.thingsroot.com/quick_start/)\
+	Quick start guide (only in Chinese for now)
 
-* [ThingsRoot Cloud](http://cloud.thingsroot.com)  
-The default cloud provider for FreeIOE
+* [ThingsRoot Cloud](http://cloud.thingsroot.com)\
+	The default cloud provider for FreeIOE
 
-* [FreeIOE forum](http://freeioe.org)  
-The discussion forum
+* [FreeIOE forum](http://freeioe.org)\
+	The discussion forum
 
 
 ## App Development
@@ -21,12 +21,12 @@ The discussion forum
 ### Documents
 
 * [FreeIOE Application Guide](https://freeioe.gitbook.io/doc/)
+	FreeIOE application development guide
 
 
 ### Examples
 
-* [Example Applications](https://github.com/freeioe/freeioe_example_apps)  
-Includes:
+* [Example Applications](https://github.com/freeioe/freeioe_example_apps)
   * Modbus data collect application with lua-modbus(libmodbus)
   * Modbus data collect application implemented in pure lua
   * OpcUA Server/Client data provider applications
