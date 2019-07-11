@@ -151,7 +151,7 @@ function handler.on_close(ws, code, reason)
 end
 
 function handler.on_pong(ws, data)
-    --log.debug(string.format("::WS:: %d on_pong %s", ws.id, data))
+    log.debug(string.format("::WS:: %d on_pong %s", ws.id, data))
 	local v = client_map[ws.id]
 	if v then
 		v.last = tonumber(data) or skynet.now()
