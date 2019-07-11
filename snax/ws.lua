@@ -219,6 +219,12 @@ function msg_handler.app_stop(client, id, code, data)
 	return __fire_result(client, id, code, true)
 end
 
+function msg_handler.app_restart(client, id, code, data)
+	local appmgr = snax.queryservice('appmgr')
+	appmgr.post.app_restart(data.inst, data.reason)
+	return __fire_result(client, id, code, true)
+end
+
 function msg_handler.app_download(client, id, code, data)
 	local post_ops = app_file_editor.post_ops
 	local inst = data.inst
