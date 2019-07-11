@@ -216,7 +216,7 @@ function api:default_meta()
 	return {
 		name = "Unknown",
 		description = "Unknown device",
-		manufacturer = "BambooShoots IOE",
+		manufacturer = "FreeIOE",
 		series = "Unknown",
 		link = "http://device.freeioe.org/device?name=",
 	}

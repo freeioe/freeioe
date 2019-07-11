@@ -3,6 +3,14 @@
 
 # Release history
 
+v1.5.0 ()
+------------------
+
+* Fixed serial port closes issue
+* Changed default device meta manufactor to FreeIOE
+
+
+
 v1.4.5 (2019-07-10)
 ------------------
 

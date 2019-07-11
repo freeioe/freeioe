@@ -80,6 +80,10 @@ function serial:start(cb, timeout)
 	assert(port)
 	skynet.fork(function()
 		while true do
+			if not port._p then
+				cb(nil, "Serial port closed!")
+				break
+			end
 			local len, err = port:in_queue()
 			if len and len > 0 then
 				local data, err = port:read(len, timeout)

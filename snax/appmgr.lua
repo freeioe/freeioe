@@ -22,12 +22,14 @@ end
 ---
 -- Return instance id
 function response.start(name, conf)
+	log.info("::AppMgr:: Strat application "..name)
 	-- Get application list item by name
 	applist[name] = applist[name] or {}
 	local app = applist[name]
 
 	--- check if already started
 	if app.inst then
+		log.debug("::AppMgr:: Application already started "..name, app.inst)
 		return app.inst
 	end
 
