@@ -614,7 +614,8 @@ local function write_script(fn, str)
 end
 
 local function start_upgrade_proc(ioe_path, skynet_path)
-	assert(ioe_path)
+	assert(ioe_path or skynet_path)
+	local ioe_path = ioe_path or '/IamNotExits.unknown'
 	local skynet_path = skynet_path or '/IamNotExits.unknown'
 	log.warning("::UPGRADER:: Core System Upgrade....")
 	log.trace("::UPGRADER::", ioe_path, skynet_path)
@@ -652,8 +653,6 @@ end
 
 function command.upgrade_core(id, args)
 	local is_windows = package.config:sub(1,1) == '\\'
-	local version, beta = parse_version_string(args.version)
-	local skynet_args = args.skynet
 
 	if args.no_ack then
 		local base_dir = get_ioe_dir()
@@ -664,11 +663,21 @@ function command.upgrade_core(id, args)
 		end
 	end
 
+	local skynet_args = args.skynet
+	--- Upgrade skynet only
+	if not args.version or string.lower(args.version) == 'none' then
+		return download_upgrade_skynet(id, skynet_args, function(path)
+			return start_upgrade_proc(freeioe_path, path)
+		end)
+	end
+
+	local version, beta = parse_version_string(args.version)
+
 	return create_sys_download('__FREEIOE__', 'freeioe', version, function(path)
 		local freeioe_path = path
 		if skynet_args then
-			return download_upgrade_skynet(id, skynet_args, function(path) 
-				return start_upgrade_proc(freeioe_path, path) 
+			return download_upgrade_skynet(id, skynet_args, function(path)
+				return start_upgrade_proc(freeioe_path, path)
 			end)
 		else
 			return start_upgrade_proc(freeioe_path)
