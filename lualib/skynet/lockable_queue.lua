@@ -21,7 +21,10 @@ function skynet.lockable_queue(parent_queue, parent_lock)
 				skynet.wakeup(current_thread)
 			end
 		end
-		assert(ok, (...))
+		if not ok then
+			return nil, ...
+		end
+		--assert(ok, (...))
 		return ...
 	end
 

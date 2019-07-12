@@ -667,7 +667,7 @@ function command.upgrade_core(id, args)
 	--- Upgrade skynet only
 	if not args.version or string.lower(args.version) == 'none' then
 		return download_upgrade_skynet(id, skynet_args, function(path)
-			return start_upgrade_proc(freeioe_path, path)
+			return start_upgrade_proc(nil, path)
 		end)
 	end
 
