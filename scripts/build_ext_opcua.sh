@@ -14,11 +14,11 @@ printf "ARCH: $PLAT_ARCH \t TOOLCHAINE: $TOOLCHAIN \t SOURCE: $SOURCE_DIR \n"
 declare -A toolchains
 
 toolchains["linux/x86_64"]="native"
-toolchains["openwrt/arm_cortex-a9_neon"]="Toolchain-arm-openwrt-linux-gcc.cmake"
-toolchains["openwrt/mips_24kc"]="Toolchain-mips_24kc-openwrt-linux-gcc.cmake"
-toolchains["openwrt/x86_64"]="Toolchain-x86_64-openwrt-linux-gcc.cmake"
-toolchains["openwrt/aarch64_cortex-a53"]="Toolchain-aarch64-openwrt-linux-gcc.cmake"
-toolchains["openwrt/arm_cortex-a7_neon-vfpv4"]="Toolchain-arm-openwrt-linux-gcc.cmake"
+toolchains["openwrt/17.01/arm_cortex-a9_neon"]="Toolchain-arm-openwrt-linux-gcc.cmake"
+toolchains["openwrt/18.06/mips_24kc"]="Toolchain-mips_24kc-openwrt-linux-gcc.cmake"
+toolchains["openwrt/18.06/x86_64"]="Toolchain-x86_64-openwrt-linux-gcc.cmake"
+toolchains["openwrt/19.07/aarch64_cortex-a53"]="Toolchain-aarch64-openwrt-linux-gcc.cmake"
+toolchains["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="Toolchain-arm-openwrt-linux-gcc.cmake"
 toolchains["android/arm"]="Toolchain-arm-androideabi-gcc.cmake"
 
 cd $SOURCE_DIR

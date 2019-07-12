@@ -9,19 +9,19 @@ echo $SCRIPTPATH
 VERSION=$1
 echo $VERSION
 
-RELEASE_DIR=$SCRIPTPATH/../__release
+RELEASE_DIR=$SCRIPTPATH/../__release/bin
 
 declare -A plats
 
 plats["linux/x86_64"]="native"
-plats["openwrt/arm_cortex-a9_neon"]="imx6_exports.sh"
-plats["openwrt/mips_24kc"]="mips_24kc.sh"
-plats["openwrt/x86_64"]="x86_64_glibc.sh"
+plats["openwrt/17.01/arm_cortex-a9_neon"]="imx6_exports.sh"
+plats["openwrt/18.06/mips_24kc"]="mips_24kc.sh"
+plats["openwrt/18.06/x86_64"]="x86_64_glibc.sh"
 # plats["openwrt/aarch64_cortex-a53"]="bp3plus_exports.sh"
-plats["openwrt/arm_cortex-a7_neon-vfpv4"]="sunxi_a7.sh"
+plats["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="sunxi_a7.sh"
 
 for item in "${!plats[@]}"; 
 do
-	cat ${RELEASE_DIR}/${item}_skynet/${VERSION}.tar.gz.md5
-	ls -l ${RELEASE_DIR}/${item}_skynet/${VERSION}.tar.gz
+	cat ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz.md5
+	ls -l ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz
 done

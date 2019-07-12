@@ -467,7 +467,10 @@ local function get_core_name(name, platform)
 	local name = name
 	local platform = platform or sysinfo.platform()
 	if platform then
-		name = platform.."_"..name
+		--name = platform.."_"..name
+		--- FreeIOE not takes the os version before. so using openwrt/arm_cortex-a9_neon_skynet as download core name
+		---		now it switched to bin/openwrt/17.01/arm_cortex-a9_neon/skynet
+		name = string.format("bin/%s/%s", platform, name)
 	end
 	return name
 end

@@ -6,6 +6,7 @@
 v1.5.0 ()
 ------------------
 
+* Using OS/Version/CPU_ARCH for platform information
 * Fixed serial port closes issue
 * Changed default device meta manufactor to FreeIOE
 

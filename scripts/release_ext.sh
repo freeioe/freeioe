@@ -18,7 +18,7 @@ fi
 
 BASE_DIR=`pwd`
 RELEASE_DIR="__release"
-TARGET_FOLDER="ext/$1/$TARGET_PLAT"
+TARGET_FOLDER="bin/$TARGET_PLAT/$1"
 
 # echo "Release Extension:" $TARGET_FOLDER
 

@@ -7,7 +7,7 @@ if [ ! -n "$2" ]
 then
 	SKYNET_PLAT="skynet"
 else
-	SKYNET_PLAT=$2"_skynet"
+	SKYNET_PLAT=$2"/skynet"
 fi
 
 echo "--------------------------------------------"
@@ -27,7 +27,7 @@ REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
 echo 'Version:'$VERSION
 echo 'Revision:'$REVISION
 
-if [ -f "ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz" ]
+if [ -f "ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz" ]
 then
 	echo 'skynet already released'
 	exit
@@ -70,15 +70,15 @@ du __install -sh
 ##
 ##################
 cd __install
-mkdir -p ../ioe/__release/$SKYNET_PLAT
-tar czvf ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz * > /dev/null
-md5sum -b ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz > ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5
-du ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz -sh
-cat ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5
+mkdir -p ../ioe/__release/bin/$SKYNET_PLAT
+tar czvf ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz * > /dev/null
+md5sum -b ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz > ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz.md5
+du ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz -sh
+cat ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz.md5
 ## Copy to latest
-cp -f ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz ../ioe/__release/$SKYNET_PLAT/latest.tar.gz
-cp -f ../ioe/__release/$SKYNET_PLAT/$VERSION.tar.gz.md5 ../ioe/__release/$SKYNET_PLAT/latest.tar.gz.md5
-echo $VERSION > ../ioe/__release/$SKYNET_PLAT/latest.version
+cp -f ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz ../ioe/__release/bin/$SKYNET_PLAT/latest.tar.gz
+cp -f ../ioe/__release/bin/$SKYNET_PLAT/$VERSION.tar.gz.md5 ../ioe/__release/bin/$SKYNET_PLAT/latest.tar.gz.md5
+echo $VERSION > ../ioe/__release/bin/$SKYNET_PLAT/latest.version
 cd - > /dev/null
 
 # Clean up the rootfs files

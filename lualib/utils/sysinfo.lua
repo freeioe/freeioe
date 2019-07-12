@@ -251,7 +251,6 @@ _M.skynet_version = function()
 end
 
 local arch_short_names = {
-	['arm_cortex-a9_neon'] = 'arm', -- openwrt imx6
 	armv5tejl = 'arm', --mx0
 	armv7l = 'arm', --imx6
 	x86_64 = 'x86_64',
@@ -259,20 +258,9 @@ local arch_short_names = {
 }
 
 -- for detecting cpu arch short name. when calling binrary built by go-lang
-_M.cpu_arch_short = function(os_id)
-	local arch = _M.cpu_arch(os_id)
-	return arch_short_names[arch] or arch
-end
-
----
--- for detecting cpu arch
-_M.cpu_arch = function(os_id)
-	local os_id = os_id or _M.os_id()
-	if os_id == 'openwrt' then
-		return _M.openwrt_cpu_arch()
-	end
+_M.cpu_arch_short = function()
 	local matchine_arch = _M.uname('-m')
-	return assert(matchine_arch or os.getenv("IOE_CPU_ARCH"))
+	return arch_short_names[arch] or arch
 end
 
 local function read_openwrt_arch()
@@ -295,6 +283,24 @@ _M.openwrt_cpu_arch = function()
 	return assert(read_openwrt_arch() or os.getenv("IOE_CPU_ARCH"))
 end
 
+---
+-- for detecting cpu arch
+_M.cpu_arch = function()
+	if _M._CPU_ARCH then
+		return _M._CPU_ARCH
+	end
+
+	local os_id = _M.os_id()
+	if os_id == 'openwrt' then
+		_M._CPU_ARCH = _M.openwrt_cpu_arch()
+	else
+		local matchine_arch = _M.uname('-m')
+		_M._CPU_ARCH = assert(matchine_arch or os.getenv("MSYSTEM_CARCH"))
+	end
+
+	return _M._CPU_ARCH
+end
+
 local function read_os_id()
 	local f, err = io.open('/etc/os-release', 'r')
 	if not f then
@@ -304,41 +310,57 @@ local function read_os_id()
 		local id = string.match(l, '^ID="*(.-)"*$')
 		if id then
 			f:close()
-			return string.lower(id)
+			id = string.lower(id)
+			if id == 'lede' then
+				id = 'openwrt'
+			end
+			return id
 		end
 	end
 	f:close()
 	return nil, 'os-release file does not contains ID'
 end
 
-local os_id_names = {
-	debian = 'linux',
-	ubuntu = 'linux',
-	lede = 'openwrt',
-}
-
 _M.os_id = function()
-	local os_id = read_os_id()
-	os_id = os_id_names[os_id] or os_id
-	return assert(os_id or os.getenv("MSYSTEM"))
+	_M._OS_ID = _M._OS_ID or read_os_id() or os.getenv("MSYSTEM")
+	return assert(_M._OS_ID)
+end
+
+local function read_os_version()
+	local f, err = io.open('/etc/os-release', 'r')
+	if not f then
+		return nil, 'os-release file does not exits'
+	end
+	for l in f:lines() do
+		local id = string.match(l, '^VERSION_ID="*(.-)"*$')
+		if id then
+			f:close()
+			id = string.lower(id)
+			local sid = string.match(id, '^(.+)%-snapshot')
+			return sid or id
+		end
+	end
+	f:close()
+	return nil, 'os-release file does not contains VERSION_ID'
+end
+
+_M.os_version = function()
+	_M._OS_VERSION = _M._OS_VERSION or read_os_version() or os.getenv("MSYSTEM_CHOST")
+	return assert(_M._OS_VERSION)
 end
 
 _M.platform = function()
+	if _M._PLATFORM then
+		return _M._PLATFORM
+	end
+
 	local os_id = _M.os_id()
-	local arch = _M.cpu_arch(os_id)
-	return os_id.."/"..arch
-end
+	local os_ver = _M.os_version()
+	local cpu_arch = _M.cpu_arch()
 
-local device_types_names = {
-	armv5tejl = 'mx0',
-	armv7l = 'q102',
-	x86_64 = 'x86_64',
-	mips = 'tp-720n',
-}
+	_M._PLATFORM = string.format("%s/%s/%s", os_id, os_ver, cpu_arch)
 
-_M.device_type = function()
-	local uname = _M.uname('-m')
-	return assert(device_types_names[uname] or os.getenv("IOE_DEVICE_TYPE"))
+	return _M._PLATFORM
 end
 
 local try_read_ioe_sn_from_config = function()
