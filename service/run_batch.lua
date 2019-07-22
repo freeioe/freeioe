@@ -65,6 +65,28 @@ local batch_env = {
 			log.error(err)
 		end
 	end,
+	CONF_APP_SCRIPT = function(inst, script)
+		local id = gen_task_id('app', "Config application "..inst)
+		local appmgr = snax.queryservice('appmgr')
+		local conf, err = appmgr.req.get_conf(inst)
+		if not conf then
+			post_action_result('app', id, nil, err)
+			return
+		end
+		local f, err = load(script, 'conf_app_script'..inst, 't', {conf=conf})
+		if not f then
+			post_action_result('app', id, nil, err)
+			return
+		end
+
+		local new_conf, err = f(conf)
+		if not new_conf then
+			post_action_result('app', id, nil, err)
+			return
+		end
+		local r, err = appmgr.req.set_conf(inst, conf)
+		post_action_result('app', id, r, err or "Done")
+	end,
 	CONF_APP = function(inst, conf)
 		local id = gen_task_id('app', "Config application "..inst)
 		local appmgr = snax.queryservice('appmgr')
