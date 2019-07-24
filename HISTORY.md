@@ -10,6 +10,7 @@ v1.5.0 ()
 * Fixed serial port closes issue
 * Changed default device meta manufactor to FreeIOE
 * Support upgrade skynet code without freeioe
+* Support script application configuration in batch script
 
 
 
