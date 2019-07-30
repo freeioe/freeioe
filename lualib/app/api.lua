@@ -260,14 +260,15 @@ function api:del_device(dev)
 	return true
 end
 
--- Get readonly device object to access input / fire command / output
-function api:get_device(sn)
+-- Get device object to access input, fire command and write output
+--  With correct secret will be able to write the input
+function api:get_device(sn, secret)
 	assert(sn, "Device Serial Number is required!")
 	local props = dc.get('DEVICES', sn)
 	if not props then
 		return nil, string.format("Device %s does not exits", sn)
 	end
-	return dev_api:new(self, sn, props, true)
+	return dev_api:new(self, sn, props, true, secret)
 end
 
 -- Applicaiton control

@@ -9,12 +9,13 @@ local stat_api = require 'app.stat'
 local device = class("APP_MGR_DEV_API")
 
 --- Do not call this directly, but throw the api.lua
-function device:initialize(api, sn, props, readonly)
+function device:initialize(api, sn, props, guest, secret)
 	self._api = api
 	self._sn = sn
 	self._props = props
 	self._app_src = api._app_name
-	if readonly then
+	self._secret = secret
+	if guest then
 		self._app_name = dc.get('DEV_IN_APP', sn) or api._app_name
 		self._props = dc.get('DEVICES', sn) or {}
 	else
@@ -24,7 +25,7 @@ function device:initialize(api, sn, props, readonly)
 	self._ctrl_chn = api._ctrl_chn
 	self._comm_chn = api._comm_chn
 	self._event_chn = api._event_chn
-	self._readonly = readonly
+	self._guest = guest
 
 	self._inputs_map = {}
 	for _, t in ipairs(props.inputs or {}) do
@@ -33,14 +34,14 @@ function device:initialize(api, sn, props, readonly)
 	end
 	self._stats = {}
 
-	if not readonly then
+	if not guest then
 		dc.set('DEVICES', sn, props)
 		dc.set('DEV_IN_APP', sn, self._app_name)
 	end
 end
 
 function device:_cleanup()
-	self._readonly = true
+	self._guest = true
 	self._app_name = nil
 	self._app_src = nil
 	self._sn = nil
@@ -54,7 +55,7 @@ function device:_cleanup()
 end
 
 function device:cleanup()
-	if self._readonly then
+	if self._guest then
 		return
 	end
 	if self._cov then
@@ -82,7 +83,7 @@ function device:cleanup()
 end
 
 function device:mod(inputs, outputs, commands)
-	assert(not self._readonly, "This is an readonly device!")
+	assert(not self._guest, "Device permission denined!")
 	self._props.inputs = inputs or self._props.inputs
 	self._props.outputs = outputs or self._props.outputs
 	self._props.commands = commands or self._props.commands
@@ -101,7 +102,7 @@ function device:mod(inputs, outputs, commands)
 end
 
 function device:add(inputs, outputs, commands)
-	assert(not self._readonly, "This is an readonly device!")
+	assert(not self._guest, "Device permission denined!")
 	local org_inputs = self._props.inputs
 	for _, v in ipairs(inputs or {}) do
 		org_inputs[#org_inputs + 1] = v
@@ -129,8 +130,14 @@ function device:_publish_input(input, prop, value, timestamp, quality)
 end
 
 function device:set_input_prop(input, prop, value, timestamp, quality)
-	assert(not self._readonly, "This is an readonly device!")
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
+	if self._guest then
+		assert(self._secret, "Device permission denined!")
+		local secret = dc.get("DEVICE_SECRET", self._sn)
+		assert(secret, "Device permission denined!")
+		assert(secret == self._secret, "Device secret is not correct")
+	end
+
 	local value = value
 	local it = self._inputs_map[input]
 	if not it then
@@ -157,8 +164,14 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 end
 
 function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
-	assert(not self._readonly, "This is an readonly device!")
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
+	if self._guest then
+		assert(self._secret, "Device permission denined!")
+		local secret = dc.get("DEVICE_SECRET", self._sn)
+		assert(secret, "Device permission denined!")
+		assert(secret == self._secret, "Device secret is not correct")
+	end
+
 	local value = value
 	local it = self._inputs_map[input]
 	if not it then
@@ -227,7 +240,7 @@ function device:list_inputs(data_cb)
 end
 
 function device:cov(opt)
-	assert(not self._readonly, "This is an readonly device!")
+	assert(not self._guest, "Device permission denined!")
 	if not opt then
 		self._cov = nil
 	else
@@ -248,27 +261,37 @@ function device:data()
 end
 
 function device:flush_data()
-	assert(not self._readonly, "This is an readonly device!")
+	assert(not self._guest, "Device permission denined!")
 	return self:list_inputs(function(input, prop, value, timestamp, quality)
 		self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
 	end)
 end
 
 function device:dump_comm(dir, ...)
-	assert(not self._readonly, "This is an readonly device!")
+	assert(not self._guest, "Device permission denined!")
 	return self._comm_chn:publish(self._app_name, self._sn, dir, ioe.time(), ...)
 end
 
 function device:fire_event(level, type_, info, data, timestamp)
-	assert(not self._readonly, "This is an readonly device!")
+	assert(not self._guest, "Device permission denined!")
 	return self._api:_fire_event(self._sn, level, type_, info, data, timestamp)
 end
 
 function device:stat(name)
-	assert(not self._readonly, "This is an readonly device!")
-	local stat = stat_api:new(self._api, self._sn, name, self._readonly)
+	assert(not self._guest, "Device permission denined!")
+	local stat = stat_api:new(self._api, self._sn, name, self._guest)
 	self._stats[#self._stats + 1] = stat
 	return stat
+end
+
+---
+-- Share this device with specified device secret
+--   Then the application instance who knows this secret
+--   will be able to write input prop to this device
+--   secret is nil will disable shares
+function device:share(secret)
+	self._secret = secret
+	dc.set('DEVICE_SECRET', self._secret)
 end
 
 return device

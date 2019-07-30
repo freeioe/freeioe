@@ -202,6 +202,10 @@ end
 -- @tparam app_inst string application instance name
 -- @treturn bool, string
 function command.install_depends(app_inst)
+	if os.getenv('IOE_EXT_INSTALLED') then
+		return true, "All extension pre-installed!!!"
+	end
+
 	local exts = get_app_depends(app_inst)
 	if #exts == 0 then
 		return true, "There no dependency extension needed by "..app_inst

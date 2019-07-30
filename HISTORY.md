@@ -11,6 +11,7 @@ v1.5.0 ()
 * Changed default device meta manufactor to FreeIOE
 * Support upgrade skynet code without freeioe
 * Support script application configuration in batch script
+* Support device shared between application with specified secret
 
 
 
