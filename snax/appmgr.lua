@@ -358,7 +358,7 @@ function init(...)
 			end
 		end
 		if not apps[sys_app] then
-			snax.self().req.start(sys_app)
+			snax.self().req.start(sys_app, {})
 		end
 	end)
 	skynet.fork(function()
