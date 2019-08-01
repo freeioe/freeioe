@@ -11,13 +11,13 @@ _M.get_boardname = function()
 	if _M._board_name then
 		return _M._board_name
 	end
-	local f, err = io.open('/proc/device-tree/model', 'r')
+	local f, err = io.open('/tmp/sysinfo/board_name', 'r')
 	if f then
 		s = f:read("l")
 		if string.match(s, 'Q2040') then
 			_M._board_name = 'Q204'
 		end
-		if string.match(s, 'TGW303X') then
+		if string.match(s, 'tgw303x') then
 			_M._board_name = 'Q102'
 		end
 		f:close()
