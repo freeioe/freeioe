@@ -7,6 +7,7 @@ v1.6.0
 ------------------
 
 * Support ThingsLink T1 3000
+* Support os version in boot script
 
 
 v1.5.0 (2019-08-01)
