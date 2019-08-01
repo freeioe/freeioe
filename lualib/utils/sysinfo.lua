@@ -441,6 +441,21 @@ _M.firmware_version = function()
 	end
 end
 
+local _board_name = nil
+_M.board_name = function()
+	if _board_name then
+		return _board_name
+	end
+
+	local s, err = _M.cat_file('/tmp/sysinfo/board_name')
+	if s then
+		_board_name = s
+	else
+		_board_name = 'UNKNOWN'
+	end
+	return _board_name
+end
+
 local try_list_mount = function()
 	local s, err = _M.exec('mount | grep /dev/mmcblk1p3')
 	if not s then
