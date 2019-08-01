@@ -1,13 +1,13 @@
 FreeIOE
 ===================
 
-**[FreeIOE](http://freeioe.org)** 是用于快速构建物联网智能数据网关的开源框架。 [English|英文](/README.md)
+**[FreeIOE](http://freeioe.org)** 是用于快速构建物联网边缘计算网关的开源软件。 [English|英文](/README.md)
 
 
 ## 如何使用
 
 * [快速指南](http://help.cloud.thingsroot.com/quick_start/)\
-	如果快速体验FreeIOE网关设备带来的极致体验，以及如果进行定制开发等等。
+	如果快速体验FreeIOE边缘计算网关设备带来的极致体验，以及如果进行定制开发等等。
 
 * [冬笋云平台](http://cloud.thingsroot.com)
 	FreeIOE默认使用的设备维护云平台。

@@ -1,7 +1,7 @@
 FreeIOE
 ===================
 
-**[FreeIOE](http://freeioe.org)** is a framework for building IOE (Internet Of Everything) gateway device. [Chinese|中文](/README_CN.md)
+**[FreeIOE](http://freeioe.org)** is a framework for building IOE (Internet Of Everything) edge computing gateway. [Chinese|中文](/README_CN.md)
 
 
 ## How To Use
@@ -10,7 +10,7 @@ FreeIOE
 	Quick start guide (only in Chinese for now)
 
 * [ThingsRoot Cloud](http://cloud.thingsroot.com)\
-	The default cloud provider for FreeIOE
+	The default cloud service provider for FreeIOE
 
 * [FreeIOE forum](http://freeioe.org)\
 	The discussion forum
