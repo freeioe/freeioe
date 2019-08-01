@@ -17,9 +17,17 @@ STARTUP_SH=$FREEIOE_DIR/startup.sh
 if [ -f /etc/os-release ]
 then
 	source /etc/os-release
-	if [ -f $FREEIOE_DIR/openwrt/$LEDE_ARCH/process-monitor ]
+
+	VERSION_ID=`echo $VERSION_ID | sed -e 's/\-snapshot//g'`
+
+	OS_ARCH=$LEDE_ARCH
+	if [ $OPENWRT_ARCH ]; then
+		OS_ARCH=$OPENWRT_ARCH
+	fi
+
+	if [ -f $FREEIOE_DIR/openwrt/$VERSION_ID/$OS_ARCH/process-monitor ]
 	then
-		PM_BIN=$FREEIOE_DIR/openwrt/$LEDE_ARCH/process-monitor
+		PM_BIN=$FREEIOE_DIR/openwrt/$VERSION_ID/$OS_ARCH/process-monitor
 	fi
 fi
 
