@@ -1,7 +1,7 @@
 FreeIOE
 ===================
 
-**[FreeIOE](http://freeioe.org)** 是用于快速构建物联网边缘计算网关的开源软件。 [English|英文](/README.md)
+**[FreeIOE](http://freeioe.org)** 是用于快速构建物联网边缘计算网关的开源框架。 [English|英文](/README.md)
 
 
 ## 如何使用
@@ -20,7 +20,7 @@ FreeIOE
 
 ### 文档
 
-* [FreeIOE 应用开发指南](https://freeioe.gitbook.io/doc/)\
+* [FreeIOE 应用开发指南](http://help.cloud.thingsroot.com/app_api_book/)\
 	应用开发接口说明，以及应用开发入门介绍等。
 
 

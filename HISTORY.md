@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.5.0 ()
+v1.5.0 (2019-08-01)
 ------------------
 
 * Using OS/Version/CPU_ARCH for platform information
