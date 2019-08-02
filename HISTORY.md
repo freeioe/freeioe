@@ -3,12 +3,12 @@
 
 # Release history
 
-v1.6.0
+v1.6.0 ()
 ------------------
 
 * Support ThingsLink T1 3000 (CSQ leds are controled by wwanleds)
 * Support ThingsLink Q204 (ccid cspi not working for now)
-* Support os version in boot script
+* Support OS version in boot script
 
 
 v1.5.0 (2019-08-01)
