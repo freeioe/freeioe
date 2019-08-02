@@ -454,6 +454,7 @@ local function load_cov_conf()
 	end
 	log.notice('::CLOUD:: COV option:', enable_cov, ttl, enable_data_upload)
 	cov = cov_m:new(publish_data, opt)
+	cov:start()
 
 	--- Stat data cov stuff
 	local stat_cov_opt = {}
@@ -467,6 +468,7 @@ local function load_cov_conf()
 		end
 	end
 	stat_cov = cov_m:new(publish_stat, opt)
+	stat_cov:start()
 end
 
 --- Load file buffer objects
