@@ -10,6 +10,12 @@ function app:initialize(name, sys, conf)
 	self._conf = conf or {}
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
+
+	self:on_init()
+end
+
+function app:on_init()
+	---
 end
 
 function app:on_start()
@@ -52,6 +58,11 @@ function app:_map_handler()
 	__map_handler(handler, self, 'on_comm')
 	__map_handler(handler, self, 'on_stat')
 	__map_handler(handler, self, 'on_event')
+
+	if self._calc then
+		self._calc:start(handler)
+	end
+
 	return handler, handler.on_input ~= nil
 end
 
@@ -62,6 +73,11 @@ function app:start()
 end
 
 function app:close(reason)
+	if self._calc then
+		self._calc:stop()
+		self._calc = nil
+	end
+
 	return self:on_close(reason)
 end
 
@@ -76,6 +92,19 @@ end
 --- Generate unique id, depends on gateway id and hashing from key
 function app:gen_sn(key)
 	return string.format('%s.%s', self._sys:id(), self._sys:gen_sn(key))
+end
+
+function app:create_calc()
+	if not self._calc then
+		local app_calc = require 'app.utils.calc'
+		self._calc = app_calc(self._sys, self._api, self._log)
+	end
+	return self._calc
+end
+
+function app:get_calc()
+	assert(self._calc)
+	return self._calc
 end
 
 return app
