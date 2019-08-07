@@ -23,7 +23,7 @@ function _M.read_socket(sock, len, dump)
 		return str
 	end
 
-	return nil, "The length of socket data is less than "..len
+	return nil, "The length of socket data is less than "..len.." LEN:"..string.len(str)
 end
 
 ---
@@ -50,7 +50,7 @@ function _M.read_serial(serial, len, dump, timeout)
 		return str
 	end
 
-	return nil, "The length of serial data is less than "..len
+	return nil, "The length of serial data is less than "..len.." LEN:"..string.len(str)
 end
 
 return _M

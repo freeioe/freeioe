@@ -59,6 +59,10 @@ function test:_proc(port)
 	self._send_speed = 0
 	self._recv_speed = 0
 
+	if self._ping then
+		skynet.sleep(20, self)
+	end
+
 	local msg_send_total = 0
 	local msg_recv_total = 0
 	local begin_time = skynet.time()

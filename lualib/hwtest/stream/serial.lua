@@ -11,6 +11,8 @@ end
 function serial:open(port_a, port_b)
 	self._port_a = app_port.new_serial(port_a)
 	self._port_b = app_port.new_serial(port_b)
+	self._port_a:connect()
+	self._port_b:connect()
 end
 
 function serial:close()

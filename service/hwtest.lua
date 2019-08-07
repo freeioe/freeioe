@@ -13,5 +13,19 @@ skynet.start(function()
 		skynet.sleep(100)
 	end
 
-	log.debug(cjson.encode(runner:result()))
+	local result, err = cjson.encode(runner:result())
+	if not result then
+		os.execute("echo "..(err or "N???").." > /dev/console")
+		return
+	else
+		log.debug(result)
+
+		local f, err = io.open('/tmp/hwtest.result', 'w+')
+		if f then
+			f:write(result)
+			f:close()
+		else
+			os.execute("echo AAAAAAAAAAAAAAAAAAAAAAAAAAAA > /dev/console")
+		end
+	end
 end)
