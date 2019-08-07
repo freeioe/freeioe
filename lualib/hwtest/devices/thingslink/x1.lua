@@ -109,6 +109,25 @@ local function leds_on()
 	_leds_on('kooiot:green:gs')
 	_leds_on('kooiot:green:modem')
 	_leds_on('kooiot:green:status')
+
+	if os.getenv('IOE_HWTEST_FINISH_HALT') then
+		skynet.timeout(200, function()
+			os.execute('halt')
+		end)
+	end
+end
+
+local function _leds_blink(led_name)
+	local cmd = 'echo heartbeat > /sys/class/leds/'..led_name..'/trigger'
+	os.execute(cmd)
+end
+
+local function leds_blink()
+	_leds_blink('kooiot:green:cloud')
+	_leds_blink('kooiot:green:bs')
+	_leds_blink('kooiot:green:gs')
+	_leds_blink('kooiot:green:modem')
+	_leds_blink('kooiot:green:status')
 end
 
 return  {
@@ -116,6 +135,8 @@ return  {
 	finish = function(success)
 		if success then
 			leds_on()
+		else
+			leds_blink()
 		end
 	end,
 }

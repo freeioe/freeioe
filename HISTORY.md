@@ -10,6 +10,7 @@ v1.6.0 ()
 * Support ThingsLink Q204 (ccid cspi not working for now)
 * Support OS version in boot script
 * Application base module support on_init for object initialization
+* Halt device when hardware test finished, and blink leds when failed
 
 
 v1.5.0 (2019-08-01)
