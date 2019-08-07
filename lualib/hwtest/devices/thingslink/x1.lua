@@ -32,13 +32,13 @@ function tests.test_serial()
 end
 
 function tests.test_eth0()
-	log.debug("Ping", '192.168.1.139')
-	return ping('192.168.1.139')
+	log.debug("Ping", '192.168.1.1')
+	return ping('192.168.1.1')
 end
 
 function tests.test_eth1()
-	log.debug("Ping", '172.30.11.139')
-	return ping('172.30.11.139')
+	log.debug("Ping", '192.168.2.1')
+	return ping('192.168.2.1')
 	--return true
 end
 
