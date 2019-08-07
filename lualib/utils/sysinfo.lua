@@ -490,4 +490,17 @@ _M.data_dir = function()
 	return result or try_list_mount() or '/tmp'
 end
 
+_M.TZ = function()
+	local s, err = _M.cat_file('/tmp/TZ')
+	if s then
+		return s
+	end
+	local s, err= _M.cat_file('/etc/timezone')
+	if s then
+		return s
+	else
+		return 'UTC'
+	end
+end
+
 return _M
