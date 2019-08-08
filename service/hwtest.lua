@@ -22,7 +22,7 @@ skynet.start(function()
 	end
 
 	log.warning("Hardware Test Finished!!!")
-	os.execute("echo Hardware Test Finished!!! > dev/console")
+	os.execute("echo Hardware Test Finished!!! > /dev/console")
 
 	local result, err = cjson.encode(runner:result())
 	if not result then

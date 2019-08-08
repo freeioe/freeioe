@@ -7,6 +7,10 @@ local exec = sysinfo.exec
 
 local list_modem = function(eth_name, usb_id)
 	local str = exec('lsusb')
+	if not str then
+		return nil, err
+	end
+
 	if not str:find(usb_id) then
 		return nil, "Not found USB"
 	end
@@ -21,7 +25,7 @@ return function(eth_name, usb_id)
 
 	local check_present = function()
 		for i = 1, 3 do
-			local r, err = list_modem(usb_id)
+			local r, err = list_modem(eth_name, usb_id)
 			if r then
 				return true
 			end
@@ -31,7 +35,7 @@ return function(eth_name, usb_id)
 	end
 	local check_not_present = function()
 		for i = 1, 3 do
-			local r, err = list_modem(usb_id)
+			local r, err = list_modem(eth_name, usb_id)
 			if not r then
 				return true
 			end
@@ -40,5 +44,5 @@ return function(eth_name, usb_id)
 		return false, "USB existing!!!"
 	end
 
-	return gpio_test(eth_name..'_reset', true, check_present, check_not_present)
+	return gpio_test(eth_name..'_reset', true, check_not_present, check_present)
 end

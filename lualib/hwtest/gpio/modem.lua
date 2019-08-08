@@ -7,7 +7,10 @@ local gpio_test = require 'hwtest.gpio'
 local exec = sysinfo.exec
 
 local list_modem = function(usb_id)
-	local str = exec('lsusb')
+	local str, err = exec('lsusb')
+	if not str then
+		return nil, err
+	end
 	if not str:find(usb_id) then
 		return nil, "Not found USB"
 	end

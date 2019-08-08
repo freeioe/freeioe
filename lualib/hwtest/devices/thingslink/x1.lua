@@ -31,28 +31,43 @@ function tests.test_serial()
 	return reports.master.passed >= 10 and reports.slave.passed >= 10
 end
 
-function tests.test_eth0()
-	log.debug("Ping", '192.168.1.1')
-	return ping('192.168.1.1')
-end
-
-function tests.test_eth1()
-	log.debug("Ping", '192.168.2.1')
-	return ping('192.168.2.1')
-	--return true
-end
-
-function tests.test_modem()
+local function ping_check(ip)
+	assert(ip)
 	local ping_ok = false
 	for i = 1, 5 do
-		if ping('8.8.8.8') then
+		if ping(ip) then
 			ping_ok = true
 			break
 		end
 		skynet.sleep(100)
 	end
 	if not ping_ok then
-		log.debug("Modem network is not ready")
+		log.error("Ping", ip, "Failed")
+		return false, "Ping "..ip.." failed!"
+	end
+	return ping_ok
+end
+
+function tests.test_eth0()
+	skynet.sleep(500)
+	return ping_check('192.168.1.1')
+end
+
+function tests.test_eth1()
+	skynet.sleep(400)
+	local ping_ok = ping_check('192.168.2.1')
+	if not ping_ok then
+		return false, "Ping failed"
+	end
+	local usb_eth = require 'hwtest.gpio.usb_eth'
+	return usb_eth('eth1', '0b95:772b')
+end
+
+function tests.test_modem()
+	skynet.sleep(300)
+	local ping_ok = ping_check('114.114.114.114')
+	if not ping_ok then
+		log.error("Modem network is not ready")
 		return false, "Modem network is not ready"
 	end
 
@@ -61,6 +76,7 @@ function tests.test_modem()
 end
 
 function tests.test_rtc()
+	skynet.sleep(1000)
 	return rtc()
 end
 
