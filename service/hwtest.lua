@@ -6,6 +6,14 @@ local log = require 'utils.log'
 skynet.start(function()
 	local runner = hwtest:new('thingslink', 'x1')
 	runner:start()
+
+	skynet.timeout(10000, function()
+		while true do
+			skynet.sleep(500)
+			log.notice(cjson.encode(runner:result()))
+		end
+	end)
+
 	while true do
 		if runner:finished() then
 			break
@@ -13,12 +21,15 @@ skynet.start(function()
 		skynet.sleep(100)
 	end
 
+	log.warning("Hardware Test Finished!!!")
+	os.execute("echo Hardware Test Finished!!! > dev/console")
+
 	local result, err = cjson.encode(runner:result())
 	if not result then
 		os.execute("echo "..(err or "N???").." > /dev/console")
 		return
 	else
-		log.debug(result)
+		log.notice(result)
 
 		local f, err = io.open('/tmp/hwtest.result', 'w+')
 		if f then
@@ -28,4 +39,5 @@ skynet.start(function()
 			os.execute("echo AAAAAAAAAAAAAAAAAAAAAAAAAAAA > /dev/console")
 		end
 	end
+	skynet.exit()
 end)

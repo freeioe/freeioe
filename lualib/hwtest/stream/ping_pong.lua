@@ -121,6 +121,7 @@ function test:_proc(port)
 
 		self._count = self._count + 1
 		self._droped = buf:droped()
+		log.info('Finished count', self._count, r ~= false)
 		if r then
 			log.trace("Got data")
 			local sk, rdata, ek = string.unpack('>c'..#test.SK..'s4c'..#test.EK, r)
@@ -139,6 +140,8 @@ function test:_proc(port)
 				end
 			end
 		else
+			self._failed = self._failed + 1
+			msg = self:_gen_msg()
 			log.error('Port error', tostring(err))
 		end
 		--- skip all error /timeout case
@@ -149,7 +152,11 @@ function test:_proc(port)
 		-- last pong message
 		local r, err = port:request(msg, function(sock)
 			return true
-		end)
+		end, false, 3000)
+		if not r then
+			self._failed = self._failed + 1
+			log.error('Port error', tostring(err))
+		end
 	end
 end
 

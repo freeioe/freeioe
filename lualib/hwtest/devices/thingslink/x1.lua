@@ -1,4 +1,4 @@
-local skynet = require 'skynet'
+local skynet = require 'skynet.manager'
 local log = require 'utils.log'
 local rtc = require 'hwtest.other.rtc'
 local leds = require 'hwtest.leds'
@@ -109,12 +109,6 @@ local function leds_on()
 	_leds_on('kooiot:green:gs')
 	_leds_on('kooiot:green:modem')
 	_leds_on('kooiot:green:status')
-
-	if os.getenv('IOE_HWTEST_FINISH_HALT') then
-		skynet.timeout(200, function()
-			os.execute('halt')
-		end)
-	end
 end
 
 local function _leds_blink(led_name)
@@ -135,8 +129,22 @@ return  {
 	finish = function(success)
 		if success then
 			leds_on()
+			if os.getenv('IOE_HWTEST_FINISH_HALT') then
+				skynet.timeout(200, function()
+					os.execute('halt')
+				end)
+			else
+				skynet.timeout(200, function()
+					log.notice("Aborting SKYNET!!!")
+					skynet.abort()
+				end)
+			end
 		else
 			leds_blink()
+			skynet.timeout(200, function()
+				log.notice("Aborting SKYNET!!!")
+				skynet.abort()
+			end)
 		end
 	end,
 }
