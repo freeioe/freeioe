@@ -61,6 +61,8 @@ function app:_map_handler()
 
 	if self._calc then
 		self._calc:start(handler)
+	else
+		self.__calc_assert = true
 	end
 
 	return handler, handler.on_input ~= nil
@@ -95,6 +97,8 @@ function app:gen_sn(key)
 end
 
 function app:create_calc()
+	assert(not self.__calc_assert, "create_calc only can be called in on_init function")
+
 	if not self._calc then
 		local app_calc = require 'app.utils.calc'
 		self._calc = app_calc(self._sys, self._api, self._log)

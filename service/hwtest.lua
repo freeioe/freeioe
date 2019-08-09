@@ -39,5 +39,6 @@ skynet.start(function()
 			os.execute("echo AAAAAAAAAAAAAAAAAAAAAAAAAAAA > /dev/console")
 		end
 	end
-	skynet.exit()
+	-- Do not quit this service
+	-- skynet.exit()
 end)

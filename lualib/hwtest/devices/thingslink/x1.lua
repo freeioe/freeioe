@@ -146,19 +146,23 @@ return  {
 		if success then
 			leds_on()
 			if os.getenv('IOE_HWTEST_FINISH_HALT') then
+				log.notice("Halt hardware two seconds later!!")
 				skynet.timeout(200, function()
+					log.notice("Halt hardware now!!")
 					os.execute('halt')
 				end)
 			else
+				log.notice("Abort FreeIOE two seconds later!!")
 				skynet.timeout(200, function()
-					log.notice("Aborting SKYNET!!!")
+					log.notice("FreeIOE closing!!!")
 					skynet.abort()
 				end)
 			end
 		else
 			leds_blink()
+			log.notice("Hardware test failed!!!! Abort FreeIOE two seconds later!!")
 			skynet.timeout(200, function()
-				log.notice("Aborting SKYNET!!!")
+				log.notice("FreeIOE closing!!!")
 				skynet.abort()
 			end)
 		end
