@@ -49,12 +49,12 @@ local function ping_check(ip)
 end
 
 function tests.test_eth0()
-	skynet.sleep(500)
+	skynet.sleep(700)
 	return ping_check('192.168.1.1')
 end
 
 function tests.test_eth1()
-	skynet.sleep(400)
+	skynet.sleep(600)
 	local ping_ok = ping_check('192.168.2.1')
 	if not ping_ok then
 		return false, "Ping failed"
@@ -64,7 +64,7 @@ function tests.test_eth1()
 end
 
 function tests.test_modem()
-	skynet.sleep(300)
+	skynet.sleep(500)
 	local ping_ok = ping_check('114.114.114.114')
 	if not ping_ok then
 		log.error("Modem network is not ready")
@@ -93,6 +93,7 @@ function tests.test_button()
 end
 
 function tests.test_led()
+	skynet.sleep(500)
 	skynet.fork(function()
 		leds('kooiot:green:cloud')
 	end)
@@ -109,7 +110,6 @@ function tests.test_led()
 		leds('kooiot:green:status')
 	end)
 
-	skynet.sleep(3000)
 	return true
 end
 
