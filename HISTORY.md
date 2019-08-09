@@ -11,6 +11,7 @@ v1.6.0 ()
 * Support OS version in boot script
 * Application base module support on_init for object initialization
 * Halt device when hardware test finished, and blink leds when failed
+* Fixed LTE WAN does not been reported if 3ginfo does not genereated issue
 
 
 v1.5.0 (2019-08-01)
