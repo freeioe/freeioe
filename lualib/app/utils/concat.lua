@@ -39,7 +39,6 @@ function concat:update(key, value, timestamp, quality)
 	item.last = ioe.time()
 
 	local delay = item.delay or self._delay
-	local timeout = item.timeout or self._timeout
 
 	if delay > 0 then
 		if self._delay_exec_cancel then
@@ -53,7 +52,7 @@ function concat:update(key, value, timestamp, quality)
 end
 
 function concat:call_calc()
-	print('call_calc')
+	--print('call_calc')
 	local values = {}
 	local now = ioe.time()
 	for k, v in pairs(self._source) do

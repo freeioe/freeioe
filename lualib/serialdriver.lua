@@ -88,10 +88,10 @@ function serial:start(cb, timeout)
 			if len and len > 0 then
 				local data, err = port:read(len, timeout)
 				--print("SERIAL:", len, data, err)
+				cb(data, err)
 				if not data then
 					break
 				end
-				cb(data, err)
 			end
 			skynet.sleep(1)
 		end
