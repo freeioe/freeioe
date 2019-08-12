@@ -76,9 +76,16 @@ _M.socketchannel = require 'socketchannel'
 _M.basexx = require 'basexx'
 ]]--
 
-_M.abort = function(timeout)
+_M.abort_prepare = function()
 	local appmgr = snax.uniqueservice("appmgr")
-	appmgr.post.close_all("FreeIOE is aborting!!!")
+	if appmgr then
+		appmgr.post.close_all("FreeIOE is aborting!!!")
+	end
+end
+
+_M.abort = function(timeout)
+	_M.abort_prepare()
+
 	local timeout = timeout or 5000
 	skynet.timeout(timeout / 10, function()
 		skynet.abort()

@@ -643,11 +643,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	write_script(base_dir.."/ipt/upgrade", os.date())
 
 	aborting = true
-	ioe.abort_prepare()
-	skynet.timeout(100, function()
-		skynet.abort()
-	end)
-
+	ioe.abort()
 	log.warning("::UPGRADER:: Core system upgradation Done!")
 	return true, "System upgradation is done!"
 end
@@ -710,6 +706,7 @@ end
 function command.system_reboot(id, args)
 	aborting = true
 	local delay = args.delay or 5
+	ioe.abort_prepare()
 	skynet.timeout(delay * 100, function()
 		os.execute("reboot &")
 	end)
