@@ -64,7 +64,8 @@ end
 
 -- System abort
 function sys:abort()
-	skynet.abort()
+	self._logger:warning("FreeIOE will be closed after 5 seconds!")
+	ioe.abort(5000)
 end
 
 -- ms uptime
@@ -76,10 +77,8 @@ function sys:fix_time()
 	if skynet.fix_time then
 		skynet.fix_time()
 	else
-		self._logger:error("Reboot FreeIOE after 5 seconds for fix time diff!")
-		self:timeout(5000, function()
-			self:abort()
-		end)
+		self._logger:warning("Reboot FreeIOE to fix time diff issue!")
+		self:abort()
 	end
 end
 

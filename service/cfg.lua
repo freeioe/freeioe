@@ -7,6 +7,7 @@ local lfs = require 'lfs'
 local restful = require 'restful'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
+local ioe = require 'ioe'
 
 local db_file = "cfg.json"
 local md5sum = ""
@@ -125,7 +126,7 @@ local function on_cfg_failure()
 		log.error("::CFG:: Cannot create crash backup script file. ", err)
 	end
 	skynet.sleep(100)
-	skynet.abort()
+	ioe.abort()
 end
 
 

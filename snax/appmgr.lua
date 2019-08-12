@@ -325,6 +325,15 @@ function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
 	end
 end
 
+function accept.close_all(reason)
+	log.warning("::AppMgr:: service is closing all apps. reason:"..(reason or "UKNOWN"))
+	for k, v in pairs(applist) do
+		if v.inst then
+			snax.self().post.app_stop(k, reason)
+		end
+	end
+end
+
 function init(...)
 	log.info("::AppMgr:: service starting...")
 

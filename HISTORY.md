@@ -12,6 +12,7 @@ v1.6.0 ()
 * Application base module support on_init for object initialization
 * Halt device when hardware test finished, and blink leds when failed
 * Fixed LTE WAN does not been reported if 3ginfo does not genereated issue
+* Ask all application to quit before restart FreeIOE
 
 
 v1.5.0 (2019-08-01)

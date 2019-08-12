@@ -643,6 +643,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	write_script(base_dir.."/ipt/upgrade", os.date())
 
 	aborting = true
+	ioe.abort_prepare()
 	skynet.timeout(100, function()
 		skynet.abort()
 	end)
@@ -717,10 +718,8 @@ end
 
 function command.system_quit(id, args)
 	aborting = true
-	local delay = args.delay or 5
-	skynet.timeout(delay * 100, function()
-		skynet.abort()
-	end)
+	local delay = (args.delay or 5) * 1000
+	ioe.abort(delay)
 	return true, "FreeIOE will reboot after "..delay.." seconds"
 end
 
@@ -742,10 +741,11 @@ local function rollback_co()
 		local wd = { version=sysinfo.version(), skynet_version=sysinfo.skynet_version() }
 		fire_warning_event('System will be rollback now!', wd)
 		log.error("::UPGRADER:: System will be rollback now!")
+
 		aborting = true
 		skynet.sleep(100)
 		do_rollback = nil
-		skynet.abort()
+		ioe.abort()
 	end
 
 	rollback_time = skynet.time() + 5 * 60
