@@ -67,13 +67,9 @@ end
 
 function calc:_add_watch(trigger, input)
 	assert(input.sn and input.input and input.prop)
-	--- Set values buffer
+
 	local key = self:_watch_key(input.sn, input.input, input.prop)
 	input._key = key
-
-	if default ~= nil then
-		trigger.values[key] = default
-	end
 
 	local triggers = self._watch_map[key] or {}
 
@@ -85,7 +81,11 @@ function calc:_add_watch(trigger, input)
 		return 
 	end
 
-	input.value = device:get_input_prop(input.input, input.prop)
+	local value, timestamp, quality = device:get_input_prop(input.input, input.prop)
+	if value ~= nil and ( quality == nil or quality == 0 ) then
+		input.value = value
+		input.timestamp = timestamp
+	end
 end
 
 function calc:_complete_trigger(trigger)
@@ -123,6 +123,7 @@ function calc:_clean_watch(key)
 			if key == input._key then
 				self._log:trace("Clean input value", key, trigger.name)
 				input.value = nil
+				input.timestamp = nil
 			end
 		end
 	end
@@ -157,11 +158,6 @@ function calc:_on_mod_device(app_src, sn, props)
 end
 
 function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
-	if quality ~= nil and quality ~= 0 then
-		self._log:trace("Skip none qualitied value", app_src, sn, input, prop, value, timestamp, quality)
-		return
-	end
-
 	local key = self:_watch_key(sn, input, prop)
 
 	if not self._watch_map[key] then
@@ -185,7 +181,13 @@ function calc:_on_cov_input(key, value, timestamp, quality)
 	for _, trigger in ipairs(triggers) do
 		for _, input in ipairs(trigger.inputs) do
 			if key == input._key then
-				input.value = value
+				if quality == nil or quality == 0 then
+					input.value = value
+					input.timestamp = timestamp
+				else
+					input.value = nil
+					input.timestamp = nil
+				end
 			end
 		end
 		self:_complete_trigger(trigger)

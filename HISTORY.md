@@ -13,6 +13,7 @@ v1.6.0 ()
 * Halt device when hardware test finished, and blink leds when failed
 * Fixed LTE WAN does not been reported if 3ginfo does not genereated issue
 * Ask all application to quit before restart FreeIOE
+* Fixed the app.utils.calc do not handle the value quality correctly issue
 
 
 v1.5.0 (2019-08-01)
