@@ -23,5 +23,5 @@ plats["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="sunxi_a7.sh"
 for item in "${!plats[@]}"; 
 do
 	cat ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz.md5
-	ls -l ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz
+	ls -lh ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz
 done

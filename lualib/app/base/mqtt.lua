@@ -216,9 +216,6 @@ end
 
 --- 处理设备输入项数值变更消息
 function app:on_input(src_app, sn, input, prop, value, timestamp, quality)
-	if tonumber(value) == nil then
-		return
-	end
 	return self:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
 end
 
