@@ -98,28 +98,28 @@ function sum:check_save()
 end
 
 function sum:add(key, value)
-	self:check_save()
-
 	local val = self._value[key] or { base = 0, value = 0, delta = 0 }
 	val.value = val.value + value
 
 	self._value[key] = val
+
+	self:check_save()
 end
 
 function sum:set(key, value)
-	self:check_save()
-
 	local val = self._value[key] or { base = 0, value = 0, delta = 0 }
 
 	if value >= val.value then
 		val.value = value
 	else
-		val.base = 0
 		val.delta = val.value - val.base + val.delta --- The current value
+		val.base = 0
 		val.value = value
 	end
 
 	self._value[key] = val
+
+	self:check_save()
 end
 
 function sum:get(key)
