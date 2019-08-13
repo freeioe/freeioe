@@ -14,6 +14,7 @@ v1.6.0 ()
 * Fixed LTE WAN does not been reported if 3ginfo does not genereated issue
 * Ask all application to quit before restart FreeIOE
 * Fixed the app.utils.calc do not handle the value quality correctly issue
+* Fixed summation utils count the value incorrect when value reseted (base is not zero) 
 
 
 v1.5.0 (2019-08-01)

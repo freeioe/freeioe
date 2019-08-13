@@ -115,7 +115,7 @@ function sum:set(key, value)
 		val.value = value
 	else
 		val.base = 0
-		val.delta = val.delta + val.value
+		val.delta = val.value - val.base + val.delta --- The current value
 		val.value = value
 	end
 
