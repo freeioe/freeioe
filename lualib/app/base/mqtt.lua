@@ -424,7 +424,7 @@ function app:_handle_cov_data(...)
 end
 
 function app:_init_cov()
-	local cov_opt = {ttl=300, float_threshold = 0.000001}
+	local cov_opt = {ttl=self._ttl, float_threshold = self._float_threshold}
 	self._cov = cov:new(function(...)
 		self:_handle_cov_data(...)
 	end, cov_opt)
