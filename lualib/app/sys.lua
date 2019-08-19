@@ -6,11 +6,11 @@ local class = require 'middleclass'
 local ioe = require 'ioe'
 local api = require 'app.api'
 local logger = require 'app.logger'
-local conf_api = require 'app.conf_api'
+local conf_api = require 'app.conf.api'
 local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 4
+sys.API_VER = 5
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)

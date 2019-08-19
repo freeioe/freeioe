@@ -1,4 +1,5 @@
 local class = require 'middleclass'
+local app_conf = require 'app.conf'
 
 local app = class('BASIC_APP_CLASS')
 app.static.API_VER = 4
@@ -7,7 +8,7 @@ function app:initialize(name, sys, conf)
 	assert(name and sys and conf, "Missing parameter in initialize")
 	self._name = name
 	self._sys = sys
-	self._conf = conf or {}
+	self._conf = app_conf:new(sys)(conf)
 	self._api = self._sys:data_api()
 	self._log = sys:logger()
 

@@ -346,6 +346,9 @@ end
 
 _M.os_version = function()
 	_M._OS_VERSION = _M._OS_VERSION or read_os_version() or os.getenv("MSYSTEM_CHOST")
+	if not _M._OS_VERSION and _M.os_id() == 'debian' then
+		_M._OS_VERSION = _M.cat_file('/etc/debian_version')
+	end
 	return assert(_M._OS_VERSION)
 end
 
