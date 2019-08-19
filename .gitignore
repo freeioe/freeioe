@@ -43,7 +43,6 @@ luac.out
 *.un~
 *.swp
 lwf
-conf
 apps
 ext
 __install
