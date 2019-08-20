@@ -13,6 +13,15 @@ function app:initialize(name, sys, conf)
 	self._log = sys:logger()
 
 	self:on_init()
+
+	self._safe_call = function(f, ...)
+		local r, er, err = xpcall(f, debug.traceback, ...)
+		if not r then
+			self._log:warning('Code bug', er, err)
+			return nil, er and tostring(er) or nil
+		end
+		return er, er and tostring(err) or nil
+	end
 end
 
 function app:on_init()
@@ -32,7 +41,7 @@ local function __map_handler(handler, app, func)
 	if f then
 		--app._log:trace("Application has handler:", func)
 		handler[func] = function(...)
-			return f(app, ...)
+			return app._safe_call(f, app, ...)
 		end
 	end
 end

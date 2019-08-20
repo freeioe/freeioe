@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.6.0 ()
+v1.6.0 (2019-08-19)
 ------------------
 
 * Support ThingsLink T1 3000 (CSQ leds are controled by wwanleds)
@@ -15,6 +15,7 @@ v1.6.0 ()
 * Ask all application to quit before restart FreeIOE
 * Fixed the app.utils.calc do not handle the value quality correctly issue
 * Fixed summation utils count the value incorrect when value reseted (base is not zero) 
+* Support application reading default settings from its visual config file (API version 5)
 
 
 v1.5.0 (2019-08-01)
