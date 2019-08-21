@@ -49,7 +49,12 @@ function helper:_load_conf()
 		return {}
 	end
 	-- Decode as json
-	return cjson.decode(config) or {}
+	local conf, err = cjson.decode(config)
+	if not conf then
+		self._log:error("Cloud configuration decode error: "..err)
+		return {}
+	end
+	return conf
 end
 
 function helper:_real_fetch()
