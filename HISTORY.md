@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.6.1 ()
+------------------
+
+* Fixed MQTT base app fires twice message when from on_connection_ok
+
+
 v1.6.0 (2019-08-19)
 ------------------
 

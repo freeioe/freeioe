@@ -118,7 +118,7 @@ function app:publish(topic, data, qos, retained)
 
 	local mid, err = self._mqtt_client:publish(topic, data, qos, retained)
 	--print(topic, mid, err)
-	if qos == 1 and mid then
+	if qos == 1 and mid and not self._in_connection_ok_cb then
 		self._qos_msg_buf:push(mid, topic, data, qos, retained)
 	end
 	return mid, err
@@ -293,7 +293,9 @@ function app:_connect_proc()
 			self._mqtt_reconnect_timeout = 1000
 
 			if self.on_mqtt_connect_ok then
+				self._in_connection_ok_cb = true
 				self._safe_call(self.on_mqtt_connect_ok, self)
+				self._in_connection_ok_cb = false
 			end
 
 			self:_fire_devices(1000)
