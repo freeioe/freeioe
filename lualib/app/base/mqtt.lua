@@ -69,7 +69,7 @@ function app:initialize(name, sys, conf)
 	self._mqtt_id = conf.client_id or sys:id()
 	self._mqtt_username = conf.username
 	self._mqtt_password = conf.password
-	self._mqtt_host = conf.server or '127.0.0.0'
+	self._mqtt_host = conf.server or '127.0.0.1'
 	self._mqtt_port = conf.port or 1883
 	self._mqtt_enable_tls = conf.enable_tls
 	self._mqtt_tls_cert = conf.tls_cert
@@ -228,7 +228,7 @@ function app:on_input_em(src_app, sn, input, prop, value, timestamp, quality)
 	if not key then
 		return
 	end
-	return self:on_publish_data_em(key, value, timestamp, quality)
+	return self._safe_call(self.on_publish_data_em, self, key, value, timestamp, quality)
 end
 
 function app:_start_reconnect()
@@ -290,7 +290,7 @@ function app:_connect_proc()
 
 			self._mqtt_client = client
 			self._mqtt_client_last = sys:time()
-			self._mqtt_reconnect_timeout = 100
+			self._mqtt_reconnect_timeout = 1000
 
 			if self.on_mqtt_connect_ok then
 				self._safe_call(self.on_mqtt_connect_ok, self)
@@ -323,7 +323,7 @@ function app:_connect_proc()
 		self._qos_msg_buf:remove(mid)
 
 		if self.on_mqtt_publish then
-			self.on_mqtt_publish(mid)
+			self._safe_call(self.on_mqtt_publish, self, mid)
 		end
 	end
 	client.ON_LOG = function(...)
