@@ -336,6 +336,8 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 end
 
 --- Push data to period buffer or publish to MQTT dirtectly
+-- in our server we using [key, timestamp, value, quality] as data order,
+--   in our MQTT standard which timestamp value position swapped :-(
 local function publish_data(key, value, timestamp, quality)
 	if pb then
 		--log.trace('::CLOUD:: publish_data turn period buffer', key, value, timestamp, quality)
