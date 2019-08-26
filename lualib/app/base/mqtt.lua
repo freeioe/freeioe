@@ -73,6 +73,8 @@ function app:initialize(name, sys, conf)
 	self._mqtt_port = conf.port or 1883
 	self._mqtt_enable_tls = conf.enable_tls
 	self._mqtt_tls_cert = conf.tls_cert
+	self._mqtt_client_cert = conf.client_cert
+	self._mqtt_client_key = conf.client_key
 	self._mqtt_clean_session = true
 
 	-- COV and PB
@@ -267,15 +269,25 @@ function app:_connect_proc()
 	local password = info and info.password or self._mqtt_password
 	local enable_tls = info and info.enable_tls or self._mqtt_enable_tls
 	local tls_cert = info and info.tls_cert or self._mqtt_tls_cert
+	local client_cert = info and info.client_cert or self._mqtt_client_cert
+	local client_key = info and info.client_key or self._mqtt_client_key
 
 	-- 创建MQTT客户端实例
 	log:info("MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, username, password)
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	local close_client = false
 	client:version_set(mosq.PROTOCOL_V311)
-	client:login_set(username, password)
+	if username and string.len(username) > 0 then
+		client:login_set(username, password)
+	end
 	if enable_tls then
-		client:tls_set(sys:app_dir().."/"..tls_cert)
+		client_cert = client_cert and sys:app_dir()..client_cert or nil
+		client_key = client_key and sys:app_dir()..client_key or nil
+		tls_cert = tls_cert and sys:app_dir()..tls_cert or nil
+		local r, errno, err = client:tls_set(tls_cert, tls_cert_path, client_cert, client_key)
+		if not r then
+			log:error("TLS set error", errno, err)
+		end
 	end
 
 	-- 注册回调函数
@@ -293,9 +305,9 @@ function app:_connect_proc()
 			self._mqtt_reconnect_timeout = 1000
 
 			if self.on_mqtt_connect_ok then
-				self._in_connection_ok_cb = true
-				self._safe_call(self.on_mqtt_connect_ok, self)
-				self._in_connection_ok_cb = false
+				self._sys:fork(function()
+					self._safe_call(self.on_mqtt_connect_ok, self)
+				end)
 			end
 
 			self:_fire_devices(1000)
@@ -325,7 +337,9 @@ function app:_connect_proc()
 		self._qos_msg_buf:remove(mid)
 
 		if self.on_mqtt_publish then
-			self._safe_call(self.on_mqtt_publish, self, mid)
+			self._sys:fork(function()
+				self._safe_call(self.on_mqtt_publish, self, mid)
+			end)
 		end
 	end
 	client.ON_LOG = function(...)
@@ -334,7 +348,9 @@ function app:_connect_proc()
 	client.ON_MESSAGE = function(packet_id, topic, data, qos, retained)
 		--print(packet_id, topic, data, qos, retained)
 		if self.on_mqtt_message then
-			self._safe_call(self.on_mqtt_message, self, packet_id, topic, data, qos, retained)
+			self._sys:fork(function()
+				self._safe_call(self.on_mqtt_message, self, packet_id, topic, data, qos, retained)
+			end)
 		end
 	end
 
@@ -345,7 +361,7 @@ function app:_connect_proc()
 		end
 	end
 
-	log:info('MQTT connectting...')
+	log:info('MQTT Connectting...')
 	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	local ts = 1000
 	while not r do
