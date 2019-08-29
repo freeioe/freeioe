@@ -3,10 +3,11 @@
 
 # Release history
 
-v1.6.1 ()
+v1.6.1 (2019-08-29)
 ------------------
 
 * Fixed MQTT base app fires twice message when from on_connection_ok
+* Echo cloud status to /tmp/sysinfo/cloud_status
 
 
 v1.6.0 (2019-08-19)
