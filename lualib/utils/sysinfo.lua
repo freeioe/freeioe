@@ -506,4 +506,18 @@ _M.TZ = function()
 	end
 end
 
+_M.update_cloud_status = function(status, status_last_update_time)
+	local f, err = io.open('/tmp/sysinfo/cloud_status', 'w+')
+	if not f then
+		return nil, err
+	end
+	local r, str = pcall(string.format, '%d\n%d\n', status and 1 or 0, math.floor(status_last_update_time))
+	if not r then
+		return nil, str
+	end
+	f:write(str)
+	f:close()
+	return true
+end
+
 return _M
