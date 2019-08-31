@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.6.2 ()
+------------------
+
+* Fixed ubus failure on method not found case
+
+
 v1.6.1 (2019-08-29)
 ------------------
 

@@ -330,12 +330,12 @@ end
 function ubus:process_obj_message(req, obj_id, method, msg)
 	local obj = self.__objects[obj_id]
 	if not obj then
-		return STATUS_NOT_FOUND
+		return ubus.STATUS_NOT_FOUND
 	end
 
 	local func = obj.methods[method] and obj.methods[method][1] or obj.methods.__notify_cb
 	if not func then
-		return STATUS_METHOD_NOT_FOUND
+		return ubus.STATUS_METHOD_NOT_FOUND
 	end
 
 	local msg_data = msg:data(ubus.ATTR_DATA)
@@ -367,7 +367,7 @@ end
 function ubus:process_invoke_message(req, obj_id, msg)
 	local method = msg:data(ubus.ATTR_METHOD)
 	if not method then
-		return STATUS_INVALID_ARGUMENT
+		return ubus.STATUS_INVALID_ARGUMENT
 	end
 	return self:process_obj_message(req, obj_id, method, msg)
 end
