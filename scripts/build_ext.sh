@@ -10,6 +10,7 @@ TOOLCHAIN=$2
 TARGET_DIR=$3
 
 rm build -rf
+rm bin -rf
 
 printf "ARCH: $PLAT_ARCH \t TOOLCHAINE: $TOOLCHAIN \t TARGET: $TARGET_DIR \n"
 

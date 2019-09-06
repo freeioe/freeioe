@@ -29,6 +29,7 @@ if [ ! -f ${SOURCE_DIR}/open62541.spec ]; then
 fi
 
 if [ "$TOOLCHAIN" == "native" ]; then
+	rm bin -rf
 	rm build -rf
 	mkdir build/
 	cd build
@@ -36,6 +37,7 @@ if [ "$TOOLCHAIN" == "native" ]; then
 	make
 else
 	. ~/toolchains/$TOOLCHAIN
+	rm bin -rf
 	rm build_openwrt -rf
 	mkdir build_openwrt
 	cd build_openwrt
