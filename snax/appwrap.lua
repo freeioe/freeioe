@@ -76,7 +76,9 @@ local function work_proc()
 		end
 
 		--- Sleep before while app do checking
-		skynet.sleep(timeout // 10)
+		if timeout > 0 then
+			skynet.sleep(timeout // 10)
+		end
 	end
 end
 

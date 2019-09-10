@@ -27,18 +27,13 @@ FreeIOE
 ### 示例
 
 * [FreeIOE 应用示例代码库](https://github.com/freeioe/freeioe_example_apps)
-  * Modbus 设备数据采集应用，基于lua-modbus模块(libmodbus)
-  * Modbus 设备数据采集应用(纯Lua实现)
-  * OpcUA 服务器/客户端示例(使用open62541协议栈)
-  * 基于Socat/Frpc 工具的网络/串口远程映射
-  * Aliyun/Huawei/Baidu 物联网平台接入 (基于MQTT协议)
-  * DLT645 电表数据采集应用(纯Lua实现)
-  * 基于uci指令的网络管理应用
-  * 基于OpcUA协议的SymLink数据集成应用
+  * Modbus 应用示例（Master/Slave)
+  * OPCUA 应用示例(Server/Client)
   * 发那科Focas协议数据采集(通过ubus服务)
-  * 广东联通云平台(Telit Cloud)接入应用
-  * 伊之密UN200A5注塑机数据采集应用(基于OpcUa)
-  * 中信物联网云平台接入应用
+  * DLT645 电表数据采集应用
+  * Aliyun/Huawei/Baidu/联通云(Telit)/浪潮云/中信云 等物联网平台接入 (基于MQTT协议)
+  * 基于Socat/Frpc 工具的网络/串口远程映射
+  * 基于uci指令的网络管理应用
 
 * [第三方应用](https://github.com/viccom/myfreeioe_apps)
   * 支持设备点表的Modbus数据采集应用
@@ -52,7 +47,7 @@ FreeIOE
   * MQTT数据上送示例
   * 华日激光数据采集应用（主动模式)
 
-## 核心开发
+## 框架开发
 
 FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 > 可以从它的[wiki](https://github.com/cloudwu/skynet/wiki) 获取更多信息。

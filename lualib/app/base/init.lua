@@ -20,7 +20,7 @@ function app:initialize(name, sys, conf)
 			self._log:warning('Code bug', er, err)
 			return nil, er and tostring(er) or nil
 		end
-		return er, er and tostring(err) or nil
+		return er, tostring(err) or nil
 	end
 end
 
