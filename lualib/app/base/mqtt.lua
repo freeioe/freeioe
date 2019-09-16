@@ -72,7 +72,9 @@ function app:initialize(name, sys, conf)
 	self._mqtt_host = conf.server or '127.0.0.1'
 	self._mqtt_port = conf.port or 1883
 	self._mqtt_enable_tls = conf.enable_tls
+	self._mqtt_tls_insecure = conf.tls_insecure
 	self._mqtt_tls_cert = conf.tls_cert
+	self._mqtt_tls_ca_path = conf.tls_ca_path
 	self._mqtt_client_cert = conf.client_cert
 	self._mqtt_client_key = conf.client_key
 	self._mqtt_clean_session = true
@@ -268,7 +270,9 @@ function app:_connect_proc()
 	local username = info and info.username or self._mqtt_username
 	local password = info and info.password or self._mqtt_password
 	local enable_tls = info and info.enable_tls or self._mqtt_enable_tls
+	local tls_insecure = info and info.tls_insecure or self._mqtt_tls_insecure
 	local tls_cert = info and info.tls_cert or self._mqtt_tls_cert
+	local tls_ca_path = info and info.tls_ca_path or self._mqtt_tls_ca_path
 	local client_cert = info and info.client_cert or self._mqtt_client_cert
 	local client_key = info and info.client_key or self._mqtt_client_key
 
@@ -281,10 +285,15 @@ function app:_connect_proc()
 		client:login_set(username, password)
 	end
 	if enable_tls then
+		if tls_insecure == true then
+			log:warning("MQTT using insecure tls connection!")
+			client:tls_insecure_set(true)
+		end
 		client_cert = client_cert and sys:app_dir()..client_cert or nil
 		client_key = client_key and sys:app_dir()..client_key or nil
 		tls_cert = tls_cert and sys:app_dir()..tls_cert or nil
-		local r, errno, err = client:tls_set(tls_cert, client_cert, client_key)
+		--print(tls_cert, tls_ca_path or 'nil', client_cert or 'nil', client_key or 'nil')
+		local r, errno, err = client:tls_set(tls_cert, tls_ca_path, client_cert, client_key)
 		if not r then
 			log:error("TLS set error", errno, err)
 		end
