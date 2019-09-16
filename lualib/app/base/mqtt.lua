@@ -284,7 +284,7 @@ function app:_connect_proc()
 		client_cert = client_cert and sys:app_dir()..client_cert or nil
 		client_key = client_key and sys:app_dir()..client_key or nil
 		tls_cert = tls_cert and sys:app_dir()..tls_cert or nil
-		local r, errno, err = client:tls_set(tls_cert, tls_cert_path, client_cert, client_key)
+		local r, errno, err = client:tls_set(tls_cert, client_cert, client_key)
 		if not r then
 			log:error("TLS set error", errno, err)
 		end
