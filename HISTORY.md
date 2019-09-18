@@ -7,6 +7,8 @@ v1.6.3 ()
 ------------------
 
 * Fixed application serial number not updated when rename instance name
+* Echo the data compress rate every 60 seconds
+* Improve the period buffer sleep length
 
 
 v1.6.2 (2019-09-17)

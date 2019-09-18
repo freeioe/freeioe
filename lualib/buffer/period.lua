@@ -157,10 +157,14 @@ function pb:start(cb, drop_cb)
 	self._cb = cb
 	self._drop_cb = drop_cb
 	skynet.fork(function()
+		local begin_fire_all = skynet.now()
+		local next_fire_all = begin_fire_all
 		while not self._stop do
+			--print(self._period // 10, begin_fire_all, next_fire_all, skynet.now())
+			next_fire_all = next_fire_all + self._period // 10
 			self:fire_all(cb)
-			--print(math.floor(self._period / 10))
-			skynet.sleep(math.floor(self._period / 10), self)
+			--print(self._period // 10, next_fire_all - skynet.now(), skynet.now())
+			skynet.sleep(next_fire_all - skynet.now(), self)
 		end
 	end)
 end

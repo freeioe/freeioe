@@ -283,12 +283,29 @@ end
 
 local total_compressed = 0
 local total_uncompressed = 0
+local total_count = 0
+local MAX_BYTE_COUNT = 0xFFFFFFFF
+local last_echo_rate = 0
+
+local function echo_compress_rate()
+	local total_rate = (total_compressed/total_uncompressed) * 100
+	log.trace('::CLOUD:: Data Count '..total_count..' Raw size '..total_uncompressed..' Compressed size '..total_compressed..' Rate '..total_rate)
+end
+
 local function calc_compress(bytes_in, bytes_out, count)
+	if total_uncompressed > MAX_BYTE_COUNT or total_compressed > MAX_BYTE_COUNT then
+		total_uncompressed = 0
+		total_compressed = 0
+		total_count = 0
+	end
 	total_compressed = total_compressed + bytes_out
 	total_uncompressed = total_uncompressed + bytes_in
-	local total_rate = (total_compressed/total_uncompressed) * 100
-	local current_rate = (bytes_out/bytes_in) * 100
-	log.trace('::CLOUD:: Count '..count..' Original size '..bytes_in..' Compressed size '..bytes_out, current_rate, total_rate)
+	total_count = total_count + count
+
+	if mqtt_client and skynet.now() - last_echo_rate >= 60 * 100 then
+		echo_compress_rate()
+		last_echo_rate = (skynet.now() // 100) * 100
+	end
 end
 
 --- MQTT Publish (not for data) with zip if it has
@@ -1036,6 +1053,7 @@ function accept.enable_log(id, sec)
 		snax.self().post.action_result('sys', id, false, err)
 		return
 	end
+	log.debug("::CLOUD:: enable log upload for "..sec.." seconds")
 
 	if sec and sec > 0 then
 		enable_log_upload = math.floor(skynet.time()) + sec
