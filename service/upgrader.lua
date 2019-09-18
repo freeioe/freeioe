@@ -369,6 +369,7 @@ function command.rename_app(id, args)
 	end
 	local appmgr = snax.queryservice("appmgr")
 	appmgr.req.stop(inst_name, "Renaming application")
+	app.sn = args.sn or gen_app_sn(new_name)
 
 	local source_folder = get_target_folder(inst_name)
 	local target_folder = get_target_folder(new_name)
