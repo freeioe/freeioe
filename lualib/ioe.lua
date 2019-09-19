@@ -26,7 +26,7 @@ _M.auth_code = function()
 	return dc.get("SYS", "AUTH_CODE")
 end
 
-_M.set_auto_code = function(value)
+_M.set_auth_code = function(value)
 	dc.set("SYS", "AUTH_CODE", value)
 end
 

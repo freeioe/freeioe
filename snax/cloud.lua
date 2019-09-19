@@ -1053,7 +1053,7 @@ function accept.enable_log(id, sec)
 		snax.self().post.action_result('sys', id, false, err)
 		return
 	end
-	log.debug("::CLOUD:: enable log upload for "..sec.." seconds")
+	--log.debug("::CLOUD:: enable log upload for "..sec.." seconds")
 
 	if sec and sec > 0 then
 		enable_log_upload = math.floor(skynet.time()) + sec
