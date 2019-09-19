@@ -22,23 +22,24 @@ local function load_defaults_real(filename)
 	return default
 end
 
-local function load_defaults(filename)
+function conf:_load_defaults(filename)
 	local r, data = pcall(load_defaults_real, filename)
 	if not r then
-		--skynet.error('Load app config file '..filename..' failed!', data)
+		self._log:error('Load app config file '..filename..' failed!', data)
 		return {}
 	else
-		skynet.error('Loaded app config template file!!')
+		self._log:info('Loaded app config template file!!')
 	end
 	return data or {}
 end
 
 function conf:initialize(sys, conf_json)
 	self._sys = sys
+	self._log = sys:logger()
 	self._conf_json = conf_json or 'conf.json'
 
 	local filename = self._sys:app_dir()..'/'..self._conf_json
-	self._default = load_defaults(filename)
+	self._default = self:_load_defaults(filename)
 
 end
 
