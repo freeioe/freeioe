@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.6.3 ()
+v1.6.3 (2019-09-20)
 ------------------
 
 * Fixed application serial number not updated when rename instance name
