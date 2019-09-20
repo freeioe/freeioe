@@ -53,6 +53,9 @@ local max_enable_comm_upload = 60 * 10		--- Max upload communication data period
 local enable_log_upload = nil				--- Whether upload logs (time)
 local max_enable_log_upload = 60 * 10		--- Max upload logs period
 
+local enable_device_action = nil			--- Enable fire device action sperately
+--- This is not enabled here, as the cloud depends on the devices topic retained data
+
 local api = nil					--- App API object to access devices
 local cov = nil					--- COV helper
 local cov_min_timer_gap = 10	--- COV min timer gap which will be set to period / 10 if upload period enabled
@@ -1167,15 +1170,45 @@ function accept.fire_devices(timeout)
 		local r, err = mqtt_publish(mqtt_id.."/devices", devs, 1, true)
 		if not r then
 			-- If mqtt connection is offline, retry after five seconds.
+			log.notice("::CLOUD:: Cloud fire devices failed, retry after 5 seconds")
 			snax.self().post.fire_devices(500)
+		else
+			log.notice("::CLOUD:: Cloud fire devices done!")
 		end
 	end
+
+	if enable_device_action then
+		fire_device_timer()
+		fire_device_timer = nil
+		return
+	end
+
 	skynet.timeout(timeout, function()
 		if fire_device_timer then
 			fire_device_timer()
 			fire_device_timer = nil
 		end
 	end)
+end
+
+function accept.fire_device_action(action, sn, props)
+	local data = {
+		action = action,
+		sn = sn,
+		props = props
+	}
+
+	local fire_device = nil
+	fire_device = function()
+		local r, err = mqtt_publish(mqtt_id.."/device", data, 1, false)
+		if not r then
+			log.notice("::CLOUD:: Cloud fire device action failed, retry after 5 seconds")
+			skynet.timeout(fire_device, 500)
+		else
+			log.notice("::CLOUD:: Cloud fire device action done!")
+		end
+	end
+	fire_device()
 end
 
 local function clean_cov_by_device_sn(sn)
@@ -1195,17 +1228,29 @@ end
 
 function accept.device_add(app, sn, props)
 	clean_cov_by_device_sn(sn)
-	snax.self().post.fire_devices()
+	if enable_device_action then
+		snax.self().post.fire_device_action('add', sn, props)
+	else
+		snax.self().post.fire_devices()
+	end
 end
 
 function accept.device_mod(app, sn, props)
 	clean_cov_by_device_sn(sn)
-	snax.self().post.fire_devices()
+	if enable_device_action then
+		snax.self().post.fire_device_action('mod', sn, props)
+	else
+		snax.self().post.fire_devices()
+	end
 end
 
 function accept.device_del(app, sn)
 	clean_cov_by_device_sn(sn)
-	snax.self().post.fire_devices(100)
+	if enable_device_action then
+		snax.self().post.fire_device_action('del', sn, props)
+	else
+		snax.self().post.fire_devices(100)
+	end
 end
 
 -- Delay application list post
