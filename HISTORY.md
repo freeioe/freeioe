@@ -10,6 +10,7 @@ v1.6.3 ()
 * Echo the data compress rate every 60 seconds
 * Improve the period buffer sleep length
 * Show the error information when failed to parse app's conf.json file
+* Fixed application delete with error will not cleanup the devices stuff
 
 
 v1.6.2 (2019-09-17)

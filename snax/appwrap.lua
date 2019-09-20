@@ -29,18 +29,22 @@ local function protect_call(app, func, ...)
 end
 
 local on_close = function(...)
+	local clean_up = function(...)
+		if sys_api then
+			sys_api:cleanup()
+		end
+		sys_api = nil
+		app = nil
+		return ...
+	end
+
 	if app then
 		local r, err = protect_call(app, 'close', ...)
 		if not r and err then
-			return nil, err
+			return clean_up(nil, err)
 		end
 	end
-	if sys_api then
-		sys_api:cleanup()
-	end
-	sys_api = nil
-	app = nil
-	return true
+	return clean_up(true)
 end
 
 local function fire_exception_event(info, data, level)
