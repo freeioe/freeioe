@@ -288,7 +288,7 @@ function accept.app_heartbeat_check()
 		if v.inst then
 			--- 180 seconds timeout, three times for app heart beart
 			if skynet.time() - v.last > 180 + 20 then
-				v.last = skynet.time() + 600 --- mark it as not timeout
+				v.last = skynet.time() + 180 --- mark it as not timeout
 				log.notice("::AppMgr:: App heartbeat timeout! Inst:", k)
 
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
