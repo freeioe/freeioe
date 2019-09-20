@@ -94,13 +94,13 @@ function response.stop(name, reason)
 
 	if app.inst then
 		local force_kill = function()
-			log.warning("::AppMgr:: Force to kill app "..name.." as it is not closed within 10 seconds")
+			log.warning("::AppMgr:: Force to kill app "..name.." as it is not closed within 60 seconds")
 			skynet.kill(app.inst.handle)
 
 			app.inst = nil
 		end
 
-		skynet.timeout(1000, function()
+		skynet.timeout(6000, function()
 			if force_kill then
 				force_kill()
 			end
@@ -286,8 +286,11 @@ end
 function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
-			if skynet.time() - v.last > 60 then
-				v.last = skynet.time() + 300 --- mark it as not timeout
+			--- 180 seconds timeout, three times for app heart beart
+			if skynet.time() - v.last > 180 + 20 then
+				v.last = skynet.time() + 600 --- mark it as not timeout
+				log.notice("::AppMgr:: App heartbeat timeout! Inst:", k)
+
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
 				snax.self().post.fire_event(sys_app, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, 'heartbeat timeout', data)
 				snax.self().req.restart(k, 'heartbeat timeout')

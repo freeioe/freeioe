@@ -11,6 +11,7 @@ v1.6.3 ()
 * Improve the period buffer sleep length
 * Show the error information when failed to parse app's conf.json file
 * Fixed application delete with error will not cleanup the devices stuff
+* Increase the app hearbeat time to avoid MQTT killed caused by connection timeout
 
 
 v1.6.2 (2019-09-17)

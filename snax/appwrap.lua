@@ -12,7 +12,7 @@ local mgr_snax = nil
 local sys_api = nil
 
 local cancel_ping_timer = nil
-local app_ping_timeout = 5000 -- ms
+local app_ping_timeout = 60000 -- ms -- 60 seconds
 
 local function protect_call(app, func, ...)
 	assert(app and func)
