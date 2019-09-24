@@ -43,7 +43,7 @@ if [ -f "luaclib/opcua.so" ]; then
 	mv luaclib/opcua.so ./opcua.so.bak~
 fi
 
-zip -r -q $RELEASE_DIR/$VERSION.zip * -x *~
+zip -r -q $RELEASE_DIR/$VERSION.zip * -x *~ -x *.un~ -x *.csv -x *.cnf
 rm -f version
 
 if [ -f "./opcua.so.bak~" ]; then
