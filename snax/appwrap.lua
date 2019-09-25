@@ -221,6 +221,12 @@ function init(name, conf, mgr_handle, mgr_type)
 		local s = string.format("API Version required is out of range. Required: %d. Current %d-%d",
 								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
 		app_log:error(s)
+		if m.API_VER > app_sys.API_VER then
+			app_log:error("Please **UPGRADE** FreeIOE to latest version for running this application.")
+		end
+		if m.API_VER < app_sys.API_MIN_VER then
+			app_log:error("Please **UPDATE** application code to run with current FreeIOE version.")
+		end
 		fire_exception_event(s, {sys_min_ver=app_sys.API_MIN_VER, sys_ver=ap_sys.API_VER, ver=m.API_VER})
 		return nil, s
 	else
