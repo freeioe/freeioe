@@ -1,5 +1,4 @@
 local blob = require 'ubox.blob'
-local basexx = require 'basexx'
 
 local class = require 'middleclass'
 
@@ -37,6 +36,7 @@ blob_msg.static.blob_info = msg_blob_info
 function blob_msg.static:parse(blob_info, raw, pos)
 	local self = self:allocate()
 	local pos = pos or 1
+	--local basexx = require 'basexx'
 	--print('parse blob_msg', basexx.to_hex(string.sub(raw, pos)))
 	local head = assert(blob:parse(blob_info, raw, pos))
 
@@ -221,7 +221,7 @@ function blob_msg:name()
 end
 
 function blob_msg:msg2lua()
-	local val = self._data
+	--local val = self._data
 	--print(self._name, #self._blobs)
 	if #self._blobs == 0 then
 		return self._name, self._data or {}

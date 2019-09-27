@@ -1,6 +1,6 @@
 local class = require 'middleclass'
 local skynet = require 'skynet'
-local log = require 'utils.log'
+--local log = require 'utils.log'
 
 local pb = class("_PERIOD_CONSUMER_LIB")
 
@@ -36,13 +36,13 @@ function pb:push(...)
 		end
 
 		--log.trace("Drop one data")
-		table.remove(self._buf, 1)	
+		table.remove(self._buf, 1)
 	end
 end
 
 function pb:_push_front(val_list)
 	--log.trace("_push_front", #self._buf, #val_list)
-	-- If there is no new data 
+	-- If there is no new data
 	if #self._buf == 0 then
 		self._buf = val_list
 		return

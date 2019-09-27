@@ -1,9 +1,9 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
-local queue = require 'skynet.queue'
+--local queue = require 'skynet.queue'
 local lockable_queue = require 'skynet.lockable_queue'
 local log = require 'utils.log'
-local sysinfo = require 'utils.sysinfo' 
+local sysinfo = require 'utils.sysinfo'
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
 local pkg_api = require 'utils.pkg_api'
@@ -11,7 +11,7 @@ local ioe = require 'ioe'
 
 local sys_lock = nil
 local app_lock = nil
-local task_lock = nil
+--local task_lock = nil
 local tasks = {}
 local aborting = false
 
@@ -25,9 +25,9 @@ local function get_ioe_dir()
 	return os.getenv('IOE_DIR') or lfs.currentdir().."/.."
 end
 
-local reserved_list = { 
-	"ioe", "ioe_frpc", "ioe_symlink", 
-	"UBUS", "CLOUD", "AppMgr", "CFG", "LWF", "EXT", 
+local reserved_list = {
+	"ioe", "ioe_frpc", "ioe_symlink",
+	"UBUS", "CLOUD", "AppMgr", "CFG", "LWF", "EXT",
 	"RunBatch", "BUFFER", "UPGRADER"
 }
 
@@ -60,6 +60,7 @@ local function fire_warning_event(info, data)
 	appmgr.post.fire_event('ioe', ioe.id(), event.LEVEL_WARNING, event.EVENT_SYS, info, data)
 end
 
+--[[
 local function xpcall_ret(channel, id, ok, ...)
 	if ok then
 		return action_result(channel, id, ...)
@@ -74,6 +75,7 @@ local function action_exec(channel, func)
 		return xpcall_ret(channel, id, xpcall(func, debug.traceback, id, args))
 	end
 end
+]]--
 
 --[[
 local function create_task(lock, task_func)
@@ -94,10 +96,16 @@ local function create_task(func, task_name, ...)
 	end
 
 	skynet.fork(function(task_name, ...)
-		tasks[coroutine.running()] = {
+		local co = coroutine.running()
+		tasks[co] = {
 			name = task_name
 		}
 		local r, err = func(...)
+		tasks[co] = nil
+
+		if not r then
+			log.error("::UPGRADER:: Task executed failed.", task_name, err)
+		end
 	end, task_name, ...)
 
 	return true, task_name.. " started"
@@ -110,8 +118,7 @@ end
 
 local function create_download(channel)
 	return function(inst_name, app_name, version, success_cb, ext)
-		local ext = ext or ".zip"
-		local down = pkg_api.create_download_func(inst_name, app_name, version, ext)
+		local down = pkg_api.create_download_func(inst_name, app_name, version, ext or '.zip')
 		return down(success_cb)
 	end
 end
@@ -386,7 +393,6 @@ end
 
 function command.install_missing_app(inst_name)
 	skynet.timeout(100, function()
-		local appmgr = snax.queryservice("appmgr")
 		local info = datacenter.get("APPS", inst_name)
 		if not info or info.islocal then
 			return
@@ -421,8 +427,6 @@ function command.uninstall_app(id, args)
 	else
 		return false, "Application uninstall failed, Error: "..err
 	end
-
-	return true, "Application has been uninstalled!"
 end
 
 function command.list_app()
@@ -442,9 +446,8 @@ end
 
 function command.pkg_enable_beta()
 	local fn = get_ioe_dir()..'/ipt/using_beta'
-	local f, err = io.open(fn, 'r')
-	if f then
-		f:close()
+
+	if lfs.attributes(fn, 'mode') then
 		return true
 	end
 
@@ -465,7 +468,7 @@ function command.pkg_user_access(auth_code)
 end
 
 local function get_core_name(name, platform)
-	local name = name
+	assert(name, 'Core name is required!')
 	local platform = platform or sysinfo.platform()
 	if platform then
 		--name = platform.."_"..name
@@ -477,13 +480,16 @@ local function get_core_name(name, platform)
 end
 
 local function download_upgrade_skynet(id, args, cb)
-	local is_windows = package.config:sub(1,1) == '\\'
+	--local is_windows = package.config:sub(1,1) == '\\'
 	local version, beta = parse_version_string(args.version)
 	local kname = get_core_name('skynet', args.platform)
+
+	--- TODO: Check about beta
 
 	return create_sys_download('__SKYNET__', kname, version, cb, ".tar.gz")
 end
 
+--[[
 local function get_ps_e()
 	local r, status, code = os.execute("ps -e > /dev/null")
 	if not r then
@@ -491,6 +497,7 @@ local function get_ps_e()
 	end
 	return "ps -e"
 end
+]]--
 
 local upgrade_sh_str = [[
 #!/bin/sh
@@ -555,7 +562,7 @@ then
 	rm -f $IOE_DIR/ipt/upgrade_no_ack
 
 	mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
-	if [ -f $IOE_DIR/ipt/skynet.tar.gz.new ] 
+	if [ -f $IOE_DIR/ipt/skynet.tar.gz.new ]
 	then
 		mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
 	fi
@@ -650,7 +657,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 end
 
 function command.upgrade_core(id, args)
-	local is_windows = package.config:sub(1,1) == '\\'
+	--local is_windows = package.config:sub(1,1) == '\\'
 
 	if args.no_ack then
 		local base_dir = get_ioe_dir()
@@ -704,6 +711,10 @@ function command.is_upgrading()
 	return false
 end
 
+function command.list_tasks()
+	return tasks
+end
+
 function command.system_reboot(id, args)
 	aborting = true
 	local delay = args.delay or 5
@@ -723,9 +734,7 @@ end
 
 local function check_rollback()
 	local fn = get_ioe_dir()..'/ipt/rollback'
-	local f, err = io.open(fn, 'r')
-	if f then
-		f:close()
+	if lfs.attributes(fn, 'mode') then
 		return true
 	end
 	return false
@@ -736,9 +745,9 @@ local function rollback_co()
 
 	local do_rollback = nil
 	do_rollback = function()
-		local wd = { version=sysinfo.version(), skynet_version=sysinfo.skynet_version() }
-		fire_warning_event('System will be rollback now!', wd)
-		log.error("::UPGRADER:: System will be rollback now!")
+		local data = { version=sysinfo.version(), skynet_version=sysinfo.skynet_version() }
+		fire_warning_event('System will be rollback!', data)
+		log.error("::UPGRADER:: System will be rollback!")
 
 		aborting = true
 		skynet.sleep(100)
@@ -773,7 +782,7 @@ map_sys_action('system_quit', true)
 skynet.start(function()
 	sys_lock = lockable_queue()
 	app_lock = lockable_queue(sys_lock, false)
-	task_lock = queue()
+	--task_lock = queue()
 
 	lfs.mkdir(get_ioe_dir().."/ipt")
 

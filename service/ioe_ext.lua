@@ -4,7 +4,6 @@ local queue = require 'skynet.queue'
 local datacenter = require 'skynet.datacenter'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
-local httpdown = require 'httpdown'
 local pkg_api = require 'utils.pkg_api'
 local lfs = require 'lfs'
 local ioe = require 'ioe'
@@ -22,8 +21,8 @@ local parse_version_string = pkg_api.parse_version_string
 local get_app_target_folder = pkg_api.get_app_folder
 
 local function make_inst_name(lib_name, version)
-	local version = version or 'latest'
-	return lib_name..'.'..version
+	assert(lib_name, 'The instance name is required!')
+	return lib_name..'.'..(version or 'latest')
 end
 
 local function parse_inst_name(inst_name)
@@ -52,6 +51,7 @@ local function cloud_update_ext_list()
 	cloud.post.ext_list('__fake_id__from_freeioe_'..os.time(), {})
 end
 
+--[[
 local function xpcall_ret(id, ok, ...)
 	if ok then
 		return action_result(id, ...)
@@ -65,6 +65,7 @@ local function action_exec(func)
 		return xpcall_ret(id, xpcall(func, debug.traceback, id, args))
 	end
 end
+]]--
 
 
 local function create_task(func, task_name, ...)
@@ -93,7 +94,7 @@ end
 local function get_app_depends(app_inst)
 	local exts = {}
 	local dir = get_app_target_folder(app_inst)
-	local f, err = io.open(dir.."/depends.txt", "r")
+	local f = io.open(dir.."/depends.txt", "r")
 	if f then
 		for line in f:lines() do
 			local name, version = string.match(line, '^([^:]+):(%d+)$')
@@ -103,7 +104,7 @@ local function get_app_depends(app_inst)
 		end
 		f:close()
 	end
-	return exts 
+	return exts
 end
 
 local function install_depends_to_app_ext(ext_inst, app_inst, folder)
@@ -119,7 +120,7 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 			if lfs.attributes(path, 'mode') == 'file' then
 				local lnpath = target_folder..filename
 				os.execute("rm -f "..lnpath)
-				log.debug('File Link ', path, lnpath)
+				log.debug('File link ', path, lnpath)
 				os.execute("ln -s "..path.." "..lnpath)
 			end
 		end
@@ -133,8 +134,8 @@ local function install_depends_to_app(ext_inst, app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
 
-function remove_depends(inst)
-	log.warning('::EXT:: Remove Extension', inst)
+local function remove_depends(inst)
+	log.warning('::EXT:: Remove extension', inst)
 	installed[inst] = nil
 	local target_folder = get_target_folder(inst)
 	os.execute("rm -rf "..target_folder)
@@ -147,7 +148,7 @@ local function list_installed()
 		if filename ~= '.' and filename ~= '..' then
 			if lfs.attributes(root..filename, 'mode') == 'directory' then
 				local name, version = parse_inst_name(filename)
-				log.debug('::EXT:: Installed Extension', name, version)
+				log.debug('::EXT:: Installed extension', name, version)
 				list[filename] = {
 					name = name,
 					version = version
@@ -164,7 +165,7 @@ end
 local function list_depends()
 	local app_list = datacenter.get("APPS") or {}
 	local depends = {}
-	for app_inst, v in pairs(app_list) do
+	for app_inst, _ in pairs(app_list) do
 		local exts = get_app_depends(app_inst)
 		for _, ext in ipairs(exts) do
 			local inst_name = make_inst_name(ext.name, ext.version)
@@ -181,7 +182,7 @@ end
 local function auto_clean_exts()
 	log.debug("::EXT:: Auto cleanup installed extensions")
 	local depends = list_depends()
-	for inst, v in pairs(installed) do
+	for inst, _ in pairs(installed) do
 		if not depends[inst] then
 			remove_depends(inst)
 		end
@@ -261,7 +262,7 @@ function command.install_ext(id, args)
 	end
 
 	return create_download(inst, name, version, function(path)
-		log.notice("Download Extension finished", name, version)
+		log.notice("Download extension finished", name, version)
 
 		local target_folder = get_target_folder(inst)
 		lfs.mkdir(target_folder)
@@ -269,6 +270,7 @@ function command.install_ext(id, args)
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
 		if r and status == 'exit' then
+			log.notice("Install extension finished", name, version, r, status)
 			installed[inst] = {
 				name = name,
 				version = version,
@@ -277,6 +279,7 @@ function command.install_ext(id, args)
 			cloud_update_ext_list()
 			return true
 		else
+			log.error("Install extention failed", name, version, r, status)
 			return false, "failed to unzip Extension"
 		end
 	end)
@@ -290,7 +293,7 @@ function command.upgrade_ext(id, args)
 	end
 
 	local name = args.name
-	local version, beta, editor = parse_version_string(args.version)
+	local version, beta, _ = parse_version_string(args.version)
 
 	--- Stop all applications depends on this extension
 	local depends = list_depends()
@@ -301,13 +304,18 @@ function command.upgrade_ext(id, args)
 	end
 
 	return create_download(inst, name, version, function(path)
-		log.notice("Download Extension finished", name, version)
+		log.notice("Download extension finished", name, version, beta)
 
 		local target_folder = get_target_folder(inst)
 		log.debug("tar xzf "..path.." -C "..target_folder)
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
-		log.notice("Install Extension finished", name, version, r, status)
+		if not r or status ~= 'exit' then
+			log.error("Install extention failed", name, version, r, status)
+			return false, "Extention upgradation failed to install"
+		end
+
+		log.notice("Install extension finished", name, version, r, status)
 		installed[inst] = {
 			name = name,
 			version = version
@@ -324,23 +332,29 @@ function command.upgrade_ext(id, args)
 end
 
 function command.pkg_check_update(ext, beta)
+	assert(ext, "Extention name required!")
+
 	local pkg_host = ioe.pkg_host_url()
-	local beta = beta and ioe.beta() 
-	local ext = 'ext/'..sysinfo.platform()..'/'..ext
-	return pkg_api.pkg_check_update(pkg_host, ext, beta)
+	local beta = beta and ioe.beta()
+	local ext_path = 'ext/'..sysinfo.platform()..'/'..ext
+	return pkg_api.pkg_check_update(pkg_host, ext_path, beta)
 end
 
 function command.pkg_check_version(ext, version)
+	assert(ext, "Extention name required!")
+
 	local pkg_host = ioe.pkg_host_url()
-	local ext = 'ext/'..sysinfo.platform()..'/'..ext
-	return pkg_api.pkg_check_version(pkg_host, ext, version)
+	local ext_path = 'ext/'..sysinfo.platform()..'/'..ext
+	return pkg_api.pkg_check_version(pkg_host, ext_path, version)
 end
 
 function command.pkg_latest_version(ext, beta)
+	assert(ext, "Extention name required!")
+
 	local pkg_host = ioe.pkg_host_url()
-	local beta = beta and ioe.beta() 
-	local ext = 'ext/'..sysinfo.platform()..'/'..ext
-	return pkg_api.pkg_latest_version(pkg_host, ext, beta)
+	local beta = beta and ioe.beta()
+	local ext_path = 'ext/'..sysinfo.platform()..'/'..ext
+	return pkg_api.pkg_latest_version(pkg_host, ext_path, beta)
 end
 
 function command.auto_clean()
@@ -359,7 +373,7 @@ skynet.start(function()
 		if f then
 			skynet.ret(skynet.pack(f(...)))
 		else
-			error(string.format("Unknown command %s", tostring(cmd)))
+			error(string.format("Unknown command %s from session %s-%s", tostring(cmd), tostring(session), tostring(address)))
 		end
 	end)
 	skynet.register ".ioe_ext"

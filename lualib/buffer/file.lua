@@ -15,7 +15,7 @@ function fb:initialize(file_folder, data_count_per_file, max_file_count, max_bat
 	self._files = {} -- file list that already in disk
 	self._buffer = {} -- data buffer list
 	self._fire_buffer = {}
-	self._fire_offset = 1 -- buffer offset. 
+	self._fire_offset = 1 -- buffer offset.
 	self._fire_index = nil -- file index. nil means there is no fire_buffer (file or buffer)
 	self._hash = 'FILE_BUF_UTILS_V1'
 
@@ -71,6 +71,7 @@ function fb:start(data_callback, batch_callback)
 
 	skynet.fork(function()
 		while not self._stop and self._callback do
+			local sleep_gap = 100
 			if batch_callback then
 				sleep_gap = self:_try_fire_data_batch(batch_callback)
 			else
@@ -121,6 +122,7 @@ function fb:_dump_buffer_to_file(buffer)
 	local file_path = self:_make_file_path(index)
 	local f, err = io.open(file_path, "w+")
 	if not f then
+		log.error("Failed to create data cache file", err)
 		return nil, err
 	end
 
@@ -192,19 +194,19 @@ function fb:_load_next_file()
 
 			if str then
 				--- if read ok decode content
-				str = self:_decompress(str)
-				local buffer, err = cjson.decode(str)
+				local dstr = self:_decompress(str)
+				local buffer, err = cjson.decode(dstr)
 				if buffer then
 					--- if decode ok return
 					return buffer
 				else
-					log.error('Decode data cache error! Index: ', index)
+					log.error('Decode data cache error! Index: ', index, err)
 				end
 			else
 				log.error('Read data cache file error! Index: ', index)
 			end
 		end
-		
+
 		-- continue with next file
 		table.remove(self._files, 1)
 		os.remove(self:_make_file_path(index))

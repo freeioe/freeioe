@@ -1,10 +1,10 @@
 local class = require 'middleclass'
 local blob = require 'ubox.blob'
-local basexx = require 'basexx'
 
 local blob_buf = class('ubox.blob_buf')
 
 function blob_buf.static:parse(blob_info, raw, pos)
+	--local basexx = require 'basexx'
 	--print('parse blob_buf', basexx.to_hex(string.sub(raw, pos or 1)))
 	local self = self:allocate()
 	local head = assert(blob:parse(blob_info, raw, pos))
@@ -15,11 +15,11 @@ function blob_buf.static:parse(blob_info, raw, pos)
 	--print('parse blob_buf data', basexx.to_hex(data))
 
 	local blobs = {}
-	local pos = 1
-	while string.len(data) > pos + blob.ATTR_ALIGN do
-		local b = assert(blob:parse(blob_info, data, pos))
+	local ipos = 1
+	while string.len(data) > ipos + blob.ATTR_ALIGN do
+		local b = assert(blob:parse(blob_info, data, ipos))
 		table.insert(blobs, b)
-		pos = pos + b:pad_len()
+		ipos = ipos + b:pad_len()
 	end
 
 	self._blobs = blobs

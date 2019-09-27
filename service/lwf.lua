@@ -3,7 +3,7 @@ local socket = require "skynet.socket"
 local co_m = require "skynet.coroutine"
 local httpd = require "http.httpd"
 local sockethelper = require "http.sockethelper"
-local urllib = require "http.url"
+--local urllib = require "http.url"
 local table = table
 local string = string
 

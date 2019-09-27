@@ -122,7 +122,7 @@ function response.set_conf(conf)
 	if not app then
 		return nil, "app is nil"
 	end
-	sys_api:set_conf(conf)	
+	sys_api:set_conf(conf)
 	if app.reload then
 		return protect_call(app, 'reload', conf)
 	end
@@ -227,7 +227,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		if m.API_VER < app_sys.API_MIN_VER then
 			app_log:error("Please **UPDATE** application code to run with current FreeIOE version.")
 		end
-		fire_exception_event(s, {sys_min_ver=app_sys.API_MIN_VER, sys_ver=ap_sys.API_VER, ver=m.API_VER})
+		fire_exception_event(s, {sys_min_ver=app_sys.API_MIN_VER, sys_ver=app_sys.API_VER, ver=m.API_VER})
 		return nil, s
 	else
 		if not m.API_VER then

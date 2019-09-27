@@ -193,8 +193,6 @@ function response.app_rename(inst, new_name, reason)
 	if not inst or not new_name then
 		return nil, "Incorrect params"
 	end
-	local inst = inst
-	local new_name = new_name
 	local reason = reason or "Rename from "..inst.." to "..new_name
 	if not applist[inst] then
 		return nil, "App not exists!"
@@ -243,7 +241,7 @@ function accept.app_stop(inst, reason)
 	local v = dc.get("APPS", inst)
 	if not v then return end
 	skynet.fork(function()
-		snax.self().req.stop(inst, reason or 'stop application from accept.app_stop') 
+		snax.self().req.stop(inst, reason or 'stop application from accept.app_stop')
 	end)
 end
 
@@ -251,14 +249,14 @@ function accept.app_restart(inst, reason)
 	local v = dc.get("APPS", inst)
 	if not v then return end
 	skynet.fork(function()
-		snax.self().req.restart(inst, reason or 'restart application from accept.app_stop') 
+		snax.self().req.restart(inst, reason or 'restart application from accept.app_stop')
 	end)
 end
 
 function accept.app_event(event, inst_name, ...)
 	if event == 'create' then
 		if not applist[inst_name] then
-			applist[inst_name] = {conf=conf}
+			applist[inst_name] = {conf={}}
 		end
 	end
 	if event == 'rename' then
@@ -338,7 +336,7 @@ function accept.close_all(reason)
 end
 
 function init(...)
-	log.info("::AppMgr:: service starting...")
+	log.info("::AppMgr:: App manager service starting...")
 
 	local chn = mc.new()
 	dc.set("MC", "APP", "DATA", chn.channel)

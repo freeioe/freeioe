@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 local snax = require "skynet.snax"
 local datacenter = require "skynet.datacenter"
-local cjson = require "cjson.safe"
 local log = require 'utils.log'
 
 local arg = table.pack(...)
@@ -38,8 +37,7 @@ local batch_env = {
 			sn = sn
 		})
 		if not r then
-			local err = "::RunBatch:: Call install_app failed. "..err
-			log.error(err)
+			log.error("::RunBatch:: Call install_app failed.", err)
 		end
 	end,
 	REMOVE_APP = function(inst)
@@ -48,8 +46,7 @@ local batch_env = {
 			inst = inst,
 		})
 		if not r then
-			local err = "::RunBatch:: Call uninstall_app failed. "..err
-			log.error(err)
+			log.error("::RunBatch:: Call uninstall_app failed.", err)
 		end
 	end,
 	UPGRADE_APP = function(inst, version, conf, sn)
@@ -61,8 +58,7 @@ local batch_env = {
 			conf = conf
 		})
 		if not r then
-			local err = "::RunBatch:: Call upgrade_app failed. "..err
-			log.error(err)
+			log.error("::RunBatch:: Call upgrade_app failed.", err)
 		end
 	end,
 	CONF_APP_SCRIPT = function(inst, script)
@@ -94,6 +90,7 @@ local batch_env = {
 		post_action_result('app', id, r, err or "Done")
 	end,
 	SET_APP_OPTION = function(inst, option, value)
+		local id = gen_task_id('app', "Set application "..inst..' option')
 		local appmgr = snax.queryservice('appmgr')
 		local r, err = appmgr.req.app_option(inst, option, value)
 		post_action_result('app', id, r, err or "Done")
@@ -107,7 +104,7 @@ local batch_env = {
 	CLEAN_APPS = function()
 		local appmgr = snax.queryservice('appmgr')
 		local list = appmgr.req.list()
-		for k, v in pairs() do
+		for k, _ in pairs(list) do
 			REMOVE_APP(k)
 		end
 	end,
@@ -123,10 +120,10 @@ local batch_env = {
 		end
 	end,
 	UPGRADE_SYS = function(version, skynet_version, need_ack)
-		local id = gen_task_id('sys', "Upgrade system to version "..version.." "..(skynet_version and ("with skynet "..skynet_version) or "without skynet"))
+		local id = gen_task_id('sys', "Upgrade system to ver "..(version or 'N/A')..", skynet "..(skynet_version or 'N/A'))
 		if not version then
 			post_action_result('app', id, false, "Version is required!")
-			return 
+			return
 		end
 		local no_ack = not need_ack
 		local skynet_args = skynet_version and {version=skynet_version} or nil
@@ -171,6 +168,6 @@ skynet.start(function()
 		end
 	end
 
-	--- Cleanup script 
+	--- Cleanup script
 	datacenter.set("BATCH", batch_id, nil)
 end)

@@ -2,7 +2,6 @@ local class = require 'middleclass'
 local socket = require 'skynet.socket'
 local ublob = require 'ubox.blob'
 local ublob_buf = require 'ubox.blob_buf'
-local basexx = require 'basexx'
 
 local umsg = class('ubus.msg')
 
@@ -33,6 +32,7 @@ function umsg.static:read_sock(sock, blob_info)
 	local self = self:allocate()
 	local min_len = umsg.HDR_LEN + ublob.ATTR_HDR_LEN
 	local hdr_data, err = socket.read(sock, min_len)
+	--local basexx = require 'basexx'
 	--print('read_sock', basexx.to_hex(hdr_data))
 	if not hdr_data or string.len(hdr_data) < min_len then
 		return nil, "Not enough data for ubus message header, error: "..err
@@ -84,7 +84,7 @@ function umsg:parse_hdr(blob_info, raw)
 end
 
 function umsg:initialize(msg_type, seq, peer, buf)
-	self._version = umsg.MSG_VERSION 
+	self._version = umsg.MSG_VERSION
 	self._type = msg_type
 	self._seq = seq
 	self._peer = peer

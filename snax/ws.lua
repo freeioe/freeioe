@@ -5,7 +5,6 @@ local crypt = require 'skynet.crypt'
 local ioe = require 'ioe'
 local websocket = require "websocket"
 local httpd = require "http.httpd"
-local urllib = require "http.url"
 local sockethelper = require "http.sockethelper"
 local cjson = require 'cjson.safe'
 local log = require 'utils.log'
@@ -181,7 +180,7 @@ function msg_handler.login(client, id, code, data)
 	end
 end
 
-function __fire_result(client, id, code, r, err)
+local function __fire_result(client, id, code, r, err)
 	local result = r and true or false
 	return client:send({id = id, code = code, data = { result = result, message = err or "Done" }})
 end

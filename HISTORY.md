@@ -3,6 +3,13 @@
 
 # Release history
 
+v1.6.4 ()
+------------------
+
+* Show more tips on API_VER error
+* Refine the log content
+
+
 v1.6.3 (2019-09-20)
 ------------------
 

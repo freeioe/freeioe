@@ -21,7 +21,7 @@ function command.GET(app, ...)
 	return dc.get('APPS', app, ...)
 end
 
-function command.SET(...)
+function command.SET(app, ...)
 	return dc.set('APPS', app, ...)
 end
 
@@ -45,7 +45,6 @@ local function sys_defaults()
 end
 
 local function cloud_defaults()
-	local ioe_sn = sysinfo.ioe_sn()
 	return {
 		HOST = "ioe.thingsroot.com",
 		PORT = 1883,
@@ -121,12 +120,12 @@ local function on_cfg_failure()
 		f:write(content)
 		f:close()
 		os.execute('sh '..sh_file)
-		log.info("::CFG:: Finished crash backup")
+		log.info("::CFG:: Crash backup script finished")
 	else
-		log.error("::CFG:: Cannot create crash backup script file. ", err)
+		log.error("::CFG:: Failed to create crash backup script, "..err)
 	end
 	skynet.sleep(100)
-	ioe.abort()
+	skynet.abort()
 end
 
 
@@ -145,30 +144,33 @@ local function load_cfg(path)
 
 	local str = file:read("*a")
 	file:close()
+
+	--- Check the configuration md5
 	local sum = md5.sumhexa(str)
-	local mfile, err = io.open(path..".md5", "r")
+	local mfile = io.open(path..".md5", "r")
 	if mfile then
 		local md5s = mfile:read("*l")
 		mfile:close()
 		if md5s ~= sum then
-			log.error("::CFG:: File md5 checksum error", md5s, sum)
-			log.error("::CFG:: System is aborting, please correct this error manually!")
+			log.error("::CFG:: Configuration file checksum error.", md5s, sum)
+			log.error("::CFG:: FreeIOE is aborting, please correct this error manually!")
 			on_cfg_failure()
 		end
 	else
-		log.warning("::CFG:: Config File md5 file is missing, try create new one")
-		local mfile, err = io.open(path..".md5", "w+")
+		log.warning("::CFG:: Configuration checksum file is missing, create it")
+		local mfile, merr = io.open(path..".md5", "w+")
 		if mfile then
 			mfile:write(sum)
 			mfile:close()
 		else
-			log.warning("::CFG:: Failed to open md5 file for writing")
+			log.warning("::CFG:: Failed to open checksum file for writing.", merr)
 		end
 	end
 
-	db = cjson.decode(str) or {}
+	local db = cjson.decode(str) or {}
 
-	if not db.sys then
+	--- The eariler version of FreeIOE put the ID/CLOUD_ID/USING_BETA in cloud sub-node
+	if not db.sys and db.cloud then
 		db.sys = {}
 		db.sys.ID = db.cloud.ID
 		db.cloud.ID = db.cloud.CLOUD_ID
@@ -178,8 +180,11 @@ local function load_cfg(path)
 		db.cloud.USING_BETA = nil
 	end
 
+	--- Load the cloud/sys defaults
 	db.cloud = set_cloud_defaults(db.cloud)
 	db.sys = set_sys_defaults(db.sys)
+
+	--- Upload value to datacenter
 	dc.set("CLOUD", db.cloud or {})
 	dc.set("SYS", db.sys or {})
 	dc.set("APPS", db.apps or {})
@@ -194,11 +199,13 @@ local function save_cfg(path, content, content_md5sum)
 	if not file then
 		return nil, err
 	end
-	local mfile, err = io.open(path..".md5", "w+")
+
+	local mfile, merr = io.open(path..".md5", "w+")
 	if not mfile then
-		return nil, err
+		return nil, merr
 	end
 	db_modification = os.time()
+
 	file:write(content)
 	file:close()
 
@@ -211,10 +218,10 @@ end
 local function save_cfg_cloud(content, content_md5sum, rest)
 	assert(content, content_md5sum)
 	if not rest then
-		return nil, "Restful api missing"
+		return nil, "Restful api missing, cannot upload configuration to cloud"
 	end
 
-	log.info("::CFG:: Upload cloud config start")
+	log.info("::CFG:: Start to upload configuration to cloud")
 
 	local id = dc.get("CLOUD", "ID") or dc.wait("SYS", "ID")
 	local url = "/conf_center/upload_device_conf"
@@ -226,10 +233,10 @@ local function save_cfg_cloud(content, content_md5sum, rest)
 	}
 	local status, body = rest:post(url, params)
 	if not status or status ~= 200 then
-		log.warning("::CFG:: Saving cloud config failed", status or -1)
-		return nil, "Saving cloud configuration failed!"
+		log.warning("::CFG:: Upload configuration failed. Status:", status or -1, body)
+		return nil, "Upload configuration failed!"
 	else
-		log.info("::CFG:: Upload cloud config done!")
+		log.info("::CFG:: Upload configuration done!")
 		return true
 	end
 end
@@ -237,39 +244,37 @@ end
 local function load_cfg_cloud(cfg_id, rest)
 	assert(cfg_id)
 	if not rest then
-		return nil, "Restful api missing"
+		return nil, "Restful api missing, cannot download configruation from cloud"
 	end
 
-	log.info("::CFG:: Download cloud config start")
+	log.info("::CFG:: Start to download configuration from cloud")
 
 	local id = dc.get("CLOUD", "ID") or dc.wait("SYS", "ID")
 	local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
 	if not status or status ~= 200 then
-		log.warning("::CFG:: Get cloud config failed", status or -1, body)
-		return nil, "Failed to download device configuration "..cfg_id
+		log.warning("::CFG:: Download configuration failed. Status:", status or -1, body)
+		return nil, "Failed to download configuration, id:"..cfg_id
 	end
 	local new_cfg = cjson.decode(body)
 
-	local content = new_cfg.data
-	local md5sum = new_cfg.md5
+	local new_content = new_cfg.data
+	local new_md5sum = new_cfg.md5
 
-	local sum = md5.sumhexa(content)
-	if sum ~= md5sum then
-		log.warning("::CFG:: MD5 Checksum error", sum, md5sum)
-		return nil, "The downloaded configuration hasing is incorrect!"
+	local sum = md5.sumhexa(new_content)
+	if sum ~= new_md5sum then
+		log.warning("::CFG:: MD5 Checksum failed.", sum, new_md5sum)
+		return nil, "The fetched configuration checksum incorrect!"
 	end
 
-	local r, err = save_cfg(db_file, str, sum)
+	local r, err = save_cfg(db_file, new_content, new_md5sum)
 	if not r  then
-		log.warning("::CFG:: Saving configurtaion failed", err)
+		log.warning("::CFG:: Saving configurtaion failed.", err)
 		return nil, "Saving configuration failed!"
 	end
 
-	log.notice("::CFG:: Download cloud config finished. FreeIOE reboot in five seconds!!")
-	skynet.timeout(500, function()
-		-- Quit skynet
-		skynet.abort()
-	end)
+	log.notice("::CFG:: Download configuration finished. FreeIOE is reloading!!")
+	ioe.abort()
+
 	return true
 end
 
@@ -279,20 +284,26 @@ function command.SAVE(opt_path)
 		local r, err = save_cfg(opt_path or db_file, str, sum)
 		if r then
 			md5sum = sum
+		else
+			return nil, err
 		end
 
 		os.execute('sync')
 
 		local cfg_upload = dc.get("SYS", "CFG_AUTO_UPLOAD")
 		if cfg_upload then
-			save_cfg_cloud(str, sum, db_restful)
+			return save_cfg_cloud(str, sum, db_restful)
+		else
+			return true
 		end
 	end
 end
 
+--[[
 function command.CLEAR()
 	db = {}
 end
+]]--
 
 function command.DOWNLOAD(id, host)
 	local rest = host and restful:new(host) or db_restful
@@ -307,12 +318,12 @@ end
 
 local function init_restful()
 	local cfg_upload = dc.get("SYS", "CFG_AUTO_UPLOAD")
-	if cfg_upload then
-		log.info("::CFG:: System configuration upload enabled!", host)
-	end
+	local cfg_host = dc.get("SYS", "CNF_HOST_URL")
 
-	local host = dc.get("SYS", "CNF_HOST_URL")
-	db_restful = restful:new(host)
+	if cfg_upload and cfg_host then
+		log.info("::CFG:: Configuration cloud upload enabled! Server:", cfg_host)
+		db_restful = restful:new(cfg_host)
+	end
 end
 
 skynet.start(function()
@@ -327,7 +338,7 @@ skynet.start(function()
 				skynet.ret(skynet.pack(f(...)))
 			end, ...)
 		else
-			error(string.format("Unknown command %s", tostring(cmd)))
+			error(string.format("Unknown command %s from session %s-%s", tostring(cmd), tostring(session), tostring(address)))
 		end
 	end)
 	skynet.register ".cfg"

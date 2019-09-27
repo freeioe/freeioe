@@ -8,7 +8,6 @@ local ublob_buf = require 'ubox.blob_buf'
 local ublob_msg = require 'ubox.blob_msg'
 local umsg = require 'ubus.msg'
 local basexx = require 'basexx'
-local cjson = require 'cjson'
 
 local ubus = class('ubus')
 
@@ -199,8 +198,8 @@ function ubus:start_request(msg_id, ubuf, peer)
 	local seq = self.__req_seq
 	local msg = umsg:new(msg_id, seq, peer, ubuf)
 	self.__req_seq = self.__req_seq + 1
-	
-	--print("Send", seq, basexx.to_hex(tostring(msg)))
+
+	--print("Send", seq, basexx.to_hex(tostring(msg))
 	-- TODO:
 	--local r, err = socket.write(self.__sock, tostring(msg))
 	local r, err = self.__client:send(tostring(msg))
@@ -249,7 +248,7 @@ function ubus:dispatch_response(msg)
 		--print('DATA------------')
 		--msg:dbg_print()
 		--print('DATA------------')
-		
+
 		local data = self.__result_data[co] or {}
 		table.insert(data, msg)
 		self.__result_data[co] = data
@@ -344,7 +343,7 @@ function ubus:process_obj_message(req, obj_id, method, msg)
 		--print(basexx.to_hex(tostring(v)))
 		local msg = assert(ublob_msg:from_blob(ubus.blob_info, v))
 
-		local name, val = msg:msg2lua() 
+		local name, val = msg:msg2lua()
 		if string.len(name) > 0 then
 			data[name] = val
 		else
@@ -388,7 +387,7 @@ function ubus:request(request_id, buf, peer)
 
 	local co = coroutine.running()
 	skynet.wait(co)
-	
+
 	local result = self.__result[co]
 	local result_code = self.__result_code[co]
 	local result_data = self.__result_data[co]
@@ -428,7 +427,7 @@ function ubus:objects(path)
 		for k,v in pairs(signature) do
 			local msg = assert(ublob_msg:from_blob(ubus.blob_info, v))
 
-			local name, val = msg:msg2lua() 
+			local name, val = msg:msg2lua()
 			items[name] = val
 		end
 
@@ -436,9 +435,11 @@ function ubus:objects(path)
 			id = id,
 			path = path,
 			type = type_id,
-			signature = items 
+			signature = items
 		})
 	end
+
+	--local cjson = require 'cjson'
 	--print(cjson.encode(results))
 
 	return results
@@ -537,7 +538,7 @@ function ubus:call(path, method, params)
 	if not id then
 		return nil, err
 	end
-	
+
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, id)
 	buf:add_string(ubus.ATTR_METHOD, method)
@@ -559,7 +560,7 @@ function ubus:call(path, method, params)
 			--print(basexx.to_hex(tostring(v)))
 			local msg = assert(ublob_msg:from_blob(ubus.blob_info, v))
 
-			local name, val = msg:msg2lua() 
+			local name, val = msg:msg2lua()
 			if string.len(name) > 0 then
 				items[name] = val
 			else

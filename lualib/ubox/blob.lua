@@ -1,5 +1,5 @@
 local class = require 'middleclass'
-local basexx = require 'basexx'
+--local basexx = require 'basexx'
 
 local blob = class('ubox.blob')
 
@@ -46,16 +46,15 @@ local blob_type_unpack = {
 	uint64 = function(blob_info, data, pos, len) return string.unpack('>I8', data, pos) end,
 	double = function(blob_info, data, pos, len) return string.unpack('>d', data, pos) end,
 	nested = function(blob_info, data, pos, len)
-		local data = data
 		if pos and pos ~= 1 then
 			data = string.sub(data, pos, pos + len - 1)
 		end
 		local blobs = {}
-		local pos = 1
-		while string.len(data) > pos + blob.ATTR_ALIGN do
-			local b = blob:parse(blob_info, data, pos)
+		local ipos = 1
+		while string.len(data) > ipos + blob.ATTR_ALIGN do
+			local b = blob:parse(blob_info, data, ipos)
 			table.insert(blobs, b)
-			pos = pos + b:pad_len()
+			ipos = ipos + b:pad_len()
 		end
 		return blobs
 	end,
@@ -121,12 +120,12 @@ function blob.static:parse(blob_info, raw, pos, only_hdr)
 	local id_len = string.unpack('>I4', raw, pos)
 
 	self._id = (id_len & blob.ATTR_ID_MASK) >> blob.ATTR_ID_SHIFT
-	self._ext = (id_len & blob.ATTR_EXTENDED) == blob.ATTR_EXTENDED 
+	self._ext = (id_len & blob.ATTR_EXTENDED) == blob.ATTR_EXTENDED
 	self._len = (id_len & blob.ATTR_LEN_MASK) - blob.ATTR_HDR_LEN
 
 	self._blob_info = blob_info
 	local info = self._blob_info and self._blob_info[self._id] or nil
-	
+
 	--local info_type = info and get_type(info.type) or 'N/A'
 	--print('blob parse result id:'..self._id.. "\text:"..tostring(self._ext).."\tlen:"..self._len.."\tinfo:"..info_type)
 
@@ -134,14 +133,15 @@ function blob.static:parse(blob_info, raw, pos, only_hdr)
 		-- for reading socket hack
 		return self
 	end
-	local info_type = info and get_type(info.type) or 'N/A'
+
+	--local info_type = info and get_type(info.type) or 'N/A'
 	--print('blob parse result id:'..self._id.. "\text:"..tostring(self._ext).."\tlen:"..self._len.."\tinfo:"..info_type)
 
 	-- decode data
 	if self._len > 0 then
-		local pad_len = self:pad_len()
+		--local pad_len = self:pad_len()
 		local raw_len = self:raw_len()
-		
+
 		local start_pos = pos + blob.ATTR_HDR_LEN
 		local end_pos = pos + raw_len - 1
 		--print('Blob[data]: ', basexx.to_hex(string.sub(raw, pos, end_pos)))
@@ -155,7 +155,7 @@ function blob.static:parse(blob_info, raw, pos, only_hdr)
 			self._data = raw_data
 		end
 	else
-		local end_pos = pos + blob.HRD_LEN - 1
+		--local end_pos = pos + blob.HRD_LEN - 1
 		--print('Blob[no_data]: ', basexx.to_hex(string.sub(raw, pos, end_pos)))
 	end
 
@@ -213,7 +213,7 @@ function blob:pad_len()
 end
 
 function blob:pack_data()
-	local raw_len = self:raw_len() 
+	local raw_len = self:raw_len()
 	local pad_len = self:pad_len()
 
 	--print('blob tostring', self._id, self._len, self._ext, string.len(self._data))

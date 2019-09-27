@@ -10,10 +10,6 @@ local ioe = require 'ioe'
 local api = nil
 local bus = nil
 
-local handle_to_process = function(handle)
-	return string.format("%08x", handle)
-end
-
 --[[
 -- Api Handler
 --]]

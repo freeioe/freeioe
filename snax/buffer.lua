@@ -1,6 +1,5 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
-local socket = require 'skynet.socket'
 local crypt = require 'skynet.crypt'
 local log = require 'utils.log'
 local app_api = require 'app.api'
