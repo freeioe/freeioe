@@ -22,7 +22,7 @@ local client_class = {}
 function client_class:send(data)
 	local str, err = cjson.encode(data)
 	if not str then
-		log.error("::WS:: WebSocket cjson encode error", err)
+		log.error("::WS:: CJson encode error", err)
 		return nil, err
 	end
 
@@ -378,7 +378,7 @@ local ws_socket = nil
 function init()
 	http_api = restful("127.0.0.1:8808")
 	local address = "0.0.0.0:8818"
-    log.notice("::WS:: WebSocket Listening", address)
+    log.notice("::WS:: listening on", address)
 
     local id = assert(socket.listen(address))
     socket.start(id , function(id, addr)
@@ -422,5 +422,5 @@ end
 function exit(...)
 	connect_buffer_service(false)
 	socket.close(ws_socket)
-	log.notice("::WS:: WebSocket service stoped!")
+	log.notice("::WS:: Service stoped!")
 end

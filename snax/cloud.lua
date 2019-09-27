@@ -819,7 +819,7 @@ connect_proc = function(clean_session, username, password)
 
 			-- Only fire apps and device once
 			if not apps_devices_fired then
-				log.info("::CLOUD:: ON_CONNECT fire devices and apps")
+				log.info("::CLOUD:: ON_CONNECT upload devices and apps list")
 				apps_devices_fired = true
 				mqtt_last = 0  -- reset last
 				snax.self().post.fire_devices()
@@ -905,9 +905,9 @@ connect_proc = function(clean_session, username, password)
 
 	--- disconnect client and destory it
 	client:disconnect()
-	log.notice("::CLOUD:: Connection Closed!")
+	log.notice("::CLOUD:: Connection closed!")
 	client:destroy()
-	log.notice("::CLOUD:: Client Destroyed!")
+	log.notice("::CLOUD:: Connection destroyed!")
 
 	--- wakeup close connection waitor
 	if close_connection then
@@ -927,7 +927,7 @@ function response.disconnect()
 	skynet.wait(close_connection)
 	close_connection = nil
 
-	log.notice("::CLOUD:: Connection Closed!")
+	log.notice("::CLOUD:: Connection closed!")
 	return true
 end
 
@@ -1006,7 +1006,7 @@ function accept.enable_data_one_short(id, period)
 	end
 
 	enable_data_upload = true
-	log.debug("::CLOUD:: data one-short upload enabled!")
+	log.debug("::CLOUD:: Data one-short upload enabled!")
 
 	if id then
 		--- only fire action result and data snapshot if has id
@@ -1020,7 +1020,7 @@ function accept.enable_data_one_short(id, period)
 		if cov then
 			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
-		log.debug("::CLOUD:: data one-short upload disabled!")
+		log.debug("::CLOUD:: Data one-short upload disabled!")
 	end)
 end
 
@@ -1049,7 +1049,7 @@ function accept.enable_stat(id, enable)
 		if stat_cov then
 			stat_cov:clean()
 		end
-		log.debug("::CLOUD:: stat data upload disabled!", enable)
+		log.debug("::CLOUD:: Stat data upload disabled!", enable)
 	else
 		snax.self().post.fire_stat_snapshot()
 	end
@@ -1063,7 +1063,7 @@ function accept.enable_log(id, sec)
 		snax.self().post.action_result('sys', id, false, err)
 		return
 	end
-	--log.debug("::CLOUD:: enable log upload for "..sec.." seconds")
+	--log.debug("::CLOUD:: Enable log upload for "..sec.." seconds")
 
 	if sec and sec > 0 then
 		enable_log_upload = math.floor(skynet.time()) + sec
@@ -1563,9 +1563,9 @@ function accept.action_result(action, id, result, message)
 			timestamp_str = os.date(),
 		}
 		if result then
-			log.notice("::CLOUD:: Action Result: ", action, id, result, message)
+			log.notice("::CLOUD:: Action result: ", action, id, result, message)
 		else
-			log.warning("::CLOUD:: Action Result: ", action, id, result, message)
+			log.warning("::CLOUD:: Action result: ", action, id, result, message)
 		end
 		mqtt_client_publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end

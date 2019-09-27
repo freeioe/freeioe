@@ -18,7 +18,7 @@ local function protect_call(app, func, ...)
 	assert(app and func)
 	local f = app[func]
 	if not f then
-		return nil, "App has no function "..func
+		return nil, "Application has no function "..func
 	end
 
 	local r, er, err = xpcall(f, debug.traceback, app, ...)
@@ -69,7 +69,7 @@ local function work_proc()
 			timeout = tonumber(t) or timeout
 		else
 			if err then
-				app_log:warning('App.run return error:', err)
+				app_log:warning('App.run returns error:', err)
 				fire_exception_event('Application run loop error!', { err=err }, event.LEVEL_WARNING)
 
 				timeout = timeout * 2 -- Double timeout
@@ -148,7 +148,7 @@ end
 
 function accept.app_post(msg, ...)
 	if not app then
-		app_log:warning("app is nil when fire event", msg)
+		app_log:warning("App is nil when fire event", msg)
 		return false
 	end
 
@@ -167,7 +167,7 @@ function accept.app_post(msg, ...)
 				app_log:trace(err)
 			end
 		else
-			app_log:warning("no handler for post message "..msg)
+			app_log:warning("No handler for post message "..msg)
 		end
 	end
 end
@@ -181,15 +181,15 @@ function init(name, conf, mgr_handle, mgr_type)
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 	app_log = sys_api:logger()
 
-	app_log:info("App starting...")
+	app_log:info("Application starting...")
 	package.path = package.path..";./ioe/apps/"..name.."/?.lua;./ioe/apps/"..name.."/?.luac"..";./ioe/apps/"..name.."/lualib/?.lua;./ioe/apps/"..name.."/lualib/?.luac"
 	package.cpath = package.cpath..";./ioe/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
 	local f, err = io.open("./ioe/apps/"..name.."/app.lua", "r")
 	if not f then
-		app_log:warning("App's app.lua does not exits!, Try to install it")
+		app_log:warning("There is no app.lua!, Try to install it")
 		skynet.call(".upgrader", "lua", "install_missing_app", name)
-		return nil, "App does not exits!"
+		return nil, "Application does not exits!"
 	end
 	f:close()
 
@@ -203,14 +203,14 @@ function init(name, conf, mgr_handle, mgr_type)
 
 	local lf, err = loadfile("./ioe/apps/"..name.."/app.lua")
 	if not lf then
-		local info = "Loading app failed."
+		local info = "Loading application failed."
 		app_log:error(info, err)
 		fire_exception_event(info, {err=err})
 		return nil, err
 	end
 	local r, m = xpcall(lf, debug.traceback)
 	if not r then
-		local info = "Loading app failed."
+		local info = "Loading application failed."
 		app_log:error(info, m)
 		fire_exception_event(err, {err=m})
 		return nil, m
@@ -231,15 +231,15 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, s
 	else
 		if not m.API_VER then
-			app_log:warning("API Version is not specified, please use it only for development")
+			app_log:warning("API_VER is not specified, please use it only for development")
 		end
 	end
 
 	if not m.new and m.App then
 		r, err = xpcall(m.App.new, debug.traceback, app_name, sys_api, conf)
 		if not r then
-			app_log:error("Create App instance failed.", err)
-			fire_exception_event("Create App instance failed.", {err=err})
+			app_log:error("Create application instance failed.", err)
+			fire_exception_event("Create application instance failed.", {err=err})
 			return nil, err
 		end
 		app = err
@@ -248,23 +248,23 @@ function init(name, conf, mgr_handle, mgr_type)
 
 	r, err = xpcall(m.new, debug.traceback, m, app_name, sys_api, conf)
 	if not r then
-		app_log:error("Create App instance failed.", err)
-		fire_exception_event("Create App instance failed.", {err=err})
+		app_log:error("Create application instance failed.", err)
+		fire_exception_event("Create application instance failed.", {err=err})
 		return nil, err
 	end
 	app = err
 end
 
 function exit(...)
-	app_log:info("App closing...")
+	app_log:info("Application closing...")
 	if cancel_ping_timer then
 		cancel_ping_timer()
 		cancel_ping_timer = nil
 	end
 	local r, err = on_close(...)
 	if not r then
-		app_log:error(err or 'Unknown closed error')
+		app_log:error(err or 'Unknown application close error')
 		--fire_exception_event("App closed failure.", {err=err})
 	end
-	app_log:info("App closed!")
+	app_log:info("Application closed!")
 end

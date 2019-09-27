@@ -625,7 +625,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	assert(ioe_path or skynet_path)
 	local ioe_path = ioe_path or '/IamNotExits.unknown'
 	local skynet_path = skynet_path or '/IamNotExits.unknown'
-	log.warning("::UPGRADER:: Core System Upgrade....")
+	log.warning("::UPGRADER:: Core system upgradation starting....")
 	log.trace("::UPGRADER::", ioe_path, skynet_path)
 	--local ps_e = get_ps_e()
 
@@ -652,7 +652,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 
 	aborting = true
 	ioe.abort()
-	log.warning("::UPGRADER:: Core system upgradation Done!")
+	log.warning("::UPGRADER:: Core system upgradation done!")
 	return true, "System upgradation is done!"
 end
 
