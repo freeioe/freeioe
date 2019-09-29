@@ -1,5 +1,6 @@
 local class = require 'middleclass'
 local cjson = require 'cjson.safe'
+local utimer = require 'utils.timer'
 
 local sum = class('Continue_Count_LIB')
 
@@ -30,28 +31,30 @@ local function calc_save_time(now, save_span)
 	return save_time
 end
 
-function sum:migrate_from_v1(opt)
+local function migrate_from_v1(opt)
 	local path = (opt.path or '/var/run')..'/ioe_sum_'
 	local filename = path..opt.key..'_'..opt.span
 
 	local f, err = io.open(filename, 'r')
-	if f then
-		local str = f:read('*a')
-		local value = cjson.decode(str)
-		f:close()
-
-		local new_value = {}
-		for k, v in pairs(value) do
-			if string.sub(k, 1, 2) ~= '__' then
-				new_value[k] = {
-					base = value['__'..k],
-					value = v,
-					delta = 0
-				}
-			end
-		end
-		return new_value
+	if not f then
+		return nil, err
 	end
+
+	local str = f:read('*a')
+	local value = cjson.decode(str)
+	f:close()
+
+	local new_value = {}
+	for k, v in pairs(value) do
+		if string.sub(k, 1, 2) ~= '__' then
+			new_value[k] = {
+				base = value['__'..k],
+				value = v,
+				delta = 0
+			}
+		end
+	end
+	return new_value
 end
 
 function sum:initialize(opt)
@@ -79,13 +82,20 @@ function sum:initialize(opt)
 			end
 			f:close()
 		else
-			self._value = self:migrate_from_v1(opt) or {}
+			self._value = migrate_from_v1(opt) or {}
 		end
 	end
 	self._opt = opt
+	self._opt_on_reset = opt.on_reset
+
+	self._timer = utimer:new(function()
+		self:check_save()
+	end, 60, true) --- every minute
+	self._timer:start()
 end
 
 function sum:__gc()
+	self._timer:stop()
 	self:save()
 end
 
@@ -128,6 +138,9 @@ function sum:get(key)
 end
 
 function sum:reset()
+	if self._opt_on_reset then
+		pcall(self._opt_on_reset)
+	end
 	for k, v in pairs(self._value) do
 		if k ~= SPAN_KEY then
 			v.base = v.value
@@ -135,6 +148,10 @@ function sum:reset()
 		end
 	end
 	self._value[SPAN_KEY] = self._span_key
+end
+
+function sum:set_reset_cb(cb)
+	self._opt_on_reset = cb
 end
 
 function sum:save()

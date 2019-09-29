@@ -6,6 +6,9 @@
 v1.6.4 ()
 ------------------
 
+* API_VER is 6 now
+* Added utils.timer module
+* Improved summation module
 * Show more tips on API_VER error
 * Refine the log content
 
