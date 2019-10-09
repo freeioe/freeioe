@@ -13,7 +13,7 @@ function cov:initialize(cb, opt)
 	opt.try_convert_string = true
 
 	opt.ttl = tonumber(opt.ttl)
-	if opt.ttl and opt.ttl < 0 then
+	if opt.ttl and opt.ttl <= 0 then
 		opt.ttl = nil
 	end
 	opt.min_ttl_gap = opt.min_ttl_gap or 10  -- 0.1 seconds
