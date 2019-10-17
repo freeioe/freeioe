@@ -31,7 +31,7 @@ function timer:start()
 		local next_cb_time = last_cb_time + self._span
 
 		while not self._stop do
-			skynet.sleep(next_cb_time - skynet.time(), self)
+			skynet.sleep(math.floor((next_cb_time - skynet.time()) * 100), self)
 
 			last_cb_time = next_cb_time
 			next_cb_time = next_cb_time + self._span
