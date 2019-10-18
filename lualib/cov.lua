@@ -10,7 +10,7 @@ function cov:initialize(cb, opt)
 	local opt = opt or {}
 
 	opt.float_threshold = opt.float_threshold or 0.000001
-	opt.try_convert_string = true
+	opt.try_convert_string = false
 
 	opt.ttl = tonumber(opt.ttl)
 	if opt.ttl and opt.ttl <= 0 then

@@ -151,6 +151,10 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 			value = tonumber(value)
 		end
 	end
+	if not value then
+		return nil, "Invalid value"
+	end
+
 	local timestamp = timestamp or ioe.time()
 	local quality = quality or 0
 
@@ -179,11 +183,16 @@ function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
 	else
 		if it.vt == 'int' then
 			value = math.floor(tonumber(value))
-		end
-		if it.vt == 'string' then
+		elseif it.vt == 'string' then
 			value = tostring(value)
+		else
+			value = tonumber(value)
 		end
 	end
+	if not value then
+		return nil, "Invalid value"
+	end
+
 	local timestamp = timestamp or ioe.time()
 	local quality = quality or 0
 
