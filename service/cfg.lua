@@ -13,6 +13,7 @@ local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
 local db_restful = nil
+local db_failure = false
 
 local lock = nil -- Critical Section
 local command = {}
@@ -96,22 +97,37 @@ local function set_cloud_defaults(data)
 	return data
 end
 
+local function backup_cfg(path)
+	os.execute("cp "..path.." "..path..".backup")
+	os.execute("cp "..path..".md5 "..path..".md5.backup")
+	os.execute("sync")
+end
+
 local on_cfg_crash_sh = [[
 CFG_JSON=%s
 BACKUP_DIR=./__crash_backup
 BACKUP_TIME="%s"
-rm -rf $BACKUP_DIR
-mkdir $BACKUP_DIR
+
+rm -rf ${BACKUP_DIR}
+mkdir ${BACKUP_DIR}
+
 cp ./logs/freeioe.log $BACKUP_DIR/
 cp ./logs/freeioe_sys.log $BACKUP_DIR/
-mv $CFG_JSON $BACKUP_DIR/
-mv $CFG_JSON.md5 $BACKUP_DIR/
-echo $BACKUP_TIME > $BACKUP_DIR/backup_time
-touch $CFG_JSON.crash
+mv ${CFG_JSON} ${BACKUP_DIR}/
+mv ${CFG_JSON}.md5 ${BACKUP_DIR}/
+echo ${BACKUP_TIME} > ${BACKUP_DIR}/backup_time
+touch ${CFG_JSON}.crash
+
+if [ -f ${CFG_JSON}.backup ]
+then
+	mv ${CFG_JSON}.backup ${CFG_JSON}
+	mv ${CFG_JSON}.md5.backup ${CFG_JSON}.md5
+fi
 sync
 ]]
 
 local function on_cfg_failure()
+	db_failure = true
 	local sh_file = "/tmp/on_cfg_crash.sh"
 	local f, err = io.open(sh_file, "w+")
 	if f then
@@ -127,7 +143,6 @@ local function on_cfg_failure()
 	skynet.sleep(100)
 	skynet.abort()
 end
-
 
 local function load_cfg(path)
 	log.info("::CFG:: Loading configuration...")
@@ -191,10 +206,16 @@ local function load_cfg(path)
 
 	local _, csum = get_cfg_str()
 	md5sum = csum or sum
+
+	backup_cfg(path)
 end
 
 local function save_cfg(path, content, content_md5sum)
 	log.info("::CFG:: Saving configuration...")
+	if path == db_file then
+		backup_cfg(path)
+	end
+
 	local file, err = io.open(path, "w+")
 	if not file then
 		return nil, err
@@ -211,6 +232,8 @@ local function save_cfg(path, content, content_md5sum)
 
 	mfile:write(content_md5sum)
 	mfile:close()
+
+	os.execute("sync")
 
 	return true
 end
@@ -279,6 +302,10 @@ local function load_cfg_cloud(cfg_id, rest)
 end
 
 function command.SAVE(opt_path)
+	if db_failure then
+		return nil, "Configuration is failure state!"
+	end
+
 	local str, sum = get_cfg_str()
 	if sum ~= md5sum then
 		local r, err = save_cfg(opt_path or db_file, str, sum)
@@ -287,8 +314,6 @@ function command.SAVE(opt_path)
 		else
 			return nil, err
 		end
-
-		os.execute('sync')
 
 		local cfg_upload = dc.get("SYS", "CFG_AUTO_UPLOAD")
 		if cfg_upload then

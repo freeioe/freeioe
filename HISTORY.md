@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.6.4 ()
+v1.6.4 (2019-10-23)
 ------------------
 
 * API_VER is 6 now
@@ -11,6 +11,7 @@ v1.6.4 ()
 * Improved summation module
 * Show more tips on API_VER error
 * Refine the log content
+* Backup the configuration and try to restore it when error found
 
 
 v1.6.3 (2019-09-20)
