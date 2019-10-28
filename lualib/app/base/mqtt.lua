@@ -351,9 +351,10 @@ function app:_connect_proc()
 			end)
 		end
 	end
+	--[[
 	client.ON_LOG = function(...)
-		--print(...)
 	end
+	]]--
 	client.ON_MESSAGE = function(packet_id, topic, data, qos, retained)
 		--print(packet_id, topic, data, qos, retained)
 		if self.on_mqtt_message then

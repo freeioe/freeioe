@@ -866,7 +866,7 @@ connect_proc = function(clean_session, username, password)
 		qos_msg_buf:remove(mid)
 	end
 
-	client.ON_LOG = log_callback
+	--client.ON_LOG = log_callback
 	client.ON_MESSAGE = msg_callback
 
 	--- Tell mqtt backends that this device is online
