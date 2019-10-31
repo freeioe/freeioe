@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.7.0
+------------------
+
+* Removed the embedded document
+
+
 v1.6.4 (2019-10-23)
 ------------------
 

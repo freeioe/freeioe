@@ -9,7 +9,7 @@ local sockethelper = require "http.sockethelper"
 local cjson = require 'cjson.safe'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
-local restful = require 'restful'
+local restful = require 'http.restful'
 local app_file_editor = require 'utils.app_file_editor'
 
 local client_map = {}

@@ -1,6 +1,6 @@
 local datacenter = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
-local httpdown = require 'httpdown'
+local httpdown = require 'http.download'
 local log = require 'utils.log'
 local class = require 'middleclass'
 local ioe = require 'ioe'
