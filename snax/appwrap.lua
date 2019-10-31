@@ -182,6 +182,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	app_log = sys_api:logger()
 
 	app_log:info("Application starting...")
+	package.path = package.path..';./ioe/lualib/compat/?.lua'
 	package.path = package.path..";./ioe/apps/"..name.."/?.lua;./ioe/apps/"..name.."/?.luac"..";./ioe/apps/"..name.."/lualib/?.lua;./ioe/apps/"..name.."/lualib/?.luac"
 	package.cpath = package.cpath..";./ioe/apps/"..name.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
