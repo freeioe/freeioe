@@ -2,14 +2,6 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 
-msgid "API"
-msgstr ""
-
-
-msgid "API Reference"
-msgstr ""
-
-
 msgid "Action"
 msgstr ""
 
@@ -34,10 +26,6 @@ msgid "Application"
 msgstr ""
 
 
-msgid "Application API"
-msgstr ""
-
-
 msgid "Application Center Host"
 msgstr ""
 
@@ -54,7 +42,7 @@ msgid "Application Debuger"
 msgstr ""
 
 
-msgid "Application Document"
+msgid "Application Development Book"
 msgstr ""
 
 
@@ -63,10 +51,6 @@ msgstr ""
 
 
 msgid "Application List"
-msgstr ""
-
-
-msgid "Application Store"
 msgstr ""
 
 
@@ -99,14 +83,6 @@ msgstr ""
 
 
 msgid "CLA"
-msgstr ""
-
-
-msgid "CONF_API"
-msgstr ""
-
-
-msgid "CONF_HELPER"
 msgstr ""
 
 
@@ -174,6 +150,10 @@ msgid "Cloud option is changed, you need restart FreeIOE to apply changes!"
 msgstr ""
 
 
+msgid "Code"
+msgstr ""
+
+
 msgid "Comm Data Watcher"
 msgstr ""
 
@@ -206,19 +186,7 @@ msgid "Create"
 msgstr ""
 
 
-msgid "Create Applicatoin"
-msgstr ""
-
-
 msgid "Create an new application"
-msgstr ""
-
-
-msgid "Cycle Buffer"
-msgstr ""
-
-
-msgid "DEVICE"
 msgstr ""
 
 
@@ -246,7 +214,7 @@ msgid "Description"
 msgstr ""
 
 
-msgid "Development Reference"
+msgid "Development Book"
 msgstr ""
 
 
@@ -286,6 +254,10 @@ msgid "Devices List"
 msgstr ""
 
 
+msgid "Discussion forum"
+msgstr ""
+
+
 msgid "Document"
 msgstr ""
 
@@ -295,10 +267,6 @@ msgstr ""
 
 
 msgid "Documents"
-msgstr ""
-
-
-msgid "EVENT"
 msgstr ""
 
 
@@ -331,10 +299,6 @@ msgstr ""
 
 
 msgid "Extensions"
-msgstr ""
-
-
-msgid "FT CSV Parser"
 msgstr ""
 
 
@@ -402,11 +366,15 @@ msgid "FreeIOE Cloud Settings"
 msgstr ""
 
 
-msgid "FreeIOE System API"
+msgid "FreeIOE Forum"
 msgstr ""
 
 
 msgid "FreeIOE Uptime"
+msgstr ""
+
+
+msgid "FreeIOE Wiki"
 msgstr ""
 
 
@@ -426,10 +394,6 @@ msgid "Git Version"
 msgstr ""
 
 
-msgid "Help"
-msgstr ""
-
-
 msgid "Help Make FreeIOE Better"
 msgstr ""
 
@@ -439,10 +403,6 @@ msgstr ""
 
 
 msgid "ID"
-msgstr ""
-
-
-msgid "INI Parser"
 msgstr ""
 
 
@@ -475,10 +435,6 @@ msgstr ""
 
 
 msgid "Issue Tracker"
-msgstr ""
-
-
-msgid "LOGGER"
 msgstr ""
 
 
@@ -658,23 +614,11 @@ msgid "Return the Homepage"
 msgstr ""
 
 
-msgid "Review"
-msgstr ""
-
-
 msgid "Rollback Time"
 msgstr ""
 
 
 msgid "SN"
-msgstr ""
-
-
-msgid "STAT"
-msgstr ""
-
-
-msgid "SYS"
 msgstr ""
 
 
@@ -710,10 +654,6 @@ msgid "Send output to device"
 msgstr ""
 
 
-msgid "SerialChannel"
-msgstr ""
-
-
 msgid "Setting"
 msgstr ""
 
@@ -742,15 +682,7 @@ msgid "Skynet Version"
 msgstr ""
 
 
-msgid "Skynet Wiki"
-msgstr ""
-
-
-msgid "SocketChannel"
-msgstr ""
-
-
-msgid "Source Code"
+msgid "Source code"
 msgstr ""
 
 
@@ -826,6 +758,10 @@ msgid "There is no new system updates"
 msgstr ""
 
 
+msgid "ThingsCloud"
+msgstr ""
+
+
 msgid "This will delete all local changes! Are you sure?"
 msgstr ""
 
@@ -838,15 +774,7 @@ msgid "Total Memory"
 msgstr ""
 
 
-msgid "Translation Hub"
-msgstr ""
-
-
 msgid "UNAME"
-msgstr ""
-
-
-msgid "UUID Module"
 msgstr ""
 
 
@@ -882,10 +810,6 @@ msgid "Upload an new application package"
 msgstr ""
 
 
-msgid "User Documents"
-msgstr ""
-
-
 msgid "User Profile"
 msgstr ""
 
@@ -915,6 +839,10 @@ msgstr ""
 
 
 msgid "Welcome in FreeIOE"
+msgstr ""
+
+
+msgid "Wiki"
 msgstr ""
 
 

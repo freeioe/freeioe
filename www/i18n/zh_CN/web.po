@@ -1,12 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "API"
-msgstr "接口"
-
-msgid "API Reference"
-msgstr "API参考"
-
 msgid "Action"
 msgstr "动作"
 
@@ -25,9 +19,6 @@ msgstr "所有消息"
 msgid "Application"
 msgstr "应用"
 
-msgid "Application API"
-msgstr "应用接口"
-
 msgid "Application Center Host"
 msgstr "应用中心地址"
 
@@ -40,17 +31,14 @@ msgstr "应用配置"
 msgid "Application Debuger"
 msgstr "应用调试器"
 
-msgid "Application Document"
-msgstr "应用文档"
+msgid "Application Development Book"
+msgstr "应用开发手册"
 
 msgid "Application ID"
 msgstr "应用ID"
 
 msgid "Application List"
 msgstr "应用列表"
-
-msgid "Application Store"
-msgstr "应用中心"
 
 msgid "Application configuration changed!"
 msgstr "应用配置已更改!"
@@ -75,12 +63,6 @@ msgstr "Beta版本使用警告"
 
 msgid "CLA"
 msgstr "CLA"
-
-msgid "CONF_API"
-msgstr "云配置接口"
-
-msgid "CONF_HELPER"
-msgstr "云配置帮助接口"
 
 msgid "COV TTL"
 msgstr "变化传输快照间隔"
@@ -130,6 +112,9 @@ msgstr "超时时间"
 msgid "Cloud option is changed, you need restart FreeIOE to apply changes!"
 msgstr "云平台设定已修改，重启FreeIOE网关后才能使之生效!"
 
+msgid "Code"
+msgstr "源代码"
+
 msgid "Comm Data Watcher"
 msgstr "报文监视"
 
@@ -154,17 +139,8 @@ msgstr "控制项"
 msgid "Create"
 msgstr "创建"
 
-msgid "Create Applicatoin"
-msgstr "创建应用"
-
 msgid "Create an new application"
 msgstr "创建新应用"
-
-msgid "Cycle Buffer"
-msgstr "循环缓存"
-
-msgid "DEVICE"
-msgstr "设备"
 
 msgid "Dashboard"
 msgstr "仪表盘"
@@ -184,8 +160,8 @@ msgstr "数据传输选项"
 msgid "Description"
 msgstr "描述"
 
-msgid "Development Reference"
-msgstr "开发参考手册"
+msgid "Development Book"
+msgstr "开发手册"
 
 msgid "Device"
 msgstr "设备"
@@ -214,6 +190,9 @@ msgstr "设备"
 msgid "Devices List"
 msgstr "设备列表"
 
+msgid "Discussion forum"
+msgstr "论坛"
+
 msgid "Document"
 msgstr "文档"
 
@@ -222,9 +201,6 @@ msgstr "文档索引"
 
 msgid "Documents"
 msgstr "文档"
-
-msgid "EVENT"
-msgstr "事件类型和等级"
 
 msgid "Enable Cloud Web Mapping"
 msgstr "开启Web映射"
@@ -249,9 +225,6 @@ msgstr "扩展列表"
 
 msgid "Extensions"
 msgstr "扩展库"
-
-msgid "FT CSV Parser"
-msgstr "FT CSV解析器"
 
 msgid "Failed to check system updates"
 msgstr "发送检查系统更新请求失败"
@@ -301,11 +274,14 @@ msgstr "FreeIOE"
 msgid "FreeIOE Cloud Settings"
 msgstr "FreeIOE 云配置"
 
-msgid "FreeIOE System API"
-msgstr "FreeIOE系统接口"
+msgid "FreeIOE Forum"
+msgstr "FreeIOE 论坛"
 
 msgid "FreeIOE Uptime"
 msgstr "FreeIOE 运行时长"
+
+msgid "FreeIOE Wiki"
+msgstr ""
 
 msgid "FreeIOE device in not in beta mode!"
 msgstr "FreeIOE设备并不是Beta模式!"
@@ -319,9 +295,6 @@ msgstr "如何入门"
 msgid "Git Version"
 msgstr "代码版本"
 
-msgid "Help"
-msgstr "帮助"
-
 msgid "Help Make FreeIOE Better"
 msgstr "帮助改进FreeIOE"
 
@@ -330,9 +303,6 @@ msgstr "主页"
 
 msgid "ID"
 msgstr "序列号"
-
-msgid "INI Parser"
-msgstr "INI解析器"
 
 msgid "IOE Network"
 msgstr "IOE生态圈"
@@ -357,9 +327,6 @@ msgstr "介绍"
 
 msgid "Issue Tracker"
 msgstr "问题跟踪"
-
-msgid "LOGGER"
-msgstr "日志"
 
 msgid "Learn more"
 msgstr "了解更多"
@@ -493,20 +460,11 @@ msgstr "重启"
 msgid "Return the Homepage"
 msgstr "返回主页"
 
-msgid "Review"
-msgstr "评价"
-
 msgid "Rollback Time"
 msgstr "回退时间"
 
 msgid "SN"
 msgstr "序列号"
-
-msgid "STAT"
-msgstr "分析数据"
-
-msgid "SYS"
-msgstr "系统接口"
 
 msgid "Script"
 msgstr "脚本"
@@ -532,9 +490,6 @@ msgstr "发送设备指令"
 msgid "Send output to device"
 msgstr "发送设备输出"
 
-msgid "SerialChannel"
-msgstr "串口通道"
-
 msgid "Setting"
 msgstr "配置"
 
@@ -556,14 +511,8 @@ msgstr "Skynet代码版本"
 msgid "Skynet Version"
 msgstr "Skynet版本"
 
-msgid "Skynet Wiki"
-msgstr "Skynet Wiki"
-
-msgid "SocketChannel"
-msgstr "网络接口"
-
-msgid "Source Code"
-msgstr "FreeIOE源码"
+msgid "Source code"
+msgstr "源代码"
 
 msgid "Start Application"
 msgstr "开启应用"
@@ -619,6 +568,9 @@ msgstr "周期上送的时间不能低于1000毫秒"
 msgid "There is no new system updates"
 msgstr "未检测到系统更新"
 
+msgid "ThingsCloud"
+msgstr "冬笋云"
+
 msgid "This will delete all local changes! Are you sure?"
 msgstr "删除本地所有的改动，是否确认?"
 
@@ -628,14 +580,8 @@ msgstr "时间戳"
 msgid "Total Memory"
 msgstr "全部内存"
 
-msgid "Translation Hub"
-msgstr "翻译中心"
-
 msgid "UNAME"
 msgstr "UNAME"
-
-msgid "UUID Module"
-msgstr "UUID模块"
 
 msgid "Uninstall Application"
 msgstr "卸载应用"
@@ -661,9 +607,6 @@ msgstr "上送配置"
 msgid "Upload an new application package"
 msgstr "上传应用包"
 
-msgid "User Documents"
-msgstr "用户文档"
-
 msgid "User Profile"
 msgstr "用户资料"
 
@@ -688,6 +631,9 @@ msgstr "欢迎 %s"
 msgid "Welcome in FreeIOE"
 msgstr "欢迎"
 
+msgid "Wiki"
+msgstr ""
+
 msgid "With Skynet"
 msgstr "同步升级Skynet"
 
@@ -705,3 +651,84 @@ msgstr "内核日志"
 
 msgid "seconds"
 msgstr "秒"
+
+#~ msgid "API"
+#~ msgstr "接口"
+
+#~ msgid "API Reference"
+#~ msgstr "API参考"
+
+#~ msgid "Application API"
+#~ msgstr "应用接口"
+
+#~ msgid "Application Document"
+#~ msgstr "应用文档"
+
+#~ msgid "Application Store"
+#~ msgstr "应用中心"
+
+#~ msgid "CONF_API"
+#~ msgstr "云配置接口"
+
+#~ msgid "CONF_HELPER"
+#~ msgstr "云配置帮助接口"
+
+#~ msgid "Create Applicatoin"
+#~ msgstr "创建应用"
+
+#~ msgid "Cycle Buffer"
+#~ msgstr "循环缓存"
+
+#~ msgid "DEVICE"
+#~ msgstr "设备"
+
+#~ msgid "Development Reference"
+#~ msgstr "开发参考手册"
+
+#~ msgid "EVENT"
+#~ msgstr "事件类型和等级"
+
+#~ msgid "FT CSV Parser"
+#~ msgstr "FT CSV解析器"
+
+#~ msgid "FreeIOE System API"
+#~ msgstr "FreeIOE系统接口"
+
+#~ msgid "Help"
+#~ msgstr "帮助"
+
+#~ msgid "INI Parser"
+#~ msgstr "INI解析器"
+
+#~ msgid "LOGGER"
+#~ msgstr "日志"
+
+#~ msgid "Review"
+#~ msgstr "评价"
+
+#~ msgid "STAT"
+#~ msgstr "分析数据"
+
+#~ msgid "SYS"
+#~ msgstr "系统接口"
+
+#~ msgid "SerialChannel"
+#~ msgstr "串口通道"
+
+#~ msgid "Skynet Wiki"
+#~ msgstr "Skynet Wiki"
+
+#~ msgid "SocketChannel"
+#~ msgstr "网络接口"
+
+#~ msgid "Source Code"
+#~ msgstr "FreeIOE源码"
+
+#~ msgid "Translation Hub"
+#~ msgstr "翻译中心"
+
+#~ msgid "UUID Module"
+#~ msgstr "UUID模块"
+
+#~ msgid "User Documents"
+#~ msgstr "用户文档"
