@@ -61,10 +61,10 @@ local function set_sys_defaults(data)
 	local defaults = sys_defaults()
 
 	--- Fix hacks
-	if string.match(data.PKG_HOST_URL, 'cloud.thingsroot.com') then
+	if string.match(data.PKG_HOST_URL or '', 'cloud.thingsroot.com') then
 		data.PKG_HOST_URL = nil
 	end
-	if string.match(data.CNF_HOST_URL, 'cloud.thingsroot.com') then
+	if string.match(data.CNF_HOST_URL or '', 'cloud.thingsroot.com') then
 		data.CNF_HOST_URL = nil
 	end
 
