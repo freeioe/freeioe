@@ -19,6 +19,7 @@ plats["openwrt/18.06/mips_24kc"]="mips_24kc.sh"
 plats["openwrt/18.06/x86_64"]="x86_64_glibc.sh"
 # plats["openwrt/aarch64_cortex-a53"]="bp3plus_exports.sh"
 plats["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="sunxi_a7.sh"
+plats["openwrt/19.07/x86_64"]="x86_64_glibc_19.07.sh"
 
 for item in "${!plats[@]}"; 
 do
