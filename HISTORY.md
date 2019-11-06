@@ -3,10 +3,12 @@
 
 # Release history
 
-v1.7.0
+v1.7.0 (2019-11-06)
 ------------------
 
 * Removed the embedded document
+* Added compat folder
+* Show cloud information in ubus interface
 
 
 v1.6.4 (2019-10-23)

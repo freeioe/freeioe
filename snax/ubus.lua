@@ -58,6 +58,22 @@ function create_methods(bus)
 				return ubus.STATUS_OK
 			end, {}
 		},
+		cloud = {
+			function(req, msg, response)
+				local dc = require 'skynet.datacenter'
+				local cloud = snax.queryservice('cloud')
+				local info = {}
+				info.host = dc.get("CLOUD", "HOST")
+				local online, last, msg = cloud.req.get_status()
+				info.mqtt = {
+					online = online,
+					last = last,
+					msg = msg
+				}
+				response(info)
+				return ubus.STATUS_OK
+			end, {}
+		},
 		apps = {
 			function(req, msg, response)
 				local dc = require 'skynet.datacenter'

@@ -31,6 +31,7 @@ local mqtt_keepalive = nil		--300
 local mqtt_secret = nil			--- MQTT secret
 local mqtt_client = nil			--- MQTT Client instance
 local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
+local mqtt_connect_msg = nil	--- MQTT Client connection/disconnection error message
 local qos_msg_buf = nil			--- MQTT QOS messages
 
 --- Next reconnect timeout which will be multi by two until a max time
@@ -786,6 +787,7 @@ connect_proc = function(clean_session, username, password)
 
 	--- on connect result callback
 	client.ON_CONNECT = function(success, rc, msg)
+		mqtt_connect_msg = msg
 		if success then
 			log.notice("::CLOUD:: ON_CONNECT", success, rc, msg)
 
@@ -965,7 +967,7 @@ function response.get_conf()
 end
 
 function response.get_status()
-	return mqtt_client ~= nil, mqtt_client_last
+	return mqtt_client ~= nil, mqtt_client_last, mqtt_connect_msg
 end
 
 --- Enable data upload
