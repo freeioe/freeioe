@@ -336,7 +336,7 @@ local function read_os_version()
 		if id then
 			f:close()
 			id = string.lower(id)
-			local sid = string.match(id, '^(.+)%-snapshot')
+			local sid = string.match(id, '^(.+)%-snapshot') or string.match(id, '^(.+)%-rc%d+')
 			return sid or id
 		end
 	end
