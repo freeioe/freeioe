@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.7.1 ()
+------------------
+
+* Remove the rc<n> version postfix
+
+
 v1.7.0 (2019-11-06)
 ------------------
 

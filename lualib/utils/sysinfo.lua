@@ -360,6 +360,9 @@ _M.platform = function()
 	local os_id = _M.os_id()
 	local os_ver = _M.os_version()
 	local cpu_arch = _M.cpu_arch()
+	if os_id == 'openwrt' then
+		os_ver = string.match(os_ver, '^(%d+%.%d+)') or os_ver
+	end
 
 	_M._PLATFORM = string.format("%s/%s/%s", os_id, os_ver, cpu_arch)
 
