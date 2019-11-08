@@ -8,6 +8,7 @@ v1.7.1 ()
 
 * Remove the rc<n> version postfix (openwrt)
 * Support 'never' time span in summation
+* Using time counter for standby battery working status
 
 
 v1.7.0 (2019-11-06)
