@@ -22,6 +22,9 @@ local function get_span_key(span)
 	if span == 'minute' then
 		return os.date('%Y_%m_%d_%H_%M')
 	end
+	if span == 'never' then
+		return 'NEVER'
+	end
 	return nil, "Incorrect time span"
 end
 

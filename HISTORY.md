@@ -6,7 +6,8 @@
 v1.7.1 ()
 ------------------
 
-* Remove the rc<n> version postfix
+* Remove the rc<n> version postfix (openwrt)
+* Support 'never' time span in summation
 
 
 v1.7.0 (2019-11-06)
