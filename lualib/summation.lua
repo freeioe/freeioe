@@ -44,7 +44,7 @@ local function migrate_from_v1(opt)
 	end
 
 	local str = f:read('*a')
-	local value = cjson.decode(str)
+	local value = cjson.decode(str) or {}
 	f:close()
 
 	local new_value = {}
@@ -74,7 +74,7 @@ function sum:initialize(opt)
 		local f, err = io.open(filename, 'r')
 		if f then
 			local str = f:read('*a')
-			self._value = cjson.decode(str)
+			self._value = cjson.decode(str) or {}
 			-- for origin version that does not have span key in saved file
 			if not self._value[SPAN_KEY] then
 				self._value[SPAN_KEY] = self._span_key
