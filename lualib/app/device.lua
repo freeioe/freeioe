@@ -82,8 +82,16 @@ function device:cleanup()
 	self:_cleanup()
 end
 
+local function valid_prop_name(name)
+	return nil == string.find(name, "[^%w_]")
+end
+
 function device:mod(inputs, outputs, commands)
 	assert(not self._guest, "Device permission denined!")
+	for _, v in ipairs(inputs or {}) do assert(valid_prop_name(v.name), v.name.." is not valid input name") end
+	for _, v in ipairs(outputs or {}) do assert(valid_prop_name(v.name), v.name.." is not valid output name") end
+	for _, v in ipairs(commands or {}) do assert(valid_prop_name(v.name), v.name.." is not valid command name") end
+
 	self._props.inputs = inputs or self._props.inputs
 	self._props.outputs = outputs or self._props.outputs
 	self._props.commands = commands or self._props.commands
@@ -103,6 +111,10 @@ end
 
 function device:add(inputs, outputs, commands)
 	assert(not self._guest, "Device permission denined!")
+	for _, v in ipairs(inputs or {}) do assert(valid_prop_name(v.name), v.name.." is not valid input name") end
+	for _, v in ipairs(outputs or {}) do assert(valid_prop_name(v.name), v.name.." is not valid output name") end
+	for _, v in ipairs(commands or {}) do assert(valid_prop_name(v.name), v.name.." is not valid command name") end
+
 	local org_inputs = self._props.inputs
 	for _, v in ipairs(inputs or {}) do
 		org_inputs[#org_inputs + 1] = v

@@ -40,6 +40,9 @@ function api:version()
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
+		if not msg then
+			return nil, err
+		end
 		if not msg.message then
 			return nil, "No version found!"
 		end
@@ -74,6 +77,9 @@ function api:data(version)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
+		if not msg then
+			return nil, err
+		end
 		if not msg.message then
 			return nil, "Version not valided!"
 		end
