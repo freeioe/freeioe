@@ -2,10 +2,9 @@ local skynet = require "skynet"
 local snax = require "skynet.snax"
 local socket = require "skynet.socket"
 local crypt = require 'skynet.crypt'
+local websocket = require "http.websocket"
+
 local ioe = require 'ioe'
-local websocket = require "websocket"
-local httpd = require "http.httpd"
-local sockethelper = require "http.sockethelper"
 local cjson = require 'cjson.safe'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
@@ -26,11 +25,11 @@ function client_class:send(data)
 		return nil, err
 	end
 
-	local ws = self.ws
-	local r, err = xpcall(ws.send_text, debug.traceback, ws, str)
+	local id = self.id
+	local r, err = xpcall(websocket.write, debug.traceback, id, str)
 	if not r then
 		log.error("::WS:: Call send_text failed", err)
-		ws:close(nil, err)
+		websocket.close(id, nil, err)
 		return nil, err
 	end
 
@@ -39,26 +38,15 @@ function client_class:send(data)
 end
 
 function client_class:close(code, reason)
-	return self.ws:close(code, reason)
+	return websocket.close(self.id, code, reason)
 end
 
 function client_class:ping(data)
-	return self.ws:send_ping(data)
+	return websocket.ping(self.id, data)
 end
 
-function client_class:id()
-	return self.ws.id
-end
-
-local function handle_socket(id)
-    -- limit request body size to 8 * 1024 * 1024 (you can pass nil to unlimit)
-    local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8 * 1024 * 1024)
-    if code then
-        if header.upgrade == "websocket" then
-            local ws = websocket.new(id, header, handler)
-            ws:start()
-        end
-    end
+local function handle_socket(id, protocol, addr)
+	local ok, err = websocket.accept(id, handler, protocol, addr)
 end
 
 local broadcast_id = 0
@@ -75,16 +63,16 @@ local function broadcast_msg(code, data)
 	end
 end
 
-function handler.on_open(ws)
-    log.debug(string.format("::WS:: WebSocket[%d] connected", ws.id))
+function handler.connect(id)
+    log.debug(string.format("::WS:: WebSocket[%d] connected", id))
 	local client = setmetatable({
-		ws = ws,
+		id = id,
 		last = skynet.now(),
 		authed = false,
 		_in_ping = false,
 	}, {__index=client_class})
 
-	client_map[ws.id] = client
+	client_map[id] = client
 	-- delay send our information
 	--
 	skynet.timeout(20, function()
@@ -99,11 +87,14 @@ function handler.on_open(ws)
 	end)
 end
 
-function handler.on_message(ws, message)
-    --log.debug(string.format("::WS:: WebSocket[%d] message len :  %d", ws.id, string.len(message)))
-	--ws:send_text(message .. "from server")
+function handler.handshake(id, header, url)
+end
 
-	local client = client_map[ws.id]
+function handler.message(id, message)
+    --log.debug(string.format("::WS:: WebSocket[%d] message len :  %d", id, string.len(message)))
+	--websocket.write(id, message .. "from server")
+
+	local client = client_map[id]
 	if client then
 		client.last = skynet.now()
 
@@ -140,22 +131,26 @@ function handler.on_message(ws, message)
 		end
 	else
 		-- Should not be here
-		ws:close()
+		websocket.close(id)
 	end
 end
 
-function handler.on_close(ws, code, reason)
-    log.debug(string.format("::WS:: WebSocket[%d] close:%s  %s", ws.id, code, reason))
-	client_map[ws.id] = nil
+function handler.close(id, code, reason)
+    log.debug(string.format("::WS:: WebSocket[%d] close:%s  %s", id, code, reason))
+	client_map[id] = nil
 end
 
-function handler.on_pong(ws, data)
-    log.debug(string.format("::WS:: %d on_pong %s", ws.id, data))
-	local v = client_map[ws.id]
+function handler.pong(id, data)
+    log.debug(string.format("::WS:: %d on_pong %s", id, data))
+	local v = client_map[id]
 	if v then
 		v.last = tonumber(data) or skynet.now()
 		v._in_ping = false
 	end
+end
+
+function handler.error(id)
+	log.error("ws error from: " .. tostring(id))
 end
 
 local function auth_user(user, passwd)
@@ -170,7 +165,7 @@ local function auth_user(user, passwd)
 end
 
 function msg_handler.login(client, id, code, data)
-    log.debug(string.format("::WS:: WebSocket[%d] login %s %s", client.ws.id, data.user, data.passwd))
+    log.debug(string.format("::WS:: WebSocket[%d] login %s %s", client.id, data.user, data.passwd))
 	local r, err = auth_user(data.user, data.passwd)
 	if r then
 		client.authed = true
@@ -379,12 +374,13 @@ function init()
 	http_api = restful("127.0.0.1:8808")
 	local address = "0.0.0.0:8818"
     log.notice("::WS:: listening on", address)
+	local protocol = "ws"
+	local id = assert(socket.listen(address))
 
-    local id = assert(socket.listen(address))
-    socket.start(id , function(id, addr)
-       socket.start(id)
-       pcall(handle_socket, id)
-    end)
+	socket.start(id, function(id, addr)
+		print(string.format("accept client socket_id: %s addr:%s", id, addr))
+		pcall(handle_socket, id, protocol, addr)
+	end)
 	ws_socket = id
 
 	skynet.fork(function()
@@ -399,12 +395,12 @@ function init()
 			for k, v in pairs(client_map) do
 				local diff = math.abs(now - v.last)
 				if diff > 60 * 100 then
-					log.debug(string.format("::WS:: %d ping timeout %d-%d", v:id(), v.last, now))
+					log.debug(string.format("::WS:: %d ping timeout %d-%d", v.id, v.last, now))
 					v:close(nil, 'Ping timeout')
 					table.insert(remove_list, k)
 				end
 				if not v._in_ping and diff >= (30 * 100) then
-					log.trace(string.format("::WS:: %d send ping", v:id()))
+					log.trace(string.format("::WS:: %d send ping", v.id))
 					v:ping(tostring(now))
 					v._in_ping = true
 				end
