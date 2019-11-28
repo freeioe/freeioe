@@ -109,7 +109,7 @@ function handler.on_message(ws, message)
 
 		local msg, err = cjson.decode(message)
 
-		assert(msg.id and tostring(msg.code))	
+		assert(msg and msg.id and tostring(msg.code), err or "id or code missing")
 		assert(client or msg.code == 'login')
 
 		local f = msg_handler[msg.code]

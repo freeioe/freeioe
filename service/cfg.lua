@@ -278,7 +278,7 @@ local function load_cfg_cloud(cfg_id, rest)
 		log.warning("::CFG:: Download configuration failed. Status:", status or -1, body)
 		return nil, "Failed to download configuration, id:"..cfg_id
 	end
-	local new_cfg = cjson.decode(body)
+	local new_cfg = cjson.decode(body) or {}
 
 	local new_content = new_cfg.data
 	local new_md5sum = new_cfg.md5
