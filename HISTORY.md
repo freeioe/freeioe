@@ -9,6 +9,7 @@ v1.7.1 ()
 * Remove the rc<n> version postfix (openwrt)
 * Support 'never' time span in summation
 * Using time counter for standby battery working status
+* Fixed summation asserts with empty saving file (file lost?)
 
 
 v1.7.0 (2019-11-06)
