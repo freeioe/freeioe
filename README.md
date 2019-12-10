@@ -3,17 +3,12 @@ FreeIOE
 
 **[FreeIOE](http://freeioe.org)** is an opensource framework for building IOE (Internet Of Everything) Edge-Computing Gateway. [Chinese|中文](/README_CN.md)
 
-
 ## How To Use
 
 * [FreeIOE forum](http://freeioe.org)
-  The discussion forum
 * [FreeIOE wiki](http://wiki.freeioe.org)
-  The knowledge base
-* [Guick Guide](http://help.cloud.thingsroot.com/quick_start/)
-  Quick start guide (only in Chinese for now)
+* [Guick Guide (Chinese only)](http://help.cloud.thingsroot.com/quick_start/)
 * [ThingsRoot Cloud](http://cloud.thingsroot.com)
-  The default cloud service provider for FreeIOE
 
 
 ## App Development
@@ -21,8 +16,6 @@ FreeIOE
 ### Documents
 
 * [FreeIOE Application Development Book](https://freeioe.gitbook.io/doc/)
-  FreeIOE application development book
-
 
 ### Examples
 
@@ -47,24 +40,20 @@ FreeIOE
   * MQTT data upload application demo
   * Huaraylaser 355 device connector
 
-
 ## Core Development
 
 FreeIOE is based on [Skynet](https://github.com/cloudwu/skynet) framework.
 > More information can be found in its [wiki](https://github.com/cloudwu/skynet/wiki)
 > FreeIOE works with on [skynet](https://github.com/srdgame/skynet) with a few more lua C modules
 
-
 ## Report Issues
 
 Please use [issue list](https://github.com/freeioe/freeioe/issues).
-
 
 ## Where To Buy 
 
 * [ThingsLink](https://www.thingsroot.com/product/)
 * [SymLink](http://www.symid.com/)
-
 
 ## Known Issue
 
