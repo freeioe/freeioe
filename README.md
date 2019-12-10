@@ -6,25 +6,22 @@ FreeIOE
 
 ## How To Use
 
-* [FreeIOE forum](http://freeioe.org)<br>
-	The discussion forum
-
-* [FreeIOE wiki](http://wiki.freeioe.org)<br>
-	The knowledge base
-
-* [Guick Guide](http://help.cloud.thingsroot.com/quick_start/)<br>
-	Quick start guide (only in Chinese for now)
-
-* [ThingsRoot Cloud](http://cloud.thingsroot.com)<br>
-	The default cloud service provider for FreeIOE
+* [FreeIOE forum](http://freeioe.org)
+  The discussion forum
+* [FreeIOE wiki](http://wiki.freeioe.org)
+  The knowledge base
+* [Guick Guide](http://help.cloud.thingsroot.com/quick_start/)
+  Quick start guide (only in Chinese for now)
+* [ThingsRoot Cloud](http://cloud.thingsroot.com)
+  The default cloud service provider for FreeIOE
 
 
 ## App Development
 
 ### Documents
 
-* [FreeIOE Application Development Book](https://freeioe.gitbook.io/doc/)<br>
-	FreeIOE application development book
+* [FreeIOE Application Development Book](https://freeioe.gitbook.io/doc/)
+  FreeIOE application development book
 
 
 ### Examples

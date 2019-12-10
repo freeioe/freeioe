@@ -6,25 +6,22 @@ FreeIOE
 
 ## 如何使用
 
-* [FreeIOE社区](http://freeioe.org)<br>
-	FreeIOE 开源社区.
-
-* [FreeIOE WIKI](http://wiki.freeioe.org)<br>
-	FreeIOE 知识库.
-
-* [快速指南](http://help.cloud.thingsroot.com/quick_start/)<br>
-	如果快速体验FreeIOE边缘计算网关设备带来的极致体验，以及如果进行定制开发等等。
-
-* [冬笋云平台](http://cloud.thingsroot.com)<br>
-	FreeIOE默认使用的设备维护云平台。
+* [FreeIOE社区](http://freeioe.org)
+  FreeIOE 开源社区.
+* [FreeIOE WIKI](http://wiki.freeioe.org)
+  FreeIOE 知识库.
+* [快速指南](http://help.cloud.thingsroot.com/quick_start/)
+  如果快速体验FreeIOE边缘计算网关设备带来的极致体验，以及如果进行定制开发等等。
+* [冬笋云平台](http://cloud.thingsroot.com)
+  FreeIOE默认使用的设备维护云平台。
 
 
 ## 应用开发
 
 ### 文档
 
-* [FreeIOE 应用开发手册](https://freeioe.gitbook.io/doc/)<br>
-	应用开发接口说明，以及应用开发入门介绍等。
+* [FreeIOE 应用开发手册](https://freeioe.gitbook.io/doc/)
+  应用开发入门介绍，以及 FreeIOE 接口手册。
 
 
 ### 示例
