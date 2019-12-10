@@ -1,15 +1,13 @@
-FreeIOE
-===================
+# FreeIOE
 
-**[FreeIOE](http://freeioe.org)** is an opensource framework for building IOE (Internet Of Everything) Edge-Computing Gateway. [Chinese|中文](/README_CN.md)
+**[FreeIOE](http://freeioe.org)** is an open source framework for building IOE (Internet Of Everything) Edge-Computing Gateway. [Chinese|中文](/README_CN.md)
 
 ## How To Use
 
 * [FreeIOE forum](http://freeioe.org)
 * [FreeIOE wiki](http://wiki.freeioe.org)
-* [Guick Guide (Chinese only)](http://help.cloud.thingsroot.com/quick_start/)
-* [ThingsRoot Cloud](http://cloud.thingsroot.com)
-
+* [Quick guide (Chinese only)](http://help.cloud.thingsroot.com/quick_start/)
+* [ThingsRoot cloud](http://cloud.thingsroot.com)
 
 ## App Development
 
@@ -34,15 +32,16 @@ FreeIOE
   * Huawei UPS2000 data to redis application
   * Multiple gateway route management (auto switch ethernet and 4G link)
   * Gateway network information collect application
-  * Netowork/Serial remote mapping application
+  * Network/Serial remote mapping application
   * Semens S7 PLC connector (based on snap7 library)
   * Device remote connect applications (Serial & Network)
   * MQTT data upload application demo
-  * Huaraylaser 355 device connector
+  * Huaray laser 355 device connector
 
 ## Core Development
 
 FreeIOE is based on [Skynet](https://github.com/cloudwu/skynet) framework.
+
 > More information can be found in its [wiki](https://github.com/cloudwu/skynet/wiki)
 > FreeIOE works with on [skynet](https://github.com/srdgame/skynet) with a few more lua C modules
 
@@ -50,16 +49,12 @@ FreeIOE is based on [Skynet](https://github.com/cloudwu/skynet) framework.
 
 Please use [issue list](https://github.com/freeioe/freeioe/issues).
 
-## Where To Buy 
+## Where To Buy
 
 * [ThingsLink](https://www.thingsroot.com/product/)
 * [SymLink](http://www.symid.com/)
 
 ## Known Issue
-
-* FreeIOE upgradation will not remove original files.
-> 1. the delete files from new package will retain in local
-> 2. cannot have file(soft link file) replace directory
 
 ## LICENSE
 

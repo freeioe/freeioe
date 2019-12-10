@@ -1,28 +1,19 @@
-FreeIOE
-===================
+# FreeIOE
 
 **[FreeIOE](http://freeioe.org)** 是用于快速构建物联网边缘计算网关的开源框架。 [English|英文](/README.md)
 
-
 ## 如何使用
 
-* [FreeIOE社区](http://freeioe.org)
-  FreeIOE 开源社区.
-* [FreeIOE WIKI](http://wiki.freeioe.org)
-  FreeIOE 知识库.
-* [快速指南](http://help.cloud.thingsroot.com/quick_start/)
-  如果快速体验FreeIOE边缘计算网关设备带来的极致体验，以及如果进行定制开发等等。
+* [FreeIOE 社区](http://freeioe.org)
+* [FreeIOE WIKI 知识库](http://wiki.freeioe.org)
+* [快速使用指南](http://help.cloud.thingsroot.com/quick_start/)
 * [冬笋云平台](http://cloud.thingsroot.com)
-  FreeIOE默认使用的设备维护云平台。
-
 
 ## 应用开发
 
 ### 文档
 
 * [FreeIOE 应用开发手册](https://freeioe.gitbook.io/doc/)
-  应用开发入门介绍，以及 FreeIOE 接口手册。
-
 
 ### 示例
 
@@ -50,26 +41,20 @@ FreeIOE
 ## 框架开发
 
 FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
+
 > 可以从它的[wiki](https://github.com/cloudwu/skynet/wiki) 获取更多信息。
 > FreeIOE使用的[skynet](https://github.com/srdgame/skynet) 具有更多的C扩展模块
-
 
 ## 提交问题
 
 请使用github的[问题列表](https://github.com/freeioe/freeioe/issues).
-
 
 ## 购买FreeIOE 物联网智能网关
 
 * 冬笋科技: [ThingsLink系列](https://www.thingsroot.com/product/)
 * 旋思科技: [SymLink系列](http://www.symid.com/)
 
-
 ## 已知问题
-
-* FreeIOE 新版本中有文件被移除，在升级时并未移除本地文件.
-> 1. 本地遗留有之前版本的一些文件，在新版中这些文件已经被删除
-> 2. 同名目录不能被文件或者软链接替换
 
 ## 授权协议
 
