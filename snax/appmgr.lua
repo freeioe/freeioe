@@ -319,6 +319,7 @@ function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
 	log.trace("::AppMgr:: fire_event", app_name, sn, level, type_, info, timestamp, cjson.encode(data))
 	assert(sn and level and type_ and info)
 	local event_chn = mc_map.EVENT
+	local type_ = event.type_to_string(type_)
 	if event_chn then
 		skynet.timeout(200, function()
 			event_chn:publish(app_name, sn, level, type_, info, data or {}, timestamp or ioe.time())
