@@ -61,6 +61,7 @@ for plat in $PLAT_NAMES; do
 	./scripts/release_ext.sh snap7 $plat "luaclib"
 	./scripts/release_ext.sh plctag $plat "luaclib"
 	./scripts/release_ext.sh frpc $plat "bin"
+	./scripts/release_ext.sh sqlite3 $plat "raw"
 done
 
 # For pre-installed applications

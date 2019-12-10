@@ -60,6 +60,9 @@ if [ "$TARGET_TYPE" == "bin" ] ; then
 	mkdir -p $RELEASE_DIR/$TARGET_FOLDER/temp/bin
 	cp ./feeds/prebuild_exts/$TARGET_PLAT/$TARGET_EXT $RELEASE_DIR/$TARGET_FOLDER/temp/bin/
 fi
+if [ "$TARGET_TYPE" == "raw" ] ; then
+	cp -r ./feeds/prebuild_exts/$TARGET_PLAT/$TARGET_EXT/* $RELEASE_DIR/$TARGET_FOLDER/temp/
+fi
 
 cd $RELEASE_DIR/$TARGET_FOLDER/temp
 # find . -type f |xargs -I{} file "{}"|grep "ELF\|ar "|sed 's/\(.*\):.*/\1/'|xargs $STRIP
