@@ -1,4 +1,5 @@
 local skynet = require 'skynet'
+local lfs = require 'lfs'
 local cjson = require 'cjson.safe'
 local class = require 'middleclass'
 
@@ -23,6 +24,10 @@ local function load_defaults_real(filename)
 end
 
 function conf:_load_defaults(filename)
+	if 'file' ~= lfs.attributes(filename, 'mode') then
+		return {}
+	end
+
 	local r, data = pcall(load_defaults_real, filename)
 	if not r then
 		self._log:error('Load app config file '..filename..' failed!', data)
