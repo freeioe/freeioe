@@ -3,6 +3,11 @@
 
 # Release history
 
+v1.7.2 ()
+------------------
+* Fixed conf.json file missing assert
+
+
 v1.7.1 (2019-12-10)
 ------------------
 

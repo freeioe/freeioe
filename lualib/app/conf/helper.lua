@@ -88,7 +88,7 @@ function helper:_real_fetch()
 					}
 				else
 					not_finished = true
-					self._log:warning('Cannot fetch app_conf', version)
+					self._log:warning('Cannot fetch template', version)
 				end
 			end
 		end

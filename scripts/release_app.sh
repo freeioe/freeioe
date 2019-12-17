@@ -8,6 +8,7 @@ fi
 
 BASE_DIR=`pwd`
 RELEASE_DIR=$BASE_DIR'/__release/'$1
+APP_DIR=$1
 
 mkdir -p $RELEASE_DIR
 # echo 'Base Dir:'$BASE_DIR
@@ -35,20 +36,20 @@ then
 	exit
 fi
 
+mkdir __install
+
+git archive HEAD:${APP_DRI} | tar -x -C __install
+
+cd __install
+
 # zip files
 echo $VERSION > version
 echo $REVISION >> version
 
-if [ -f "luaclib/opcua.so" ]; then
-	mv luaclib/opcua.so ./opcua.so.bak~
-fi
+zip -r -q $RELEASE_DIR/$VERSION.zip *
 
-zip -r -q $RELEASE_DIR/$VERSION.zip * -x *~ -x *.un~ -x *.csv -x *.cnf
-rm -f version
-
-if [ -f "./opcua.so.bak~" ]; then
-	mv ./opcua.so.bak~ luaclib/opcua.so
-fi
+cd -
+rm -rf __install
 
 md5sum -b $RELEASE_DIR/$VERSION.zip > $RELEASE_DIR/$VERSION.zip.md5
 du $RELEASE_DIR/$VERSION.zip -sh
