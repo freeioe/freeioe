@@ -108,7 +108,7 @@ function response.start()
 			return nil, err
 		end
 
-		if app and app.run and app_closing then
+		if app and app.run and not app_closing then
 			skynet.timeout(10, work_proc)
 		end
 
