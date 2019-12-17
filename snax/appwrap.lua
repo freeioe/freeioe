@@ -6,6 +6,7 @@ local event = require 'app.event'
 local ioe = require 'ioe'
 
 local app = nil
+local app_closing = false
 local app_name = "UNKNOWN"
 local app_log = nil
 local mgr_snax = nil
@@ -39,6 +40,7 @@ local on_close = function(...)
 	end
 
 	if app then
+		app_closing = true
 		local r, err = protect_call(app, 'close', ...)
 		if not r and err then
 			return clean_up(nil, err)
@@ -63,7 +65,7 @@ local function work_proc()
 	--- Sleep one seconds
 	skynet.sleep(timeout // 10)
 
-	while app do
+	while app and not app_closing do
 		local t, err = protect_call(app, 'run', timeout)
 		if t then
 			timeout = tonumber(t) or timeout
@@ -92,21 +94,23 @@ end
 
 function response.start()
 	if app then
-		local r, err = protect_call(app, 'start')
-		if not r then
-			return nil, err
-		end
-
-		if app.run then
-			skynet.timeout(10, work_proc)
-		end
-
 		local ping_mgr = nil
 		ping_mgr = function()
 			mgr_snax.post.app_heartbeat(app_name, skynet.time())
 			cancel_ping_timer = app_sys:cancelable_timeout(app_ping_timeout, ping_mgr)
 		end
 		cancel_ping_timer = app_sys:cancelable_timeout(app_ping_timeout, ping_mgr)
+
+		local r, err = protect_call(app, 'start')
+		if not r then
+			cancel_ping_timer()
+			cancel_ping_timer = nil
+			return nil, err
+		end
+
+		if app and app.run and app_closing then
+			skynet.timeout(10, work_proc)
+		end
 
 		return true
 	else
