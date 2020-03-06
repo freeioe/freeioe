@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.7.3 (2020-03-06)
+------------------
+
+* Fixed the connection lost message
+
+
 v1.7.2 (2019-12-24)
 ------------------
 
