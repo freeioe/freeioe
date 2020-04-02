@@ -21,14 +21,14 @@ local client_class = {}
 function client_class:send(data)
 	local str, err = cjson.encode(data)
 	if not str then
-		log.error("::WS:: CJson encode error", err)
+		log.error("::WS:: cJSON encode error", err)
 		return nil, err
 	end
 
 	local id = self.id
 	local r, err = xpcall(websocket.write, debug.traceback, id, str)
 	if not r then
-		log.error("::WS:: Call send_text failed", err)
+		log.error("::WS:: Call websocket.write failed", err)
 		websocket.close(id, nil, err)
 		return nil, err
 	end
