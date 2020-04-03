@@ -7,6 +7,7 @@ v1.7.3 (2020-03-06)
 ------------------
 
 * Fixed the connection lost message
+* Fixed the data has been fire twice in MQTT apps
 
 
 v1.7.2 (2019-12-24)

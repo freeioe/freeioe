@@ -447,14 +447,15 @@ function app:_handle_cov_data(...)
 		end
 		return self._safe_call(self.on_publish_data, self, ...)
 	else
-		return pb:push(...)
+		pb:push(...)
+		return true
 	end
 end
 
 function app:_init_cov()
 	local cov_opt = {ttl=self._ttl, float_threshold = self._float_threshold}
 	self._cov = cov:new(function(...)
-		self:_handle_cov_data(...)
+		return self:_handle_cov_data(...)
 	end, cov_opt)
 	self._cov:start()
 end

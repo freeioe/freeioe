@@ -131,7 +131,8 @@ function cov:timer(now, cb)
 			v[2] = now
 			local r = cb(key, table.unpack(v))	
 			if not r then
-				v[2] = tv
+				--- Currently we skip this update???
+				--- v[2] = tv
 			end
 			self._retained_map[key] = v
 		end
