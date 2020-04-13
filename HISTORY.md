@@ -3,6 +3,13 @@
 
 # Release history
 
+v1.8.0 (2020-04-13)
+------------------
+
+* Fixed the MQTT based application data been fired twice issue
+* Using the FreeIOE web admin password for reboot hack
+
+
 v1.7.3 (2020-03-06)
 ------------------
 
