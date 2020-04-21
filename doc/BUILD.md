@@ -32,7 +32,8 @@ cd freeioe
 mkdir apps
 mkdir ext
 ./scripts/feeds update -a
-ln -s feeds/example_apps/ioe ./apps/ioe
+cd apps
+ln -s ../feeds/example_apps/ioe ./
 ```
 
 TIPS:
