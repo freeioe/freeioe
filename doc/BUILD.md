@@ -47,6 +47,15 @@ Comment the 3,4 lines
 Then run the ./scripts/feeds update -a
 </i>
 
+### Prepare submodules (lwf)
+
+``` sh
+cd lwf
+git submodule init
+git submodule update
+```
+
+
 ## Prepare your build env
 
 ### Ubuntu/Debian:
