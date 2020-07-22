@@ -16,6 +16,7 @@ source $SCRIPTPATH/plats.sh
 
 for item in "${!plats[@]}"; 
 do
-	cat ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz.md5
-	ls -lh ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz
+	echo "deleting ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz"
+	rm ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz.md5
+	rm ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz
 done
