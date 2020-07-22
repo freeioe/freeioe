@@ -524,9 +524,9 @@ then
 
 	if [ $? -eq 0 ]
 	then
-		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz.new
+		echo "Skynet upgrade is done!"
 	else
-		echo "tar got error!"
+		echo "Skynet uncompress error!! Rollback..."
 		rm -f $SKYNET_FILE
 		sh $IOE_DIR/ipt/rollback.sh
 		exit $?
@@ -547,9 +547,9 @@ then
 
 	if [ $? -eq 0 ]
 	then
-		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz.new
+		echo "FreeIOE upgrade is done!"
 	else
-		echo "tar got error!"
+		echo "FreeIOE uncompress error!! Rollback..."
 		rm -f $FREEIOE_FILE
 		sh $IOE_DIR/ipt/rollback.sh
 		exit $?
@@ -561,12 +561,27 @@ then
 	rm -f $IOE_DIR/ipt/rollback
 	rm -f $IOE_DIR/ipt/upgrade_no_ack
 
-	mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
-	if [ -f $IOE_DIR/ipt/skynet.tar.gz.new ]
+	if [ -f $IOE_DIR/ipt/rollback.sh.new ]
 	then
-		mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
+		mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
 	fi
-	mv -f $IOE_DIR/ipt/freeioe.tar.gz.new $IOE_DIR/ipt/freeioe.tar.gz
+
+	if [ -f $SKYNET_FILE ]
+	then
+		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz
+	fi
+	if [ -f $FREEIOE_FILE ]
+		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz
+	fi
+else
+	if [ -f $SKYNET_FILE ]
+	then
+		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz.new
+	fi
+	if [ -f $FREEIOE_FILE ]
+	then
+		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz.new
+	fi
 fi
 
 sync
@@ -580,13 +595,19 @@ IOE_DIR=%s
 SKYNET_PATH=%s
 FREEIOE_PATH=%s
 
-cd $IOE_DIR
-cd $SKYNET_PATH
-tar xzf $IOE_DIR/ipt/skynet.tar.gz
+if [ -f $IOE_DIR/ipt/skynet.tar.gz ]
+then
+	cd $IOE_DIR
+	cd $SKYNET_PATH
+	tar xzf $IOE_DIR/ipt/skynet.tar.gz
+fi
 
-cd $IOE_DIR
-cd $FREEIOE_PATH
-tar xzf $IOE_DIR/ipt/freeioe.tar.gz
+if [ -f $IOE_DIR/ipt/freeioe.tar.gz ]
+then
+	cd $IOE_DIR
+	cd $FREEIOE_PATH
+	tar xzf $IOE_DIR/ipt/freeioe.tar.gz
+fi
 
 if [ -f $IOE_DIR/ipt/cfg.json.bak ]
 then
@@ -602,9 +623,21 @@ local upgrade_ack_sh_str = [[
 
 IOE_DIR=%s
 
-mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
-mv -f $IOE_DIR/ipt/freeioe.tar.gz.new $IOE_DIR/ipt/freeioe.tar.gz
-mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+if [ -f $IOE_DIR/ipt/skynet.tar.gz.new ]
+then
+	mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
+fi
+
+if [ -f $IOE_DIR/ipt/freeioe.tar.gz.new ]
+then
+	mv -f $IOE_DIR/ipt/freeioe.tar.gz.new $IOE_DIR/ipt/freeioe.tar.gz
+fi
+
+if [ -f $IOE_DIR/ipt/rollback.sh.new ]
+then
+	mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+fi
+
 rm -f $IOE_DIR/ipt/rollback
 
 sync

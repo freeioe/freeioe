@@ -236,12 +236,12 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 		if status and status == 200 then
 			local sum, err = helper.md5sum(path)
 			if not sum then
-				return on_result(nil, "Cannot caculate md5, error:\t"..err)
+				return nil, "Cannot caculate md5, error:\t"..err
 			end
 			log.notice("Downloaded file md5 sum", sum)
 			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
 			if sum ~= md5 then
-				return "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum
+				return nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum
 			end
 		end
 		return success_callback(path)
