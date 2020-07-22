@@ -571,6 +571,7 @@ then
 		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz
 	fi
 	if [ -f $FREEIOE_FILE ]
+	then
 		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz
 	fi
 else
