@@ -556,6 +556,22 @@ then
 	fi
 fi
 
+if [ -f $IOE_DIR/ipt/strip_ioe ]
+then
+	rm -f $IOE_DIR/ipt/rollback
+	rm -f $IOE_DIR/ipt/upgrade_no_ack
+
+	if [ -f $IOE_DIR/ipt/rollback.sh.new ]
+	then
+		mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+	fi
+
+	[ -f $SKYNET_FILE ] && rm -f $SKYNET_FILE
+	[ -f $FREEIOE_FILE ] && rm -f $FREEIOE_FILE
+
+	exit 0
+fi
+
 if [ -f $IOE_DIR/ipt/upgrade_no_ack ]
 then
 	rm -f $IOE_DIR/ipt/rollback
