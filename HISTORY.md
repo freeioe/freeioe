@@ -9,6 +9,7 @@ v1.8.1 ()
 * Support PPP mode in home-made openwrt hardwares
 * Fixed missing stop bits function in serialdriver
 * Improve the self-upgrade process
+* Support strip_mode
 
 
 v1.8.0 (2020-04-13)

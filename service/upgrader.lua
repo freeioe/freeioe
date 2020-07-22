@@ -556,7 +556,7 @@ then
 	fi
 fi
 
-if [ -f $IOE_DIR/ipt/strip_ioe ]
+if [ -f $IOE_DIR/ipt/strip_mode ]
 then
 	rm -f $IOE_DIR/ipt/rollback
 	rm -f $IOE_DIR/ipt/upgrade_no_ack
