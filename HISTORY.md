@@ -3,13 +3,14 @@
 
 # Release history
 
-v1.8.1 ()
+v1.8.1 (2020-08-05)
 ------------------
 
 * Support PPP mode in home-made openwrt hardwares
 * Fixed missing stop bits function in serialdriver
 * Improve the self-upgrade process
 * Support strip_mode
+* Fixed df asserts on BMT devices
 
 
 v1.8.0 (2020-04-13)
