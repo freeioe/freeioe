@@ -109,7 +109,7 @@ function calc:_complete_call(trigger, ...)
 
 	local r, er, err = xpcall(f, debug.traceback, ...)
 	if not r then
-		self._log:warning('Calc Callback bug', er, err)
+		self._log:warning("Calc's callback code error:", er, err)
 		return nil, er and tostring(er) or nil
 	end
 	return er, er and tostring(err) or nil
@@ -223,7 +223,7 @@ function calc:_map_handler_func(handler, calc_handler, func)
 	local map_f = function(...)
 		local r, er, err = xpcall(calc_func, debug.traceback, ...)
 		if not r then
-			self._log:warning('Calc bug:', er, err)
+			self._log:warning('Calc handler function code error:', er, err)
 		end
 		return hf(...)
 	end
