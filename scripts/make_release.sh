@@ -53,7 +53,7 @@ cp -rL lualib/resty __install/lualib/resty
 ./feeds/example_apps/release.sh ./scripts/release_app.sh
 
 # Validate platform name
-PLAT_NAMES="linux/x86_64 openwrt/17.01/arm_cortex-a9_neon openwrt/18.06/x86_64 openwrt/19.07/x86_64 openwrt/19.07/arm_cortex-a7_neon-vfpv4 openwrt/snapshot/mipsel_24kc"
+PLAT_NAMES="linux/x86_64 openwrt/17.01/arm_cortex-a9_neon openwrt/19.07/x86_64 openwrt/19.07/arm_cortex-a7_neon-vfpv4 openwrt/snapshot/mipsel_24kc"
 
 # Release Extensions
 for plat in $PLAT_NAMES; do
