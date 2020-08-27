@@ -99,7 +99,9 @@ function create_methods(bus)
 				if cfg_key ~= 'SYS' and cfg_key ~= 'CLOUD' then
 					return ubus.STATUS_INVALID_ARGUMENT
 				end
-				dc.set(cfg_key, msg.conf)
+				for k, v in pairs(msg.conf) do
+					dc.set(cfg_key, k, v)
+				end
 
 				response( msg )
 				return ubus.STATUS_OK
