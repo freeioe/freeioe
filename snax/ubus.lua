@@ -74,6 +74,37 @@ function create_methods(bus)
 				return ubus.STATUS_OK
 			end, {}
 		},
+		cfg_get = {
+			function(req, msg, response)
+				local dc = require 'skynet.datacenter'
+				if not msg.cfg then
+					return ubus.STATUS_INVALID_ARGUMENT
+				end
+				local cfg_key = string.upper(msg.cfg)
+				if cfg_key ~= 'SYS' and cfg_key ~= 'CLOUD' then
+					return ubus.STATUS_INVALID_ARGUMENT
+				end
+
+				response(dc.get(cfg_key))
+				return ubus.STATUS_OK
+			end, {cfg=ubus.STRING}
+		},
+		cfg_set = {
+			function(req, msg, response)
+				local dc = require 'skynet.datacenter'
+				if not msg.cfg or not msg.conf then
+					return ubus.STATUS_INVALID_ARGUMENT
+				end
+				local cfg_key = string.upper(msg.cfg)
+				if cfg_key ~= 'SYS' and cfg_key ~= 'CLOUD' then
+					return ubus.STATUS_INVALID_ARGUMENT
+				end
+				dc.set(cfg_key, msg.conf)
+
+				response( msg )
+				return ubus.STATUS_OK
+			end, {cfg=ubus.STRING,conf=ubus.TABLE}
+		},
 		apps = {
 			function(req, msg, response)
 				local dc = require 'skynet.datacenter'
@@ -94,7 +125,7 @@ function create_methods(bus)
 		start_app = {
 			function(req, msg, response)
 				if not msg.inst then
-					return ubus.INVALID_ARGUMENT
+					return ubus.STATUS_INVALID_ARGUMENT
 				end
 				local appmgr = snax.queryservice('appmgr')
 				local r, err = appmgr.req.start(msg.inst)
@@ -105,7 +136,7 @@ function create_methods(bus)
 		stop_app = {
 			function(req, msg, response)
 				if not msg.inst then
-					return ubus.INVALID_ARGUMENT
+					return ubus.STATUS_INVALID_ARGUMENT
 				end
 				local appmgr = snax.queryservice('appmgr')
 				local r, err = appmgr.req.stop(msg.inst, 'stop from ubus')
@@ -147,7 +178,7 @@ function create_methods(bus)
 		upgrade_app = {
 			function(req, msg, response)
 				if not msg.inst then
-					return ubus.INVALID_ARGUMENT
+					return ubus.STATUS_INVALID_ARGUMENT
 				end
 				local data = {
 					inst = msg.inst,
@@ -162,7 +193,7 @@ function create_methods(bus)
 		install_app = {
 			function(req, msg, response)
 				if not msg.inst or not msg.name then
-					return ubus.INVALID_ARGUMENT
+					return ubus.STATUS_INVALID_ARGUMENT
 				end
 				local data = {
 					inst = msg.inst,
@@ -179,7 +210,7 @@ function create_methods(bus)
 		option_app = {
 			function(req, msg, response)
 				if not msg.inst or not msg.option or msg.value == nil then
-					return ubus.INVALID_ARGUMENT
+					return ubus.STATUS_INVALID_ARGUMENT
 				end
 				local appmgr = snax.queryservice('appmgr')
 				local r, err = appmgr.req.app_option(msg.inst, msg.option, msg.value)

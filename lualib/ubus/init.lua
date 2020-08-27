@@ -39,7 +39,7 @@ ubus.static.MONITOR_MAX = 6
 
 ubus.static.STATUS_OK = 0
 ubus.static.STATUS_INVALID_COMMAND = 1
-ubus.static.STATUS_INVALID_AGRUMENT = 2
+ubus.static.STATUS_INVALID_ARGUMENT = 2
 ubus.static.STATUS_METHOD_NOT_FOUND = 3
 ubus.static.STATUS_NOT_FOUND = 4
 ubus.static.STATUS_NO_DATA = 5
@@ -288,6 +288,7 @@ end
 
 function ubus:__fire_status(req, obj_id, status)
 	--print('fire status', obj_id, status)
+	local status = status or ubus.STATUS_UNKNOWN_ERROR
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_STATUS, status)
 	buf:add_int32(ubus.ATTR_OBJID, obj_id)
@@ -299,7 +300,13 @@ function ubus:__send_reply(req, obj_id, data)
 	local buf = ublob_buf:new(ubus.blob_info, 0)
 	buf:add_int32(ubus.ATTR_OBJID, obj_id)
 	buf:add_ubus_data(ubus.ATTR_DATA, data)
-	return self:send_ubuf(req, umsg.DATA, buf)
+
+	local r, ret, data = xpcall(self.send_ubuf, debug.traceback, self, req, umsg.DATA, buf)
+	if not r then
+		skynet.error(tostring(ret))
+		return self:__fire_status(req, obj_id, ubus.STATUS_UNKNOWN_ERROR)
+	end
+	return ret, data
 end
 
 function ubus:__request(func, req, obj_id, msg)

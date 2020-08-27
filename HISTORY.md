@@ -3,6 +3,11 @@
 
 # Release history
 
+v1.9.0
+------------------
+
+* UBUS service support cfg_set cfg_get method
+
 v1.8.1 (2020-08-05)
 ------------------
 
