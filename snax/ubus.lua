@@ -103,7 +103,9 @@ function create_methods(bus)
 					dc.set(cfg_key, k, v)
 				end
 
-				response( msg )
+				skynet.call(".cfg", "lua", "save")
+
+				response(dc.get(cfg_key))
 				return ubus.STATUS_OK
 			end, {cfg=ubus.STRING,conf=ubus.TABLE}
 		},
