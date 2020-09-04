@@ -41,7 +41,7 @@ function _M.df(path)
 	if #r == 1 then
 		return r[1]
 	end
-	return r
+	return nil, 'Failed to reading filesystem information on path:'..path
 end
 
 return _M

@@ -88,14 +88,14 @@ local function data_cache_compatitable()
 	end
 
 	local dir, err = disk.df(ddir)
-	if not dir then
-		log.warning("::CFG:: Cannot access data directory", sysinfo.data_dir(), err)
+	if not dir or not dir.total then
+		log.warning("::CFG:: Cannot access data directory", ddir, err)
 		return nil, err
 	end
 
 	--- total unit is 1K-block
 	if dir.total < 256 * 1024 then
-		log.warning("::CFG:: Data directory is too small!", sysinfo.data_dir(), dir.total)
+		log.warning("::CFG:: Data directory is too small!", ddir, dir.total)
 		return nil, "Data dir is too small"
 	end
 	return true
