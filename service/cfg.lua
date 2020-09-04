@@ -7,6 +7,7 @@ local lfs = require 'lfs'
 local restful = require 'http.restful'
 local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
+local disk = require 'utils.disk'
 local ioe = require 'ioe'
 
 local db_file = "cfg.json"
@@ -51,6 +52,7 @@ local function cloud_defaults()
 		PORT = 1883,
 		KEEPALIVE = 60,
 		DATA_UPLOAD = false,
+		DATA_CACHE = true,
 		EVENT_UPLOAD = 99,
 		SECRET = "ZGV2aWNlIGlkCg==",
 	}
@@ -77,6 +79,19 @@ local function set_sys_defaults(data)
 	return data
 end
 
+local function data_cache_compatitable()
+	local dir, err = disk.df(sysinfo.data_dir())
+	if not dir then
+		log.error("::CFG:: Cannot access data directory", sysinfo.data_dir(), err)
+		return nil, err
+	end
+	if dir.total < 256 * 1024 * 1024 then
+		log.error("::CFG:: Data directory is too small!", sysinfo.data_dir(), dir.total)
+		return nil, "Data dir is too small"
+	end
+	return true
+end
+
 local function set_cloud_defaults(data)
 	local data = data or {}
 	local defaults = cloud_defaults()
@@ -89,6 +104,11 @@ local function set_cloud_defaults(data)
 	end
 	if string.match(data.HOST, 'cloud.thingsroot.com') then
 		data.HOST = defaults.HOST
+	end
+
+	if not data_cache_compatitable() then
+		log.info("::CFG:: Data cache not allowed in currect device")
+		data.DATA_CACHE = false
 	end
 
 	--- export host to /tmp/sysinfo/cloud
