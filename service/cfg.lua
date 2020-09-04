@@ -80,13 +80,22 @@ local function set_sys_defaults(data)
 end
 
 local function data_cache_compatitable()
-	local dir, err = disk.df(sysinfo.data_dir())
-	if not dir then
-		log.error("::CFG:: Cannot access data directory", sysinfo.data_dir(), err)
+	local ddir = sysinfo.data_dir()
+	if ddir == '/tmp' then
+		local err = 'Data cache not allowed on /tmp'
+		log.warning("::CFG:: "..err)
 		return nil, err
 	end
-	if dir.total < 256 * 1024 * 1024 then
-		log.error("::CFG:: Data directory is too small!", sysinfo.data_dir(), dir.total)
+
+	local dir, err = disk.df(ddir)
+	if not dir then
+		log.warning("::CFG:: Cannot access data directory", sysinfo.data_dir(), err)
+		return nil, err
+	end
+
+	--- total unit is 1K-block
+	if dir.total < 256 * 1024 then
+		log.warning("::CFG:: Data directory is too small!", sysinfo.data_dir(), dir.total)
 		return nil, "Data dir is too small"
 	end
 	return true
