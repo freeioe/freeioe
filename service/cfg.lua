@@ -36,7 +36,7 @@ local function get_cfg_str()
 	return str, md5.sumhexa(str)	
 end
 
-local function sys_defaults()
+local function _sys_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
 	return {
 		ID = ioe_sn,
@@ -46,7 +46,7 @@ local function sys_defaults()
 	}
 end
 
-local function cloud_defaults()
+local function _cloud_defaults()
 	return {
 		HOST = "ioe.thingsroot.com",
 		PORT = 1883,
@@ -60,7 +60,7 @@ end
 
 local function set_sys_defaults(data)
 	local data = data or {}
-	local defaults = sys_defaults()
+	local defaults = _sys_defaults()
 
 	--- Fix hacks
 	if string.match(data.PKG_HOST_URL or '', 'cloud.thingsroot.com') then
@@ -111,7 +111,7 @@ end
 
 local function set_cloud_defaults(data)
 	local data = data or {}
-	local defaults = cloud_defaults()
+	local defaults = _cloud_defaults()
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
 	end
@@ -185,8 +185,8 @@ local function load_cfg(path)
 	log.info("::CFG:: Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
-		dc.set("SYS", sys_defaults())
-		dc.set("CLOUD", cloud_defaults())
+		dc.set("SYS", set_sys_defaults())
+		dc.set("CLOUD", set_cloud_defaults())
 		dc.set("APPS", {})
 		return nil, err
 	end
