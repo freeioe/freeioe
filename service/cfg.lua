@@ -86,6 +86,11 @@ local function data_cache_compatitable()
 		log.warning("::CFG:: "..err)
 		return nil, err
 	end
+	if not lfs.attributes(ddir, 'mode') then
+		local err = 'Data cache not exists'
+		log.warning("::CFG:: "..err)
+		return nil, err
+	end
 
 	local dir, err = disk.df(ddir)
 	if not dir or not dir.total then
