@@ -100,9 +100,12 @@ local function data_cache_compatitable()
 
 	--- total unit is 1K-block
 	if dir.total < 256 * 1024 then
-		log.warning("::CFG:: Data directory is too small!", ddir, dir.total)
+		log.warning("::CFG:: Data cache directory is too small!", ddir, dir.total)
 		return nil, "Data dir is too small"
+	else
+		log.notice("::CFG:: Data cache directory info", ddir, dir.total)
 	end
+
 	return true
 end
 
