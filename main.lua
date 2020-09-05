@@ -1,10 +1,18 @@
 local skynet = require "skynet"
 local snax = require "skynet.snax"
+local lfs = require 'lfs'
 
 local is_windows = package.config:sub(1,1) == '\\'
 
 skynet.start(function()
 	skynet.error("FreeIOE Starting...")
+	if not lfs.currentdir() then
+		skynet.error("FreeIOE Current Directory is nil!")
+		skynet.sleep(5)
+		skynet.abort()
+		return
+	end
+
 	--skynet.newservice("exec_sal")
 	if not is_windows and not os.getenv("IOE_RUN_AS_DAEMON") then
 		local console = skynet.newservice("console")
