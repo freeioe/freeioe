@@ -55,11 +55,11 @@ local function check_exists(exec)
 	local lfs = require 'lfs'
 	local plat = sysinfo.platform()
 	assert(plat, "OS Platform is nil")
-	assert(lfs.currentdir(), "LFS CurrentDir is nil")
-	local path = lfs.currentdir().."/ioe/linux/"..plat.."/"..exec
-	local f, err = io.open(path, "r")
-	if f then
-		f:close()
+	local cur_dir = lfs.currentdir() or '/usr/ioe/skynet'
+	local path = cur_dir.."/ioe/linux/"..plat.."/"..exec
+
+	local m, err = lfs.attributes(path, "mode")
+	if m then
 		return path
 	end
 	return nil, err
