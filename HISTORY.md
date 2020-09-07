@@ -3,13 +3,13 @@
 
 # Release history
 
-v1.9.0
+v1.9.0 (2020-09-07)
 ------------------
 
 * UBUS service support cfg_set cfg_get method
 * Enable data cache by default when data dir bigger than 256M
 * Fixed configuration error when cfg.json does not exits
-* Using /usr/ioe/skynet as default dir when lfs.currentdir is nil
+* Abort when lfs.currentdir() returns nil
 
 
 v1.8.1 (2020-08-05)
