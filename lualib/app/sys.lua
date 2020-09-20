@@ -75,11 +75,15 @@ end
 
 function sys:fix_time()
 	if skynet.fix_time then
-		skynet.fix_time()
-	else
-		self._logger:warning("Reboot FreeIOE to fix time diff issue!")
-		self:abort()
+		local r = skynet.fix_time()
+		--- previous fix_time does not returns any value, so r will be nil
+		if r or r == nil then
+			return
+		end
 	end
+
+	self._logger:warning("Reboot FreeIOE to fix time diff issue!")
+	self:abort()
 end
 
 -- seconds (UTC now)
