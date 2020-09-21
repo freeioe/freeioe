@@ -12,6 +12,24 @@ date +%s >> $START_TIME_FILE
 echo "Starting...." > $STARTUP_LOG
 date +"Start Time: %c" >> $STARTUP_LOG
 
+if [ -f $IOE_DIR/ipt/strip_mode ]
+then
+	i=1
+	while [ $i -le 300 ]
+	do
+		if [ -f $IOE_DIR/ipt/strip_done ]
+		then
+			if [ $i -gt 1 ]
+			then
+				sync
+			fi
+			break
+		fi
+		sleep 1
+		let i++
+	done
+fi
+
 if [ -f $IOE_DIR/ipt/startup.sh ]
 then
 	sh $IOE_DIR/ipt/startup.sh
