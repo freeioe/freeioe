@@ -280,6 +280,7 @@ function command.install_ext(id, args)
 			return true
 		else
 			log.error("Install extention failed", name, version, r, status)
+			os.execute("rm -rf "..target_folder)
 			return false, "failed to unzip Extension"
 		end
 	end)
