@@ -7,6 +7,7 @@ v1.10.0 ()
 ------------------
 
 * Fixed timestamp issued caused by fix_time
+* Fixed websocket asserts on closed fd
 
 
 v1.9.0 (2020-09-07)

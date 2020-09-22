@@ -28,8 +28,8 @@ function client_class:send(data)
 	local id = self.id
 	local r, err = xpcall(websocket.write, debug.traceback, id, str)
 	if not r then
+		self:close(nil, err)
 		log.error("::WS:: Call websocket.write failed", err)
-		websocket.close(id, nil, err)
 		return nil, err
 	end
 
@@ -38,6 +38,7 @@ function client_class:send(data)
 end
 
 function client_class:close(code, reason)
+	client_map[id] = nil
 	return websocket.close(self.id, code, reason)
 end
 
@@ -131,7 +132,7 @@ function handler.message(id, message)
 		end
 	else
 		-- Should not be here
-		websocket.close(id)
+		client:close()
 	end
 end
 
