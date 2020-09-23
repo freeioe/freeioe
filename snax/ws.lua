@@ -38,7 +38,7 @@ function client_class:send(data)
 end
 
 function client_class:close(code, reason)
-	client_map[id] = nil
+	client_map[self.id] = nil
 	return websocket.close(self.id, code, reason)
 end
 
