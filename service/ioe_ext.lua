@@ -120,7 +120,7 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 			if lfs.attributes(path, 'mode') == 'file' then
 				local lnpath = target_folder..filename
 				os.execute("rm -f "..lnpath)
-				log.debug('File link ', path, lnpath)
+				log.debug('::EXT:: File link ', path, lnpath)
 				os.execute("ln -s "..path.." "..lnpath)
 			end
 		end
@@ -262,15 +262,15 @@ function command.install_ext(id, args)
 	end
 
 	return create_download(inst, name, version, function(path)
-		log.notice("Download extension finished", name, version)
+		log.notice("::EXT:: Download extension finished", name, version)
 
 		local target_folder = get_target_folder(inst)
 		lfs.mkdir(target_folder)
-		log.debug("tar xzf "..path.." -C "..target_folder)
+		log.debug("::EXT:: tar xzf "..path.." -C "..target_folder)
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
 		if r and status == 'exit' then
-			log.notice("Install extension finished", name, version, r, status)
+			log.notice("::EXT:: Install extension finished", name, version, r, status)
 			installed[inst] = {
 				name = name,
 				version = version,
@@ -279,7 +279,7 @@ function command.install_ext(id, args)
 			cloud_update_ext_list()
 			return true
 		else
-			log.error("Install extention failed", name, version, r, status)
+			log.error("::EXT:: Install extention failed", name, version, r, status)
 			os.execute("rm -rf "..target_folder)
 			return false, "failed to unzip Extension"
 		end
@@ -305,18 +305,18 @@ function command.upgrade_ext(id, args)
 	end
 
 	return create_download(inst, name, version, function(path)
-		log.notice("Download extension finished", name, version, beta)
+		log.notice("::EXT:: Download extension finished", name, version, beta)
 
 		local target_folder = get_target_folder(inst)
-		log.debug("tar xzf "..path.." -C "..target_folder)
+		log.debug("::EXT:: tar xzf "..path.." -C "..target_folder)
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
 		if not r or status ~= 'exit' then
-			log.error("Install extention failed", name, version, r, status)
+			log.error("::EXT:: Install extention failed", name, version, r, status)
 			return false, "Extention upgradation failed to install"
 		end
 
-		log.notice("Install extension finished", name, version, r, status)
+		log.notice("::EXT:: Install extension finished", name, version, r, status)
 		installed[inst] = {
 			name = name,
 			version = version
@@ -325,7 +325,7 @@ function command.upgrade_ext(id, args)
 		for _,app_inst in ipairs(applist) do
 			local r, err = appmgr.req.start(app_inst)
 			if not r then
-				log.error("Failed to start application after extension upgraded. Error: "..err)
+				log.error("::EXT::: Failed to start application after extension upgraded. Error: "..err)
 			end
 		end
 		return true, "Extension upgradation is done!"

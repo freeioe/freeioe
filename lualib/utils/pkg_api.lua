@@ -35,7 +35,7 @@ function _M.pkg_check_update(pkg_host, app, beta)
 		query.beta = 1
 	end
 	local status, header, body = httpdown.get(pkg_host, url, api_header, query)
-	log.info('pkg_check_update', pkg_host..url, status, body or header)
+	log.info('::PKG:: pkg_check_update', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
@@ -51,7 +51,7 @@ end
 function _M.pkg_enable_beta(pkg_host, sys_id)
 	local url = '/pkg/enable_beta'
 	local status, header, body = httpdown.get(pkg_host, url, api_header, {sn=sys_id})
-	log.info('pkg_enable_beta', pkg_host..url, status, body or header)
+	log.info('::PKG:: pkg_enable_beta', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
@@ -69,7 +69,7 @@ function _M.pkg_user_access(pkg_host, sys_id, auth_code)
 		AuthorizationCode=auth_code
 	}
 	local status, header, body = httpdown.get(pkg_host, url, headers, {sn=sys_id})
-	log.info('pkg_user_access', pkg_host..url, status, body or header)
+	log.info('::PKG:: pkg_user_access', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
@@ -87,7 +87,7 @@ function _M.pkg_check_version(pkg_host, app, version)
 	end
 	local url = '/pkg/check_version'
 	local status, header, body = httpdown.get(pkg_host, url, api_header, {app=app, version=version})
-	log.info('pkg_check_version', pkg_host..url, status, body or header)
+	log.info('::PKG:: pkg_check_version', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
@@ -104,7 +104,7 @@ function _M.pkg_latest_version(pkg_host, app, beta)
 	local beta = beta and 1 or 0
 	local url = '/pkg/get_latest_version'
 	local status, header, body = httpdown.get(pkg_host, url, api_header, {app=app, beta=beta})
-	log.info('pkg_check_version', pkg_host..url, status, body or header)
+	log.info('::PKG:: pkg_check_version', pkg_host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)
@@ -221,7 +221,7 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 			url = _M.url_packages.."/bin/"..plat.."/"..app_name.."/"..version..ext
 		end
 
-		log.notice('Start download package '..app_name..' from: '..pkg_host..url)
+		log.notice('::PKG:: Start download package '..app_name..' from: '..pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
 			return nil, "Download package "..app_name.." failed. Reason:"..tostring(header)
@@ -238,7 +238,7 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 			if not sum then
 				return nil, "Cannot caculate md5, error:\t"..err
 			end
-			log.notice("Downloaded file md5 sum", sum)
+			log.notice("::PKG:: Downloaded file md5 sum", sum)
 			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')
 			if sum ~= md5 then
 				return nil, "Check md5 sum failed, expected:\t"..md5.."\t Got:\t"..sum

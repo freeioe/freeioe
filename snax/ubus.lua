@@ -64,6 +64,11 @@ function create_methods(bus)
 				local cloud = snax.queryservice('cloud')
 				local info = {}
 				info.host = dc.get("CLOUD", "HOST")
+				info.port = dc.get("CLOUD", "PORT")
+				info.data_upload = dc.get("CLOUD", "DATA_UPLOAD")
+				info.event_upload = dc.get("CLOUD", "EVENT_UPLOAD")
+				info.data_cache = dc.get("CLOUD", "DATA_CACHE")
+				info.secret = dc.get("CLOUD", "SECRET")
 				local online, last, msg = cloud.req.get_status()
 				info.mqtt = {
 					online = online,

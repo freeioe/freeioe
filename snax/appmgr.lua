@@ -22,7 +22,7 @@ end
 ---
 -- Return instance id
 function response.start(name, conf)
-	log.info("::AppMgr:: Strat application "..name)
+	log.info("::AppMgr:: Start application "..name)
 	-- Get application list item by name
 	applist[name] = applist[name] or {}
 	local app = applist[name]
@@ -40,6 +40,8 @@ function response.start(name, conf)
 	local mgr_snax = snax.self()
 	local inst, err = snax.newservice("appwrap", name, app.conf, mgr_snax.handle, mgr_snax.type)
 	assert(not app.inst, "Bug found when starting application!!")
+
+	log.info("::AppMgr:: Application instance created "..name)
 
 	--- Set the instance and last ping time
 	app.inst = inst
