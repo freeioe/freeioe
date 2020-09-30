@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.10.0 ()
+v1.10.0 (2020-09-30)
 ------------------
 
 * Fixed timestamp issued caused by fix_time
