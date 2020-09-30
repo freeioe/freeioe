@@ -158,6 +158,9 @@ local msg_handler = {
 		if action == 'enable/data_one_short' then
 			snax.self().post.enable_data_one_short(args.id, tonumber(args.data))
 		end
+		if action == 'enable/data_cache' then
+			snax.self().post.enable_cache(args.id, tonumber(args.data) == 1)
+		end
 		if action == 'enable/stat' then
 			snax.self().post.enable_stat(args.id, tonumber(args.data) == 1)
 		end
