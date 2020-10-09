@@ -12,14 +12,27 @@ local function list_leds()
 		local leds_path = '/sys/class/leds'
 		if lfs.attributes(leds_path, 'mode') == 'directory' then
 			for filename in lfs.dir(leds_path) do
-				local id, color, short_name = string.match(filename, '^([^:]+):([^:]+):([^:]+)$')
-				list[filename] = {
-					name = filename,
-					brightness_path = leds_path.."/"..filename.."/brightness",
-					id = id,
-					color = color,
-					short_name = short_name,
-				}
+				local model, color, short_name = string.match(filename, '^([^:]+):([^:]+):([^:]+)$')
+				if model and color and short_name then
+					list[filename] = {
+						name = filename,
+						brightness_path = leds_path.."/"..filename.."/brightness",
+						model = model,
+						color = color,
+						short_name = short_name,
+					}
+				else
+					local color, short_name = string.match(filename, '^([^:]+):([^:]+)$')
+					if color and short_name then
+						list[filename] = {
+							name = filename,
+							brightness_path = leds_path.."/"..filename.."/brightness",
+							model = 'openwrt',
+							color = color,
+							short_name = short_name,
+						}
+					end
+				end
 			end
 		end
 	end

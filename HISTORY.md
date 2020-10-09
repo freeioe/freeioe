@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.11.0 ()
+------------------
+
+* Support the leds without model name prefix
+
+
 v1.10.0 (2020-09-30)
 ------------------
 
