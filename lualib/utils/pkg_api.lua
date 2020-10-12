@@ -28,6 +28,12 @@ function _M.valid_inst(s)
 	return s and #s > 0 and s == _M.trim_inst(s)
 end
 
+function _M.pkg_check_update_ext(pkg_host, ext_name, beta)
+	local plat = sysinfo.platform()
+	ext = "bin/"..plat.."/"..ext_name
+	return _M.pkg_check_update(pkg_host, ext, beta)
+end
+
 function _M.pkg_check_update(pkg_host, app, beta)
 	local url = '/pkg/check_update'
 	local query = { app = app }
@@ -80,6 +86,12 @@ function _M.pkg_user_access(pkg_host, sys_id, auth_code)
 
 end
 
+function _M.pkg_check_version_ext(pkg_host, ext_name, version)
+	local plat = sysinfo.platform()
+	ext = "bin/"..plat.."/"..ext_name
+	return _M.pkg_check_version(pkg_host, ext, version)
+end
+
 function _M.pkg_check_version(pkg_host, app, version)
 	local version = version
 	if type(version) == 'number' then
@@ -98,6 +110,12 @@ function _M.pkg_check_version(pkg_host, app, version)
 	else
 		return nil, body
 	end
+end
+
+function _M.pkg_latest_version_ext(pkg_host, ext_name, beta)
+	local plat = sysinfo.platform()
+	ext = "bin/"..plat.."/"..ext_name
+	return _M.pkg_latest_version(pkg_host, ext, beta)
 end
 
 function _M.pkg_latest_version(pkg_host, app, beta)

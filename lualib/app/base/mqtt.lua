@@ -280,7 +280,7 @@ function app:_connect_proc()
 	log:info("MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, username, password)
 	local client = assert(mosq.new(mqtt_id, clean_session))
 	local close_client = false
-	client:version_set(mosq.PROTOCOL_V311)
+	client:version_set(mosq.PROTOCOL_V311 or mosq.MQTT_PROTOCOL_V311)
 	if username and string.len(username) > 0 then
 		client:login_set(username, password)
 	end

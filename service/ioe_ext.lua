@@ -337,16 +337,14 @@ function command.pkg_check_update(ext, beta)
 
 	local pkg_host = ioe.pkg_host_url()
 	local beta = beta and ioe.beta()
-	local ext_path = 'ext/'..sysinfo.platform()..'/'..ext
-	return pkg_api.pkg_check_update(pkg_host, ext_path, beta)
+	return pkg_api.pkg_check_update_ext(pkg_host, ext, beta)
 end
 
 function command.pkg_check_version(ext, version)
 	assert(ext, "Extention name required!")
 
 	local pkg_host = ioe.pkg_host_url()
-	local ext_path = 'ext/'..sysinfo.platform()..'/'..ext
-	return pkg_api.pkg_check_version(pkg_host, ext_path, version)
+	return pkg_api.pkg_check_version_ext(pkg_host, ext, version)
 end
 
 function command.pkg_latest_version(ext, beta)
@@ -354,8 +352,7 @@ function command.pkg_latest_version(ext, beta)
 
 	local pkg_host = ioe.pkg_host_url()
 	local beta = beta and ioe.beta()
-	local ext_path = 'ext/'..sysinfo.platform()..'/'..ext
-	return pkg_api.pkg_latest_version(pkg_host, ext_path, beta)
+	return pkg_api.pkg_latest_version_ext(pkg_host, ext, beta)
 end
 
 function command.auto_clean()
