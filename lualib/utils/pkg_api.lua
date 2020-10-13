@@ -212,6 +212,11 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 	local ext = ext
 	local is_extension = is_extension
 
+	--- All lua5.3 extension stop on version 43
+	if is_extension and _VERSION == 'Lua 5.3' then
+		version = 43
+	end
+
 	if version == 'latest' and ioe.beta() then
 		version = 'latest.beta'
 	end

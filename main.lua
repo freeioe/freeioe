@@ -13,6 +13,10 @@ skynet.start(function()
 		return
 	end
 
+	if _VERSION ~= 'Lua 5.4' then
+		skynet.error("FreeIOE required run with skynet built with Lua 5.4!!!!")
+	end
+
 	--skynet.newservice("exec_sal")
 	if not is_windows and not os.getenv("IOE_RUN_AS_DAEMON") then
 		local console = skynet.newservice("console")
