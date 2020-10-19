@@ -42,7 +42,7 @@ strip_files() {
 	ls -lh $SKYNET_DIR/skynet
 	$STRIP $SKYNET_DIR/skynet
 	find $SKYNET_DIR/cservice/ -mindepth 1 | xargs $STRIP
-	find $SKYNET_DIR/luaclib/ -mindepth 1 | xargs $STRIP
+	find $SKYNET_DIR/luaclib/ -mindepth 1 | grep so | xargs $STRIP
 	ls -lh $SKYNET_DIR/skynet
 }
 
