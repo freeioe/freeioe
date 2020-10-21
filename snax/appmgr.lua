@@ -304,11 +304,13 @@ end
 -- @handle source snax type
 -- @fire_list fire application list inside post
 function accept.listen(handle, type, fire_list)
-	local snax_inst = snax.bind(handle, type)
-	listeners[handle] = snax_inst
-	if fire_list then
-		snax_inst.post.app_list(applist)
-	end
+	skynet.fork(function()
+		local snax_inst = snax.bind(handle, type)
+		listeners[handle] = snax_inst
+		if fire_list then
+			snax_inst.post.app_list(applist)
+		end
+	end)
 	return true
 end
 
