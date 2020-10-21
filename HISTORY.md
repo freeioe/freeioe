@@ -7,6 +7,8 @@ v1.11.0 ()
 ------------------
 
 * Support the leds without model name prefix
+* Support Lua5.4
+* Fixed snax binding asserts
 
 
 v1.10.0 (2020-09-30)
