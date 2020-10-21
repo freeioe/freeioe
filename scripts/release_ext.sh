@@ -30,6 +30,8 @@ cd ./feeds/prebuild_exts/$TARGET_PLAT
 ### Get the version by count the commits
 VERSION=`git log --oneline | wc -l | tr -d ' '`
 
+VERSION=`expr 40000 + ${VERSION}`
+
 ### Generate the revision by last commit
 set -- $(git log -1 --format="%ct %h")
 R_SECS="$(($1 % 86400))"
