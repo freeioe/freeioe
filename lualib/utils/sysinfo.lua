@@ -347,7 +347,15 @@ end
 _M.os_version = function()
 	_M._OS_VERSION = _M._OS_VERSION or read_os_version() or os.getenv("MSYSTEM_CHOST")
 	if not _M._OS_VERSION and _M.os_id() == 'debian' then
-		_M._OS_VERSION = _M.cat_file('/etc/debian_version')
+		local s = _M.cat_file('/etc/debian_version')
+		local sver, ver = string.match(s, '^(%w+)/(%w+)')
+		if not sver then
+			ver = string.match(s, '^(%w+)')
+		end
+		if ver == 'sid' then
+			ver = 'testing'
+		end
+		_M._OS_VERSION = ver
 	end
 	return assert(_M._OS_VERSION)
 end
