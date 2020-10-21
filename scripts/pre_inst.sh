@@ -1,3 +1,6 @@
+# !/usr/bin/env bash
+
+set -e
 
 if [ $# != 2 ] ; then
 	echo "Usage: pre_inst.sh <app name> <inst name>"

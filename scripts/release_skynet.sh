@@ -1,4 +1,6 @@
-# !/usr/bin/env sh
+# !/usr/bin/env bash
+
+set -e
 
 SKYNET_DIR=$1
 RELEASE_DIR="$1/ioe/__release"

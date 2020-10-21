@@ -1,5 +1,7 @@
 # !/usr/bin/env sh
 
+set -e
+
 if [ $# -lt 3 ] ; then
 	echo "Usage: build_skynet.sh <cpu arch> <toolchain script name> <freeioe dir>"
 	exit 0

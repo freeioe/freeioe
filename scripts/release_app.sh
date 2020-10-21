@@ -1,3 +1,6 @@
+# !/usr/bin/env bash
+
+set -e
 
 if [ $# -lt 1 ] ; then
 	echo "Usage: release_app.sh <app name>"

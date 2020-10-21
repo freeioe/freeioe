@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 if [ $# -lt 3 ] ; then
 	echo "Usage: build_ext_opcua.sh <cpu arch> <toolchain script name> <source dir>"
 	exit 0

@@ -1,5 +1,7 @@
 # !/usr/bin/env sh
 
+set -e
+
 echo "--------------------------------------------"
 echo "FreeIOE System IN:" $PWD
 

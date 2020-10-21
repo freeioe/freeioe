@@ -1,3 +1,6 @@
+# !/usr/bin/env bash
+
+set -e
 
 if [ $# -lt 3 ] ; then
 	echo "Usage: release_ext.sh <ext name> <platform> <type>"
