@@ -5,16 +5,7 @@ return function(adu)
 		crc = 0xffff;
 	end
 	local function updCrc(byte)
-		if _VERSION == 'Lua 5.3' then
-			crc = crc ~ byte
-			for i = 1, 8 do
-				local j = crc & 1
-				crc = crc >> 1
-				if j ~= 0 then
-					crc = crc ~ 0xA001
-				end
-			end
-		else
+		if _VERSION == 'Lua 5.1' or _VERSION == 'Lua 5.2' then
 			local bit32 = require 'bit'
 			crc = bit32.bxor(crc, byte);
 			for i = 1, 8 do
@@ -22,6 +13,15 @@ return function(adu)
 				crc = bit32.rshift(crc, 1);
 				if j ~= 0 then
 					crc = bit32.bxor(crc, 0xA001);
+				end
+			end
+		else
+			crc = crc ~ byte
+			for i = 1, 8 do
+				local j = crc & 1
+				crc = crc >> 1
+				if j ~= 0 then
+					crc = crc ~ 0xA001
 				end
 			end
 		end
