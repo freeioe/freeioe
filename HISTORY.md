@@ -9,7 +9,7 @@ v1.11.0 ()
 * Support the leds without model name prefix
 * Support Lua5.4
 * Fixed snax binding asserts
-* The ubus socket file path changed to /var/run/ubus/ubus.sock
+* Socket file of ubusd changed to /var/run/ubus/ubus.sock
 
 
 v1.10.0 (2020-09-30)
