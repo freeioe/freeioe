@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local socket = require 'skynet.socket'
 local socket_driver = require 'skynet.socketdriver'
 local lsocket = require 'lsocket'
+local lfs = require 'luafilesystem'
 local class = require 'middleclass'
 local ublob = require 'ubox.blob'
 local ublob_buf = require 'ubox.blob_buf'
@@ -140,12 +141,11 @@ function ubus:initialize(timeout)
 end
 
 function ubus:_default_sock()
-	local f, err = io.open(ubus.UNIX_SOCKET, 'r')
-	if f then
-		f:close()
+	if lfs.attributes(ubus.UNIX_SOCKET, 'mode') then
 		return ubus.UNIX_SOCKET
+	else
+		return ubus.UNIX_SOCKET_OLD
 	end
-	return ubus.UNIX_SOCKET_OLD
 end
 
 function ubus:connect(addr, port)
