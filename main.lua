@@ -35,5 +35,16 @@ skynet.start(function()
 	local commlog = snax.uniqueservice("buffer")
 	local ws = snax.uniqueservice("ws")
 
+	-- Enable ubus when lsocket exits and OS is openwrt
+	local lsocket_loaded, lsocket = pcall(require, 'lsocket')
+	if lsocket_loaded and lfs.attributes('/etc/openwrt_release', 'mode') then
+		skynet.error("Starts ubus service!!!")
+		local ubus = snax.uniqueservice('ubus')
+	else
+		skynet.error("Unix socket for ubus not found, ubus service will not be started!!!")
+		--local ubus = snax.uniqueservice('ubus', '172.30.11.230', 11000)
+		--local ubus = snax.uniqueservice('ubus', '/tmp/ubus.sock')
+	end
+
 	skynet.exit()
 end)
