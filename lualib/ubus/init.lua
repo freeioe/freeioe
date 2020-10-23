@@ -11,7 +11,8 @@ local basexx = require 'basexx'
 
 local ubus = class('ubus')
 
-ubus.static.UNIX_SOCKET = '/var/run/ubus.sock'
+ubus.static.UNIX_SOCKET = '/var/run/ubus/ubus.sock'
+ubus.static.UNIX_SOCKET_OLD = '/var/run/ubus.sock'
 
 ubus.static.ATTR_UNSPEC = 0
 ubus.static.ATTR_STATUS = 1
@@ -138,8 +139,17 @@ function ubus:initialize(timeout)
 	self.__objects = {}
 end
 
+function ubus:_default_sock()
+	local f, err = io.open(ubus.UNIX_SOCKET, 'r')
+	if f then
+		f:close()
+		return ubus.UNIX_SOCKET
+	end
+	return ubus.UNIX_SOCKET_OLD
+end
+
 function ubus:connect(addr, port)
-	local addr  = addr or ubus.UNIX_SOCKET
+	local addr  = addr or self:_default_sock()
 	local client, err = lsocket.connect(addr, port)
 	if not client then
 		return nil, err
