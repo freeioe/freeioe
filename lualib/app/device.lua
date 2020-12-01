@@ -142,7 +142,7 @@ function device:_publish_input(input, prop, value, timestamp, quality)
 end
 
 function device:set_input_prop(input, prop, value, timestamp, quality)
-	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
+	assert(input and prop and (value ~= nil), "Input/Prop/Value are required as not nil value")
 	if self._guest then
 		assert(self._secret, "Device permission denined!")
 		local secret = dc.get("DEVICE_SECRET", self._sn)
@@ -151,6 +151,10 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	end
 
 	local value = value
+	if type(value) == 'boolean' then
+		value = value and 1 or 0
+	end
+
 	local it = self._inputs_map[input]
 	if not it then
 		return nil, "Property "..input.." does not exits in device "..self._sn
