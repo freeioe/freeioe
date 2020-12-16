@@ -10,7 +10,7 @@ local conf_api = require 'app.conf.api'
 local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 6 -- 2019.09.28
+sys.API_VER = 7 -- 2020.12.16
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)

@@ -24,6 +24,26 @@ function app:initialize(name, sys, conf)
 	end
 end
 
+function app:app_name()
+	return self._name
+end
+
+function app:sys_api()
+	return self._sys
+end
+
+function app:data_api()
+	return self._api
+end
+
+function app:app_conf()
+	return self._conf
+end
+
+function app:log_api()
+	return self._log
+end
+
 function app:on_init()
 	---
 end
