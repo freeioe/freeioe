@@ -23,9 +23,9 @@ local function protect_call(func, ...)
 	assert(func)
 	local r, er, err = xpcall(func, debug.traceback, ...)
 	if not r then
-		return nil, er and tostring(er) or nil
+		return nil, er and tostring(er) or tostring(err)
 	end
-	return er, er and tostring(err) or nil
+	return er, err and tostring(err) or 'UNKNOWN ERROR'
 end
 
 function test:start()

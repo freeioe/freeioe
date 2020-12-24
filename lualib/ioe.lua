@@ -92,4 +92,16 @@ _M.abort = function(timeout)
 	end)
 end
 
+_M.env = {
+	set = function(...)
+		dc.set("__IOE_ENV", ...)
+	end,
+	get = function(...)
+		return dc.get("__IOE_ENV", ...)
+	end,
+	wait = function(...)
+		return dc.wait("__IOE_ENV", ...)
+	end,
+}
+
 return _M
