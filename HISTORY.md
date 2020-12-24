@@ -3,13 +3,14 @@
 
 # Release history
 
-v1.11.0 ()
+v1.11.0 (2020-12-24)
 ------------------
 
 * Support the leds without model name prefix
 * Support Lua5.4
 * Fixed snax binding asserts
 * Socket file of ubusd changed to /var/run/ubus/ubus.sock
+* App API version 8
 
 
 v1.10.0 (2020-09-30)
