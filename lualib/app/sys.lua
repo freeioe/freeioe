@@ -10,7 +10,7 @@ local conf_api = require 'app.conf.api'
 local lfs = require 'lfs'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 7 -- 2020.12.16
+sys.API_VER = 8 -- 2020.12.23
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)
@@ -151,6 +151,9 @@ function sys:get_conf(default_config)
 	local conf = {}
 	if app and app.conf then
 		conf = app.conf 
+	end
+	if not default_config then
+		return conf
 	end
 	return setmetatable(conf, {__index = default_config})
 end

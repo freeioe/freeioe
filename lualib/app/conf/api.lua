@@ -96,6 +96,15 @@ function api:data(version)
 	end
 end
 
+--- Fetch and return file path
+function api:fetch(version)
+	local data, version = self:data(version)
+	if not data then
+		return nil, version
+	end
+	return self:_local_filename(version)
+end
+
 function api:_local_filename(version)
 	return self._dir.."/"..self._conf.."_"..version.."."..self._ext
 end

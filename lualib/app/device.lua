@@ -159,12 +159,14 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 	if not it then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	else
-		if it.vt == 'int' then
-			value = math.floor(tonumber(value))
-		elseif it.vt == 'string' then
-			value = tostring(value)
-		else
-			value = tonumber(value)
+		if prop == 'value' then
+			if it.vt == 'int' then
+				value = math.floor(tonumber(value))
+			elseif it.vt == 'string' then
+				value = tostring(value)
+			else
+				value = tonumber(value)
+			end
 		end
 	end
 	if not value then
@@ -197,12 +199,14 @@ function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
 	if not it then
 		return nil, "Property "..input.." does not exits in device "..self._sn
 	else
-		if it.vt == 'int' then
-			value = math.floor(tonumber(value))
-		elseif it.vt == 'string' then
-			value = tostring(value)
-		else
-			value = tonumber(value)
+		if prop == 'value' then
+			if it.vt == 'int' then
+				value = math.floor(tonumber(value))
+			elseif it.vt == 'string' then
+				value = tostring(value)
+			else
+				value = tonumber(value)
+			end
 		end
 	end
 	if not value then
