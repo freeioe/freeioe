@@ -137,7 +137,7 @@ end
 local function backup_cfg(path)
 	os.execute("cp "..path.." "..path..".backup")
 	os.execute("cp "..path..".md5 "..path..".md5.backup")
-	os.execute("sync")
+	os.execute("sync &")
 end
 
 local on_cfg_crash_sh = [[

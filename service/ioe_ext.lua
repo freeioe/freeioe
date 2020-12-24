@@ -117,7 +117,8 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 	for filename in lfs.dir(src_folder) do
 		if filename ~= '.' and filename ~= '..' then
 			local path = src_folder..filename
-			if lfs.attributes(path, 'mode') == 'file' then
+			local mode = lfs.attributes(path, 'mode')
+			if mode == 'file' or mode == 'directory' then
 				local lnpath = target_folder..filename
 				os.execute("rm -f "..lnpath)
 				log.debug('::EXT:: File link ', path, lnpath)
@@ -187,7 +188,7 @@ local function auto_clean_exts()
 			remove_depends(inst)
 		end
 	end
-	os.execute('sync')
+	os.execute('sync &')
 end
 
 function command.list()
