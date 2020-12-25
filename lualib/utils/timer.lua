@@ -48,13 +48,22 @@ function timer:start()
 			end
 		end
 		self._closed = true
+		skynet.wakeup(self._stop)
 	end)
 end
 
 function timer:stop()
+	if self._closed then
+		return
+	end
+
 	if not self._stop then
-		self._stop = true
+		self._stop = {}
 		skynet.wakeup(self)
+		skynet.sleep(500, self._stop)
+		assert(self._closed)
+	else
+		skynet.wait(500, self._stop)
 		assert(self._closed)
 	end
 end

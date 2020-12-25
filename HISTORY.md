@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.11.1 ()
+------------------
+
+* Fixed MQTT disconnection time takes too long issue
+
+
 v1.11.0 (2020-12-24)
 ------------------
 

@@ -41,10 +41,7 @@ local on_close = function(...)
 
 	if app then
 		app_closing = true
-		local r, err = protect_call(app, 'close', ...)
-		if not r and err then
-			return clean_up(nil, err)
-		end
+		return clean_up(protect_call(app, 'close', ...))
 	end
 	return clean_up(true)
 end

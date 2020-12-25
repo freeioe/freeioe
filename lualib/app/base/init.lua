@@ -50,10 +50,12 @@ end
 
 function app:on_start()
 	self._log:trace("Default simple application on_start used.")
+	return true
 end
 
 function app:on_close(reason)
 	self._log:trace("Default simple application on_stop used.")
+	return true
 end
 
 local function __map_handler(handler, app, func)

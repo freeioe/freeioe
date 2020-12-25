@@ -94,6 +94,7 @@ function app:initialize(name, sys, conf)
 	self._data_cache_fire_gap = tonumber(conf.data_cache_fire_gap) or 1000 -- ms
 	self._data_cache_fire_gap = self._data_cache_fire_gap < 1000 and 1000 or self._data_cache_fire_gap
 
+	self._connecting = nil
 	self._close_connection = nil
 	self._mqtt_reconnect_timeout = 1000
 	self._max_mqtt_reconnect_timeout = 512 * 1000 -- about 8.5 minutes
@@ -178,12 +179,15 @@ function app:connect()
 end
 
 function app:disconnect()
-	if not self._mqtt_client then
-		return
+	if self._close_connection then
+		return nil, "Connection is closing"
 	end
 
 	self._log:debug("Cloud Connection Closing!")
 	self._close_connection = {}
+	if self._connecting then
+		self._sys:wakeup(self._connecting)
+	end
 	self._sys:wait(self._close_connection)
 	self._close_connection = nil
 	return true
@@ -374,10 +378,15 @@ function app:_connect_proc()
 	log:info('MQTT Connectting...')
 	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	local ts = 1000
-	while not r do
+	while not r and self._close_connection == nil do
 		log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
 		ts = ts * 2
-		self._sys:sleep(ts)
+		self._connecting = {}
+		self._sys:sleep(ts, self._connecting)
+		self._connecting = nil
+		if self._close_connection then
+			break
+		end
 
 		if ts > self._max_mqtt_reconnect_timeout then
 			log:error("Destroy client and reconnect!")

@@ -38,6 +38,8 @@ local qos_msg_buf = nil			--- MQTT QOS messages
 local mqtt_reconnect_timeout = 100
 local max_mqtt_reconnect_timeout = 512 * 100 --- about 8.5 minutes
 
+--- Connecting sleep
+local mqtt_connecting = nil
 --- Close connection flag in block mode
 local close_connection = nil
 --- App devices data fire flag to prevent fire data when reconnected
@@ -885,7 +887,12 @@ connect_proc = function(clean_session, username, password)
 		log.error(string.format("::CLOUD:: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
 
 		ts = ts * 2
-		skynet.sleep(ts)
+		mqtt_connecting = {}
+		skynet.sleep(ts, mqtt_connecting)
+		mqtt_connecting = nil
+		if close_connection then
+			break
+		end
 
 		--- Reach max reconnect timeout then destroy current client
 		if ts > max_mqtt_reconnect_timeout then
@@ -929,7 +936,11 @@ function response.disconnect()
 		log.notice("::CLOUD:: Connection is closing!")
 		return nil, "Connection is closing!"
 	end
+
 	close_connection = {}
+	if mqtt_connecting then
+		skynet.wakeup(mqtt_connecting)
+	end
 	skynet.wait(close_connection)
 	close_connection = nil
 
