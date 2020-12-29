@@ -80,6 +80,7 @@ function app:initialize(name, sys, conf)
 	self._mqtt_clean_session = true
 
 	-- COV and PB
+	self._disable_cov = conf.disable_cov or false
 	self._period = tonumber(conf.period) or 60 -- seconds
 	self._ttl = tonumber(conf.ttl) or 300 --- seconds
 	self._float_threshold = tonumber(conf.float_threshold) or 0.000001
@@ -419,7 +420,14 @@ function app:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
 	if not key then
 		return
 	end
-	self._cov:handle(key, value, timestamp, quality)
+	if self._cov then
+		self._cov:handle(key, value, timestamp, quality)
+	else
+		if not self:connected() then
+			return nil, "MQTT not connected"
+		end
+		return self._safe_call(self.on_publish_data, self, key, value, timestamp, quality)
+	end
 end
 
 function app:_fire_devices(timeout)
@@ -462,6 +470,9 @@ function app:_handle_cov_data(...)
 end
 
 function app:_init_cov()
+	if self._disable_cov then
+		return
+	end
 	local cov_opt = {ttl=self._ttl, float_threshold = self._float_threshold}
 	self._cov = cov:new(function(...)
 		return self:_handle_cov_data(...)

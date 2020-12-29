@@ -7,6 +7,7 @@ v1.11.1 ()
 ------------------
 
 * Fixed MQTT disconnection time takes too long issue
+* Disable COV in MQTT base application if conf.disable_cov been set
 
 
 v1.11.0 (2020-12-24)
