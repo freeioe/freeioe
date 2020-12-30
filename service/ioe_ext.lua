@@ -324,10 +324,8 @@ function command.upgrade_ext(id, args)
 		}
 
 		for _,app_inst in ipairs(applist) do
-			local r, err = appmgr.post.app_start(app_inst)
-			if not r then
-				log.error("::EXT::: Failed to start application after extension upgraded. Error: "..err)
-			end
+			log.notice("::EXT:: Launch appliation", app_inst)
+			appmgr.post.app_start(app_inst)
 		end
 		return true, "Extension upgradation is done!"
 	end)
