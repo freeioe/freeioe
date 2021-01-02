@@ -45,7 +45,7 @@ function response.start(name, conf)
 
 	--- Set the instance and last ping time
 	app.inst = inst
-	app.last = skynet.time()
+	app.last = skynet.now()
 
 	--- Call the applicaiton start
 	local pr, r, err = pcall(inst.req.start)
@@ -74,7 +74,7 @@ function response.start(name, conf)
 
 	--- Set the proper start/last time
 	app.start = skynet.time()
-	app.last = skynet.time()
+	app.last = skynet.now()
 
 	--- Tell the applicaiton status listeners
 	for handle, srv in pairs(listeners) do
@@ -279,7 +279,7 @@ end
 function accept.app_heartbeat(inst, time)
 	--log.debug("::AppMgr:: Application heartbeat received from", inst, time)
 	if applist[inst] then
-		applist[inst].last = time or skynet.time()
+		applist[inst].last = time or skynet.now()
 	end
 end
 
@@ -287,12 +287,14 @@ function accept.app_heartbeat_check()
 	for k, v in pairs(applist) do
 		if v.inst then
 			--- 180 seconds timeout, three times for app heart beart
-			if skynet.time() - v.last > 180 + 20 then
-				v.last = skynet.time() + 180 --- mark it as not timeout
+			if (skynet.now() - v.last) > ((180 + 20) * 100) then
 				log.notice("::AppMgr:: App heartbeat timeout! Inst:", k)
 
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
-				snax.self().post.fire_event(sys_app, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, 'heartbeat timeout', data)
+				fire_exception_event(sys_app, 'heartbeat timeout', data)
+
+				--- mark it as not timeout
+				v.last = skynet.now()
 				snax.self().req.restart(k, 'heartbeat timeout')
 			end
 		end

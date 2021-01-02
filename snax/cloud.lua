@@ -1364,8 +1364,8 @@ function accept.app_list(id, args)
 				v.running = now_time
 				v.start = app.start
 				v.last = app.last
-				if now_time - app.last > 5 then
-					v.blocked = app.last
+				if (skynet.now() - app.last) > 60 * 100 then
+					v.blocked = true
 				end
 			end
 		end

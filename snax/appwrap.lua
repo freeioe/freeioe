@@ -12,8 +12,7 @@ local app_log = nil
 local mgr_snax = nil
 local sys_api = nil
 
-local cancel_ping_timer = nil
-local app_ping_timeout = 60000 -- ms -- 60 seconds
+local app_ping_timeout = 60 -- 60 seconds
 
 local function protect_call(app, func, ...)
 	assert(app and func)
@@ -56,11 +55,17 @@ local function fire_exception_event(info, data, level)
 end
 
 local function work_proc()
-	local timeout_err = 1000 * 5
-	local timeout_err_max = timeout_err * 60
+	local timeout_err_max = app_ping_timeout * 1000 -- max timeout
 	local timeout = 1000
+	local start = 0
 	--- Sleep one seconds
 	skynet.sleep(timeout // 10)
+
+	if not app.run then
+		app.run = function(tms)
+			return tms
+		end
+	end
 
 	while app and not app_closing do
 		local t, err = protect_call(app, 'run', timeout)
@@ -73,14 +78,24 @@ local function work_proc()
 
 				timeout = timeout * 2 -- Double timeout
 				if timeout >= timeout_err_max then
-					timeout = timeout_err
+					timeout = timeout_err_max
 				end
 			end
+		end
+
+		local now = skynet.now()
+		--- for each ping timeout
+		if (now - start + 500) >= (app_ping_timeout * 100) then
+			assert(mgr_snax)
+			start = now
+			mgr_snax.post.app_heartbeat(app_name, now)
 		end
 
 		--- Sleep before while app do checking
 		if timeout > 0 then
 			skynet.sleep(timeout // 10)
+		else
+			timeout = 1000 --- reset the timeout
 		end
 	end
 end
@@ -91,23 +106,12 @@ end
 
 function response.start()
 	if app then
-		local ping_mgr = nil
-		ping_mgr = function()
-			mgr_snax.post.app_heartbeat(app_name, skynet.time())
-			cancel_ping_timer = app_sys:cancelable_timeout(app_ping_timeout, ping_mgr)
-		end
-		cancel_ping_timer = app_sys:cancelable_timeout(app_ping_timeout, ping_mgr)
-
 		local r, err = protect_call(app, 'start')
 		if not r then
-			cancel_ping_timer()
-			cancel_ping_timer = nil
 			return nil, err
 		end
 
-		if app and app.run and not app_closing then
-			skynet.timeout(10, work_proc)
-		end
+		skynet.timeout(100, work_proc)
 
 		return true
 	else
@@ -259,10 +263,6 @@ end
 
 function exit(...)
 	app_log:info("Application closing...")
-	if cancel_ping_timer then
-		cancel_ping_timer()
-		cancel_ping_timer = nil
-	end
 	local r, err = on_close(...)
 	if not r then
 		app_log:error(err or 'Unknown application close error')
