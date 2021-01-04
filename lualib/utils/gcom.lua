@@ -20,6 +20,9 @@ _M.get_boardname = function()
 		if string.match(s, 'tgw303x') then
 			_M._board_name = 'Q102'
 		end
+		if string.match(s, 'F202-6') then
+			_M._board_name = 'F208'
+		end
 		f:close()
 	end
 	return _M._board_name or 'Unknown'
@@ -31,7 +34,7 @@ _M.detect_device = function()
 	end
 
 	local bname = _M.get_boardname()
-	if bname == 'Q204' then
+	if bname == 'Q204' or bname == 'F208' then
 		_M._dev_tty = '/dev/ttyUSB2'
 	end
 	if bname == 'Q102' then
