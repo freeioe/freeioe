@@ -63,6 +63,9 @@ _M.set_cfg_auto_upload = function(value)
 	dc.set('SYS', 'CFG_AUTO_UPLOAD', value)
 end
 
+_M.now = function()
+	return skynet.now() * 10 --- ms
+end
 _M.time = skynet.time
 _M.starttime = skynet.starttime
 
