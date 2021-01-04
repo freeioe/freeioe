@@ -24,6 +24,7 @@ toolchains["openwrt/17.01/arm_cortex-a7_neon_gcc"]="Toolchain-arm-openwrt-linux-
 toolchains["openwrt/18.06/mips_24kc"]="Toolchain-mips_24kc-openwrt-linux-gcc.cmake"
 # toolchains["openwrt/18.06/x86_64"]="Toolchain-x86_64-openwrt-linux-gcc.cmake"
 
+toolchains["openwrt/19.07/arm_cortex-a9_neon"]="Toolchain-arm-openwrt-linux-gcc.cmake"
 toolchains["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="Toolchain-arm-openwrt-linux-gcc.cmake"
 toolchains["openwrt/19.07/x86_64"]="Toolchain-x86_64-openwrt-linux-gcc.cmake"
 

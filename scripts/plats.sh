@@ -11,6 +11,7 @@ plats["openwrt/17.01/arm_cortex-a9_neon"]="tgw3030_exports.sh"
 # plats["openwrt/18.06/mips_24kc"]="mips_24kc.sh"
 # plats["openwrt/18.06/x86_64"]="x86_64_glibc_18.06.sh"
 
+plats["openwrt/19.07/arm_cortex-a9_neon"]="imx6_19.07.sh"
 plats["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="sunxi_a7_19.07.sh"
 plats["openwrt/19.07/x86_64"]="x86_64_glibc_19.07.sh"
 
