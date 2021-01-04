@@ -481,7 +481,7 @@ end
 local data_dir_list = {
 	tgw303x = '/root',
 	Q2040 = '/root',
-	['F202-6'] = '/root',
+	F202 = '/root',
 	kooiot = '/mnt/data',
 }
 

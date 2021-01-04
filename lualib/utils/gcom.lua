@@ -20,7 +20,7 @@ _M.get_boardname = function()
 		if string.match(s, 'tgw303x') then
 			_M._board_name = 'Q102'
 		end
-		if string.match(s, 'F202-6') then
+		if string.match(s, 'F202') then
 			_M._board_name = 'F208'
 		end
 		f:close()
