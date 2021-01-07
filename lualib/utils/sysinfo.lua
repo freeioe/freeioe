@@ -9,7 +9,7 @@ local _M = {}
 
 --- Get output of shell command
 --
-_M.exec = function(cmd, inplace)
+_M.exec = function(cmd, not_inplace)
 	local cmd = cmd..' 2>/dev/null'
 	if true or inplace then
 		local f, err = io.popen(cmd)
@@ -46,7 +46,7 @@ _M.cpu_model = function()
 end
 
 local try_read_cpu_temp_by_sysinfo = function()
-	local s, err = _M.exec('sysinfo temp', true)
+	local s, err = _M.exec('sysinfo temp')
 	if s and string.len(s) > 0 then
 		local temp = tonumber(string.match(s, 'current:%s-(%d+)'))
 		if temp then
@@ -80,7 +80,7 @@ end
 -- @treturn string the output from uname
 _M.uname = function(arg)
 	local cmd = 'uname '..arg
-	local s, err = _M.exec(cmd, true)
+	local s, err = _M.exec(cmd)
 	if not s then
 		return nil, err
 	end
@@ -107,7 +107,7 @@ end
 -- includes 'total' 'used' 'free'
 -- @treturn table information struct {total=xx, used=xx, free=xx}
 _M.meminfo = function()
-	local s, err = _M.exec('free', true)
+	local s, err = _M.exec('free')
 	if not s then
 		return nil, err
 	end
@@ -169,7 +169,7 @@ local function network_if(ifname)
 		patt = '[^%s]'
 	end
 
-	local s, err = _M.exec('PATH=$PATH:/sbin LANG=C ifconfig '..ifname, true)
+	local s, err = _M.exec('PATH=$PATH:/sbin LANG=C ifconfig '..ifname)
 	if not s then
 		return nil, err
 	end
@@ -382,7 +382,7 @@ local try_read_ioe_sn_from_config = function()
 	if f then
 		--- This is openwrt system
 		f:close()
-		local s, err = _M.exec('uci get ioe.@system[0].sn', true)
+		local s, err = _M.exec('uci get ioe.@system[0].sn')
 		if s and string.len(s) > 0 then
 			if string.sub(s, -1) == "\n" then
 				return string.sub(s, 1, -2)
@@ -410,7 +410,7 @@ local try_gen_ioe_sn_by_mac_addr = function()
 end
 
 local try_read_ioe_sn_by_sysinfo = function()
-	local s, err = _M.exec('sysinfo psn', true)
+	local s, err = _M.exec('sysinfo psn')
 	if s and string.len(s) > 0 then
 		local patt = '%g'
 		if _VERSION == 'Lua 5.1' then
@@ -440,7 +440,7 @@ _M.ioe_sn = function()
 end
 
 _M.firmware_version = function()
-	local s, err = _M.exec('sysinfo sw', true)
+	local s, err = _M.exec('sysinfo sw')
 	if s and string.len(s) > 0 then
 		local patt = '%g'
 		if _VERSION == 'Lua 5.1' then

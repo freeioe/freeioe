@@ -15,10 +15,17 @@ local function create_log()
 		require 'log.writer.list'.new(               -- multi writers:
 			require "log.writer.console.color".new(),  -- * console color
 			require 'log.writer.file.roll'.new('./logs', "freeioe_sys.log", 4, 1*1024*1024)
+			--[[
+			require 'log.writer.format'.new(
+				require 'log.logformat.syslog'.new(),
+				require 'log.writer.net.udp'.new('127.0.0.1', 514)
+			)
+			]]--
 		),
 
 		-- Formatter
-		require "log.formatter.concat".new('\t')
+		require "log.formatter.concat".new('\t'),
+		require 'log.logformat.default'.new()
 	)
 end
 
