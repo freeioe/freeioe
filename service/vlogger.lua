@@ -7,9 +7,8 @@ local listeners = {}
 
 local function post_to_listeners(fmt, msg, lvl, now)
 	local tnow = skynet.time()
-	local content = fmt(msg, lvl, now)
 	for handle, srv in pairs(listeners) do
-		srv.post.log(tnow, content)
+		srv.post.log(tnow, lvl, msg)
 	end
 end
 

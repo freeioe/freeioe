@@ -109,10 +109,13 @@ local function publish_log(ts, lvl, ...)
 end
 
 local function logger_proc()
+	local obj = snax.self()
+	skynet.call(".logger", "lua", "__LISTEN__", obj.handle, obj.type)
 	while app and not app_closing and log_buffer do
 		log_buffer:fire_all()
 		skynet.sleep(50)
 	end
+	skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 end
 
 function response.ping()
