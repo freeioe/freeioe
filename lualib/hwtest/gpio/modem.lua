@@ -1,6 +1,6 @@
 local skynet = require 'skynet'
 local lfs = require 'lfs'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new()
 local sysinfo = require 'utils.sysinfo'
 local gpio_test = require 'hwtest.gpio'
 

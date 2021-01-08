@@ -1,6 +1,5 @@
 local skynet = require 'skynet'
 local ioe = require 'ioe'
-local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'

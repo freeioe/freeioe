@@ -2,7 +2,7 @@ local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 --local queue = require 'skynet.queue'
 local lockable_queue = require 'skynet.lockable_queue'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new('UPGRADER')
 local sysinfo = require 'utils.sysinfo'
 local lfs = require 'lfs'
 local datacenter = require 'skynet.datacenter'
@@ -42,9 +42,9 @@ end
 local function action_result(channel, id, result, info, ...)
 	local info = info or (result and 'Done [UNKNOWN]' or 'Error! [UNKNOWN]')
 	if result then
-		log.info("::UPGRADER:: "..info, ...)
+		log.info(info, ...)
 	else
-		log.error("::UPGRADER:: "..info, ...)
+		log.error(info, ...)
 	end
 
 	if id and id ~= 'from_web' then
@@ -104,7 +104,7 @@ local function create_task(func, task_name, ...)
 		tasks[co] = nil
 
 		if not r then
-			log.error("::UPGRADER:: Task executed failed.", task_name, err)
+			log.error("Task executed failed.", task_name, err)
 		end
 	end, task_name, ...)
 
@@ -129,9 +129,17 @@ local create_sys_download = create_download('sys')
 local function map_app_action(func_name, lock)
 	local func = command[func_name]
 	assert(func)
+	local wfunc = function(...)
+		local results = {pcall(func, ...)}
+		if results[1] then
+			return table.unpack(results, 2)
+		else
+			return table.unpack(results)
+		end
+	end
 	command[func_name] = function(id, args)
 		return create_task(function()
-			return action_result('app', id, app_lock(func, lock, id, args))
+			return action_result('app', id, app_lock(wfunc, lock, id, args))
 		end, 'Application Action '..func_name)
 	end
 end
@@ -139,9 +147,17 @@ end
 local function map_sys_action(func_name, lock)
 	local func = command[func_name]
 	assert(func)
+	local wfunc = function(...)
+		local results = {pcall(func, ...)}
+		if results[1] then
+			return table.unpack(results, 2)
+		else
+			return table.unpack(results)
+		end
+	end
 	command[func_name] = function(id, args)
 		return create_task(function()
-			return action_result('sys', id, sys_lock(func, lock, id, args))
+			return action_result('sys', id, sys_lock(wfunc, lock, id, args))
 		end, 'System Action '..func_name)
 	end
 end
@@ -171,7 +187,7 @@ function command.upgrade_app(id, args)
 
 	local download_version = editor and version..".editor" or version
 	return create_app_download(inst_name, name, download_version, function(path)
-		log.notice("::UPGRADER:: Download application finished", name)
+		log.notice("Download application finished", name)
 		local appmgr = snax.queryservice("appmgr")
 		local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
 		if not r then
@@ -233,7 +249,7 @@ function command.install_app(id, args)
 
 	local download_version = editor and version..".editor" or version
 	local r, err = create_app_download(inst_name, name, download_version, function(info)
-		log.notice("::UPGRADER:: Download application finished", name)
+		log.notice("Download application finished", name)
 		local target_folder = get_target_folder(inst_name)
 		lfs.mkdir(target_folder)
 		os.execute("unzip -oq "..info.." -d "..target_folder)
@@ -333,7 +349,7 @@ function command.install_local_app(id, args)
 
 	-- Reserve app instance name
 	datacenter.set("APPS", inst_name, {name=name, version=0, sn=sn, conf=conf, islocal=1, auto=0})
-	log.notice("::UPGRADER:: Install local application package", file_path)
+	log.notice("Install local application package", file_path)
 
 	local target_folder = get_target_folder(inst_name)
 	os.execute("unzip -oq "..file_path.." -d "..target_folder)
@@ -348,7 +364,7 @@ function command.install_local_app(id, args)
 	appmgr.post.app_event('create', inst_name)
 
 	--[[
-	log.notice("::UPGRADER:: Try to start application", inst_name)
+	log.notice("Try to start application", inst_name)
 	appmgr.post.app_start(inst_name)
 	]]--
 
@@ -675,8 +691,8 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	assert(ioe_path or skynet_path)
 	local ioe_path = ioe_path or '/IamNotExits.unknown'
 	local skynet_path = skynet_path or '/IamNotExits.unknown'
-	log.warning("::UPGRADER:: Core system upgradation starting....")
-	log.trace("::UPGRADER::", ioe_path, skynet_path)
+	log.warning("Core system upgradation starting....")
+	log.trace(ioe_path, skynet_path)
 	--local ps_e = get_ps_e()
 
 	local base_dir = get_ioe_dir()
@@ -702,7 +718,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 
 	aborting = true
 	ioe.abort()
-	log.warning("::UPGRADER:: Core system upgradation done!")
+	log.warning("Core system upgradation done!")
 	return true, "System upgradation is done!"
 end
 
@@ -713,7 +729,7 @@ function command.upgrade_core(id, args)
 		local base_dir = get_ioe_dir()
 		local r, status, code = os.execute("date > "..base_dir.."/ipt/upgrade_no_ack")
 		if not r then
-			log.error("::UPGRADER:: Create upgrade_no_ack failed", status, code)
+			log.error("Create upgrade_no_ack failed", status, code)
 			return false, "Failed to create upgrade_no_ack file!"
 		end
 	end
@@ -791,13 +807,13 @@ local function check_rollback()
 end
 
 local function rollback_co()
-	log.warning("::UPGRADER:: Rollback will be applied in five minutes")
+	log.warning("Rollback will be applied in five minutes")
 
 	local do_rollback = nil
 	do_rollback = function()
 		local data = { version=sysinfo.version(), skynet_version=sysinfo.skynet_version() }
 		fire_warning_event('System will be rollback!', data)
-		log.error("::UPGRADER:: System will be rollback!")
+		log.error("System will be rollback!")
 
 		aborting = true
 		skynet.sleep(100)

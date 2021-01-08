@@ -1,10 +1,10 @@
 local cjson = require 'cjson.safe'
 local class = require 'middleclass'
-local log = require 'utils.log'
 
 local restful = class("RESTFULL_API")
 
 function restful:initialize(host, timeout, headers)
+	local log = require 'utils.logger'.new()
 	assert(host)
 	self._host = host
 	self._timeout = timeout or 5000

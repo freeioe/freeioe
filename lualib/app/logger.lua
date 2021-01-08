@@ -1,13 +1,14 @@
 local class = require 'middleclass'
 local log = require 'utils.log'
-local formatter = require 'log.formatter.concat'.new()
+local formatter = require 'log.formatter.concat'.new('\t')
 
 local logger = class("APP_MGR_LOG")
 
-function logger:initialize(log, name)
-	self._log = log
-	self._log_buf = {}
+function logger:initialize(name, logger_m)
+	assert(name)
 	self._name = name
+	self._log = loggger_m or log
+	self._log_buf = {}
 end
 
 function logger:log(level, info, ...)

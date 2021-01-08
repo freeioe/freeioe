@@ -1,7 +1,7 @@
 local skynet = require "skynet.manager"
 local dc = require 'skynet.datacenter'
 local coroutine = require 'skynet.coroutine'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new('EXEC_SAL')
 
 
 local function exec_all(cmd)

@@ -20,10 +20,25 @@ if not inskynet then
 
 	return LOG
 else
+	local dc = require 'skynet.datacenter'
 	local make_func = function(name)
 		local name = name
+		local ln = nil
 		return function(...)
 			skynet.send('.logger', 'lua', name, ...)
+
+			--[[ There skynet.lua may asserts on proto[name] name is 'lua'
+			--ln = ln or dc.wait('FREEIOE.LOGGER')
+			if not ln then
+				print('create')
+				skynet.fork(function(...)
+					ln = dc.wait('FREEIOE.LOGGER')
+					skynet.send(ln, 'lua', name, ...)
+				end, ...)
+			else
+				skynet.send(ln, 'lua', name, ...)
+			end
+			]]--
 		end
 	end
 	local LOG = {}

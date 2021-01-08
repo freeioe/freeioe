@@ -7,7 +7,14 @@ local fmt = string.format
 
 -- removes the decimal part of a number
 local function fix(n) n = tonumber(n) return n and ((n > 0 and floor or ceil)(n)) end
-local function lshift(a,b) return a * math.pow(2, b) end
+
+local function lshift(a,b)
+	if math.pow then
+		return a * math.pow(2, b)
+	else
+		return a << b
+	end
+end
 
 --[[ RFC5424 
   0       Emergency: system is unusable

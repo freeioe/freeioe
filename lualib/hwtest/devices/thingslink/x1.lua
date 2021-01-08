@@ -1,11 +1,11 @@
 local skynet = require 'skynet.manager'
-local log = require 'utils.log'
 local rtc = require 'hwtest.other.rtc'
 local leds = require 'hwtest.leds'
 local ping = require 'hwtest.ethernet.ping'
 local master_slave = require 'hwtest.stream.master_slave'
 local serial = require 'hwtest.stream.serial'
 
+local log = require 'utils.logger'.new()
 
 local tests = {}
 

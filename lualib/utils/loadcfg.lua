@@ -2,7 +2,7 @@
 -- conf_cfg.port
 --
 local alt_getopt = require 'alt_getopt'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new()
 
 local arg = arg or {...}
 local log_trace = log.trace

@@ -5,12 +5,15 @@ local app_sys = require 'app.sys'
 local event = require 'app.event'
 local ioe = require 'ioe'
 
+G_APP_NAME = 'APP'
+
 local app = nil
 local app_closing = false
 local app_name = "UNKNOWN"
 local app_log = nil
 local mgr_snax = nil
 local sys_api = nil
+local log_buffer = nil
 
 local app_ping_timeout = 60 -- 60 seconds
 
@@ -35,6 +38,7 @@ local on_close = function(...)
 		end
 		sys_api = nil
 		app = nil
+		log_buffer = nil
 		return ...
 	end
 
@@ -100,15 +104,22 @@ local function work_proc()
 	end
 end
 
-local log_buffer = nil
 local function publish_log(ts, lvl, ...)
 	if not app then
 		return false, "App is not exists!"
 	end
-	return protect_call(app, 'on_logger', ts, lvl, ...)
+	local r, er, err = xpcall(app.on_logger, debug.traceback, app, ts, lvl, ...)
+	if not r then
+		log_buffer = nil
+		mgr_snax.post.app_stop(app_name, "app.on_logger code error, so stop app")
+		app_log:error(er, err)
+		return true
+	end
+	return er, err
 end
 
 local function logger_proc()
+	local obj = snax.self()
 	skynet.call(".logger", "lua", "__LISTEN__", obj.handle, obj.type)
 	while app and not app_closing and log_buffer do
 		log_buffer:fire_all()
@@ -209,6 +220,7 @@ end
 function init(name, conf, mgr_handle, mgr_type)
 	-- Disable Skynet Code Cache!!
 	cache.mode('EXIST')
+	G_APP_NAME = name
 
 	app_name = name
 	mgr_snax = snax.bind(mgr_handle, mgr_type)

@@ -2,13 +2,13 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local ubus = require 'ubus'
 local crypt = require 'skynet.crypt'
-local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
 local app_api = require 'app.api'
 local ioe = require 'ioe'
 
 local api = nil
 local bus = nil
+local log = nil
 
 --[[
 -- Api Handler
@@ -231,6 +231,7 @@ function create_methods(bus)
 end
 
 function init(...)
+	log = require 'utils.logger'.new('UBUS')
 	bus = ubus:new()
 	bus:connect(...)
 	--bus:connect("172.30.19.103", 11000)
@@ -238,7 +239,7 @@ function init(...)
 	--bus:connect("/tmp/ubus.sock")
 	local s, err = bus:status()
 	if not s then
-		log.error('::UBUS:: Cannot connect to ubusd', err, ...)
+		log.error('Cannot connect to ubusd', err, ...)
 		return
 	end
 
@@ -247,7 +248,7 @@ function init(...)
 		print('subscribe cb', ...)
 	end)
 
-	log.notice("::UBUS:: System ubus service started!")
+	log.notice("System ubus service started!")
 	skynet.fork(function()
 		api = app_api:new('UBUS')
 		api:set_handler(Handler)
@@ -255,5 +256,5 @@ function init(...)
 end
 
 function exit(...)
-	log.notice("::UBUS:: System ubus service stoped!")
+	log.notice("System ubus service stoped!")
 end

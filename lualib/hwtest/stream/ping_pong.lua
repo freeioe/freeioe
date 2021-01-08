@@ -2,10 +2,10 @@ local skynet = require 'skynet'
 local class = require 'middleclass'
 local helper = require 'app.port.helper'
 local stream_buffer = require 'app.utils.stream_buffer'
-local log = require 'utils.log'
 local crc16 = require 'hwtest.crc16'
 local basexx = require 'basexx'
 
+local log = require 'utils.logger'.new()
 
 local test = class("PORT_TEST_PAIR_PING_PONG")
 

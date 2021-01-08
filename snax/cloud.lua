@@ -2,7 +2,6 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local crypt = require 'skynet.crypt'
 local mosq = require 'mosquitto'
-local log = require 'utils.log'
 local datacenter = require 'skynet.datacenter'
 local ioe = require 'ioe'
 local app_api = require 'app.api'
@@ -16,6 +15,8 @@ local md5 = require 'md5'
 local sha1 = require 'hashings.sha1'
 local hmac = require 'hashings.hmac'
 local cancelable_timeout = require 'cancelable_timeout'
+
+local log = nil
 
 --- Service running
 local service_stop = false
@@ -101,11 +102,11 @@ local wildtopics = { "app/#", "sys/#", "output/#", "command/#" }
 local msg_handler = {
 	--[[
 	data = function(topic, data, qos, retained)
-		--log.trace('::CLOUD:: Data message:', topic, data, qos, retained)
+		--log.trace('Data message:', topic, data, qos, retained)
 	end,
 	]]--
 	app = function(topic, data, qos, retained)
-		log.trace('::CLOUD:: App control:', topic, data, qos, retained)
+		log.trace('App control:', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -150,7 +151,7 @@ local msg_handler = {
 		end
 	end,
 	sys = function(topic, data, qos, retained)
-		log.trace('::CLOUD:: System control:', topic, data, qos, retained)
+		log.trace('System control:', topic, data, qos, retained)
 		local args = assert(cjson.decode(data))
 		local action = args.action or topic
 
@@ -222,14 +223,14 @@ local msg_handler = {
 		end
 	end,
 	output = function(topic, data, qos, retained)
-		log.trace('::CLOUD:: Device output:', topic, data, qos, retained)
+		log.trace('Device output:', topic, data, qos, retained)
 		local oi = cjson.decode(data)
 		if oi and oi.id then
 			snax.self().post.output_to_device(oi.id, oi.data)
 		end
 	end,
 	command = function(topic, data, qos, retained)
-		log.trace('::CLOUD:: Device command:', topic, data, qos, retained)
+		log.trace('Device command:', topic, data, qos, retained)
 		local cmd = cjson.decode(data)
 		if cmd and cmd.id then
 			snax.self().post.command_to_device(cmd.id, cmd.data)
@@ -241,10 +242,10 @@ local msg_handler = {
 -- MQTT Message Callback
 --
 local msg_callback = function(packet_id, topic, data, qos, retained)
-	log.info("::CLOUD:: message:", packet_id, topic, data, qos, retained)
+	log.info("message:", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
-		log.error("::CLOUD:: msg_callback recevied incorrect topic message")
+		log.error("msg_callback recevied incorrect topic message")
 		return
 	end
 	if id and t then
@@ -255,7 +256,7 @@ local msg_callback = function(packet_id, topic, data, qos, retained)
 			end
 			f(sub, data, qos, retained)
 		else
-			log.error("::CLOUD:: msg_callback cannot find handler", id, t)
+			log.error("msg_callback cannot find handler", id, t)
 		end
 	end
 end
@@ -298,7 +299,7 @@ local last_echo_rate = 0
 
 local function echo_compress_rate()
 	local total_rate = (total_compressed/total_uncompressed) * 100
-	log.trace('::CLOUD:: Data Count '..total_count..' Raw size '..total_uncompressed..' Compressed size '..total_compressed..' Rate '..total_rate)
+	log.trace('Data Count '..total_count..' Raw size '..total_uncompressed..' Compressed size '..total_compressed..' Rate '..total_rate)
 end
 
 local function calc_compress(bytes_in, bytes_out, count)
@@ -326,7 +327,7 @@ local function mqtt_publish(topic, data, qos, retained)
 
 	local value, err = cjson.encode(data)
 	if not value then
-		log.warning('::CLOUD:: cjson encode failure. error: ', err)
+		log.warning('cjson encode failure. error: ', err)
 		return nil, err
 	end
 
@@ -335,7 +336,7 @@ local function mqtt_publish(topic, data, qos, retained)
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(value, 'finish')
 		if not deflated then
-			log.warning('::CLOUD:: zlib deflate failed', eof, bytes_in, bytes_out)
+			log.warning('zlib deflate failed', eof, bytes_in, bytes_out)
 			return nil, eof, bytes_in, bytes_out
 		end
 		calc_compress(bytes_in, bytes_out, 1)
@@ -347,7 +348,7 @@ end
 
 --- Publish data without push to period buffer (no zip compress either)
 local function publish_data_no_pb(key, value, timestamp, quality)
-	--log.trace("::CLOUD:: Publish data", key, value, timestamp, quality)
+	--log.trace("Publish data", key, value, timestamp, quality)
 	assert(key)
 	if not mqtt_client then
 		return nil, "MQTT connection lost!"
@@ -355,7 +356,7 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 
 	local val, err = cjson.encode({ key, timestamp, value, quality})
 	if not val then
-		log.warning('::CLOUD:: cjson encode failure. error: ', err)
+		log.warning('cjson encode failure. error: ', err)
 		return nil, err
 	end
 
@@ -367,32 +368,32 @@ end
 --   in our MQTT standard which timestamp value position swapped :-(
 local function publish_data(key, value, timestamp, quality)
 	if pb then
-		--log.trace('::CLOUD:: publish_data turn period buffer', key, value, timestamp, quality)
+		--log.trace('publish_data turn period buffer', key, value, timestamp, quality)
 		pb:push(key, timestamp, value, quality)
 		return true
 	else
-		--log.trace('::CLOUD:: publish_data', key, value, timestamp)
+		--log.trace('publish_data', key, value, timestamp)
 		return publish_data_no_pb(key, value, timestamp, quality)
 	end
 end
 
 --- Push stat data to period buffer or publish to MQTT dirtectly
 local function publish_stat(key, value, timestamp, quality)
-	--log.trace('::CLOUD:: publish_stat begin', mqtt_client, key, value)
+	--log.trace('publish_stat begin', mqtt_client, key, value)
 	if not mqtt_client then
 		return nil, "MQTT connection lost!"
 	end
 
 	if stat_pb then
-		--log.trace('::CLOUD:: publish_stat turn period buffer')
+		--log.trace('publish_stat turn period buffer')
 		stat_pb:push(key, timestamp, value, quality)
 		return true
 	end
 
-	--log.trace("::CLOUD:: Publish stat", key, value, timestamp)
+	--log.trace("Publish stat", key, value, timestamp)
 	local val, err = cjson.encode({ key, timestamp, value, quality})
 	if not val then
-		log.warning('::CLOUD:: cjson encode failure. error: ', err)
+		log.warning('cjson encode failure. error: ', err)
 		return nil, err
 	end
 
@@ -403,26 +404,26 @@ end
 local function publish_data_list_impl(val_list, topic)
 	assert(val_list, topic)
 	local val_count = #val_list
-	--log.trace('::CLOUD:: publish_data_list begin', mqtt_id..'/'..topic, #val_list)
+	--log.trace('publish_data_list begin', mqtt_id..'/'..topic, #val_list)
 	if not mqtt_client or val_count == 0 then
 		return nil, val_count == 0 and "Empty data list" or "MQTT connection lost!"
 	end
 
 	local val, err = cjson.encode(val_list)
 	if not val then
-		log.warning('::CLOUD:: cjson encode failure. error: ', err)
+		log.warning('cjson encode failure. error: ', err)
 	else
-		--log.trace('::CLOUD:: Publish data in array and compress the json for topic:', topic)
+		--log.trace('Publish data in array and compress the json for topic:', topic)
 		local deflate = zlib.deflate()
 		local deflated, eof, bytes_in, bytes_out = deflate(val, 'finish')
 		if not deflated then
-			log.warning('::CLOUD:: zlib deflate failed', eof, bytes_in, bytes_out)
+			log.warning('zlib deflate failed', eof, bytes_in, bytes_out)
 			return nil, eof, bytes_in, bytes_out
 		end
 
 		if mqtt_client then
 			calc_compress(bytes_in, bytes_out, val_count)
-			--log.trace('::CLOUD:: publish_data_list', mqtt_id.."/"..topic, #val_list)
+			--log.trace('publish_data_list', mqtt_id.."/"..topic, #val_list)
 			return mqtt_client_publish(mqtt_id.."/"..topic, deflated, 1, false)
 		end
 	end
@@ -436,7 +437,7 @@ end
 local publish_cached_data_list = function(val_list)
 	skynet.sleep(cache_fire_freq // 10) -- delay by gap
 	if mqtt_client then
-		log.debug('::CLOUD:: Uploading cached data! Count:', #val_list)
+		log.debug('Uploading cached data! Count:', #val_list)
 	end
 
 	local r, err = publish_data_list_impl(val_list, 'cached_data_gz')
@@ -458,7 +459,7 @@ local push_to_data_cache = function(...)
 	if data_cache_fb then
 		if mqtt_client and skynet.time() > warning_upload_period  then
 			warning_upload_period = skynet.time() + 5 * 60 * 100 --- 5 minutes
-			log.warning('::CLOUD:: ***Make sure you have proper upload period if you read this***!!!')
+			log.warning('***Make sure you have proper upload period if you read this***!!!')
 		end
 		data_cache_fb:push(...)
 	end
@@ -485,7 +486,7 @@ local function load_cov_conf()
 			opt.ttl = default_ttl
 		end
 	end
-	log.notice('::CLOUD:: COV option:', enable_cov, ttl, enable_data_upload)
+	log.notice('COV option:', enable_cov, ttl, enable_data_upload)
 	cov = cov_m:new(publish_data, opt)
 	cov:start()
 
@@ -508,7 +509,7 @@ end
 local function load_data_cache_conf()
 	local enable_data_cache = datacenter.get("CLOUD", "DATA_CACHE")
 	if not pb or not enable_data_cache then
-		log.notice('::CLOUD:: Data cache disabled')
+		log.notice('Data cache disabled')
 		return
 	end
 
@@ -519,7 +520,7 @@ local function load_data_cache_conf()
 	--- file buffer
 	local sysinfo = require 'utils.sysinfo'
 	local cache_folder = sysinfo.data_dir().."/cloud_cache"
-	log.notice('::CLOUD:: Data cache folder:', cache_folder)
+	log.notice('Data cache folder:', cache_folder)
 
 	-- should be more less than period_limit
 	local per_file = tonumber(datacenter.get("CLOUD", "DATA_CACHE_PER_FILE") or 4096)
@@ -528,7 +529,7 @@ local function load_data_cache_conf()
 	-- Upload cached data one per gap time
 	cache_fire_freq = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_FREQ") or 1000)
 
-	log.notice('::CLOUD:: Data cache option:', per_file, limit, cache_fire_freq, data_upload_max_dpp)
+	log.notice('Data cache option:', per_file, limit, cache_fire_freq, data_upload_max_dpp)
 
 	data_cache_fb = filebuffer:new(cache_folder, per_file, limit, data_upload_max_dpp)
 	data_cache_fb:start(function(...)
@@ -548,7 +549,7 @@ local function load_pb_conf()
 	--- Data Upload Buffer Max Size
 	local period_limit = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_LIMIT") or 10240)
 
-	log.notice('::CLOUD:: Period option:', period, period_limit, data_upload_max_dpp)
+	log.notice('Period option:', period, period_limit, data_upload_max_dpp)
 	if period >= 1000 then
 		--- Period buffer enabled
 		pb = periodbuffer:new(period, period_limit, data_upload_max_dpp)
@@ -580,7 +581,7 @@ local function load_conf()
 	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
 	mqtt_secret = datacenter.get("CLOUD", "SECRET")
 
-	log.notice("::CLOUD:: MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
+	log.notice("MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
 
 	enable_data_upload = datacenter.get("CLOUD", "DATA_UPLOAD")
 	enable_stat_upload = datacenter.get("CLOUD", "STAT_UPLOAD")
@@ -614,7 +615,7 @@ local function publish_comm(app_src, sn, dir, ts, content)
 
 	local topic = mqtt_id.."/comm"
 	local msg = { (sn or app_src).."/"..dir, ts, content }
-	--log.trace('::CLOUD:: publish comm', topic, table.concat(msg))
+	--log.trace('publish comm', topic, table.concat(msg))
 
 	if enable_comm_upload and ts < enable_comm_upload then
 		return mqtt_client:publish(topic, cjson.encode(msg), 1, false)
@@ -662,8 +663,8 @@ local function load_buffers()
 					gap = 500
 				else
 					--- If you see this trace
-					log.trace('::CLOUD:: Buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
-					log.warning("::CLOUD:: Failed to fire comm or log or event")
+					log.trace('Buffers loop', comm_buffer:size(), log_buffer:size(), event_buffer:size())
+					log.warning("Failed to fire comm or log or event")
 				end
 			end
 			skynet.sleep(gap)
@@ -678,11 +679,11 @@ local Handler = {
 	on_comm = function(app, sn, dir, ts, ...)
 		local content = crypt.base64encode(table.concat({...}, '\t'))
 		--local hex = string.gsub(content, "%w%w", "%1 ")
-		--log.trace('::CLOUD:: on_comm', app, sn, dir, ts, hex)
+		--log.trace('on_comm', app, sn, dir, ts, hex)
 		comm_buffer:push(app, sn, dir, ts, content)
 	end,
 	on_stat = function(app, sn, stat, prop, value, timestamp)
-		--log.trace('::CLOUD:: on_state', app, sn, stat, prop, value, timestamp)
+		--log.trace('on_state', app, sn, stat, prop, value, timestamp)
 		if not enable_stat_upload then
 			return --- If not enable stat data upload will skip cov
 		end
@@ -691,26 +692,26 @@ local Handler = {
 		stat_cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_event = function(app, sn, level, type_, info, data, timestamp)
-		log.trace('::CLOUD:: on_event', app, sn, level, type_, info, timestamp, cjson.encode(data))
+		log.trace('on_event', app, sn, level, type_, info, timestamp, cjson.encode(data))
 		if not enable_event_upload or (tonumber(level) < enable_event_upload)  then
 			return --- If not enable event data upload will skip event buffer
 		end
 		event_buffer:push(app, sn, level, type_, info, data, timestamp)
 	end,
 	on_add_device = function(app, sn, props)
-		log.trace('::CLOUD:: on_add_device', app, sn, props)
+		log.trace('on_add_device', app, sn, props)
 		snax.self().post.device_add(app, sn, props)
 	end,
 	on_del_device = function(app, sn)
-		log.trace('::CLOUD:: on_del_device', app, sn)
+		log.trace('on_del_device', app, sn)
 		snax.self().post.device_del(app, sn)
 	end,
 	on_mod_device = function(app, sn, props)
-		log.trace('::CLOUD:: on_mod_device', app, sn, props)
+		log.trace('on_mod_device', app, sn, props)
 		snax.self().post.device_mod(app, sn, props)
 	end,
 	on_input = function(app, sn, input, prop, value, timestamp, quality)
-		--log.trace('::CLOUD:: on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
+		--log.trace('on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
 		--- disable data upload from the very begining here.
 		if not enable_data_upload and sn ~= mqtt_id then
 			return  -- Skip data
@@ -720,7 +721,7 @@ local Handler = {
 		cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
-		log.trace('::CLOUD:: on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
+		log.trace('on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
 		if not enable_data_upload and sn ~= mqtt_id then
 			return -- Skip data
 		end
@@ -730,11 +731,11 @@ local Handler = {
 		publish_data_no_pb(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_output_result = function(app_src, priv, result, err)
-		log.trace('::CLOUD:: on_output_result', app_src, priv, result, err)
+		log.trace('on_output_result', app_src, priv, result, err)
 		snax.self().post.action_result('output', priv, result, err)
 	end,
 	on_command_result = function(app_src, priv, result, err)
-		log.trace('::CLOUD:: on_command_result', app_src, priv, result, err)
+		log.trace('on_command_result', app_src, priv, result, err)
 		snax.self().post.action_result('command', priv, result, err)
 	end,
 }
@@ -749,11 +750,11 @@ end
 local connect_proc = nil
 local function start_reconnect()
 	if mqtt_client then
-		log.error('::CLOUD:: ****Cannot start reconnection when client is there!****')
+		log.error('****Cannot start reconnection when client is there!****')
 		return
 	end
 
-	log.notice('::CLOUD:: Start reconnect to cloud after '..(mqtt_reconnect_timeout/100)..' seconds')
+	log.notice('Start reconnect to cloud after '..(mqtt_reconnect_timeout/100)..' seconds')
 
 	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
 	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
@@ -762,12 +763,18 @@ local function start_reconnect()
 	end
 end
 
+local function MAP_CALLBACK(func)
+	return function(...)
+		skynet.fork(func, ...)
+	end
+end
+
 ---
 -- Connection process function
 --
 connect_proc = function(clean_session, username, password)
 	if mqtt_client then
-		log.warning("::CLOUD:: There is one client exits!")
+		log.warning("There is one client exits!")
 		return
 	end
 
@@ -788,14 +795,14 @@ connect_proc = function(clean_session, username, password)
 	end
 
 	--- on connect result callback
-	client.ON_CONNECT = function(success, rc, msg)
+	client.ON_CONNECT = MAP_CALLBACK(function(success, rc, msg)
 		mqtt_client_last_msg = msg
 		if success then
-			log.notice("::CLOUD:: ON_CONNECT", success, rc, msg)
+			log.notice("ON_CONNECT", success, rc, msg)
 
 			--- Check mqtt_client
 			if mqtt_client then
-				log.warning("::CLOUD:: There is one client exits!")
+				log.warning("There is one client exits!")
 				close_client = true --- close current one
 				return
 			end
@@ -803,7 +810,7 @@ connect_proc = function(clean_session, username, password)
 			--- Publish online status message
 			local r, err = client:publish(mqtt_id.."/status", "ONLINE", 1, true)
 			if not r then
-				log.warning("::CLOUD:: Publish status failed", rc, err)
+				log.warning("Publish status failed", rc, err)
 				close_client = true --- close current one
 				return start_reconnect()
 			end
@@ -823,7 +830,7 @@ connect_proc = function(clean_session, username, password)
 
 			-- Only fire apps and device once
 			if not apps_devices_fired then
-				log.info("::CLOUD:: ON_CONNECT upload devices and apps list")
+				log.info("ON_CONNECT upload devices and apps list")
 				apps_devices_fired = true
 				mqtt_last = 0  -- reset last
 				snax.self().post.fire_devices()
@@ -834,7 +841,7 @@ connect_proc = function(clean_session, username, password)
 			if mqtt_client_last - mqtt_last > 60 * 100 then
 				--- Only flush data when period buffer enabled and period is bigger than 3 seconds
 				if pb and pb:period() > 3000 then
-					log.info("::CLOUD:: Flush all device data within three seconds!")
+					log.info("Flush all device data within three seconds!")
 					skynet.timeout(300, function() snax.self().post.data_flush() end)
 				end
 			end
@@ -842,16 +849,16 @@ connect_proc = function(clean_session, username, password)
 			-- Check Qos message
 			mqtt_resend_qos_msg()
 
-			log.notice("::CLOUD:: Connection is ready!!", client:socket())
+			log.notice("Connection is ready!!", client:socket())
 		else
-			log.warning("::CLOUD:: ON_CONNECT FAILED", success, rc, msg)
+			log.warning("ON_CONNECT FAILED", success, rc, msg)
 			-- There is an ON_DISCONNECT after this on_connect so we do not need to reconnect here
 			--close_client = true --- close current one
 			--start_reconnect()
 		end
-	end
-	client.ON_DISCONNECT = function(success, rc, msg)
-		log.warning("::CLOUD:: ON_DISCONNECT", success, rc, msg)
+	end)
+	client.ON_DISCONNECT = MAP_CALLBACK(function(success, rc, msg)
+		log.warning("ON_DISCONNECT", success, rc, msg)
 		close_client = true --- close current one
 
 		-- If client is current connection
@@ -865,14 +872,14 @@ connect_proc = function(clean_session, username, password)
 				start_reconnect()
 			end
 		end
-	end
-	client.ON_PUBLISH = function(mid)
-		--log.trace("::CLOUD:: ON_PUBLISH", mid)
+	end)
+	client.ON_PUBLISH = MAP_CALLBACK(function(mid)
+		--log.trace("ON_PUBLISH", mid)
 		qos_msg_buf:remove(mid)
-	end
+	end)
 
 	--client.ON_LOG = log_callback
-	client.ON_MESSAGE = msg_callback
+	client.ON_MESSAGE = MAP_CALLBACK(msg_callback)
 
 	--- Tell mqtt backends that this device is online
 	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
@@ -881,7 +888,7 @@ connect_proc = function(clean_session, username, password)
 	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
 	local ts = 100
 	while not r do
-		log.error(string.format("::CLOUD:: Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+		log.error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
 
 		ts = ts * 2
 		mqtt_connecting = {}
@@ -893,7 +900,7 @@ connect_proc = function(clean_session, username, password)
 
 		--- Reach max reconnect timeout then destroy current client
 		if ts > max_mqtt_reconnect_timeout then
-			log.error("::CLOUD:: Destroy client and reconnect!")
+			log.error("Destroy client and reconnect!")
 			client:destroy()  -- destroy client
 			mqtt_reconnect_timeout = 100 -- reset the reconnect timeout
 			return start_reconnect()
@@ -915,9 +922,9 @@ connect_proc = function(clean_session, username, password)
 
 	--- disconnect client and destory it
 	client:disconnect()
-	log.notice("::CLOUD:: Connection closed!")
+	log.notice("Connection closed!")
 	client:destroy()
-	log.notice("::CLOUD:: Connection destroyed!")
+	log.notice("Connection destroyed!")
 
 	--- wakeup close connection waitor
 	if close_connection then
@@ -927,10 +934,10 @@ connect_proc = function(clean_session, username, password)
 end
 
 function response.disconnect()
-	log.notice("::CLOUD:: Try to close connection!")
+	log.notice("Try to close connection!")
 
 	if close_connection ~= nil then
-		log.notice("::CLOUD:: Connection is closing!")
+		log.notice("Connection is closing!")
 		return nil, "Connection is closing!"
 	end
 
@@ -941,7 +948,7 @@ function response.disconnect()
 	skynet.wait(close_connection)
 	close_connection = nil
 
-	log.notice("::CLOUD:: Connection closed!")
+	log.notice("Connection closed!")
 	return true
 end
 
@@ -997,7 +1004,7 @@ function accept.enable_data(id, enable)
 		if cov then
 			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
-		log.debug("::CLOUD:: data upload disabled!", enable)
+		log.debug("data upload disabled!", enable)
 	else
 		snax.self().post.fire_data_snapshot()
 	end
@@ -1020,7 +1027,7 @@ function accept.enable_data_one_short(id, period)
 	end
 
 	enable_data_upload = true
-	log.debug("::CLOUD:: Data one-short upload enabled!")
+	log.debug("Data one-short upload enabled!")
 
 	if id then
 		--- only fire action result and data snapshot if has id
@@ -1034,7 +1041,7 @@ function accept.enable_data_one_short(id, period)
 		if cov then
 			cov:clean() -- cleanup cov for remove buffered snapshot for all devices
 		end
-		log.debug("::CLOUD:: Data one-short upload disabled!")
+		log.debug("Data one-short upload disabled!")
 	end)
 end
 
@@ -1042,7 +1049,7 @@ function accept.enable_cache(id, enable)
 	local enable = enable and true or false
 	datacenter.set("CLOUD", "DATA_CACHE", enable)
 	if not enable then
-		log.debug("::CLOUD:: Data cache disabled!", enable)
+		log.debug("Data cache disabled!", enable)
 		if data_cache_fb then
 			data_cache_fb:stop()
 			data_cache_fb = nil
@@ -1063,7 +1070,7 @@ function accept.enable_stat(id, enable)
 		if stat_cov then
 			stat_cov:clean()
 		end
-		log.debug("::CLOUD:: Stat data upload disabled!", enable)
+		log.debug("Stat data upload disabled!", enable)
 	else
 		snax.self().post.fire_stat_snapshot()
 	end
@@ -1077,7 +1084,7 @@ function accept.enable_log(id, sec)
 		snax.self().post.action_result('sys', id, false, err)
 		return
 	end
-	--log.debug("::CLOUD:: Enable log upload for "..sec.." seconds")
+	--log.debug("Enable log upload for "..sec.." seconds")
 
 	if sec and sec > 0 then
 		enable_log_upload = math.floor(skynet.time()) + sec
@@ -1106,12 +1113,12 @@ end
 
 function accept.enable_beta(id, enable)
 	if not enable then
-		log.warning("::CLOUD:: Using beta is disabled from cloud!")
+		log.warning("Using beta is disabled from cloud!")
 		ioe.set_beta(false)
 	else
 		local r, err = skynet.call(".upgrader", "lua", "pkg_enable_beta")
 		if r then
-			log.warning("::CLOUD:: Using beta is enabled from cloud!")
+			log.warning("Using beta is enabled from cloud!")
 			ioe.set_beta(true)
 		else
 			local msg = "Cannot enable beta. Error: "..err
@@ -1182,7 +1189,7 @@ function accept.fire_devices(timeout)
 	end
 
 	local timeout = timeout or 50
-	log.notice("::CLOUD:: Upload devices list, timeout", timeout)
+	log.notice("Upload devices list, timeout", timeout)
 	if fire_device_timer then
 		return
 	end
@@ -1191,10 +1198,10 @@ function accept.fire_devices(timeout)
 		local r, err = mqtt_publish(mqtt_id.."/devices", devs, 1, true)
 		if not r then
 			-- If mqtt connection is offline, retry after five seconds.
-			log.notice("::CLOUD:: Upload devices list failed, retry after 5 seconds")
+			log.notice("Upload devices list failed, retry after 5 seconds")
 			snax.self().post.fire_devices(500)
 		else
-			log.notice("::CLOUD:: Upload devices list done!")
+			log.notice("Upload devices list done!")
 		end
 	end
 
@@ -1223,10 +1230,10 @@ function accept.fire_device_action(action, sn, props)
 	fire_device = function()
 		local r, err = mqtt_publish(mqtt_id.."/device", data, 1, false)
 		if not r then
-			log.notice("::CLOUD:: Upload device event action failed, retry after 5 seconds")
+			log.notice("Upload device event action failed, retry after 5 seconds")
 			skynet.timeout(fire_device, 500)
 		else
-			log.notice("::CLOUD:: Upload device event action done!")
+			log.notice("Upload device event action done!")
 		end
 	end
 	fire_device()
@@ -1283,7 +1290,7 @@ function accept.fire_apps(timeout)
 	end
 
 	local timeout = timeout or 50
-	log.notice("::CLOUD:: Upload applications list, timeout", timeout)
+	log.notice("Upload applications list, timeout", timeout)
 	if fire_app_timer then
 		return
 	end
@@ -1304,7 +1311,7 @@ function accept.fire_apps(timeout)
 end
 
 function accept.app_event(event, inst_name, ...)
-	log.notice("::CLOUD:: Application event", event, inst_name, ...)
+	log.notice("Application event", event, inst_name, ...)
 	snax.self().post.fire_apps()
 end
 
@@ -1458,7 +1465,7 @@ function accept.ext_auto_clean(id, args)
 end
 
 function accept.batch_script(id, script)
-	log.debug("::CLOUD:: Cloud batch script received", id, script)
+	log.debug("Cloud batch script received", id, script)
 	datacenter.set("BATCH", id, "script", script)
 	local runner = skynet.newservice("run_batch", id)
 	datacenter.set("BATCH", id, "inst", runner)
@@ -1477,10 +1484,10 @@ end
 --- Flush buffered period data
 function accept.data_flush(id)
 	if pb then
-		log.notice("::CLOUD:: Flush all data from period buffer to cloud!", id)
+		log.notice("Flush all data from period buffer to cloud!", id)
 		pb:fire_all()
 	else
-		log.notice("::CLOUD:: Period buffer not enabled, nothing to flush!", id)
+		log.notice("Period buffer not enabled, nothing to flush!", id)
 	end
 
 	if id then
@@ -1492,7 +1499,7 @@ end
 -- Query specified device data
 --
 function accept.data_query(id, dev_sn)
-	log.notice("::CLOUD:: Query data from device", dev_sn, id)
+	log.notice("Query data from device", dev_sn, id)
 	if not dev_sn then
 		return snax.self().post.action_result('input', id, false, "Device sn is required!")
 	end
@@ -1577,21 +1584,22 @@ function accept.action_result(action, id, result, message)
 			timestamp_str = os.date(),
 		}
 		if result then
-			log.notice("::CLOUD:: Action result: ", action, id, result, message)
+			log.notice("Action result: ", action, id, result, message)
 		else
-			log.warning("::CLOUD:: Action result: ", action, id, result, message)
+			log.warning("Action result: ", action, id, result, message)
 		end
 		mqtt_client_publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
 
 function init()
+	log = require 'utils.logger'.new('CLOUD')
 	zlib_loaded, zlib = pcall(require, 'zlib')
 	if not zlib_loaded then
-		log.warning("::CLOUD:: Cannot load zlib module, data compressing disabled!!")
+		log.warning("Cannot load zlib module, data compressing disabled!!")
 	end
 	qos_msg_buf = index_stack:new(1024, function(...)
-		log.error("::CLOUD:: MQTT QOS message droped!!!!")
+		log.error("MQTT QOS message droped!!!!")
 	end)
 
 	mqtt_client_last = skynet.time()

@@ -1,6 +1,5 @@
-local log = require 'utils.log'
 local skynet = require 'skynet'
-
+local log = require 'utils.logger'.new()
 
 return function(target)
 	local ping_service = skynet.newservice('hwtest_ping')

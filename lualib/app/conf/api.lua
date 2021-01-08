@@ -1,7 +1,6 @@
 local datacenter = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
 local httpdown = require 'http.download'
-local log = require 'utils.log'
 local class = require 'middleclass'
 local ioe = require 'ioe'
 local lfs = require 'lfs'
@@ -21,6 +20,7 @@ function api:initialize(app, conf, ext, dir)
 	-- Service host (ip or domain)
 	self._host = ioe.cnf_host_url() --datacenter.wait("CLOUD", "CNF_HOST_URL")
 	self._app = app
+	self._log = app:log_api()
 	self._conf = conf
 	self._ext = ext or 'csv'
 	self._dir = dir or 'tpl'
@@ -36,7 +36,7 @@ function api:version()
 	local url = '/conf_center/get_latest_version'
 	local query = { sn = self._sn, app = self._app, conf = self._conf }
 	local status, header, body = httpdown.get(self._host, url, api_header, query)
-	log.debug('conf_api.version', self._host..url, status, body or header)
+	self._log:debug('conf_api.version', self._host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
@@ -73,7 +73,7 @@ function api:data(version)
 	local url = '/conf_center/app_conf_data'
 	local query = { sn = self._sn, app = self._app, conf = self._conf, version = version }
 	local status, header, body = httpdown.get(self._host, url, api_header, query)
-	log.debug('conf_api.data', self._host..url, status, body or header)
+	self._log:debug('conf_api.data', self._host..url, status, body or header)
 	local ret = {}
 	if status == 200 then
 		local msg = cjson.decode(body)

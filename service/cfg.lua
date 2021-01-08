@@ -5,10 +5,11 @@ local cjson = require "cjson.safe"
 local md5 = require "md5"
 local lfs = require 'lfs'
 local restful = require 'http.restful'
-local log = require 'utils.log'
 local sysinfo = require 'utils.sysinfo'
 local disk = require 'utils.disk'
 local ioe = require 'ioe'
+
+local log = require 'utils.logger'.new('CFG')
 
 local db_file = "cfg.json"
 local md5sum = ""
@@ -83,27 +84,27 @@ local function data_cache_compatitable()
 	local ddir = sysinfo.data_dir()
 	if ddir == '/tmp' then
 		local err = 'Data cache not allowed on /tmp'
-		log.warning("::CFG:: "..err)
+		log.warning(err)
 		return nil, err
 	end
 	if not lfs.attributes(ddir, 'mode') then
 		local err = 'Data cache not exists'
-		log.warning("::CFG:: "..err)
+		log.warning(err)
 		return nil, err
 	end
 
 	local dir, err = disk.df(ddir)
 	if not dir or not dir.total then
-		log.warning("::CFG:: Cannot access data directory", ddir, err)
+		log.warning("Cannot access data directory", ddir, err)
 		return nil, err
 	end
 
 	--- total unit is 1K-block
 	if dir.total < 256 * 1024 then
-		log.warning("::CFG:: Data cache directory is too small!", ddir, dir.total)
+		log.warning("Data cache directory is too small!", ddir, dir.total)
 		return nil, "Data dir is too small"
 	else
-		log.notice("::CFG:: Data cache directory info", ddir, dir.total)
+		log.notice("Data cache directory info", ddir, dir.total)
 	end
 
 	return true
@@ -124,7 +125,7 @@ local function set_cloud_defaults(data)
 	end
 
 	if not data_cache_compatitable() then
-		log.info("::CFG:: Data cache not allowed in currect device")
+		log.info("Data cache not allowed in currect device")
 		data.DATA_CACHE = false
 	end
 
@@ -173,16 +174,16 @@ local function on_cfg_failure()
 		f:write(content)
 		f:close()
 		os.execute('sh '..sh_file)
-		log.info("::CFG:: Crash backup script finished")
+		log.info("Crash backup script finished")
 	else
-		log.error("::CFG:: Failed to create crash backup script, "..err)
+		log.error("Failed to create crash backup script, "..err)
 	end
 	skynet.sleep(100)
 	skynet.abort()
 end
 
 local function load_cfg(path)
-	log.info("::CFG:: Loading configuration...")
+	log.info("Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
 		dc.set("SYS", set_sys_defaults())
@@ -204,18 +205,18 @@ local function load_cfg(path)
 		local md5s = mfile:read("*l")
 		mfile:close()
 		if md5s ~= sum then
-			log.error("::CFG:: Configuration file checksum error.", md5s, sum)
-			log.error("::CFG:: FreeIOE is aborting, please correct this error manually!")
+			log.error("Configuration file checksum error.", md5s, sum)
+			log.error("FreeIOE is aborting, please correct this error manually!")
 			on_cfg_failure()
 		end
 	else
-		log.warning("::CFG:: Configuration checksum file is missing, create it")
+		log.warning("Configuration checksum file is missing, create it")
 		local mfile, merr = io.open(path..".md5", "w+")
 		if mfile then
 			mfile:write(sum)
 			mfile:close()
 		else
-			log.warning("::CFG:: Failed to open checksum file for writing.", merr)
+			log.warning("Failed to open checksum file for writing.", merr)
 		end
 	end
 
@@ -248,7 +249,7 @@ local function load_cfg(path)
 end
 
 local function save_cfg(path, content, content_md5sum)
-	log.info("::CFG:: Saving configuration...")
+	log.info("Saving configuration...")
 	if path == db_file then
 		backup_cfg(path)
 	end
@@ -281,7 +282,7 @@ local function save_cfg_cloud(content, content_md5sum, rest)
 		return nil, "Restful api missing, cannot upload configuration to cloud"
 	end
 
-	log.info("::CFG:: Start to upload configuration to cloud")
+	log.info("Start to upload configuration to cloud")
 
 	local id = dc.get("CLOUD", "ID") or dc.wait("SYS", "ID")
 	local url = "/conf_center/upload_device_conf"
@@ -293,10 +294,10 @@ local function save_cfg_cloud(content, content_md5sum, rest)
 	}
 	local status, body = rest:post(url, params)
 	if not status or status ~= 200 then
-		log.warning("::CFG:: Upload configuration failed. Status:", status or -1, body)
+		log.warning("Upload configuration failed. Status:", status or -1, body)
 		return nil, "Upload configuration failed!"
 	else
-		log.info("::CFG:: Upload configuration done!")
+		log.info("Upload configuration done!")
 		return true
 	end
 end
@@ -307,12 +308,12 @@ local function load_cfg_cloud(cfg_id, rest)
 		return nil, "Restful api missing, cannot download configruation from cloud"
 	end
 
-	log.info("::CFG:: Start to download configuration from cloud")
+	log.info("Start to download configuration from cloud")
 
 	local id = dc.get("CLOUD", "ID") or dc.wait("SYS", "ID")
 	local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
 	if not status or status ~= 200 then
-		log.warning("::CFG:: Download configuration failed. Status:", status or -1, body)
+		log.warning("Download configuration failed. Status:", status or -1, body)
 		return nil, "Failed to download configuration, id:"..cfg_id
 	end
 	local new_cfg = cjson.decode(body) or {}
@@ -322,17 +323,17 @@ local function load_cfg_cloud(cfg_id, rest)
 
 	local sum = md5.sumhexa(new_content)
 	if sum ~= new_md5sum then
-		log.warning("::CFG:: MD5 Checksum failed.", sum, new_md5sum)
+		log.warning("MD5 Checksum failed.", sum, new_md5sum)
 		return nil, "The fetched configuration checksum incorrect!"
 	end
 
 	local r, err = save_cfg(db_file, new_content, new_md5sum)
 	if not r  then
-		log.warning("::CFG:: Saving configurtaion failed.", err)
+		log.warning("Saving configurtaion failed.", err)
 		return nil, "Saving configuration failed!"
 	end
 
-	log.notice("::CFG:: Download configuration finished. FreeIOE is reloading!!")
+	log.notice("Download configuration finished. FreeIOE is reloading!!")
 	ioe.abort()
 
 	return true
@@ -383,7 +384,7 @@ local function init_restful()
 	local cfg_host = dc.get("SYS", "CNF_HOST_URL")
 
 	if cfg_upload and cfg_host then
-		log.info("::CFG:: Configuration cloud upload enabled! Server:", cfg_host)
+		log.info("Configuration cloud upload enabled! Server:", cfg_host)
 		db_restful = restful:new(cfg_host)
 	end
 end

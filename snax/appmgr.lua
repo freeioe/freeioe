@@ -1,12 +1,12 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
-local log = require 'utils.log'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local ioe = require 'ioe'
 local event = require 'app.event'
 local cjson = require 'cjson.safe'
 
+local log = nil
 local applist = {}
 local mc_map = {}
 local listeners = {}
@@ -22,14 +22,14 @@ end
 ---
 -- Return instance id
 function response.start(name, conf)
-	log.info("::AppMgr:: Start application "..name)
+	log.info("Start application "..name)
 	-- Get application list item by name
 	applist[name] = applist[name] or {}
 	local app = applist[name]
 
 	--- check if already started
 	if app.inst then
-		log.debug("::AppMgr:: Application already started "..name, app.inst)
+		log.debug("Application already started "..name, app.inst)
 		return app.inst
 	end
 
@@ -41,7 +41,7 @@ function response.start(name, conf)
 	local inst, err = snax.newservice("appwrap", name, app.conf, mgr_snax.handle, mgr_snax.type)
 	assert(not app.inst, "Bug found when starting application!!")
 
-	log.info("::AppMgr:: Application instance created "..name)
+	log.info("Application instance created "..name)
 
 	--- Set the instance and last ping time
 	app.inst = inst
@@ -50,7 +50,7 @@ function response.start(name, conf)
 	--- Call the applicaiton start
 	local pr, r, err = pcall(inst.req.start)
 	if not pr then
-		local info = "::AppMgr:: Failed during start app "..name..". Error: "..tostring(r)
+		local info = "Failed during start app "..name..". Error: "..tostring(r)
 		log.error(info)
 		fire_exception_event(name, "Failed during start app "..name, {info=app, err=r})
 		app.inst = nil
@@ -58,7 +58,7 @@ function response.start(name, conf)
 		return nil, info
 	end
 	if not r then
-		local info = "::AppMgr:: Failed to start app "..name..". Error: "..tostring(err)
+		local info = "Failed to start app "..name..". Error: "..tostring(err)
 		log.error(info)
 		fire_exception_event(name, "Failed to start app "..name, {info=app, err=err})
 		snax.kill(inst, "Start failed!")
@@ -96,7 +96,7 @@ function response.stop(name, reason)
 
 	if app.inst then
 		local force_kill = function()
-			log.warning("::AppMgr:: Force to kill app "..name.." as it is not closed within 60 seconds")
+			log.warning("Force to kill app "..name.." as it is not closed within 60 seconds")
 			skynet.kill(app.inst.handle)
 
 			app.inst = nil
@@ -133,7 +133,7 @@ function response.restart(name, reason)
 
 	local r, err = snax.self().req.stop(name, reason)
 	if not r then
-		log.warning("::AppMgr:: Failed to stop application when restart it")
+		log.warning("Failed to stop application when restart it")
 		return false, "Failed to stop application"
 	else
 		--- Only start it if stop successfully
@@ -216,7 +216,7 @@ function response.get_channel(name)
 end
 
 function accept.app_modified(inst, from)
-	log.warning("::AppMgr:: Application has modified from "..from)
+	log.warning("Application has modified from "..from)
 	local app = applist[inst]
 	if not app then
 		return
@@ -277,7 +277,7 @@ function accept.app_event(event, inst_name, ...)
 end
 
 function accept.app_heartbeat(inst, time)
-	--log.debug("::AppMgr:: Application heartbeat received from", inst, time)
+	--log.debug("Application heartbeat received from", inst, time)
 	if applist[inst] then
 		applist[inst].last = time or skynet.now()
 	end
@@ -288,7 +288,7 @@ function accept.app_heartbeat_check()
 		if v.inst then
 			--- 180 seconds timeout, three times for app heart beart
 			if (skynet.now() - v.last) > ((180 + 20) * 100) then
-				log.notice("::AppMgr:: App heartbeat timeout! Inst:", k)
+				log.notice("App heartbeat timeout! Inst:", k)
 
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
 				fire_exception_event(sys_app, 'heartbeat timeout', data)
@@ -322,7 +322,7 @@ function accept.unlisten(handle)
 end
 
 function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
-	log.trace("::AppMgr:: fire_event", app_name, sn, level, type_, info, timestamp, cjson.encode(data))
+	log.trace("fire_event", app_name, sn, level, type_, info, timestamp, cjson.encode(data))
 	assert(sn and level and type_ and info)
 	local event_chn = mc_map.EVENT
 	local type_ = event.type_to_string(type_)
@@ -334,7 +334,7 @@ function accept.fire_event(app_name, sn, level, type_, info, data, timestamp)
 end
 
 function accept.close_all(reason)
-	log.warning("::AppMgr:: service is closing all apps. reason:"..(reason or "UKNOWN"))
+	log.warning("service is closing all apps. reason:"..(reason or "UKNOWN"))
 	for k, v in pairs(applist) do
 		if v.inst then
 			snax.self().post.app_stop(k, reason)
@@ -343,7 +343,8 @@ function accept.close_all(reason)
 end
 
 function init(...)
-	log.info("::AppMgr:: App manager service starting...")
+	log = require 'utils.logger'.new('AppMgr')
+	log.info("App manager service starting...")
 
 	local chn = mc.new()
 	dc.set("MC", "APP", "DATA", chn.channel)
@@ -406,5 +407,5 @@ function exit(...)
 	end
 	mc_map = {}
 	listeners = {}
-	log.info("::AppMgr:: service closed!")
+	log.info("service closed!")
 end

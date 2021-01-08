@@ -1,5 +1,5 @@
 local skynet = require 'skynet'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new('hwtest')
 
 local command = {}
 

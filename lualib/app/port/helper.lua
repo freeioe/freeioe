@@ -1,4 +1,3 @@
-
 local _M = {}
 
 ---
@@ -7,8 +6,8 @@ local _M = {}
 -- @tparam len Required length
 -- @tparam dump Stream dump function. e.g. function(str) print(str) end
 function _M.read_socket(sock, len, dump)
-	local log = require 'utils.log'
-	log.trace('Start reading from socket stream. required len:', len)
+	--local logger = require 'utils.logger'.new()
+	--logger.trace('Start reading from socket stream. required len:', len)
 
 	local str, err = sock:read(len)
 	if not str then
@@ -33,9 +32,8 @@ end
 -- @tparam dump Stream dump function. e.g. function(str) print(str) end
 -- @tparam timeout Reading timeout in ms. Default is 3000 ms
 function _M.read_serial(serial, len, dump, timeout)
-	--print(serial, len, dump, timeout)
-	local log = require 'utils.log'
-	--log.trace('Start reading from serial port. required len:', len, 'timeout(ms):', timeout)
+	--local logger = require 'utils.logger'.new()
+	--logger.trace('Start reading from serial port. required len:', len, 'timeout(ms):', timeout)
 
 	local str, err = serial:read(len, timeout and timeout // 10 or nil)
 	if not str then

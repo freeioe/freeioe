@@ -1,6 +1,6 @@
-local skynet = require 'skynet'
 local class = require 'middleclass'
-local log = require 'utils.log'
+local skynet = require 'skynet'
+local log = require 'utils.logger'.new()
 
 local test = class('FREEIOE_HWTEST_CLASS')
 

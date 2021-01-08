@@ -1,4 +1,4 @@
-local log = require 'utils.log'
+local log = require 'utils.logger'.new()
 
 local exec = function(cmd)
 	log.debug('Exec', cmd)

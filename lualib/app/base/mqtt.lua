@@ -304,8 +304,14 @@ function app:_connect_proc()
 		end
 	end
 
+	local function MAP_CALLBACK(func)
+		return function(...)
+			self._sys:fork(func, ...)
+		end
+	end
+
 	-- 注册回调函数
-	client.ON_CONNECT = function(success, rc, msg) 
+	client.ON_CONNECT = MAP_CALLBACK(function(success, rc, msg) 
 		if success then
 			log:notice("ON_CONNECT", success, rc, msg) 
 			if self._mqtt_client then
@@ -333,8 +339,8 @@ function app:_connect_proc()
 			--close_client = true
 			--self:_start_reconnect()
 		end
-	end
-	client.ON_DISCONNECT = function(success, rc, msg) 
+	end)
+	client.ON_DISCONNECT = MAP_CALLBACK(function(success, rc, msg) 
 		log:warning("ON_DISCONNECT", success, rc, msg) 
 		close_client = true
 
@@ -345,8 +351,8 @@ function app:_connect_proc()
 				self:_start_reconnect()
 			end
 		end
-	end
-	client.ON_PUBLISH = function (mid)
+	end)
+	client.ON_PUBLISH = MAP_CALLBACK(function (mid)
 		--print('on_publish', mid)
 		self._qos_msg_buf:remove(mid)
 
@@ -355,19 +361,19 @@ function app:_connect_proc()
 				self._safe_call(self.on_mqtt_publish, self, mid)
 			end)
 		end
-	end
+	end)
 	--[[
 	client.ON_LOG = function(...)
 	end
 	]]--
-	client.ON_MESSAGE = function(packet_id, topic, data, qos, retained)
+	client.ON_MESSAGE = MAP_CALLBACK(function(packet_id, topic, data, qos, retained)
 		--print(packet_id, topic, data, qos, retained)
 		if self.on_mqtt_message then
 			self._sys:fork(function()
 				self._safe_call(self.on_mqtt_message, self, packet_id, topic, data, qos, retained)
 			end)
 		end
-	end
+	end)
 
 	if self.mqtt_will then
 		local topic, msg, qos, retained = self:mqtt_will()

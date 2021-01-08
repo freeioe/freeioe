@@ -2,7 +2,7 @@ local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local queue = require 'skynet.queue'
 local datacenter = require 'skynet.datacenter'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new('EXT')
 local sysinfo = require 'utils.sysinfo'
 local pkg_api = require 'utils.pkg_api'
 local lfs = require 'lfs'
@@ -121,7 +121,7 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 			if mode == 'file' or mode == 'directory' then
 				local lnpath = target_folder..filename
 				os.execute("rm -f "..lnpath)
-				log.debug('::EXT:: File link ', path, lnpath)
+				log.debug('File link ', path, lnpath)
 				os.execute("ln -s "..path.." "..lnpath)
 			end
 		end
@@ -129,14 +129,14 @@ local function install_depends_to_app_ext(ext_inst, app_inst, folder)
 end
 
 local function install_depends_to_app(ext_inst, app_inst)
-	log.debug("::EXT:: Try to install "..ext_inst.." to "..app_inst)
+	log.debug("Try to install "..ext_inst.." to "..app_inst)
 	install_depends_to_app_ext(ext_inst, app_inst, 'luaclib')
 	install_depends_to_app_ext(ext_inst, app_inst, 'lualib')
 	install_depends_to_app_ext(ext_inst, app_inst, 'bin')
 end
 
 local function remove_depends(inst)
-	log.warning('::EXT:: Remove extension', inst)
+	log.warning('Remove extension', inst)
 	installed[inst] = nil
 	local target_folder = get_target_folder(inst)
 	os.execute("rm -rf "..target_folder)
@@ -149,7 +149,7 @@ local function list_installed()
 		if filename ~= '.' and filename ~= '..' then
 			if lfs.attributes(root..filename, 'mode') == 'directory' then
 				local name, version = parse_inst_name(filename)
-				log.debug('::EXT:: Installed extension', name, version)
+				log.debug('Installed extension', name, version)
 				list[filename] = {
 					name = name,
 					version = version
@@ -181,7 +181,7 @@ end
 ---
 -- Check installed exts whether its required application exists for not
 local function auto_clean_exts()
-	log.debug("::EXT:: Auto cleanup installed extensions")
+	log.debug("Auto cleanup installed extensions")
 	local depends = list_depends()
 	for inst, _ in pairs(installed) do
 		if not depends[inst] then
@@ -263,15 +263,15 @@ function command.install_ext(id, args)
 	end
 
 	return create_download(inst, name, version, function(path)
-		log.notice("::EXT:: Download extension finished", name, version)
+		log.notice("Download extension finished", name, version)
 
 		local target_folder = get_target_folder(inst)
 		lfs.mkdir(target_folder)
-		log.debug("::EXT:: tar xzf "..path.." -C "..target_folder)
+		log.debug("tar xzf "..path.." -C "..target_folder)
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
 		if r and status == 'exit' then
-			log.notice("::EXT:: Install extension finished", name, version, r, status)
+			log.notice("Install extension finished", name, version, r, status)
 			installed[inst] = {
 				name = name,
 				version = version,
@@ -280,7 +280,7 @@ function command.install_ext(id, args)
 			cloud_update_ext_list()
 			return true
 		else
-			log.error("::EXT:: Install extention failed", name, version, r, status)
+			log.error("Install extention failed", name, version, r, status)
 			os.execute("rm -rf "..target_folder)
 			return false, "failed to unzip Extension"
 		end
@@ -306,25 +306,25 @@ function command.upgrade_ext(id, args)
 	end
 
 	return create_download(inst, name, version, function(path)
-		log.notice("::EXT:: Download extension finished", name, version, beta)
+		log.notice("Download extension finished", name, version, beta)
 
 		local target_folder = get_target_folder(inst)
-		log.debug("::EXT:: tar xzf "..path.." -C "..target_folder)
+		log.debug("tar xzf "..path.." -C "..target_folder)
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
 		if not r or status ~= 'exit' then
-			log.error("::EXT:: Install extention failed", name, version, r, status)
+			log.error("Install extention failed", name, version, r, status)
 			return false, "Extention upgradation failed to install"
 		end
 
-		log.notice("::EXT:: Install extension finished", name, version, r, status)
+		log.notice("Install extension finished", name, version, r, status)
 		installed[inst] = {
 			name = name,
 			version = version
 		}
 
 		for _,app_inst in ipairs(applist) do
-			log.notice("::EXT:: Launch appliation", app_inst)
+			log.notice("Launch appliation", app_inst)
 			appmgr.post.app_start(app_inst)
 		end
 		return true, "Extension upgradation is done!"

@@ -1,10 +1,10 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local crypt = require 'skynet.crypt'
-local log = require 'utils.log'
 local app_api = require 'app.api'
 
 local api = nil
+local log = nil
 
 -- Communication Data
 local comm_buffer = {}
@@ -179,7 +179,8 @@ local function connect_log_server(enable)
 end
 
 function init()
-	log.notice("::BUFFER:: System buffer service started!")
+	log = require 'utils.logger'.new('BUFFER')
+	log.notice("System buffer service started!")
 	skynet.fork(function()
 		connect_log_server(true)
 	end)
@@ -192,5 +193,5 @@ end
 
 function exit(...)
 	connect_log_server(false)
-	log.notice("::BUFFER:: System buffer service stoped!")
+	log.notice("System buffer service stoped!")
 end

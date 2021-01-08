@@ -1,6 +1,6 @@
 local class = require 'middleclass'
 local skynet = require 'skynet'
---local log = require 'utils.log'
+local log = require 'utils.logger'.new()
 
 local pb = class("_PERIOD_CONSUMER_LIB")
 

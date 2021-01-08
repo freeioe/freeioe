@@ -5,7 +5,7 @@
 local skynet = require 'skynet'
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new()
 
 local pm = class("FREEIOE_PROCESS_MONITOR_WRAP")
 

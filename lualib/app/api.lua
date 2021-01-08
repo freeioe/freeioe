@@ -1,22 +1,23 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local ioe = require 'ioe'
-local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local dev_api = require 'app.device'
 local app_event = require 'app.event'
+local app_logger = require 'app.logger'
 local threshold_buffer = require 'buffer.threshold'
 
 local api = class("APP_MGR_API")
 
-function api:initialize(app_name, mgr_snax, cloud_snax)
+function api:initialize(app_name, mgr_snax, cloud_snax, logger)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax or snax.queryservice('appmgr')
 	self._cloud_snax = cloud_snax or snax.queryservice('cloud')
 	self._devices = {}
 	self._event_fire_buf = nil
+	self._logger = logger or app_logger:new(app_name)
 end
 
 function api:cleanup()
@@ -28,12 +29,12 @@ function api:cleanup()
 end
 
 function api:data_dispatch(channel, source, cmd, app, ...)
-	--log.trace('Data Dispatch', channel, source, cmd, app, ...)
+	--self._logger:trace('Data Dispatch', channel, source, cmd, app, ...)
 	local f = self._handler['on_'..cmd]
 	if f then
 		return f(app, ...)
 	else
-		log.trace('No handler for '..cmd)
+		self._logger:trace('No handler for '..cmd)
 	end
 end
 
@@ -43,7 +44,7 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 		return
 	end
 
-	log.trace('Ctrl Dispatch', channel, source, ctrl, app_src, app, ...)
+	self._logger:trace('Ctrl Dispatch', channel, source, ctrl, app_src, app, ...)
 	local f = self._handler['on_'..ctrl]
 	if f then
 		--- check if this is result dispatch
@@ -68,37 +69,37 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 			end
 		end, ...)
 	else
-		log.trace('No handler for '..ctrl)
+		self._logger:trace('No handler for '..ctrl)
 	end
 end
 
 function api:comm_dispatch(channel, source, app, ...)
-	--log.trace('Comm Dispatch', channel, source, ...)
+	--self._logger:trace('Comm Dispatch', channel, source, ...)
 	local f = self._handler.on_comm
 	if f then
 		return f(app, ...)
 	else
-		log.trace('No handler for on_comm')
+		self._logger:trace('No handler for on_comm')
 	end
 end
 
 function api:stat_dispatch(channel, source, app, ...)
-	--log.trace('Stat Dispatch', channel, source, ...)
+	--self._logger:trace('Stat Dispatch', channel, source, ...)
 	local f = self._handler.on_stat
 	if f then
 		return f(app, ...)
 	else
-		log.trace('No handler for on_stat')
+		self._logger:trace('No handler for on_stat')
 	end
 end
 
 function api:event_dispatch(channel, source, app, ...)
-	--log.trace('Event Dispatch', channel, source, ...)
+	--self._logger:trace('Event Dispatch', channel, source, ...)
 	local f = self._handler.on_event
 	if f then
 		return f(app, ...)
 	else
-		log.trace('No handler for on_event')
+		self._logger:trace('No handler for on_event')
 	end
 end
 
@@ -280,7 +281,7 @@ function api:_set_event_threshold(count_per_min)
 	self._event_fire_buf = threshold_buffer:new(60, count_per_min, function(...)
 		return self._event_chn:publish(...)
 	end, function(...)
-		log.error('Event threshold reached:', ...)
+		self._logger:error('Event threshold reached:', ...)
 	end)
 end
 

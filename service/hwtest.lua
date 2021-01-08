@@ -1,7 +1,7 @@
 local skynet = require 'skynet'
 local cjson = require 'cjson.safe'
 local hwtest = require 'hwtest'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new('hwtest')
 
 skynet.start(function()
 	local runner = hwtest:new('thingslink', 'x1')

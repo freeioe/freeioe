@@ -1,20 +1,21 @@
 local skynet = require "skynet"
+local dc = require 'skynet.datacenter'
 local service = require "skynet.service"
 local class = require 'middleclass'
 local uuid = require 'uuid'
-local log = require 'utils.log'
 
 local app_port = class('FREEIOE_APP_PORT_CLASS')
 
 local function agent_service(...)
 	local skynet = require "skynet"
 	local socketchannel = require "skynet.socketchannel"
-	local log = require 'utils.log'
+	local logger = require 'app.logger'
 
 	--skynet.error(...)	-- (...) passed from service.new
 	local args = table.pack(...)
 	local name = assert(args[1])
 	local conf = args[2] or {}
+	local log = logger:new(name)
 
 	local command = {}
 	local chn = socketchannel.channel(conf)
@@ -29,14 +30,14 @@ local function agent_service(...)
 			return chn:request(request, function(sock)
 				local r, data, info = skynet.pcall(resp, sock)
 				if not r then
-					log.trace(data)
+					log:trace(data)
 					return false, data
 				end
 				return data, info
 			end, padding)
 		end)
 		if not r then
-			log.trace(data)
+			log:trace(data)
 			return false, data
 		end
 		return data, err
@@ -47,7 +48,7 @@ local function agent_service(...)
 	end
 
 	function command.reopen(new_conf)
-		log.trace('reopen socket channel')
+		log:trace('reopen socket channel')
 		conf = new_conf or conf
 		chn:close()
 		chn = socketchannel.channel(conf)
@@ -90,7 +91,6 @@ local function timeout_call(ti, ...)
 		end
 	else
 		-- timeout
-		log.trace('timeout error')
 		return false, timeout_error
 	end
 end
@@ -98,6 +98,7 @@ end
 function app_port:initialize(conf, share_name)
 	assert(conf)
 	self._name = share_name or uuid()
+	self._app_name = dc.get("APP_CACHE_NAME", skynet.self())
 	self._conf = conf
 	self._agent = service.new(".app_socket_port_"..self._name, agent_service, self._name, self._conf)
 end

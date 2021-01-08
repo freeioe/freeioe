@@ -1,7 +1,6 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
-local log = require 'utils.log'
 local class = require 'middleclass'
 local ioe = require 'ioe'
 local api = require 'app.api'
@@ -292,9 +291,9 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
 	self._wrap_snax = wrap_snax
 	self._app_name = app_name
-	self._data_api = api:new(app_name, mgr_snax)
 	self._app_sn = nil
-	self._logger = logger:new(log, app_name)
+	self._logger = logger:new(app_name)
+	self._data_api = api:new(app_name, mgr_snax, self._logger)
 end
 
 function sys:cleanup()

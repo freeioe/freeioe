@@ -3,7 +3,7 @@ local skynet = require 'skynet'
 local zlib_loaded, zlib = pcall(require, 'zlib')
 local cjson = require 'cjson.safe'
 local lfs = require 'lfs'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new()
 
 local fb = class("File_Buffer_Utils")
 

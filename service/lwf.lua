@@ -3,6 +3,7 @@ local socket = require "skynet.socket"
 local co_m = require "skynet.coroutine"
 local httpd = require "http.httpd"
 local sockethelper = require "http.sockethelper"
+
 --local urllib = require "http.url"
 local table = table
 local string = string
@@ -15,7 +16,7 @@ if mode == "agent" then
 protocol = protocol or 'http'
 
 --local cache = require 'skynet.codecache'
-local log = require 'utils.log'
+local log = require 'utils.logger'.new('LWF')
 
 local SSLCTX_SERVER = nil
 local function gen_interface(protocol, fd)
@@ -64,7 +65,7 @@ skynet.start(function()
 		while processing do
 			local ts = skynet.now() - processing
 			if ts > 500 then
-				log.trace('::LWF:: Web process timeout', processing, skynet.now())
+				log.trace('Web process timeout', processing, skynet.now())
 				break
 			end
 			skynet.sleep(20)
@@ -88,7 +89,7 @@ skynet.start(function()
 
 		-- limit request body size to 8192 (you can pass nil to unlimit)
 		local code, url, method, header, body, httpver = httpd.read_request(interface.read, 4096 * 1024)
-		log.trace('::LWF:: Web access', httpver, method, url, code)
+		log.trace('Web access', httpver, method, url, code)
 		if code then
 			if code ~= 200 then
 				response(id, code)

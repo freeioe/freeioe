@@ -1,7 +1,7 @@
 local skynet = require "skynet"
 local class = require 'middleclass'
 local uuid = require 'uuid'
-local log = require 'utils.log'
+local log = require 'utils.loggger'.new()
 
 local app_port = class('FREEIOE_APP_SERIAL_PORT_CLASS')
 

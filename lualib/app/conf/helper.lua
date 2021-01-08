@@ -1,6 +1,5 @@
 local class = require 'middleclass'
 local skynet = require 'skynet'
-local log = require 'utils.log'
 local cjson = require 'cjson.safe'
 
 local helper = class("FREEIOE_APP_CONF_API_HELPER")

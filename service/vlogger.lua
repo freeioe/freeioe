@@ -1,5 +1,6 @@
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
+local dc = require 'skynet.datacenter'
 local log = require 'log'
 
 local LOG = nil
@@ -91,4 +92,5 @@ skynet.start(function()
 
 	--- Latest skynet will register .logger for us, keep this register for make this working with older skynet
 	skynet.register ".logger"
+	dc.set('FREEIOE.LOGGER', ".logger")
 end)

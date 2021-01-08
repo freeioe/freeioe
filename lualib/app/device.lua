@@ -1,6 +1,5 @@
 local skynet = require 'skynet'
 local ioe = require 'ioe'
-local log = require 'utils.log'
 local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
@@ -11,6 +10,7 @@ local device = class("APP_MGR_DEV_API")
 --- Do not call this directly, but throw the api.lua
 function device:initialize(api, sn, props, guest, secret)
 	self._api = api
+	self._logger = api._logger
 	self._sn = sn
 	self._props = props
 	self._app_src = api._app_name
@@ -76,7 +76,7 @@ function device:cleanup()
 	dc.set('INPUT', sn, nil)
 	dc.set('OUTPUT', sn, nil)
 
-	log.trace("DELETE DEVICE", self._app_name, sn, props)
+	self._logger.trace("DELETE DEVICE", self._app_name, sn, props)
 	self._data_chn:publish('del_device', self._app_name, sn, props)
 
 	self:_cleanup()
