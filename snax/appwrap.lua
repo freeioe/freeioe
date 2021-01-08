@@ -130,7 +130,7 @@ function response.start()
 		skynet.timeout(100, work_proc)
 
 		if app.on_logger then
-			log_buffer = cyclebuffer:new(publish_log, 128)
+			log_buffer = require('buffer.cycle'):new(publish_log, 128)
 			skynet.fork(logger_proc)
 		end
 
