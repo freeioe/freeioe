@@ -73,10 +73,10 @@ skynet.register_protocol {
 	end
 }
 
-skynet.start(function()
-	--- Create log files
-	create_log()
+--- Create log files
+create_log()
 
+skynet.start(function()
 	skynet.dispatch("lua", function(session, address, level, ...)
 		if level == '__LISTEN__' then
 			skynet.ret(skynet.pack(_listen(...)))

@@ -3,9 +3,11 @@
 
 # Release history
 
-v1.11.1 ()
+v1.20.0 ()
 ------------------
 
+* Improved log service
+* Support App.on_logger for receiving logs
 * Fixed MQTT disconnection time takes too long issue
 * Disable COV in MQTT base application if conf.disable_cov been set
 

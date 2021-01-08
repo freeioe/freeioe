@@ -46,7 +46,7 @@ function logger:log(level, info, ...)
 	return f(...)
 end
 
-function logger:debug_log(level, info, ...)
+function logger:log_with_name(level, info, ...)
 	local info = self._name and '::'..self._name..':: '..info or info
 	--lvl = log.lvl2number(level)
 	local f = assert(self._log[level])
@@ -57,11 +57,11 @@ local function make_func(logger, name)
 	logger[name] = function(self, ...)
 		--[[
 		if os.getenv('IOE_LOG_LEVEL') == 'trace' then
-			return self:debug_log(name, ...)
+			return self:log_with_name(name, ...)
 		end
 		return self:log(name, ...)
 		]]--
-		return self:debug_log(name, ...)
+		return self:log_with_name(name, ...)
 	end
 end
 

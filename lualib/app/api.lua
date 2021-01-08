@@ -20,6 +20,7 @@ function api:initialize(app_name, mgr_snax, cloud_snax)
 end
 
 function api:cleanup()
+	self:close_handler()
 	for sn, dev in pairs(self._devices) do
 		self:del_device(dev)
 	end
@@ -101,94 +102,87 @@ function api:event_dispatch(channel, source, app, ...)
 	end
 end
 
+function api:close_handler()
+	if self._data_chn then
+		self._data_chn:unsubscribe()
+		self._data_chn = nil
+	end
+	if self._ctrl_chn then
+		self._ctrl_chn:unsubscribe()
+		self._ctrl_chn = nil
+	end
+	if self._comm_chn then
+		self._comm_chn:unsubscribe()
+		self._comm_chn = nil
+	end
+	if self._stat_chn then
+		self._stat_chn:unsubscribe()
+		self._stat_chn = nil
+	end
+	if self._event_chn then
+		self._event_chn:unsubscribe()
+		self._event_chn = nil
+	end
+end
+
 function api:set_handler(handler, watch_data)
 	self._handler = handler
+	if not self._handler then
+		return api:close_handler()
+	end
+
 	local mgr = self._mgr_snax
 
-	if handler then
-		self._data_chn = mc.new ({
-			channel = mgr.req.get_channel('data'),
-			dispatch = function(channel, source, ...)
-				self:data_dispatch(channel, source, ...)
-			end
-		})
-		if watch_data then
-			self._data_chn:subscribe()
+	self._data_chn = self._data_chn or mc.new ({
+		channel = mgr.req.get_channel('data'),
+		dispatch = function(channel, source, ...)
+			self:data_dispatch(channel, source, ...)
 		end
-	else
-		if self._data_chn then
-			self._data_chn:unsubscribe()
-			self._data_chn = nil
-		end
+	})
+	if watch_data then
+		self._data_chn:subscribe()
 	end
 
-	if handler then
-		self._ctrl_chn = mc.new ({
-			channel = mgr.req.get_channel('ctrl'),
-			dispatch = function(channel, source, ...)
-				self:ctrl_dispatch(channel, source, ...)
-			end
-		})
-		if handler.on_ctrl or handler.on_output or handler.on_command or
-			handler.on_ctrl_result or handler.on_output_result or handler.on_command_result then
-			self._ctrl_chn:subscribe()
+	self._ctrl_chn = self._ctrl_chn or mc.new ({
+		channel = mgr.req.get_channel('ctrl'),
+		dispatch = function(channel, source, ...)
+			self:ctrl_dispatch(channel, source, ...)
 		end
-	else
-		if self._ctrl_chn then
-			self._ctrl_chn:unsubscribe()
-			self._ctrl_chn = nil
-		end
+	})
+	if handler.on_ctrl or handler.on_output or handler.on_command or
+		handler.on_ctrl_result or handler.on_output_result or handler.on_command_result then
+
+		self._ctrl_chn:subscribe()
 	end
 
-	if handler then
-		self._comm_chn = mc.new ({
-			channel = mgr.req.get_channel('comm'),
-			dispatch = function(channel, source, ...)
-				self:comm_dispatch(channel, source, ...)
-			end
-		})
-		if handler.on_comm then
-			self._comm_chn:subscribe()
+	self._comm_chn = self._comm_chn or mc.new ({
+		channel = mgr.req.get_channel('comm'),
+		dispatch = function(channel, source, ...)
+			self:comm_dispatch(channel, source, ...)
 		end
-	else
-		if self._comm_chn then
-			self._comm_chn:unsubscribe()
-			self._comm_chn = nil
-		end
+	})
+	if handler.on_comm then
+		self._comm_chn:subscribe()
 	end
 
-	if handler then
-		self._stat_chn = mc.new({
-			channel = mgr.req.get_channel('stat'),
-			dispatch = function(channel, source, ...)
-				self:stat_dispatch(channel, source, ...)
-			end
-		})
-		if handler.on_stat then
-			self._stat_chn:subscribe()
+	self._stat_chn = self._stat_chn or mc.new({
+		channel = mgr.req.get_channel('stat'),
+		dispatch = function(channel, source, ...)
+			self:stat_dispatch(channel, source, ...)
 		end
-	else
-		if self._stat_chn then
-			self._stat_chn:unsubscribe()
-			self._stat_chn = nil
-		end
+	})
+	if handler.on_stat then
+		self._stat_chn:subscribe()
 	end
 
-	if handler then
-		self._event_chn = mc.new({
-			channel = mgr.req.get_channel('event'),
-			dispatch = function(channel, source, ...)
-				self:event_dispatch(channel, source, ...)
-			end
-		})
-		if handler.on_event then
-			self._event_chn:subscribe()
+	self._event_chn = self._event_chn or mc.new({
+		channel = mgr.req.get_channel('event'),
+		dispatch = function(channel, source, ...)
+			self:event_dispatch(channel, source, ...)
 		end
-	else
-		if self._event_chn then
-			self._event_chn:unsubscribe()
-			self._event_chn = nil
-		end
+	})
+	if handler.on_event then
+		self._event_chn:subscribe()
 	end
 	self:_set_event_threshold(20)
 end

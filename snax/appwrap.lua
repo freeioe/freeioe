@@ -100,6 +100,21 @@ local function work_proc()
 	end
 end
 
+local log_buffer = nil
+local function publish_log(ts, lvl, ...)
+	if not app then
+		return false, "App is not exists!"
+	end
+	return protect_call(app, 'on_logger', ts, lvl, ...)
+end
+
+local function logger_proc()
+	while app and not app_closing and log_buffer do
+		log_buffer:fire_all()
+		skynet.sleep(50)
+	end
+end
+
 function response.ping()
 	return "Pong "..app_name
 end
@@ -108,10 +123,16 @@ function response.start()
 	if app then
 		local r, err = protect_call(app, 'start')
 		if not r then
+			skynet.fork(on_close, 'App start failed!')
 			return nil, err
 		end
 
 		skynet.timeout(100, work_proc)
+
+		if app.on_logger then
+			log_buffer = cyclebuffer:new(publish_log, 128)
+			skynet.fork(logger_proc)
+		end
 
 		return true
 	else
@@ -174,6 +195,12 @@ function accept.app_post(msg, ...)
 		else
 			app_log:warning("No handler for post message "..msg)
 		end
+	end
+end
+
+function accept.log(ts, lvl, ...)
+	if log_buffer then
+		log_buffer:push(ts, lvl, ...)
 	end
 end
 
