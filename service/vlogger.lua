@@ -3,15 +3,6 @@ local snax = require 'skynet.snax'
 local log = require 'log'
 
 local LOG = nil
-local listeners = {}
-
-local function post_to_listeners(fmt, msg, lvl, now)
-	local tnow = skynet.time()
-	for handle, srv in pairs(listeners) do
-		srv.post.log(tnow, lvl, msg)
-	end
-end
-
 local function create_log()
 	local max_lvl = os.getenv('IOE_LOG_LEVEL') or 'info'
 	LOG = log.new(
@@ -21,8 +12,7 @@ local function create_log()
 		require 'log.writer.list'.new(               -- multi writers:
 			require "log.writer.console.color".new(),  -- * console color
 			--require 'log.writer.file.roll'.new('./logs', "freeioe_sys.log", 4, 1*1024*1024)
-			require 'log.writer.file.roll'.new('./logs', "freeioe.log", 4, 4*1024*1024),
-			post_to_listeners
+			require 'log.writer.file.roll'.new('./logs', "freeioe.log", 4, 4*1024*1024)
 			--[[
 			require 'log.writer.format'.new(
 				require 'log.logformat.syslog'.new(),
@@ -37,6 +27,8 @@ local function create_log()
 	)
 end
 
+local listeners = {}
+
 local function _listen(handle, type)
        listeners[handle] = snax.bind(handle, type)
        return true
@@ -47,11 +39,22 @@ local function _unlisten(handle)
        return true
 end
 
+local _fmt = require 'log.formatter.concat'.new('\t')
+
+local function post_to_listeners(lvl, ...)
+	local msg = _fmt(...)
+	local now = skynet.time()
+	for handle, srv in pairs(listeners) do
+		srv.post.log(now, lvl, msg)
+	end
+end
+
 local function _log_content(address, level, fmt, ...)
 	local hdr = string.format("[%08x]: %s", address, fmt)
 	local f = assert(LOG[level] or LOG.notice)
 
 	f(hdr, ...)
+	post_to_listeners(level, hdr, ...)
 end
 
 skynet.register_protocol {

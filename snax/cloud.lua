@@ -646,8 +646,8 @@ local function publish_event(app_src, sn, level, type_, info, data, timestamp)
 end
 
 local function load_buffers()
-	comm_buffer = cyclebuffer:new(publish_comm, 32)
-	log_buffer = cyclebuffer:new(publish_log, 128)
+	comm_buffer = cyclebuffer:new(publish_comm, 256)
+	log_buffer = cyclebuffer:new(publish_log, 512)
 	event_buffer = cyclebuffer:new(publish_event, 16)
 
 	--- the run loop to fire those buffers

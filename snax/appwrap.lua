@@ -109,7 +109,6 @@ local function publish_log(ts, lvl, ...)
 end
 
 local function logger_proc()
-	local obj = snax.self()
 	skynet.call(".logger", "lua", "__LISTEN__", obj.handle, obj.type)
 	while app and not app_closing and log_buffer do
 		log_buffer:fire_all()
@@ -133,7 +132,7 @@ function response.start()
 		skynet.timeout(100, work_proc)
 
 		if app.on_logger then
-			log_buffer = require('buffer.cycle'):new(publish_log, 128)
+			log_buffer = require('buffer.cycle'):new(publish_log, 512)
 			skynet.fork(logger_proc)
 		end
 
