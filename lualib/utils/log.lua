@@ -20,20 +20,10 @@ if not inskynet then
 
 	return LOG
 else
-	local snax = require 'skynet.snax'
-
-	local LOGGER
-	
 	local make_func = function(name)
 		local name = name
 		return function(...)
-			LOGGER = LOGGER or snax.uniqueservice('logger')
-
-			local t = { }
-			for _, v in ipairs({...}) do
-				t[#t+1] = tostring(v)
-			end
-			LOGGER.post.log(name, string.format("[%08x]: %s", skynet.self(), table.concat(t, '\t')))
+			skynet.send('.logger', 'lua', name, ...)
 		end
 	end
 	local LOG = {}

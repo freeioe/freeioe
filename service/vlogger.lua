@@ -1,10 +1,17 @@
-local skynet = require "skynet.manager"
+local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local log = require 'log'
-local ioe = require 'ioe'
 
 local LOG = nil
 local listeners = {}
+
+local function post_to_listeners(fmt, msg, lvl, now)
+	local tnow = skynet.time()
+	local content = fmt(msg, lvl, now)
+	for handle, srv in pairs(listeners) do
+		srv.post.log(tnow, content)
+	end
+end
 
 local function create_log()
 	local max_lvl = os.getenv('IOE_LOG_LEVEL') or 'info'
@@ -14,7 +21,9 @@ local function create_log()
 		-- Writer
 		require 'log.writer.list'.new(               -- multi writers:
 			require "log.writer.console.color".new(),  -- * console color
-			require 'log.writer.file.roll'.new('./logs', "freeioe_sys.log", 4, 1*1024*1024)
+			--require 'log.writer.file.roll'.new('./logs', "freeioe_sys.log", 4, 1*1024*1024)
+			require 'log.writer.file.roll'.new('./logs', "freeioe.log", 4, 4*1024*1024),
+			post_to_listeners
 			--[[
 			require 'log.writer.format'.new(
 				require 'log.logformat.syslog'.new(),
@@ -29,16 +38,29 @@ local function create_log()
 	)
 end
 
+local function _listen(handle, type)
+       listeners[handle] = snax.bind(handle, type)
+       return true
+end
+
+local function _unlisten(handle)
+       listeners[handle] = nil
+       return true
+end
+
+local function _log_content(address, level, fmt, ...)
+	local hdr = string.format("[%08x]: %s", address, fmt)
+	local f = assert(LOG[level] or LOG.notice)
+
+	f(hdr, ...)
+end
+
 skynet.register_protocol {
 	name = "text",
 	id = skynet.PTYPE_TEXT,
 	unpack = skynet.tostring,
 	dispatch = function(_, address, msg)
-		local content = string.format("[%08x]: %s", address, msg)
-		LOG.notice(content)
-		for handle, srv in pairs(listeners) do
-			srv.post.log(ioe.time(), 'notice', content)
-		end
+		_log_content(address, 'notice', '::SYS:: '..msg)
 	end
 }
 
@@ -51,27 +73,17 @@ skynet.register_protocol {
 	end
 }
 
-local command = {}
-
-function command.listen(handle, type)
-	listeners[handle] = snax.bind(handle, type)
-	return true
-end
-
-function command.unlisten(handle)
-	listeners[handle] = nil
-	return true
-end
-
-create_log()
-
 skynet.start(function()
-	skynet.dispatch("lua", function(session, address, cmd, ...)
-		local f = command[string.lower(cmd)]
-		if f then
-			skynet.ret(skynet.pack(f(...)))
+	--- Create log files
+	create_log()
+
+	skynet.dispatch("lua", function(session, address, level, ...)
+		if level == '__LISTEN__' then
+			skynet.ret(skynet.pack(_listen(...)))
+		elseif level == '__UNLISTEN__' then
+			skynet.ret(skynet.pack(_unlisten(...)))
 		else
-			error(string.format("Unknown command %s", tostring(cmd)))
+			skynet.ret(skynet.pack(_log_content(address, level, ...)))
 		end
 	end)
 

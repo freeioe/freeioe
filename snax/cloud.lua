@@ -262,14 +262,11 @@ end
 
 --- Listen to logger service used to forward logs
 local function connect_log_server(enable)
-	local logger = snax.queryservice('logger')
 	local obj = snax.self()
 	if enable then
-		logger.post.listen(obj.handle, obj.type)
-		skynet.call(".logger", "lua", "listen", obj.handle, obj.type)
+		skynet.call(".logger", "lua", "__LISTEN__", obj.handle, obj.type)
 	else
-		logger.post.unlisten(obj.handle)
-		skynet.call(".logger", "lua", "unlisten", obj.handle)
+		skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 	end
 end
 
