@@ -1,4 +1,5 @@
-local mosq = require 'mosquitto'
+--local mosq = require 'mosquitto'
+local mosq = require 'mqtt.mosquitto'
 local cov = require 'cov'
 local periodbuffer = require 'buffer.period'
 local filebuffer = require 'buffer.file'
@@ -545,6 +546,7 @@ end
 function app:on_start()
 	assert(self.on_publish_data, "on_publish_data missing!!!")
 	assert(self.on_publish_data_list, "on_publish_data_list missing!!!")
+	mosq.init()
 
 	-- initialize COV PB, FB
 	self:_init_cov()

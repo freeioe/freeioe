@@ -401,6 +401,7 @@ skynet.start(function()
 			error(string.format("Unknown command %s from session %s-%s", tostring(cmd), tostring(session), tostring(address)))
 		end
 	end)
+	skynet.sleep(10)
 
 	load_cfg(db_file)
 	init_restful()

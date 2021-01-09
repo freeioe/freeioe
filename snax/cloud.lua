@@ -1,7 +1,8 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local crypt = require 'skynet.crypt'
-local mosq = require 'mosquitto'
+--local mosq = require 'mosquitto'
+local mosq = require 'mqtt.mosquitto'
 local datacenter = require 'skynet.datacenter'
 local ioe = require 'ioe'
 local app_api = require 'app.api'
@@ -763,12 +764,6 @@ local function start_reconnect()
 	end
 end
 
-local function MAP_CALLBACK(func)
-	return function(...)
-		skynet.fork(func, ...)
-	end
-end
-
 ---
 -- Connection process function
 --
@@ -795,7 +790,7 @@ connect_proc = function(clean_session, username, password)
 	end
 
 	--- on connect result callback
-	client.ON_CONNECT = MAP_CALLBACK(function(success, rc, msg)
+	client.ON_CONNECT = function(success, rc, msg)
 		mqtt_client_last_msg = msg
 		if success then
 			log.notice("ON_CONNECT", success, rc, msg)
@@ -856,8 +851,8 @@ connect_proc = function(clean_session, username, password)
 			--close_client = true --- close current one
 			--start_reconnect()
 		end
-	end)
-	client.ON_DISCONNECT = MAP_CALLBACK(function(success, rc, msg)
+	end
+	client.ON_DISCONNECT = function(success, rc, msg)
 		log.warning("ON_DISCONNECT", success, rc, msg)
 		close_client = true --- close current one
 
@@ -872,14 +867,14 @@ connect_proc = function(clean_session, username, password)
 				start_reconnect()
 			end
 		end
-	end)
-	client.ON_PUBLISH = MAP_CALLBACK(function(mid)
+	end
+	client.ON_PUBLISH = function(mid)
 		--log.trace("ON_PUBLISH", mid)
 		qos_msg_buf:remove(mid)
-	end)
+	end
 
 	--client.ON_LOG = log_callback
-	client.ON_MESSAGE = MAP_CALLBACK(msg_callback)
+	client.ON_MESSAGE = msg_callback
 
 	--- Tell mqtt backends that this device is online
 	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
