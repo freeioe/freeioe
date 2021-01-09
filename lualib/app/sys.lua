@@ -174,7 +174,7 @@ end
 function sys:conf_api(conf_name, ext, dir)
 	local dir = self:app_dir()..(dir or 'tpl')
 	app = dc.get("APPS", self._app_name)
-	return conf_api:new(app.name, conf_name, ext, dir)
+	return conf_api:new(sys, app.name, conf_name, ext, dir)
 end
 
 function sys:version()

@@ -16,11 +16,12 @@ local api_header = {
 -- @tparam string conf Application configuration id
 -- @tparam string ext Local saving file extension. e.g. csv conf xml. default csv
 -- @tparam string dir Application template file saving directory. full path.
-function api:initialize(app, conf, ext, dir)
+function api:initialize(sys, app, conf, ext, dir)
 	-- Service host (ip or domain)
 	self._host = ioe.cnf_host_url() --datacenter.wait("CLOUD", "CNF_HOST_URL")
+	self._sys = sys
 	self._app = app
-	self._log = app:log_api()
+	self._log = sys:logger()
 	self._conf = conf
 	self._ext = ext or 'csv'
 	self._dir = dir or 'tpl'
