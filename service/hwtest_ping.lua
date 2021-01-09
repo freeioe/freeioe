@@ -36,8 +36,6 @@ function command.EXIT()
 end
 
 skynet.start(function()
-	--cache.mode('EXIST')
-	--
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.upper(cmd)]
 		if f then

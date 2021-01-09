@@ -373,7 +373,6 @@ skynet.start(function()
 			error(string.format("Unknown command %s from session %s-%s", tostring(cmd), tostring(session), tostring(address)))
 		end
 	end)
-	skynet.register ".ioe_ext"
 	installed = list_installed()
 
 	skynet.fork(function()
@@ -382,5 +381,7 @@ skynet.start(function()
 			auto_clean_exts()
 		end
 	end)
+
+	skynet.register ".ioe_ext"
 end)
 

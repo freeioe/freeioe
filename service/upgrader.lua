@@ -861,8 +861,6 @@ skynet.start(function()
 		end
 	end)
 
-	skynet.register ".upgrader"
-
 	--- For rollback thread
 	if check_rollback() then
 		skynet.fork(function()
@@ -870,5 +868,7 @@ skynet.start(function()
 		end)
 		skynet.sleep(20)
 	end
+
+	skynet.register ".upgrader"
 end)
 

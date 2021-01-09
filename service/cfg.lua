@@ -391,9 +391,6 @@ end
 
 skynet.start(function()
 	lock = queue()
-	load_cfg(db_file)
-	init_restful()
-
 	skynet.dispatch("lua", function(session, address, cmd, ...)
 		local f = command[string.upper(cmd)]
 		if f then
@@ -404,7 +401,9 @@ skynet.start(function()
 			error(string.format("Unknown command %s from session %s-%s", tostring(cmd), tostring(session), tostring(address)))
 		end
 	end)
-	skynet.register ".cfg"
+
+	load_cfg(db_file)
+	init_restful()
 
 	skynet.fork(function()
 		while true do
@@ -414,4 +413,6 @@ skynet.start(function()
 			skynet.sleep(500)
 		end
 	end)
+
+	skynet.register ".cfg"
 end)
