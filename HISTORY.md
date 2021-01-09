@@ -3,11 +3,11 @@
 
 # Release history
 
-v1.20.0 ()
+v1.20.0 (2021-01-09)
 ------------------
 
 * Improved log service
-* Support App.on_logger for receiving logs
+* Support App.on_logger for receiving logs (API ver 8 finalized)
 * Fixed MQTT disconnection time takes too long issue
 * Disable COV in MQTT base application if conf.disable_cov been set
 
@@ -19,7 +19,7 @@ v1.11.0 (2020-12-24)
 * Support Lua5.4
 * Fixed snax binding asserts
 * Socket file of ubusd changed to /var/run/ubus/ubus.sock
-* App API version 8
+* App API version 8 prepare
 
 
 v1.10.0 (2020-09-30)
