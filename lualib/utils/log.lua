@@ -25,7 +25,11 @@ else
 		local name = name
 		local ln = nil
 		return function(...)
-			skynet.send('.logger', 'lua', name, ...)
+			local t = {}
+			for k, v in ipairs({...}) do
+				t[#t + 1] = tostring(v)
+			end
+			skynet.send('.logger', 'lua', name, table.unpack(t))
 
 			--[[ There skynet.lua may asserts on proto[name] name is 'lua'
 			--ln = ln or dc.wait('FREEIOE.LOGGER')

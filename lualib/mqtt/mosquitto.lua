@@ -35,12 +35,12 @@ function mosq:initialize(mqtt_id, clean_session)
 	self._packet_id = 0
 end
 
-function mosq:destory()
-	return true
-end
-
-function mosq:reinitialise(client, clean)
-	-- TODO:
+function mosq:reinitialise(mqtt_id, clean_session)
+	if self._client then
+		self._client:close_connection('reinitialise')
+		self._client = nil
+	end
+	mosq.initialize(self)
 	return true
 end
 
@@ -199,10 +199,21 @@ function mosq:disconnect()
 	return self._client:close_connection('close connection')
 end
 
+function mosq:destory()
+	self._client = nil
+	return true
+end
+
+function mosq:gen_packet_id()
+	if self._packet_id >= 0xFFFF then
+		self._packet_id = 0
+	end
+	self._packet_id = self._packet_id + 1
+	return self._packet_id
+end
+
 function mosq:publish(topic, payload, qos, retain, props, user_props)
 	assert(self._client, "Not connected")
-	local packet_id = self._packet_id + 1
-	self._packet_id = packet_id
 	return self._client:publish({
 		topic = topic,
 		payload = payload,
@@ -210,14 +221,11 @@ function mosq:publish(topic, payload, qos, retain, props, user_props)
 		retain = retain,
 		properties = props,
 		user_properties = user_props,
-		packet_id = packet_id
+		packet_id = self:gen_packet_id()
 	})
 end
 
 function mosq:subscribe(topic, qos, no_local, retain_as_published, retain_handling, props, user_props)
-	local packet_id = self._packet_id + 1
-	self._packet_id = packet_id
-
 	return self._client:subscribe({
 		topic = topic,
 		qos = qos,
@@ -226,19 +234,16 @@ function mosq:subscribe(topic, qos, no_local, retain_as_published, retain_handli
 		retain_handling = retain_handling,
 		properties = props,
 		user_properties = user_props,
-		packet_id = packet_id
+		packet_id = self:gen_packet_id()
 	})
 end
 
 function mosq:unsubscribe(topic, props, user_props)
-	local packet_id = self._packet_id + 1
-	self._packet_id = packet_id
-
 	return self._client:unsubscribe({
 		topic = topic,
 		properties = props,
 		user_properties = user_props,
-		packet_id = packet_id
+		packet_id = self:gen_packet_id()
 	})
 end
 
@@ -268,15 +273,15 @@ function mosq:loop_forever(timeout, max_packets)
 end
 
 function mosq:loop_start()
-	-- TODO:
+	assert(nil, "Not implemented")
 end
 
 function mosq:loop_stop()
-	-- TODO:
+	assert(nil, "Not implemented")
 end
 
 function mosq:socket()
-	-- TODO:
+	assert(nil, "Not implemented")
 end
 
 return _M
