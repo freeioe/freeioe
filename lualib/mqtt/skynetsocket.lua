@@ -25,6 +25,7 @@ end
 local _M = {}
 
 local function init(conn, socket_id)
+	conn.socket_id = socket_id
     if conn.secure then
         local tls = require "http.tlshelper"
         local ctx = tls.newctx()

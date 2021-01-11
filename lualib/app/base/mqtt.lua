@@ -1,5 +1,5 @@
---local mosq = require 'mosquitto'
-local mosq = require 'mqtt.mosquitto'
+local mosq = require 'mosquitto'
+--local mosq = require 'mqtt.mosquitto'
 local cov = require 'cov'
 local periodbuffer = require 'buffer.period'
 local filebuffer = require 'buffer.file'

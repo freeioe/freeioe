@@ -4,13 +4,14 @@ local class = require 'middleclass'
 local skynet = require 'skynet'
 local mqtt = require 'mqtt'
 
-local mosq = class('mqtt.mosq')
+local mosq = class('mqtt.mosquitto')
 
 local _M = {
 	new = function(...)
 		return mosq:new(...)
 	end,
 	init = function(...)
+		skynet.error("Using MQTT mosquitto wrapper")
 		mqtt.get_ioloop(true, {
 			timeout = 0.05,
 			sleep_function = function(timeout)
@@ -254,14 +255,10 @@ end
 function mosq:loop_forever(timeout, max_packets)
 	assert(self._client, "Not connected")
 	local client = self._client
-	local ioloop = mqtt.get_ioloop()
+	local ioloop = mqtt.get_ioloop(false)
+	assert(ioloop)
 	ioloop:add(client)
 	if not timeout  or timeout == -1 then
-		--[[
-		while client.connection do
-			client:_sync_iteration()
-		end
-		]]--
 		ioloop:run_util_clients()
 	else
 		local start = skynet.now()
@@ -281,7 +278,10 @@ function mosq:loop_stop()
 end
 
 function mosq:socket()
-	assert(nil, "Not implemented")
+	if self._client and self._client.connection then
+		return assert(self._client.connection.socket_id)
+	end
+	return -1
 end
 
 return _M

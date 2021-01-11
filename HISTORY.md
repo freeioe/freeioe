@@ -3,6 +3,12 @@
 
 # Release history
 
+v1.20.1 ()
+------------------
+
+* Fixed logger missing issue
+
+
 v1.20.0 (2021-01-09)
 ------------------
 
