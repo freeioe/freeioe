@@ -61,38 +61,6 @@ local app = base_app:subclass("FREEIOE_EX_APP_MQTT_BASE")
 function app:initialize(name, sys, conf)
 	base_app.initialize(self, name, sys, conf)
 
-	self._safe_call = function(f, ...)
-		local r, er, err = xpcall(f, debug.traceback, ...)
-		if not r then
-			self._log:warning('Code bug', er, err)
-			return nil, er and tostring(er) or nil
-		end
-		return er, er and tostring(err) or nil
-	end
-
-	self._mqtt_opt = {
-		client_id = conf.client_id or sys:id(),
-		clean_session = conf.clean_session ~= nil and conf.clean_session == true or false,
-		username = conf.username,
-		password = conf.password,
-		host = conf.server,
-		port = conf.port,
-		keep_alive = conf.keep_alive,
-		version = conf.version,
-		qos = conf.qos
-	}
-	if conf.enable_tls then
-		self._mqtt_opt.tls = self:map_tls_option({
-			protocol = conf.tls_protocol,
-			insecure = conf.tls_insecure,
-			ca_file = conf.tls_cert,
-			ca_path = conf.tls_ca_path,
-			cert = conf.tls_client_cert,
-			key = conf.tls_client_key,
-			passwd = conf.tls_client_key_passwd,
-		})
-	end
-
 	-- COV and PB
 	self._disable_cov = conf.disable_cov or false
 	self._period = tonumber(conf.period) or 60 -- seconds
@@ -118,6 +86,43 @@ function app:initialize(name, sys, conf)
 
 	self._total_compressed = 0
 	self._total_uncompressed = 0
+
+	self._safe_call = function(f, ...)
+		local r, er, err = xpcall(f, debug.traceback, ...)
+		if not r then
+			self._log:warning('Code bug', er, err)
+			return nil, er and tostring(er) or nil
+		end
+		return er, er and tostring(err) or nil
+	end
+
+	--- Force QOS when enable data_cache
+	if not conf.qos and self._enable_data_cache then
+		conf.qos = true
+	end
+
+	self._mqtt_opt = {
+		client_id = conf.client_id or sys:id(),
+		clean_session = conf.clean_session ~= nil and conf.clean_session == true or false,
+		username = conf.username,
+		password = conf.password,
+		host = conf.server,
+		port = conf.port,
+		keep_alive = conf.keep_alive,
+		version = conf.version,
+		qos = conf.qos
+	}
+	if conf.enable_tls then
+		self._mqtt_opt.tls = self:map_tls_option({
+			protocol = conf.tls_protocol,
+			insecure = conf.tls_insecure,
+			ca_file = conf.tls_cert,
+			ca_path = conf.tls_ca_path,
+			cert = conf.tls_client_cert,
+			key = conf.tls_client_key,
+			passwd = conf.tls_client_key_passwd,
+		})
+	end
 
 	self._qos_msg_buf = index_stack:new(1024, function(...)
 		self._log:error("MQTT QOS message dropped!!")

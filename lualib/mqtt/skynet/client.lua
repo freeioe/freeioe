@@ -81,7 +81,7 @@ function client:initialize(opt, logger)
 		mqtt.get_ioloop(true, {
 			sleep = 0.01,
 			sleep_function = function(timeout)
-				skynet.sleep(timeout * 100)
+				skynet.sleep(math.floor(timeout * 100))
 			end
 		})
 	end
