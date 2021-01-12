@@ -33,6 +33,7 @@ local function init(conn, socket_id)
 		local cafile = conn.secure_params.cafile
 		local capath = conn.secure_params.capath
 		if cafile or capath then
+			assert(ctx.load_ca, 'CA certs loading not supported by ltls!')
 			ctx:load_ca(cafile, capath)
 		end
 
@@ -40,11 +41,13 @@ local function init(conn, socket_id)
         local key = conn.secure_params.key
 		local passwd = conn.secure_params.passwd
         if cert and key then
+			assert(ctx.set_cert, 'Client certs not supported by ltls!')
             ctx:set_cert(cert, key, passwd)
         end
 
 		local verify = conn.secure_params.verify
 		if verify then
+			assert(ctx.set_verify, 'Set verify not supported by ltls!')
 			ctx:set_verify(verify)
 		end
 
