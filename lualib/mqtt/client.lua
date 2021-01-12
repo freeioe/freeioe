@@ -178,7 +178,7 @@ function client_mt:__init(args)
 			a.connector = require("mqtt.luasocket")
 		end
 		]]--
-		a.connector = require 'mqtt.skynetsocket'
+		a.connector = require 'mqtt.skynet.socket'
 	end
 	-- validate connector content
 	assert(type(a.connector) == "table", "expecting connector to be a table")

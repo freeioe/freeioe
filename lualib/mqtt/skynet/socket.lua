@@ -29,11 +29,25 @@ local function init(conn, socket_id)
     if conn.secure then
         local tls = require "http.tlshelper"
         local ctx = tls.newctx()
+
+		local cafile = conn.secure_params.cafile
+		local capath = conn.secure_params.capath
+		if cafile or capath then
+			ctx:load_ca(cafile, capath)
+		end
+
         local cert = conn.secure_params.certificate
         local key = conn.secure_params.key
+		local passwd = conn.secure_params.passwd
         if cert and key then
-            ctx:set_cert(cert, key)
+            ctx:set_cert(cert, key, passwd)
         end
+
+		local verify = conn.secure_params.verify
+		if verify then
+			ctx:set_verify(verify)
+		end
+
         local tls_ctx = tls.newtls("client", ctx)
         tls.init_requestfunc(socket_id, tls_ctx)()
 
@@ -56,7 +70,7 @@ local function init(conn, socket_id)
     end
 
     if conn.websocket then
-        local ws = require "mqtt.wshelper"
+        local ws = require "mqtt.skynet.wshelper"
         local mqtt_header = { ["Sec-Websocket-Protocol"] = "mqtt" }
         ws.write_handshake(conn, conn.ws_host, conn.ws_uri, mqtt_header)
 
@@ -106,12 +120,15 @@ local function parse_uri(conn)
     conn.port = port
 
     -- dns
+	--[[
     local ip = dns_resolve(hostname)
     if ip then
         conn.host = ip
     else
         error("cannot resolve uri")
     end
+	]]--
+	conn.host = hostname
 
     -- websocket
     if protocol then

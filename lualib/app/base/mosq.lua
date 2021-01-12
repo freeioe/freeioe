@@ -1,4 +1,4 @@
-local mqtt_client = require 'mqtt.skynet.client'
+local mosq = require 'mosquitto'
 local cov = require 'cov'
 local periodbuffer = require 'buffer.period'
 local filebuffer = require 'buffer.file'
@@ -70,28 +70,18 @@ function app:initialize(name, sys, conf)
 		return er, er and tostring(err) or nil
 	end
 
-	self._mqtt_opt = {
-		client_id = conf.client_id or sys:id(),
-		clean_session = conf.clean_session ~= nil and conf.clean_session == true or false,
-		username = conf.username,
-		password = conf.password,
-		host = conf.server,
-		port = conf.port,
-		keep_alive = conf.keep_alive,
-		version = conf.version,
-		qos = conf.qos
-	}
-	if conf.enable_tls then
-		self._mqtt_opt.tls = self:map_tls_option({
-			protocol = conf.tls_protocol,
-			insecure = conf.tls_insecure,
-			ca_file = conf.tls_cert,
-			ca_path = conf.tls_ca_path,
-			cert = conf.tls_client_cert,
-			key = conf.tls_client_key,
-			passwd = conf.tls_client_key_passwd,
-		})
-	end
+	self._mqtt_id = conf.client_id or sys:id()
+	self._mqtt_username = conf.username
+	self._mqtt_password = conf.password
+	self._mqtt_host = conf.server or '127.0.0.1'
+	self._mqtt_port = conf.port or 1883
+	self._mqtt_enable_tls = conf.enable_tls
+	self._mqtt_tls_insecure = conf.tls_insecure
+	self._mqtt_tls_cert = conf.tls_cert
+	self._mqtt_tls_ca_path = conf.tls_ca_path
+	self._mqtt_tls_client_cert = conf.tls_client_cert
+	self._mqtt_tls_client_key = conf.tls_client_key
+	self._mqtt_clean_session = true
 
 	-- COV and PB
 	self._disable_cov = conf.disable_cov or false
@@ -125,7 +115,7 @@ function app:initialize(name, sys, conf)
 end
 
 function app:connected()
-	return self._mqtt_client ~= nil and self._mqtt_client:connected()
+	return self._mqtt_client ~= nil
 end
 
 function app:publish(topic, data, qos, retained)
@@ -186,17 +176,25 @@ function app:decompress(data)
 end
 
 function app:connect()
-	if not self._mqtt_client then
-		return self:_connect_proc()
-	end
-	return nil, "Already connected"
+	-- TODO: Check about connection before start proc
+
+	self._sys:fork(function()
+		self:_connect_proc()
+	end)
 end
 
 function app:disconnect()
-	if self._mqtt_client then
-		self._mqtt_client:disconnect()
-		self._mqtt_client = nil
+	if self._close_connection then
+		return nil, "Connection is closing"
 	end
+
+	self._log:debug("Cloud Connection Closing!")
+	self._close_connection = {}
+	if self._connecting then
+		self._sys:wakeup(self._connecting)
+	end
+	self._sys:wait(self._close_connection)
+	self._close_connection = nil
 	return true
 end
 
@@ -247,43 +245,25 @@ function app:on_input_em(src_app, sn, input, prop, value, timestamp, quality)
 end
 
 function app:_start_reconnect()
-	local client = self._mqtt_client
-	self._mqtt_client = nil
+	if self._mqtt_client then
+		self._log:error('****Cannot start reconnection when client is there!****')
+		return
+	end
 
-	self._sys:fork(function()
-		if client then
-			client:disconnect()
-		end
-		self._connecting = true
-		self:_connect_proc()
-		self._connecting = false
-	end)
-end
+	self._log:notice('Start reconnect to cloud after '..(self._mqtt_reconnect_timeout/1000)..' seconds')
 
-function app:map_tls_option(opt)
-	local sys = self._sys
-	assert(sys)
-
-	if opt.ca_file then
-		opt.ca_file = sys:app_dir()..opt.ca_file
+	self._sys:timeout(self._mqtt_reconnect_timeout, function() self:_connect_proc() end)
+	self._mqtt_reconnect_timeout = self._mqtt_reconnect_timeout * 2
+	if self._mqtt_reconnect_timeout > self._max_mqtt_reconnect_timeout then
+		self._mqtt_reconnect_timeout = 1000
 	end
-	if opt.ca_path then
-		opt.ca_path = sys:app_dir()..opt.ca_path
-	end
-	if opt.cert then
-		opt.cert = sys:app_dir()..opt.cert
-	end
-	if opt.key then
-		opt.key = sys:app_dir()..opt.key
-	end
-	return opt
 end
 
 function app:_connect_proc()
 	local log = self._log
 	local sys = self._sys
 
-	local info, err = {}, nil
+	local info, err = nil, nil
 	if self.mqtt_auth then
 		info, err = self:mqtt_auth()
 		if not info then
@@ -292,57 +272,59 @@ function app:_connect_proc()
 		end
 	end
 
-	local mqtt_opt = {
-		client_id = info.client_id,
-		username = info.username,
-		password = info.password,
-		host = info.host,
-		port = info.port,
-		clean_session = info.clean_session ~= nil and info.clean_session == true or false,
-		keep_alive = info.keep_alive,
-		version = info.version,
-		qos = info.qos
-	}
-	if info.enable_tls then
-		mqtt_opt.tls = self:map_tls_option({
-			protocol = info.tls_protocol,
-			insecure = info.tls_insecure,
-			ca_file = info.tls_cert,
-			ca_path = info.tls_ca_path,
-			cert = info.tls_client_cert,
-			key = info.tls_client_key,
-			passwd = info.tls_client_key_passwd,
-		})
-	end
+	local mqtt_id = info and info.client_id or self._mqtt_id
+	local mqtt_host = info and info.host or self._mqtt_host
+	local mqtt_port = info and info.port or self._mqtt_port
+	local clean_session = info and info.clean_session or self._clean_session
+	local username = info and info.username or self._mqtt_username
+	local password = info and info.password or self._mqtt_password
+	local enable_tls = info and info.enable_tls or self._mqtt_enable_tls
+	local tls_insecure = info and info.tls_insecure or self._mqtt_tls_insecure
+	local tls_cert = info and info.tls_cert or self._mqtt_tls_cert
+	local tls_ca_path = info and info.tls_ca_path or self._mqtt_tls_ca_path
+	local tls_client_cert = info and info.tls_client_cert or self._mqtt_tls_client_cert
+	local tls_client_key = info and info.tls_client_key or self._mqtt_tls_client_key
 
-	if self.mqtt_will then
-		local topic, msg, qos, retained = self:mqtt_will()
-		if topic and msg then
-			mqtt_opt.will = {
-				topic = topic,
-				payload = msg,
-				qos = qos or 1,
-				retain = retained ~= nil and retained or true
-			}
+	-- 创建MQTT客户端实例
+	log:info("MQTT Connect:", mqtt_id, mqtt_host, mqtt_port, username, password)
+	local client = assert(mosq.new(mqtt_id, clean_session))
+	local close_client = false
+	client:version_set(mosq.PROTOCOL_V311 or mosq.MQTT_PROTOCOL_V311)
+	if username and string.len(username) > 0 then
+		client:login_set(username, password)
+	end
+	if enable_tls then
+		if tls_insecure == true then
+			log:warning("MQTT using insecure tls connection!")
+			client:tls_insecure_set(true)
+		end
+		tls_client_cert = tls_client_cert and sys:app_dir()..tls_client_cert or nil
+		tls_client_key = tls_client_key and sys:app_dir()..tls_client_key or nil
+		tls_cert = tls_cert and sys:app_dir()..tls_cert or nil
+		--print(tls_cert, tls_ca_path or 'nil', tls_client_cert or 'nil', tls_client_key or 'nil')
+		local r, errno, err = client:tls_set(tls_cert, tls_ca_path, tls_client_cert, tls_client_key)
+		if not r then
+			log:error("TLS set error", errno, err)
 		end
 	end
 
-	local option = setmetatable(mqtt_opt, { __index = self._mqtt_opt })
-
-	-- 创建MQTT客户端实例
-	log:info("MQTT Connect:", option.client_id, option.host, option.port, option.username, option.password)
-
-	local client = mqtt_client:new(option, self._log)
+	local function MAP_CALLBACK(func)
+		return function(...)
+			self._sys:fork(func, ...)
+		end
+	end
 
 	-- 注册回调函数
-	client.on_mqtt_connect = function(client, success, rc, msg) 
+	client.ON_CONNECT = MAP_CALLBACK(function(success, rc, msg) 
 		if success then
 			log:notice("ON_CONNECT", success, rc, msg) 
-			if self._mqtt_client ~= client then
+			if self._mqtt_client then
 				self._log:warning("There is one client already connected!")
-				self._mqtt_client:disconnect()
-				self._mqtt_client = client
+				close_client = true
+				return
 			end
+
+			self._mqtt_client = client
 			self._mqtt_client_last = sys:time()
 			self._mqtt_reconnect_timeout = 1000
 
@@ -353,33 +335,94 @@ function app:_connect_proc()
 			end
 
 			self:_fire_devices(1000)
+			---
+			self:mqtt_resend_qos_msg()
+		else
+			log:warning("ON_CONNECT FAILED", success, rc, msg) 
+			-- ON_DISCONNECT will be called soon
+			--close_client = true
+			--self:_start_reconnect()
 		end
-	end
+	end)
+	client.ON_DISCONNECT = MAP_CALLBACK(function(success, rc, msg) 
+		log:warning("ON_DISCONNECT", success, rc, msg) 
+		close_client = true
 
-	client.on_mqtt_disconnect = function(success, rc, msg) 
 		if not self._mqtt_client or self._mqtt_client == client then
 			self._mqtt_client_last = sys:time()
-		end
-	end
-
-	if self.on_mqtt_publish then
-		client.on_mqtt_publish = function(client, packet_id)
-			self._safe_call(self.on_mqtt_publish, self, packet_id)
-		end
-	end
-
-	if self.on_mqtt_message then
-		client.on_mqtt_message = function(client, packet_id, topic, data, qos, retained)
-			--print(packet_id, topic, data, qos, retained)
-			if self.on_mqtt_message then
-				self._safe_call(self.on_mqtt_message, self, packet_id, topic, data, qos, retained)
+			self._mqtt_client = nil
+			if self._close_connection == nil then
+				self:_start_reconnect()
 			end
 		end
+	end)
+	client.ON_PUBLISH = MAP_CALLBACK(function (mid)
+		--print('on_publish', mid)
+		self._qos_msg_buf:remove(mid)
+
+		if self.on_mqtt_publish then
+			self._sys:fork(function()
+				self._safe_call(self.on_mqtt_publish, self, mid)
+			end)
+		end
+	end)
+	--[[
+	client.ON_LOG = function(...)
+	end
+	]]--
+	client.ON_MESSAGE = MAP_CALLBACK(function(packet_id, topic, data, qos, retained)
+		--print(packet_id, topic, data, qos, retained)
+		if self.on_mqtt_message then
+			self._sys:fork(function()
+				self._safe_call(self.on_mqtt_message, self, packet_id, topic, data, qos, retained)
+			end)
+		end
+	end)
+
+	if self.mqtt_will then
+		local topic, msg, qos, retained = self:mqtt_will()
+		if topic and msg then
+			client:will_set(topic, msg, qos or 1, retained == nil and true or false)
+		end
 	end
 
-	self._mqtt_client = client
+	log:info('MQTT Connectting...')
+	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+	local ts = 1000
+	while not r and self._close_connection == nil do
+		log:error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+		ts = ts * 2
+		self._connecting = {}
+		self._sys:sleep(ts, self._connecting)
+		self._connecting = nil
+		if self._close_connection then
+			break
+		end
 
-	return client:connect()
+		if ts > self._max_mqtt_reconnect_timeout then
+			log:error("Destroy client and reconnect!")
+			client:destroy()
+			self._mqtt_reconnect_timeout = 1000
+			return self:_start_reconnect()
+		end
+
+		r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+	end
+
+	--- Worker thread
+	while client and not close_client and self._close_connection == nil do
+		sys:sleep(0)
+		client:loop(50, 1)
+	end
+
+	client:disconnect()
+	log:notice("Cloud Connection Closed!")
+	client:destroy()
+	log:notice("Client Destroyed!")
+
+	if self._close_connection then
+		sys:wakeup(self._close_connection)
+	end
 end
 
 function app:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
@@ -506,6 +549,7 @@ end
 function app:on_start()
 	assert(self.on_publish_data, "on_publish_data missing!!!")
 	assert(self.on_publish_data_list, "on_publish_data_list missing!!!")
+	mosq.init()
 
 	-- initialize COV PB, FB
 	self:_init_cov()
@@ -522,6 +566,7 @@ end
 --- 应用退出函数
 function app:on_close(reason)
 	self:disconnect()
+	mosq.cleanup()
 	return true
 end
 
