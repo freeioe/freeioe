@@ -123,10 +123,6 @@ function app:initialize(name, sys, conf)
 			passwd = conf.tls_client_key_passwd,
 		})
 	end
-
-	self._qos_msg_buf = index_stack:new(1024, function(...)
-		self._log:error("MQTT QOS message dropped!!")
-	end)
 end
 
 function app:connected()
@@ -134,27 +130,12 @@ function app:connected()
 end
 
 function app:publish(topic, data, qos, retained)
-	local qos = qos or 0
-	local retained = retained or false
 	if not self._mqtt_client then
 		self._log:trace("MQTT not connected!")
 		return nil, "MQTT not connected!"
 	end
 
-	local mid, err = self._mqtt_client:publish(topic, data, qos, retained)
-	--print(topic, mid, err)
-	if qos == 1 and mid then
-		self._qos_msg_buf:push(mid, topic, data, qos, retained)
-	end
-	return mid, err
-end
-
-function app:mqtt_resend_qos_msg()
-	self._sys:fork(function()
-		self._qos_msg_buf:fire_all(function(...)
-			self:publish(...)
-		end, 10, true)
-	end)
+	return self._mqtt_client:publish(topic, data, qos, retained)
 end
 
 function app:subscribe(topic, qos)
