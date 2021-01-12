@@ -76,7 +76,7 @@ function device:cleanup()
 	dc.set('INPUT', sn, nil)
 	dc.set('OUTPUT', sn, nil)
 
-	self._logger.trace("DELETE DEVICE", self._app_name, sn, props)
+	self._logger:trace("DELETE DEVICE", self._app_name, sn, props)
 	self._data_chn:publish('del_device', self._app_name, sn, props)
 
 	self:_cleanup()
