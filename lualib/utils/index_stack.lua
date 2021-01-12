@@ -14,6 +14,10 @@ function stack:clean()
 	self._buf = {}
 end
 
+function stack:size()
+	return #self._buf
+end
+
 function stack:push(key, ...)
 	self._buf[#self._buf + 1] = {key, ...}
 	if #self._buf > self._max_size then

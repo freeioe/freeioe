@@ -124,8 +124,9 @@ function client:gen_packet_id()
 end
 
 function client:publish(topic, payload, qos, retain, props, user_props)
-	local qos = qos or 0
-	local retain = retain or false
+	local qos = qos == nil and 0 or qos
+	local retain = retain == nil and false or retain
+
 	if not self:connected() then
 		self._log:trace("MQTT not connected!")
 		return nil, "MQTT not connected!"
@@ -148,7 +149,7 @@ function client:publish(topic, payload, qos, retain, props, user_props)
 end
 
 function client:mqtt_resend_qos_msg()
-	if not self._qos_msg_buf then
+	if not self._qos_msg_buf or self._qos_msg_buf:size() == 0 then
 		return
 	end
 
