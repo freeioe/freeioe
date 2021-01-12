@@ -79,7 +79,7 @@ function client:initialize(opt, logger)
 	
 	if not mqtt.get_ioloop(false) then
 		mqtt.get_ioloop(true, {
-			timeout = 0.01,
+			sleep = 0.01,
 			sleep_function = function(timeout)
 				skynet.sleep(timeout * 100)
 			end
@@ -237,10 +237,8 @@ function client:disconnect()
 		skynet.wakeup(self._connecting)
 	else
 		if self._client then
-			local ioloop = mqtt.get_ioloop(false)
-			if ioloop then
-				ioloop:remove(self._client)
-			end
+			self._log:debug("Disconnect MQTT client!")
+			self._client:disconnect()
 		end
 	end
 
@@ -290,6 +288,8 @@ function client:_connect_proc()
 	if not self._close_connection then
 		mqtt.run_ioloop(self._client)
 	end
+
+	log:notice("MQTT run_ioloop quited!")
 
 	if self._close_connection then
 		log:notice("Close mqtt connection!")
