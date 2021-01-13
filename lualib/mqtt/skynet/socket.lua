@@ -1,7 +1,8 @@
 -- DOC: https://github.com/cloudwu/skynet/wiki/Socket
-local sockethelper = require "http.sockethelper"
 local skynet = require "skynet"
 local dns = require "skynet.dns"
+local sockethelper = require "mqtt.skynet.sockethelper"
+local receiver = require 'mqtt.skynet.receiver'
 
 local regex = {
 	host_port = "^([%w%.%-]+):?(%d*)$",
@@ -85,6 +86,9 @@ local function init(conn, socket_id)
         conn.receive = conn.read
         conn.shutdown = conn.close
     end
+
+	conn.receive = receiver:new(conn.receive, conn._timeout)
+	conn.shutdown = conn.receive:shutdown(conn.shutdown)
 end
 
 local function parse_uri(conn)
@@ -181,19 +185,18 @@ function _M.send(conn, data)
 end
 
 function _M.receive(conn, size)
-    local ok, data = pcall(conn.receive, size)
+    local ok, data, err = pcall(conn.receive, size)
     if ok then
-        if data then
-            return data
-        else
-            return false, "closed"
-        end
+		return data, err
     else
         return false, tostring(data)
     end
 end
 
 function _M.settimeout(conn, timeout)
+	if conn._recv_obj then
+		conn._recv_obj:set_timeout(timeout)
+	end
 	if not timeout then
 		conn._timeout = nil
 	else

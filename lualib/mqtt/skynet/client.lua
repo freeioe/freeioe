@@ -72,14 +72,16 @@ function client:initialize(opt, logger)
 		return er, er and tostring(err) or nil
 	end
 
-	self._packet_id = 0
 	self._connecting = nil
 	self._close_connection = nil
 	self._max_mqtt_reconnect_timeout = 128 * 100 -- about two mins
 	
 	if not mqtt.get_ioloop(false) then
 		mqtt.get_ioloop(true, {
+			timeout = 1,
+			--[[
 			sleep = 0.01,
+			]]--
 			sleep_function = function(timeout)
 				skynet.sleep(math.floor(timeout * 100))
 			end
@@ -115,14 +117,6 @@ function client:socket()
 	return assert(self._client.connection.socket_id)
 end
 
-function client:gen_packet_id()
-	if self._packet_id >= 0xFFFF then
-		self._packet_id = 0
-	end
-	self._packet_id = self._packet_id + 1
-	return self._packet_id
-end
-
 function client:publish(topic, payload, qos, retain, props, user_props)
 	local qos = qos == nil and 0 or qos
 	local retain = retain == nil and false or retain
@@ -138,8 +132,7 @@ function client:publish(topic, payload, qos, retain, props, user_props)
 		qos = qos,
 		retain = retain,
 		properties = props,
-		user_properities = user_props,
-		packet_id = self:gen_packet_id()
+		user_properities = user_props
 	})
 
 	if qos == 1 and packet_id and self._qos_msg_buf then
@@ -155,7 +148,7 @@ function client:mqtt_resend_qos_msg()
 
 	skynet.fork(function()
 		self._qos_msg_buf:fire_all(function(...)
-			self:publish(...)
+			return self:publish(...)
 		end, self._qos.sleep_ten, self._qos.reset_id)
 	end)
 end
@@ -171,8 +164,7 @@ function client:subscribe(topic, qos, no_local, retain_as_published, retain_hand
 		retain_as_published = retain_as_published,
 		retain_handling = retain_handling,
 		properties = props,
-		user_properties = user_props,
-		packet_id = self:gen_packet_id()
+		user_properties = user_props
 	})
 end
 
@@ -183,8 +175,7 @@ function client:unsubscribe(topic, props, user_props)
 	return self._client:unsubscribe({
 		topic = topic,
 		properties = props,
-		user_properties = user_props,
-		packet_id = self:gen_packet_id()
+		user_properties = user_props
 	})
 end
 
