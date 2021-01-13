@@ -7,6 +7,7 @@ v1.20.1 ()
 ------------------
 
 * Fixed logger missing issue
+* Using luamqtt instead of lua-mosquitto by default
 
 
 v1.20.0 (2021-01-09)

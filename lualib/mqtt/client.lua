@@ -951,7 +951,7 @@ function client_mt:_ioloop_iteration()
 		if self.first_connect then
 			self.first_connect = false
 			self:start_connecting()
-		elseif (args.reconnect and not self.is_disconnecting) then
+		elseif args.reconnect and not self.is_disconnecting then
 			if args.reconnect == true then
 				self:start_connecting()
 			else
