@@ -7,10 +7,17 @@ local _M = {
 		local g_name = G_APP_NAME
 		local LOG = {}
 		for k, v in pairs(log) do
-			LOG[k] = function(fmt, ...)
+			local log_func = function (fmt, ...)
 				local name = g_name or G_APP_NAME
 				assert(name, "G_APP_NAME missing")
 				return v('::'..name..':: '..fmt, ...)
+			end
+			LOG[k] = function(fmt, ...)
+				if self == LOG then
+					return log_func(fmt, ...)
+				else
+					return log_func(self, fmt, ...)
+				end
 			end
 		end
 		return LOG
