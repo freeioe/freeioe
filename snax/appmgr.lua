@@ -291,7 +291,7 @@ function accept.app_heartbeat_check()
 				log.notice("App heartbeat timeout! Inst:", k)
 
 				local data = {app=k, inst=v.inst, last=v.last, time=os.time()}
-				fire_exception_event(sys_app, 'heartbeat timeout', data)
+				fire_exception_event(k, 'heartbeat timeout', data)
 
 				--- mark it as not timeout
 				v.last = skynet.now()
