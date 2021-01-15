@@ -6,6 +6,7 @@ logservice = "snlua"
 logpath = "."
 harbor = 0
 start = "main"	-- main script
+enablessl = 1
 bootstrap = "snlua bootstrap"	-- The service for bootstrap
 -- luaservice = root.."service/?.lua;"..root.."ioe/?.lua;"..root.."ioe/service/?.lua"
 luaservice = root.."service/?.lua;"..root.."ioe/?.lua;"..root.."ioe/service/?.lua;"..root.."ioe/test/?.lua"
