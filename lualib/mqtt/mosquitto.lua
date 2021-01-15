@@ -38,7 +38,7 @@ end
 
 function mosq:reinitialise(mqtt_id, clean_session)
 	if self._client then
-		self._client:close_connection('reinitialise')
+		self._client:disconnect('reinitialise')
 		self._client = nil
 	end
 	mosq.initialize(self)
@@ -153,7 +153,7 @@ function mosq:connect(host, port, keepalive)
 			protect_call(self.ON_LOG, 'error', err)
 		end,
 		close = function(conn)
-			protect_call(self.ON_CONNECT, true, 0, conn.close_reason)
+			protect_call(self.ON_DISCONNECT, true, 0, conn.close_reason)
 		end,
 		acknowledge = function(ack)
 			protect_call(self.ON_PUBLISH, ack.packet_id)
@@ -191,13 +191,13 @@ end
 function mosq:reconnect()
 	assert(self._client, "Not connected")
 
-	self._client:close_connection('reconnect')
+	self._client:disconnect()
 	return self:connect(self._host, self._port, self._keepalive)
 end
 
 function mosq:disconnect()
 	assert(self._client, "Not connected")
-	return self._client:close_connection('close connection')
+	return self._client:disconnect()
 end
 
 function mosq:destory()

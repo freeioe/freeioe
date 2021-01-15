@@ -10,6 +10,14 @@ function stack:initialize(max_size, on_drop_cb)
 	self._buf = {}
 end
 
+function stack:clean()
+	self._buf = {}
+end
+
+function stack:size()
+	return #self._buf
+end
+
 function stack:push(key, ...)
 	self._buf[#self._buf + 1] = {key, ...}
 	if #self._buf > self._max_size then
@@ -26,6 +34,7 @@ function stack:remove(key)
 	end
 end
 
+-- when reset_key is ture, all failed send message will keep into buffer with removed key
 function stack:fire_all(cb, sleep_count, reset_key)
 	local buf = self._buf
 	self._buf = {}
@@ -46,13 +55,27 @@ function stack:fire_all(cb, sleep_count, reset_key)
 		count = count + 1
 	end
 
+	if count > #buf then
+		return
+	end
+	assert(count <= #buf)
+
+	--- Reset keys
+	local new_buf = {}
 	for i = count, #buf do
-		--- append to begining of current qos msg buffer
 		local msg = buf[i]
 		if reset_key then
 			msg[1] = {} --- reset key as there is no for this
 		end
-		table.insert(self._buf, 1, msg)
+		new_buf[#new_buf + 1] = msg
+	end
+
+	if #self._buf == 0 then
+		self._buf = new_buf
+	else
+		--- Append self._buf to new_buf
+		table.move(self._buf, 1, #self._buf, #new_buf + 1, new_buf)
+		self._buf = new_buf
 	end
 end
 

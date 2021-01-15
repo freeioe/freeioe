@@ -1,7 +1,8 @@
 -- DOC: https://github.com/cloudwu/skynet/wiki/Socket
-local sockethelper = require "http.sockethelper"
 local skynet = require "skynet"
 local dns = require "skynet.dns"
+local sockethelper = require "mqtt.skynet.sockethelper"
+local receiver = require 'mqtt.skynet.receiver'
 
 local regex = {
 	host_port = "^([%w%.%-]+):?(%d*)$",
@@ -29,11 +30,28 @@ local function init(conn, socket_id)
     if conn.secure then
         local tls = require "http.tlshelper"
         local ctx = tls.newctx()
+
+		local cafile = conn.secure_params.cafile
+		local capath = conn.secure_params.capath
+		if cafile or capath then
+			assert(ctx.load_ca, 'CA certs loading not supported by ltls!')
+			ctx:load_ca(cafile, capath)
+		end
+
         local cert = conn.secure_params.certificate
         local key = conn.secure_params.key
+		local passwd = conn.secure_params.passwd
         if cert and key then
-            ctx:set_cert(cert, key)
+			assert(ctx.set_cert, 'Client certs not supported by ltls!')
+            ctx:set_cert(cert, key, passwd)
         end
+
+		local verify = conn.secure_params.verify
+		if verify then
+			assert(ctx.set_verify, 'Set verify not supported by ltls!')
+			ctx:set_verify(verify)
+		end
+
         local tls_ctx = tls.newtls("client", ctx)
         tls.init_requestfunc(socket_id, tls_ctx)()
 
@@ -56,7 +74,7 @@ local function init(conn, socket_id)
     end
 
     if conn.websocket then
-        local ws = require "mqtt.wshelper"
+        local ws = require "mqtt.skynet.wshelper"
         local mqtt_header = { ["Sec-Websocket-Protocol"] = "mqtt" }
         ws.write_handshake(conn, conn.ws_host, conn.ws_uri, mqtt_header)
 
@@ -68,6 +86,9 @@ local function init(conn, socket_id)
         conn.receive = conn.read
         conn.shutdown = conn.close
     end
+
+	conn.receive = receiver:new(conn.receive, conn._timeout)
+	conn.shutdown = conn.receive:shutdown(conn.shutdown)
 end
 
 local function parse_uri(conn)
@@ -106,12 +127,15 @@ local function parse_uri(conn)
     conn.port = port
 
     -- dns
+	--[[
     local ip = dns_resolve(hostname)
     if ip then
         conn.host = ip
     else
         error("cannot resolve uri")
     end
+	]]--
+	conn.host = hostname
 
     -- websocket
     if protocol then
@@ -161,19 +185,18 @@ function _M.send(conn, data)
 end
 
 function _M.receive(conn, size)
-    local ok, data = pcall(conn.receive, size)
+    local ok, data, err = pcall(conn.receive, size)
     if ok then
-        if data then
-            return data
-        else
-            return false, "closed"
-        end
+		return data, err
     else
         return false, tostring(data)
     end
 end
 
 function _M.settimeout(conn, timeout)
+	if conn._recv_obj then
+		conn._recv_obj:set_timeout(timeout)
+	end
 	if not timeout then
 		conn._timeout = nil
 	else

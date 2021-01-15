@@ -12,6 +12,7 @@ local _M = {
 				assert(name, "G_APP_NAME missing")
 				return v('::'..name..':: '..fmt, ...)
 			end
+
 			LOG[k] = function(self, fmt, ...)
 				if self == LOG then
 					return log_func(fmt, ...)

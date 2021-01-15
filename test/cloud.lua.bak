@@ -1,7 +1,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local crypt = require 'skynet.crypt'
-local mqtt_client_m = require 'mqtt.skynet.client'
+local mosq = require 'mosquitto'
 local datacenter = require 'skynet.datacenter'
 local ioe = require 'ioe'
 local app_api = require 'app.api'
@@ -33,7 +33,16 @@ local mqtt_secret = nil			--- MQTT secret
 local mqtt_client = nil			--- MQTT Client instance
 local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
 local mqtt_client_last_msg = nil	--- MQTT Client connection/disconnection error message
+local qos_msg_buf = nil			--- MQTT QOS messages
 
+--- Next reconnect timeout which will be multi by two until a max time
+local mqtt_reconnect_timeout = 100
+local max_mqtt_reconnect_timeout = 512 * 100 --- about 8.5 minutes
+
+--- Connecting sleep
+local mqtt_connecting = nil
+--- Close connection flag in block mode
+local close_connection = nil
 --- App devices data fire flag to prevent fire data when reconnected
 local apps_devices_fired = false
 
@@ -62,6 +71,29 @@ local cache_fire_freq = 1000	--- fire cached data frequency
 local log_buffer = nil			--- Cycle buffer for logs
 local event_buffer = nil		--- Cycle buffer for events
 local comm_buffer = nil			--- Cycle buffer for communication data
+
+--- Log function handler for mqtt library
+local log_func = nil
+local null_log_print = function() end
+local log_callback = function(level, ...)
+	if not log_func then
+		log_func = {}
+		log_func[mosq.LOG_NONE] = log.trace
+		log_func[mosq.LOG_INFO] = log.info
+		log_func[mosq.LOG_NOTICE] = log.notice
+		log_func[mosq.LOG_WARNING] = log.warning
+		log_func[mosq.LOG_ERROR] = log.error
+		log_func[mosq.LOG_DEBUG] = null_log_print
+		--log_func[mosq.LOG_DEBUG] = log.debug
+	end
+
+	local func = log_func[level]
+	if func then
+		func(...)
+	else
+		print(level, ...)
+	end
+end
 
 --- Wild topics match to subscribe messages from cloud
 local wildtopics = { "app/#", "sys/#", "output/#", "command/#" }
@@ -209,7 +241,7 @@ local msg_handler = {
 ---
 -- MQTT Message Callback
 --
-local msg_callback = function(client, packet_id, topic, data, qos, retained)
+local msg_callback = function(packet_id, topic, data, qos, retained)
 	log.info("message:", packet_id, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
@@ -237,6 +269,26 @@ local function connect_log_server(enable)
 	else
 		skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 	end
+end
+
+--[[
+local function mqtt_client_publish(...)
+	return mqtt_client:publish(...)
+end
+]]--
+
+local function mqtt_client_publish(topic, data, qos, retained)
+	local mid, err = mqtt_client:publish(topic, data, qos, retained)
+	if qos == 1 and mid then
+		qos_msg_buf:push(mid, topic, data, qos, retained)
+	end
+	return mid, err
+end
+
+local function mqtt_resend_qos_msg()
+	skynet.fork(function()
+		qos_msg_buf:fire_all(mqtt_client_publish, 10, true)
+	end)
 end
 
 local total_compressed = 0
@@ -308,7 +360,7 @@ local function publish_data_no_pb(key, value, timestamp, quality)
 		return nil, err
 	end
 
-	return mqtt_client:publish(mqtt_id.."/data", val, 1, false)
+	return mqtt_client_publish(mqtt_id.."/data", val, 1, false)
 end
 
 --- Push data to period buffer or publish to MQTT dirtectly
@@ -372,7 +424,7 @@ local function publish_data_list_impl(val_list, topic)
 		if mqtt_client then
 			calc_compress(bytes_in, bytes_out, val_count)
 			--log.trace('publish_data_list', mqtt_id.."/"..topic, #val_list)
-			return mqtt_client:publish(mqtt_id.."/"..topic, deflated, 1, false)
+			return mqtt_client_publish(mqtt_id.."/"..topic, deflated, 1, false)
 		end
 	end
 end
@@ -697,81 +749,17 @@ end
 
 local connect_proc = nil
 local function start_reconnect()
-	local client = mqtt_client
-	mqtt_client = nil
-	skynet.fork(function()
-		if client then
-			client:disconnect()
-		end
-		connect_proc()
-	end)
-end
-
---- on connect result callback
-local function on_mqtt_connect(client, success, msg)
-	mqtt_client_last_msg = msg
-	if success then
-		--- Check mqtt_client
-		if mqtt_client and mqtt_client ~= client then
-			log.warning("There is one client exits!")
-			mqtt_client:disconnect()
-			mqtt_client = nil
-		end
-
-		--- Publish online status message
-		local r, err = client:publish(mqtt_id.."/status", "ONLINE", 1, true)
-		if not r then
-			log.warning("Publish ONLINE status failed", err)
-			return start_reconnect()
-		end
-
-		--- Set the mqtt_client
-		mqtt_client = client
-
-		--- Set mqtt_client and last time
-		local mqtt_last = mqtt_client_last or 0 -- remember last
-		mqtt_client_last = skynet.time()
-
-		--- Subscribe topics
-		for _, v in ipairs(wildtopics) do
-			--client:subscribe("ALL/"..v, 1)
-			local topic = mqtt_id.."/"..v
-			local r, err = client:subscribe(topic, 1)
-			if not r then
-				log.warning("Failed to subscribe: "..topic)
-			end
-		end
-
-		-- Only fire apps and device once
-		if not apps_devices_fired then
-			log.info("ON_CONNECT upload devices and apps list")
-			apps_devices_fired = true
-			mqtt_last = 0  -- reset last
-			snax.self().post.fire_devices()
-			snax.self().post.fire_apps()
-		end
-
-		-- If we disconnected more than minute
-		if mqtt_client_last - mqtt_last > 60 * 100 then
-			--- Only flush data when period buffer enabled and period is bigger than 3 seconds
-			if pb and pb:period() > 3000 then
-				log.info("Flush all device data within three seconds!")
-				skynet.timeout(300, function() snax.self().post.data_flush() end)
-			end
-		end
-
-		log.notice("Connection is ready!!", client:socket())
+	if mqtt_client then
+		log.error('****Cannot start reconnection when client is there!****')
+		return
 	end
-end
 
-local function on_mqtt_disconnect(client, msg)
-	log.warning("ON_DISCONNECT", client:socket(), msg)
+	log.notice('Start reconnect to cloud after '..(mqtt_reconnect_timeout/100)..' seconds')
 
-	-- If client is current connection
-	if not mqtt_client or mqtt_client == client then
-		mqtt_client_last = skynet.time()
-		mqtt_client = nil -- clear the client object as it wil cleaned by others
-		mqtt_client_last_msg = msg -- record the error message
+	skynet.timeout(mqtt_reconnect_timeout, function() connect_proc() end)
+	mqtt_reconnect_timeout = mqtt_reconnect_timeout * 2
+	if mqtt_reconnect_timeout > max_mqtt_reconnect_timeout then
+		mqtt_reconnect_timeout = 100
 	end
 end
 
@@ -784,42 +772,175 @@ connect_proc = function(clean_session, username, password)
 		return
 	end
 
+	local clean_session = clean_session ~= nil and clean_session or true
+	local client = assert(mosq.new(mqtt_id, clean_session))
+	local close_client = false -- set will close the connection work loop
+
+	--- Set the protocol version
+	client:version_set(mosq.PROTOCOL_V311)
+
 	--- Set login by username/password
-	if not username then
-		username = "dev="..mqtt_id.."|time="..os.time() --- id is device id and current time
-		password = hmac:new(sha1, mqtt_secret, username):hexdigest() --- hash the id as password
+	if username then
+		client:login_set(username, password)
+	else
+		local id = "dev="..mqtt_id.."|time="..os.time() --- id is device id and current time
+		local pwd = hmac:new(sha1, mqtt_secret, id):hexdigest() --- hash the id as password
+		client:login_set(id, pwd) --- Set the login
 	end
 
-	local client = mqtt_client_m:new({
-		client_id = assert(mqtt_id),
-		clean_session = clean_session ~= nil and clean_session or true,
-		host = mqtt_host,
-		port = mqtt_port,
-		keep_alive = mqtt_keepalive,
-		username = username,
-		password = password,
-		version = mqtt_client_m.V311,
-		qos = true,
-		will = {
-			topic = mqtt_id.."/status", 
-			payload = "OFFLINE",
-			qos = 1,
-			retain = true
-		}
-	}, log)
+	--- on connect result callback
+	client.ON_CONNECT = function(success, rc, msg)
+		mqtt_client_last_msg = msg
+		if success then
+			log.notice("ON_CONNECT", success, rc, msg)
 
-	client.on_mqtt_connect = on_mqtt_connect
-	client.on_mqtt_disconnect = on_mqtt_disconnect
-	client.on_mqtt_message = msg_callback
+			--- Check mqtt_client
+			if mqtt_client then
+				log.warning("There is one client exits!")
+				close_client = true --- close current one
+				return
+			end
 
-	assert(client:connect())
+			--- Publish online status message
+			local r, err = client:publish(mqtt_id.."/status", "ONLINE", 1, true)
+			if not r then
+				log.warning("Publish status failed", rc, err)
+				close_client = true --- close current one
+				return start_reconnect()
+			end
+
+			--- Set mqtt_client and last time
+			mqtt_client = client
+			local mqtt_last = mqtt_client_last or 0 -- remember last
+			mqtt_client_last = skynet.time()
+			--- Reset the reconnection timeout
+			mqtt_reconnect_timeout = 100
+
+			--- Subscribe topics
+			for _, v in ipairs(wildtopics) do
+				--client:subscribe("ALL/"..v, 1)
+				client:subscribe(mqtt_id.."/"..v, 1)
+			end
+
+			-- Only fire apps and device once
+			if not apps_devices_fired then
+				log.info("ON_CONNECT upload devices and apps list")
+				apps_devices_fired = true
+				mqtt_last = 0  -- reset last
+				snax.self().post.fire_devices()
+				snax.self().post.fire_apps()
+			end
+
+			-- If we disconnected more than minute
+			if mqtt_client_last - mqtt_last > 60 * 100 then
+				--- Only flush data when period buffer enabled and period is bigger than 3 seconds
+				if pb and pb:period() > 3000 then
+					log.info("Flush all device data within three seconds!")
+					skynet.timeout(300, function() snax.self().post.data_flush() end)
+				end
+			end
+
+			-- Check Qos message
+			mqtt_resend_qos_msg()
+
+			log.notice("Connection is ready!!", client:socket())
+		else
+			log.warning("ON_CONNECT FAILED", success, rc, msg)
+			-- There is an ON_DISCONNECT after this on_connect so we do not need to reconnect here
+			--close_client = true --- close current one
+			--start_reconnect()
+		end
+	end
+	client.ON_DISCONNECT = function(success, rc, msg)
+		log.warning("ON_DISCONNECT", success, rc, msg)
+		close_client = true --- close current one
+
+		-- If client is current connection
+		if not mqtt_client or mqtt_client == client then
+			mqtt_client_last = skynet.time()
+			mqtt_client = nil -- clear the client object as it wil cleaned by others
+			mqtt_client_last_msg = msg -- record the error message
+
+			-- If client is not asking to be closed then reconnect to cloud
+			if close_connection == nil then
+				start_reconnect()
+			end
+		end
+	end
+	client.ON_PUBLISH = function(mid)
+		--log.trace("ON_PUBLISH", mid)
+		qos_msg_buf:remove(mid)
+	end
+
+	--client.ON_LOG = log_callback
+	client.ON_MESSAGE = msg_callback
+
+	--- Tell mqtt backends that this device is online
+	client:will_set(mqtt_id.."/status", "OFFLINE", 1, true)
+
+	--- Loop until we connected to cloud or start the resonnection
+	local r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+	local ts = 100
+	while not r do
+		log.error(string.format("Connect to broker %s:%d failed!", mqtt_host, mqtt_port), err)
+
+		ts = ts * 2
+		mqtt_connecting = {}
+		skynet.sleep(ts, mqtt_connecting)
+		mqtt_connecting = nil
+		if close_connection then
+			break
+		end
+
+		--- Reach max reconnect timeout then destroy current client
+		if ts > max_mqtt_reconnect_timeout then
+			log.error("Destroy client and reconnect!")
+			client:destroy()  -- destroy client
+			mqtt_reconnect_timeout = 100 -- reset the reconnect timeout
+			return start_reconnect()
+		end
+
+		-- r, err = client:reconnect()
+		r, err = client:connect(mqtt_host, mqtt_port, mqtt_keepalive)
+	end
+
+	--- Worker thread
+	while client and not close_client and close_connection == nil do
+		skynet.sleep(0)
+		if client then
+			client:loop(50, 1)
+		else
+			skynet.sleep(50)
+		end
+	end
+
+	--- disconnect client and destory it
+	client:disconnect()
+	log.notice("Connection closed!")
+	client:destroy()
+	log.notice("Connection destroyed!")
+
+	--- wakeup close connection waitor
+	if close_connection then
+		skynet.wakeup(close_connection)
+	end
+	--- Done here!!
 end
 
 function response.disconnect()
-	log.notice("Try to close cloud connection!")
-	if mqtt_client then
-		mqtt_client:disconnect()
+	log.notice("Try to close connection!")
+
+	if close_connection ~= nil then
+		log.notice("Connection is closing!")
+		return nil, "Connection is closing!"
 	end
+
+	close_connection = {}
+	if mqtt_connecting then
+		skynet.wakeup(mqtt_connecting)
+	end
+	skynet.wait(close_connection)
+	close_connection = nil
 
 	log.notice("Connection closed!")
 	return true
@@ -1461,7 +1582,7 @@ function accept.action_result(action, id, result, message)
 		else
 			log.warning("Action result: ", action, id, result, message)
 		end
-		mqtt_client:publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
+		mqtt_client_publish(mqtt_id.."/result/"..action, cjson.encode(r), 1, false)
 	end
 end
 
@@ -1471,8 +1592,12 @@ function init()
 	if not zlib_loaded then
 		log.warning("Cannot load zlib module, data compressing disabled!!")
 	end
+	qos_msg_buf = index_stack:new(1024, function(...)
+		log.error("MQTT QOS message droped!!!!")
+	end)
 
 	mqtt_client_last = skynet.time()
+	mosq.init()
 
 	load_conf()
 	load_buffers()
@@ -1503,8 +1628,5 @@ function exit(...)
 	connect_log_server(false)
 	fire_device_timer = nil
 	fire_app_timer = nil
-	if mqtt_client then
-		mqtt_client:disconnect()
-		mqtt_client = nil
-	end
+	mosq.cleanup()
 end
