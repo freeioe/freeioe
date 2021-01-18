@@ -36,8 +36,8 @@ end
 
 function recv:work_proc()
 	while not self._close do
-		local data, err = self._read_func()
-		if not data then
+		local r, data, err = pcall(self._read_func)
+		if not r or not data then
 			self._socket_closed = true
 			break
 		end
