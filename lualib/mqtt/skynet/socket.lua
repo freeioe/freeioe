@@ -87,8 +87,7 @@ local function init(conn, socket_id)
         conn.shutdown = conn.close
     end
 
-	conn.receive = receiver:new(conn.receive, conn._timeout)
-	conn.shutdown = conn.receive:shutdown(conn.shutdown)
+	conn.receive, conn.shutdown = receiver.map_funcs(conn.receive, conn.shutdown, conn._timeout)
 end
 
 local function parse_uri(conn)
