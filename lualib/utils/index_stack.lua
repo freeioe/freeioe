@@ -37,8 +37,14 @@ end
 -- when reset_key is ture, all failed send message will keep into buffer with removed key
 function stack:fire_all(cb, sleep_count, reset_key)
 	local buf = self._buf
+	if #buf == 0 then
+		return
+	end
+
+	--- Create new buffer list
 	self._buf = {}
 
+	--- Fire all message
 	local count = 1
 	for _, v in ipairs(buf) do
 		local key, err = cb(table.unpack(v, 2))
@@ -55,12 +61,13 @@ function stack:fire_all(cb, sleep_count, reset_key)
 		count = count + 1
 	end
 
+	--- If all done
 	if count > #buf then
 		return
 	end
-	assert(count <= #buf)
 
-	--- Reset keys
+	--- Push back to buffer
+	--- And Reset keys if reset_key is true
 	local new_buf = {}
 	for i = count, #buf do
 		local msg = buf[i]
@@ -71,6 +78,7 @@ function stack:fire_all(cb, sleep_count, reset_key)
 	end
 
 	if #self._buf == 0 then
+		--- Swap buffer when _buf is empty
 		self._buf = new_buf
 	else
 		--- Append self._buf to new_buf

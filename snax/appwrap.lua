@@ -211,9 +211,10 @@ function accept.app_post(msg, ...)
 	end
 end
 
-function accept.log(ts, lvl, ...)
+function accept.log(ts, lvl, msg, ...)
+	assert(msg)
 	if log_buffer then
-		log_buffer:push(ts, lvl, ...)
+		log_buffer:push(ts, lvl, msg, ...)
 	end
 end
 
