@@ -1,7 +1,7 @@
 local _M = {}
 
-local lp   = require "influxdb.lineproto"
-local util = require "influxdb.util"
+local lp   = require "db.influxdb.lineproto"
+local util = require "db.influxdb.util"
 
 local str_gsub = string.gsub
 local str_rep  = string.rep

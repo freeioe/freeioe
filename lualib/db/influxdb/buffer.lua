@@ -1,7 +1,7 @@
 local skynet = require "skynet"
 
-local lp   = require "influxdb.lineproto"
-local util = require "influxdb.util"
+local lp   = require "db.influxdb.lineproto"
+local util = require "db.influxdb.util"
 
 local _M = {}
 _M.VERSION = "0.2"

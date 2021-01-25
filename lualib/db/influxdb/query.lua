@@ -1,4 +1,5 @@
-local util = require 'influxdb.util'
+local util = require 'db.influxdb.util'
+local cjson = require 'cjson'
 
 local _M = {}
 _M.VERSION = "0.2"
@@ -10,7 +11,7 @@ local mt = {
 function _M.query(self, query)
 	local r, body = util.query_http(setmetatable({query=query}, {__index=self._opts}))
 	if r then
-		return body
+		return cjson.decode(body)
 	end
 	reutrn nil, body
 end
