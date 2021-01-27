@@ -1,15 +1,24 @@
 local cjson = require 'cjson.safe'
 local class = require 'middleclass'
+local crypt = require "skynet.crypt"
 
 local restful = class("RESTFULL_API")
+-- Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ== 
 
-function restful:initialize(host, timeout, headers)
+local function gen_auth(auth)
+	return 'Basic '..crypt.base64encode(auth[1]..':'..auth[2])
+end
+
+function restful:initialize(host, timeout, headers, auth)
 	assert(host)
 	self._host = host
 	self._timeout = timeout or 5000
 	self._headers = headers or {
-		Accept = "application/json"
+		Accept = "application/json",
 	}
+	if auth then
+		self._headers['Authorization'] = gen_auth(auth)
+	end
 end
 
 local function init_httpc(timeout)
@@ -28,30 +37,32 @@ local function escape(s)
 	end))
 end
 
-function restful:request(method, url, params, data)
+function restful:request(method, url, params, data, content_type)
 	assert(url)
 
     local query = params or {}
 	local recvheader = {}
 	local content = data 
+	local ctype = content_type or 'text/plain'
 	if type(content) == 'table' then
 		content = assert(cjson.encode(data))
+		ctype = 'application/json'
 	end
 
     local q = {}
     for k,v in pairs(query) do
         table.insert(q, string.format("%s=%s",escape(k),escape(v)))
     end
-    if #q then
+    if #q > 0 then
         url = url..'?'..table.concat(q, '&')
     end
 
-	local httpc = init_httpc()
+	local httpc = init_httpc(self._timeout)
 
 	local headers = {}
 	for k, v in pairs(self._headers) do headers[k] = v end
 	if content and string.len(content) > 0 then
-		headers['content-type'] = headers['content-type'] or 'application/json'
+		headers['content-type'] = ctype
 	end
 
     local r, status, body = pcall(httpc.request, method, self._host, url, recvheader, headers, content)
@@ -62,20 +73,20 @@ function restful:request(method, url, params, data)
 	end
 end
 
-function restful:get(url, params, data)
-	return self:request('GET', url, params, data)
+function restful:get(url, params, data, conent_type)
+	return self:request('GET', url, params, data, conent_type)
 end
 
-function restful:post(url, params, data)
-	return self:request('POST', url, params, data)
+function restful:post(url, params, data, conent_type)
+	return self:request('POST', url, params, data, conent_type)
 end
 
-function restful:put(url, params, data)
-	return self:request('PUT', url, params, data)
+function restful:put(url, params, data, conent_type)
+	return self:request('PUT', url, params, data, conent_type)
 end
 
-function restful:delete(url, params, data)
-	return self:request('DELETE', url, params, data)
+function restful:delete(url, params, data, conent_type)
+	return self:request('DELETE', url, params, data, conent_type)
 end
 
 return restful

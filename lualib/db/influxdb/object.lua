@@ -1,5 +1,6 @@
 local _M = {}
 
+local skynet = require 'skynet'
 local lp   = require "db.influxdb.lineproto"
 local util = require "db.influxdb.util"
 
@@ -73,9 +74,9 @@ function _M.stamp(self, time)
 
 	local precision = self.precision
 	if (precision == 'ms') then
-		self._stamp = tostring(os.time() * 1000)
+		self._stamp = tostring(skynet.time() * 1000)
 	elseif (precision == 's') then
-		self._stamp = tostring(os.time())
+		self._stamp = tostring(skynet.time())
 	else
 		self._stamp = ''
 	end
