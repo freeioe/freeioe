@@ -1,5 +1,6 @@
-local restful = require 'http.restful'
 local class = require 'middleclass'
+local restful = require 'http.restful'
+local cjson = require 'cjson.safe'
 
 local client = class('db.siridb.http')
 
@@ -22,11 +23,23 @@ function client:initialize(options)
 end
 
 function client:post(url, params, data)
-	return self._rest:post(url, params, data)
+	local sts, body = self._rest:post(url, params, data)
+	if tonumber(sts) == 200 then
+		return cjson.decode(body)
+	end
+	return nil, body
 end
 
 function client:get(url, params, data)
-	return self._rest:get(url, params, data)
+	local sts, body = self._rest:get(url, params, data)
+	if tonumber(sts) == 200 then
+		local data, err = cjson.decode(body)
+		if not data then
+			return nil, err
+		end
+		return data
+	end
+	return nil, body
 end
 
 function client:new_database(dbname, time_precision, buffer_size, duration_num, duration_log)
@@ -38,7 +51,11 @@ function client:new_database(dbname, time_precision, buffer_size, duration_num, 
 		duration_num = duration_num or '52w',
 		duration_log = duration_log or '1w'
 	}
-	return self:post('/new-database', nil, data)
+	local r, err = self:post('/new-database', nil, data)
+	if r and r == 'OK' then
+		return true
+	end
+	return nil, err or r
 end
 
 function client:new_account(user, passwd)
@@ -98,7 +115,11 @@ function client:drop_database(dbname, ignore_offline)
 end
 
 function client:get_version()
-	return self:get('/get-version')
+	local data, err = self:get('/get-version')
+	if data then
+		return data[1]
+	end
+	return nil, err
 end
 
 function client:get_accounts()

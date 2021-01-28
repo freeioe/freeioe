@@ -46,6 +46,9 @@ function database:insert_series(series, auto_clean)
 	return self:insert(data, auto_clean)
 end
 
+--- Query between .. and .. could using ms timestamp, and the data returns includes
+--		sample on start, but not sample on end. So increase 1ms to includes the data your want
+--		it means the data returns [start, end)
 function database:query(query, time_precision)
 	assert(query, "query string missing")
 	local status, body = self:post('/query/'..self._db, nil, {
