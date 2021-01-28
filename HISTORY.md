@@ -3,6 +3,13 @@
 
 # Release history
 
+v1.22.0
+------------------
+
+* Added time-series db api (siridb, influxdb, prometheus), API ver 9
+* Added developer_mode and hpc in ioe module
+
+
 v1.21.0 (2021-01-15)
 ------------------
 

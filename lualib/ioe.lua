@@ -63,11 +63,16 @@ _M.set_cfg_auto_upload = function(value)
 	dc.set('SYS', 'CFG_AUTO_UPLOAD', value)
 end
 
+_M.developer_mode = function()
+	return os.getenv("IOE_DEVELOPER_MODE") or dc.get('SYS', 'DEVELOPER_MODE')
+end
+
 _M.now = function()
 	return skynet.now() * 10 --- ms
 end
 _M.time = skynet.time
 _M.starttime = skynet.starttime
+_M.hpc = skynet.hpc
 
 --[[
 _M.datacenter = dc
