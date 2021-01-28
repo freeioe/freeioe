@@ -14,7 +14,7 @@ function data:encode(auto_clean)
 	local data = {}
 	for _, v in ipairs(self._list) do
 		local lines = v:encode(auto_clean)
-		table.move(lines, 1, #lines, #data, data)
+		table.move(lines, 1, #lines, #data + 1, data)
 	end
 
 	return table.concat(data, '\n')
