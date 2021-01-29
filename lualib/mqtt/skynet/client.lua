@@ -95,6 +95,9 @@ function client:initialize(opt, logger)
 		qos.reset_id = qos.reset_id ~= nil and qos.reset_id or true
 		qos.on_drop = qos.on_drop or function(...)
 			self._log:error("MQTT QOS message dropped!!")
+			skynet.fork(function()
+				self._client:close_connection('QOS Bug')
+			end)
 		end
 
 		self._qos_msg_buf = index_stack:new(qos.max, qos.on_drop)
