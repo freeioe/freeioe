@@ -67,6 +67,12 @@ _M.developer_mode = function()
 	return os.getenv("IOE_DEVELOPER_MODE") or dc.get('SYS', 'DEVELOPER_MODE')
 end
 
+_M.cloud_status = function()
+	local cloud = snax.uniqueservice("cloud")
+	local online, last, msg = cloud.req.get_status()
+	return online, last, msg
+end
+
 _M.now = function()
 	return skynet.now() * 10 --- ms
 end

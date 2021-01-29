@@ -7,7 +7,7 @@ v1.22.0
 ------------------
 
 * Added time-series db api (siridb, influxdb, prometheus), API ver 9
-* Added developer_mode and hpc in ioe module
+* Improved ioe API: added: developer_mode, hpc, cloud_status
 
 
 v1.21.0 (2021-01-15)
