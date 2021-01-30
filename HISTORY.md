@@ -8,6 +8,7 @@ v1.22.0
 
 * Added time-series db api (siridb, influxdb, prometheus), API ver 9
 * Improved ioe API: added: developer_mode, hpc, cloud_status
+* Improved MQTT QOS buffer handling
 
 
 v1.21.0 (2021-01-15)

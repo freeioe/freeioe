@@ -3,6 +3,7 @@ local class = require 'middleclass'
 
 local stack = class("UTILS_INDEX_STACK_LIB")
 
+--- on_drop_cb returns true will remove the buffered data, or keep it
 function stack:initialize(max_size, on_drop_cb)
 	assert(max_size and on_drop_cb)
 	self._max_size = max_size
@@ -14,14 +15,36 @@ function stack:clean()
 	self._buf = {}
 end
 
+function stack:full()
+	return #self._buf >= self._max_size
+end
+
 function stack:size()
 	return #self._buf
+end
+
+function stack:max()
+	return self._max_size
+end
+
+function stack:set_max(size, skip_drop)
+	if skip_drop or self._max_size < size then
+		self._max_size = size
+	end
+	while #self._buf > size do
+		if self._on_drop_cb(table.unpack(self._buf[1])) then
+			table.remove(self._buf, 1)
+		end
+	end
+	self._max_size = size
 end
 
 function stack:push(key, ...)
 	self._buf[#self._buf + 1] = {key, ...}
 	if #self._buf > self._max_size then
-		self._on_drop_cb(table.unpack(self._buf[1]))
+		if self._on_drop_cb(table.unpack(self._buf[1])) then
+			table.remove(self._buf, 1)
+		end
 	end
 end
 

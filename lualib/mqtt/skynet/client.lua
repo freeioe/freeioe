@@ -96,17 +96,31 @@ function client:initialize(opt, logger)
 		qos.on_drop = qos.on_drop or function(...)
 			self._log:error("MQTT QOS message dropped!!")
 			skynet.fork(function()
-				self._client:close_connection('QOS Bug')
+				--- Check connect flag before calling close_connection
+				if self._connected then
+					self._client:close_connection('QOS Bug')
+				end
 			end)
+
+			--- Increase the max for avoid on_drop been called very soon
+			if self._qos_msg_buf:max() == qos.max then
+				self._qos_msg_buf:set_max(qos.max * 2)
+				return false
+			else
+				self._log:error("MQTT QOS buffer already doubled, message droping")
+				return true
+			end
 		end
 
 		self._qos_msg_buf = index_stack:new(qos.max, qos.on_drop)
 		self._qos = qos
+	else
+		self._log:warning("MQTT QOS not enabled!!!")
 	end
 end
 
 function client:connected()
-	return self._client ~= nil and self._client.connection
+	return self._client ~= nil and self._client.connection and self._connected
 end
 
 function client:socket()
@@ -127,6 +141,9 @@ function client:publish(topic, payload, qos, retain, props, user_props)
 	if not self:connected() then
 		self._log:trace("MQTT not connected!")
 		return nil, "MQTT not connected!"
+	end
+	if self._qos_msg_buf and self._qos_msg_buf:full() then
+		return nil, "MQTT Qos message buffer full!!!"
 	end
 
 	local packet_id, err = self._client:publish({
@@ -153,6 +170,11 @@ function client:mqtt_resend_qos_msg()
 		self._qos_msg_buf:fire_all(function(...)
 			return self:publish(...)
 		end, self._qos.sleep_ten, self._qos.reset_id)
+
+		--- Reset the max
+		if self._qos_msg_buf:max() > self._qos.max and self._qos_msg_buf:size() < self._qos.max then
+			self._qos_msg_buf:set_max(self._qos.max)
+		end
 	end)
 end
 
@@ -315,6 +337,7 @@ function client:ON_CONNECT(success, rc, msg)
 	end
 
 	if success then
+		self._connected = true
 		self:mqtt_resend_qos_msg()
 	end
 
@@ -324,6 +347,7 @@ end
 function client:ON_DISCONNECT(conn)
 	local msg = conn and conn.close_reason or 'Unknown disconnect reason'
 	self._log:warning("ON_DISCONNECT", msg) 
+	self._connected = false
 
 	self._safe_call(self.on_mqtt_disconnect, self, msg)
 end
