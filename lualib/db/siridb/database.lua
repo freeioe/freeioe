@@ -47,7 +47,12 @@ end
 function database:insert(data, auto_clean)
 	assert(data, "data missing")
 	assert(data.encode, "data object incorrect")
-	return self:post('/insert/'..self._db, nil, data:encode(self._ts, auto_clean))
+	local status, body = self:post('/insert/'..self._db, nil, data:encode(self._ts, auto_clean))
+	if status == 200 then
+		return true
+	else
+		return nil, body
+	end
 end
 
 function database:insert_series(series, auto_clean)
@@ -76,11 +81,9 @@ function database:query(query, time_precision)
 	return nil, body, status
 end
 
-function database:exec(query_sql)
-	assert(query, "query string missing")
-	local status, body = self:post('/query/'..self._db, nil, {
-		q = query_sql,
-	})
+function database:exec(sql)
+	assert(sql, "query string missing")
+	local status, body = self:post('/query/'..self._db, nil, {q = sql})
 	if status == 200 then
 		local data, err = cjson.decode(body)
 		if not data then
