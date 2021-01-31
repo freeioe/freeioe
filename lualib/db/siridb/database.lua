@@ -25,6 +25,17 @@ function database:initialize(options, dbname)
 	self._db = dbname or options.db or 'test'
 end
 
+function database:time_precision()
+	return self._ts
+end
+
+function database:dbname()
+	return self._db
+end
+
+function database:options()
+end
+
 function database:post(url, params, data)
 	return self._rest:post(url, params, data)
 end
@@ -54,6 +65,21 @@ function database:query(query, time_precision)
 	local status, body = self:post('/query/'..self._db, nil, {
 		q = query,
 		t = time_precision or self._ts
+	})
+	if status == 200 then
+		local data, err = cjson.decode(body)
+		if not data then
+			return nil, err
+		end
+		return data
+	end
+	return nil, body, status
+end
+
+function database:exec(query_sql)
+	assert(query, "query string missing")
+	local status, body = self:post('/query/'..self._db, nil, {
+		q = query_sql,
 	})
 	if status == 200 then
 		local data, err = cjson.decode(body)
