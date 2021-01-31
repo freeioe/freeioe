@@ -278,7 +278,7 @@ function command.install_ext(id, args)
 			}
 			--- Trigger extension list upgrade
 			cloud_update_ext_list()
-			return true
+			return true, "Extension "..name.." installation is done!"
 		else
 			log.error("Install extention failed", name, version, r, status)
 			os.execute("rm -rf "..target_folder)
@@ -356,7 +356,7 @@ end
 
 function command.auto_clean()
 	auto_clean_exts()
-	return true
+	return true, "Extension auto clean is done!"
 end
 
 map_result_action('upgrade_ext')
