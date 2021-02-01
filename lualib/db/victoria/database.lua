@@ -36,7 +36,7 @@ function database:export(match, start, etime, max_rows_per_line)
 		end
 		return data
 	end
-	return nil, body
+	return nil, tostring(body)
 end
 
 return database

@@ -51,7 +51,7 @@ function database:insert(data, auto_clean)
 	if status == 200 then
 		return true
 	else
-		return nil, body
+		return nil, tostring(body)
 	end
 end
 
@@ -78,7 +78,7 @@ function database:query(query, time_precision)
 		end
 		return data
 	end
-	return nil, body, status
+	return nil, tostring(body), status
 end
 
 function database:exec(sql)
@@ -91,7 +91,7 @@ function database:exec(sql)
 		end
 		return data
 	end
-	return nil, body, status
+	return nil, tostring(body), status
 end
 
 return database

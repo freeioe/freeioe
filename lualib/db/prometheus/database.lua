@@ -37,7 +37,7 @@ function database:insert(data, auto_clean)
 	if tonumber(sts) == 204 then
 		return true
 	end
-	return nil, body
+	return nil, tostring(body)
 end
 
 function database:insert_metric(metric, auto_clean)
@@ -64,7 +64,7 @@ function database:query(query, time, timeout)
 		end
 		return nil, data.error, data.errorType
 	end
-	return nil, body
+	return nil, tostring(body)
 end
 
 -- start, etime is <rfc3339> or <unix timestamp>
@@ -88,7 +88,7 @@ function database:query_range(query, start, etime, step, timeout)
 		end
 		return nil, data.error, data.errorType
 	end
-	return nil, body
+	return nil, tostring(body)
 end
 
 function database:query_series(match, start, etime)
@@ -107,7 +107,7 @@ function database:query_series(match, start, etime)
 		end
 		return nil, data.error, data.errorType
 	end
-	return nil, body
+	return nil, tostring(body)
 end
 
 function database:query_labels(match, start, etime)
@@ -126,7 +126,7 @@ function database:query_labels(match, start, etime)
 		end
 		return nil, data.error, data.errorType
 	end
-	return nil, body
+	return nil, tostring(body)
 end
 
 return database
