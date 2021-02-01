@@ -14,7 +14,7 @@ return {
 		if typ == 'dmesg' then
 			s = log_reader.dmesg()
 		else
-			s = log_reader.by_type(typ, max_line)
+			s = log_reader.by_type(max_line)
 		end
 		local accept_json = string.match(ngx.var.header.accept, 'application/json')
 		if s and accept_json and typ ~= 'dmesg' then

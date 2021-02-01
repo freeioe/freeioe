@@ -150,7 +150,6 @@ rm -rf ${BACKUP_DIR}
 mkdir ${BACKUP_DIR}
 
 cp ./logs/freeioe.log $BACKUP_DIR/
-cp ./logs/freeioe_sys.log $BACKUP_DIR/
 mv ${CFG_JSON} ${BACKUP_DIR}/
 mv ${CFG_JSON}.md5 ${BACKUP_DIR}/
 echo ${BACKUP_TIME} > ${BACKUP_DIR}/backup_time

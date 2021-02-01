@@ -89,7 +89,7 @@ function response.get_log(app)
 		return nil, "Application is not running"
 	end
 	local process = handle_to_process(handle)
-	return log_buffer[process]
+	return log_buffer[process] or {}
 end
 
 function response.get_event()
@@ -164,16 +164,13 @@ function accept.unlisten(handle, type)
 end
 
 local function connect_log_server(enable)
-	local logger = snax.queryservice('logger')
 	local appmgr = snax.queryservice('appmgr')
 	local obj = snax.self()
 	if enable then
-		logger.post.listen(obj.handle, obj.type)
-		skynet.call(".logger", "lua", "listen", obj.handle, obj.type)
+		skynet.call(".logger", "lua", "__LISTEN__", obj.handle, obj.type)
 		appmgr.post.listen(obj.handle, obj.type, true) --- Listen on application events
 	else
-		logger.post.unlisten(obj.handle)
-		skynet.call(".logger", "lua", "unlisten", obj.handle)
+		skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 		appmgr.post.unlisten(obj.handle)
 	end
 end
