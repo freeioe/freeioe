@@ -693,6 +693,8 @@ function client_mt:start_connecting()
 		return false, err
 	end
 
+	self._ping_t = nil -- mark ping transfer flag to nil
+
 	-- send CONNECT packet
 	ok, err = self:send_connect()
 	if not ok then
@@ -930,7 +932,7 @@ function client_mt:_ioloop_iteration()
 			ok, err = self:_sync_iteration()
 		end
 
-		if ok then
+		if ok and not self.is_disconnecting then
 			-- send PINGREQ if keep_alive interval is reached
 			if os_time() - self._last_in_time >= args.keep_alive then
 				if not self._ping_t then
