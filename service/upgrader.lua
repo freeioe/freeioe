@@ -788,14 +788,14 @@ function command.system_reboot(id, args)
 	skynet.timeout(delay * 100, function()
 		os.execute("reboot &")
 	end)
-	return true, "Device will reboot after "..delay.." seconds"
+	return true, "Device will reboot after "..delay.." ms"
 end
 
 function command.system_quit(id, args)
 	aborting = true
 	local delay = (args.delay or 5) * 1000
 	ioe.abort(delay)
-	return true, "FreeIOE will reboot after "..delay.." seconds"
+	return true, "FreeIOE will reboot after "..delay.." ms"
 end
 
 local function check_rollback()
