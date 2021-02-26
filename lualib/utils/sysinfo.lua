@@ -259,8 +259,8 @@ local arch_short_names = {
 
 -- for detecting cpu arch short name. when calling binrary built by go-lang
 _M.cpu_arch_short = function()
-	local matchine_arch = _M.uname('-m')
-	return arch_short_names[arch] or arch
+	local machine_arch = _M.uname('-m')
+	return arch_short_names[machine_arch] or machine_arch
 end
 
 local function read_openwrt_arch()
@@ -294,8 +294,8 @@ _M.cpu_arch = function()
 	if os_id == 'openwrt' then
 		_M._CPU_ARCH = _M.openwrt_cpu_arch()
 	else
-		local matchine_arch = _M.uname('-m')
-		_M._CPU_ARCH = assert(matchine_arch or os.getenv("MSYSTEM_CARCH"))
+		local machine_arch = _M.uname('-m')
+		_M._CPU_ARCH = assert(machine_arch or os.getenv("MSYSTEM_CARCH"))
 	end
 
 	return _M._CPU_ARCH
