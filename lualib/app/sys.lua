@@ -7,6 +7,7 @@ local api = require 'app.api'
 local logger = require 'app.logger'
 local conf_api = require 'app.conf.api'
 local lfs = require 'lfs'
+local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
 sys.API_VER = 9 -- 2021.1.28
@@ -36,20 +37,6 @@ end
 function sys:timeout(ms, func)
 	return skynet.timeout(ms / 10, func)
 end
-
-function cancelable_timeout(ti, func)
-	local function cb()
-		if func then
-			func()
-		end
-	end
-	local function cancel()
-		func = nil
-	end
-	skynet.timeout(ti, cb)
-	return cancel
-end
-
 
 function sys:cancelable_timeout(ms, func)
 	local cancel = cancelable_timeout(ms / 10, func)

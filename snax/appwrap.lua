@@ -15,7 +15,8 @@ local mgr_snax = nil
 local sys_api = nil
 local log_buffer = nil
 
-local app_ping_timeout = 60 -- 60 seconds
+local app_ping_timeout = 60 * 1000 -- 60 seconds
+local cancel_ping_timer = nil
 
 local function protect_call(app, func, ...)
 	assert(app and func)
@@ -59,16 +60,34 @@ local function fire_exception_event(info, data, level)
 end
 
 local function work_proc()
-	local timeout_err_max = app_ping_timeout * 1000 -- max timeout
-	local timeout = 1000
-	local start = 0
+	local timeout_err_max = app_ping_timeout * 10 -- max timeout
+	local def_timeout = 1000
+	local timeout = def_timeout
 	--- Sleep one seconds
 	skynet.sleep(timeout // 10)
 
 	if not app.run then
+		local start = nil
+		--- Using fake run for hearbeat
 		app.run = function(tms)
+			local now = skynet.now()
+			--- for each ping timeout
+			if not start or (now - start) * 10 >= app_ping_timeout then
+				assert(mgr_snax)
+				start = now
+				mgr_snax.post.app_heartbeat(app_name, now)
+			end
 			return tms
 		end
+	else
+		--- Using timer for heartbeat
+		local ping_mgr = nil
+		ping_mgr = function()
+			assert(mgr_snax)
+			mgr_snax.post.app_heartbeat(app_name, skynet.now())
+			cancel_ping_timer = sys_api:cancelable_timeout(app_ping_timeout, ping_mgr)
+		end
+		ping_mgr()
 	end
 
 	while app and not app_closing do
@@ -87,19 +106,11 @@ local function work_proc()
 			end
 		end
 
-		local now = skynet.now()
-		--- for each ping timeout
-		if (now - start + 500) >= (app_ping_timeout * 100) then
-			assert(mgr_snax)
-			start = now
-			mgr_snax.post.app_heartbeat(app_name, now)
-		end
-
 		--- Sleep before while app do checking
-		if timeout > 0 then
+		if timeout >= 0 then
 			skynet.sleep(timeout // 10)
 		else
-			timeout = 1000 --- reset the timeout
+			timeout = def_timeout --- reset the timeout
 		end
 	end
 end

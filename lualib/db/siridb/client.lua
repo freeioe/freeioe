@@ -48,8 +48,8 @@ function client:new_database(dbname, time_precision, buffer_size, duration_num, 
 		dbname = dbname,
 		time_precision = time_precision or 'ms',
 		buffer_size = tonumber(buffer_size) or 1024,
-		duration_num = duration_num or '52w',
-		duration_log = duration_log or '1w'
+		duration_num = duration_num,
+		duration_log = duration_log,
 	}
 	local r, err = self:post('/new-database', nil, data)
 	if r and r == 'OK' then
