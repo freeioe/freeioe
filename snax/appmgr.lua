@@ -16,6 +16,10 @@ local sys_app = 'ioe'
 local function fire_exception_event(app_name, info, data)
 	local data = data or {}
 	data.app = app_name
+	assert(app_name, 'App name missing')
+	assert(ioe.id(), 'IOE ID(SN) missing')
+	assert(info, 'Info missing')
+	assert(data, 'Data missing')
 	return snax.self().post.fire_event(app_name, ioe.id(), event.LEVEL_ERROR, event.EVENT_APP, info, data)
 end
 

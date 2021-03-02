@@ -56,6 +56,10 @@ local function fire_exception_event(info, data, level)
 	end
 	local data = data or {}
 	data.app = app_name
+	assert(app_name, 'App name missing')
+	assert(ioe.id(), 'IOE ID(SN) missing')
+	assert(info, 'Info missing')
+	assert(data, 'Data missing')
 	return mgr_snax.post.fire_event(app_name, ioe.id(), level or event.LEVEL_ERROR, event.EVENT_APP, info, data)
 end
 
@@ -271,7 +275,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	if not r then
 		local info = "Loading application failed."
 		app_log:error(info, m)
-		fire_exception_event(err, {err=m})
+		fire_exception_event(info, {err=m})
 		return nil, m
 	end
 	assert(m, "Application class module not found!")
