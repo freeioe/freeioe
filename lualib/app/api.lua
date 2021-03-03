@@ -11,10 +11,9 @@ local threshold_buffer = require 'buffer.threshold'
 
 local api = class("APP_MGR_API")
 
-function api:initialize(app_name, mgr_snax, cloud_snax, logger)
+function api:initialize(app_name, mgr_snax, logger)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax or snax.queryservice('appmgr')
-	self._cloud_snax = cloud_snax or snax.queryservice('cloud')
 	self._devices = {}
 	self._event_fire_buf = nil
 	self._logger = logger or app_logger:new(app_name)

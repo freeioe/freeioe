@@ -95,6 +95,13 @@ function sys:data_api()
 	return self._data_api
 end
 
+function sys:debug_api()
+	if self._debug_api then
+		self._debug_api = debug:new(app_name, self._logger)
+	end
+	return  self._debug_api
+end
+
 function sys:self_co()
 	return coroutine.running()
 end
