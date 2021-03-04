@@ -4,10 +4,11 @@ local zlib_loaded, zlib = pcall(require, 'zlib')
 local cjson = require 'cjson.safe'
 local lfs = require 'lfs'
 local log = require 'utils.logger'.new()
+local safe_file = require 'utils.safe_file'
 
 local fb = class("File_Buffer_Utils")
 
-function fb:initialize(file_folder, data_count_per_file, max_file_count, max_batch_size)
+function fb:initialize(file_folder, data_count_per_file, max_file_count, max_batch_size, index_save)
 	self._file_folder = file_folder
 	self._data_count_per_file = data_count_per_file
 	self._max_file_count = max_file_count
@@ -18,32 +19,80 @@ function fb:initialize(file_folder, data_count_per_file, max_file_count, max_bat
 	self._fire_offset = 1 -- buffer offset.
 	self._fire_index = nil -- file index. nil means there is no fire_buffer (file or buffer)
 	self._hash = 'FILE_BUF_UTILS_V1'
+	self._index_save = tonumber(index_save) --- nil will not save and loading index or number in seconds
+	--- Limit the index_save should be bigger than 5
+	if self._index_save and self._index_save < 5 then
+		self._index_save = 5
+	end
 
 	self._stop = nil
 end
 
-function fb:dump_index()
-	return cjson.encode({
+function fb:_save_index()
+	if not self._index_save then
+		return true
+	end
+
+	assert(self._index_file, "Cannot save before loading index")
+
+	--- Only save if files present
+	if #self._files <= 0 then
+		return true
+	end
+
+	log.debug('Saving cache index with files count:', #self._files)
+
+	local r, err = self._index_file:update({
 		hash = self._hash,
 		fire_index = self._fire_index,
 		fire_offset = self._fire_offset,
 		files = self._files,
 	})
+	if not r then
+		log.error("Failed to save cache index", err)
+	end
+	return nil, err
 end
 
-function fb:load_index(string)
-	local data = cjson.decode(string)
+function fb:_load_index()
+	local data = nil
+	local err = nil
+	assert(not self._index_file, "Already loaded")
+
+	local file_path = self:_make_file_path('index')
+	self._index_file = safe_file:new(file_path)
+
+	--- Empty file
+	if lfs.attributes(file_path, 'mode') == nil then
+		return true
+	end
+
+	data, err = self._index_file:load()
+	if not data then
+		return nil, err
+	end
+
 	if data.hash ~= self._hash then
 		return nil, "Not valid hash readed!"
 	end
 
 	self._files = data.files
-	self._buffer = self._load_next_file()
-	if not self._fire_index == data.fire_index then
-		self._fire_offset = data.fire_offset
+	self._buffer = {}
+	self._fire_index = data.fire_index
+	self._fire_offset = data.fire_offset or 1
+
+	if self._fire_index then
+		local file_path = self:_make_file_path(self._fire_index)
+		local buffer, err = self:_load_file(file_path)
+		if buffer then
+			self._fire_buffer = buffer
+		else
+			-- load next avaiable file
+			self._load_next_file()
+		end
 	else
-		log.warning("Loaded different file index, reset offset.", self._fire_index, data.fire_index, data.fire_offset)
-		self._fire_offset = 1
+		-- load next avaiable file
+		self._load_next_file()
 	end
 
 	return true
@@ -69,7 +118,17 @@ function fb:start(data_callback, batch_callback)
 	lfs.mkdir(self._file_folder)
 	assert(lfs.attributes(self._file_folder, 'mode') == 'directory')
 
+	if self._index_save then
+		log.info("Loadinng cache index")
+		local r, err = self:_load_index()
+		if not r then
+			log.error("Loading cache index failed", err)
+		end
+	end
+
 	skynet.fork(function()
+		local last_index_save = skynet.now()
+
 		while not self._stop and self._callback do
 			local sleep_gap = 100
 			if batch_callback then
@@ -79,6 +138,21 @@ function fb:start(data_callback, batch_callback)
 			end
 
 			skynet.sleep(sleep_gap or 100, self)
+
+			if self._index_save then
+				if skynet.now() - last_index_save >= (self._index_save * 100) then
+					self:_save_index()
+				end
+			end
+		end
+		if self._index_save then
+			if #self._buffer > 0 then
+				self:_dump_buffer_to_file(self._buffer)
+				self._buffer = {}
+			else
+				-- _dump_buffer_to_file will trigger _save_index
+				self:_save_index()
+			end
 		end
 	end)
 end
@@ -115,6 +189,7 @@ end
 function fb:_dump_buffer_to_file(buffer)
 	local str, err = cjson.encode(buffer)
 	if not str then
+		log.error("Failed to encode to JSON", err)
 		return nil, err
 	end
 
@@ -147,23 +222,49 @@ function fb:_dump_buffer_to_file(buffer)
 	if #self._files > self._max_file_count then
 		--print('drop '..self._fire_index)
 		--- load index and buffer
-		self._fire_buffer = self:_load_next_file()
-		--- reset offset
-		self._fire_offset = 1
+		self:_load_next_file()
 	end
+
+	self:_save_index()
 end
 
 function fb:_push(...)
 	--- append to buffer
 	self._buffer[#self._buffer + 1] = {...}
 
-	-- print(#self._buffer)
+	log.debug(#self._buffer, self._data_count_per_file)
 
 	--- dump to file if data count reach
 	if #self._buffer >= self._data_count_per_file then
 		self:_dump_buffer_to_file(self._buffer)
 		self._buffer = {}
 	end
+end
+
+function fb:_load_file(file_path)
+	log.debug("Loading data cache from file:", file_path)
+
+	local f, err = io.open(file_path)
+	if f then
+		--- read all file
+		local str = f:read('a')
+		f:close()
+
+		if str then
+			--- if read ok decode content
+			local dstr = self:_decompress(str)
+			local buffer, err = cjson.decode(dstr)
+			if buffer then
+				--- if decode ok return
+				return buffer
+			else
+				return nil, 'CJONS decode error: '..err
+			end
+		else
+			return nil, 'File read error'
+		end
+	end
+	return nil, err
 end
 
 function fb:_load_next_file()
@@ -181,30 +282,16 @@ function fb:_load_next_file()
 		-- Open file
 		--print('load ', index)
 		local file_path = self:_make_file_path(index)
-		log.debug("Loading data cache from file:", file_path)
+		local buffer, err = self:_load_file(file_path)
 
-		local f, err = io.open(file_path)
-		if f then
-			--- read all file
-			local str = f:read('a')
-			f:close()
-
+		if buffer then
 			--- set the current index
 			self._fire_index = index
-
-			if str then
-				--- if read ok decode content
-				local dstr = self:_decompress(str)
-				local buffer, err = cjson.decode(dstr)
-				if buffer then
-					--- if decode ok return
-					return buffer
-				else
-					log.error('Decode data cache error! Index: ', index, err)
-				end
-			else
-				log.error('Read data cache file error! Index: ', index)
-			end
+			self._fire_buffer = buffer
+			self._fire_offset = 1
+			return true
+		else
+			log.error(err)
 		end
 
 		-- continue with next file
@@ -214,7 +301,9 @@ function fb:_load_next_file()
 
 	-- no next file
 	self._fire_index = nil
-	return {}
+	self._fire_buffer = {}
+	self._fire_offset = 1
+	return false
 end
 
 function fb:_pop(first)
@@ -225,8 +314,8 @@ function fb:_pop(first)
 
 	--- if fire_buffer already done
 	if #self._fire_buffer < self._fire_offset then
-		self._fire_buffer = self:_load_next_file()
-		self._fire_offset = 1
+		self:_load_next_file()
+		self:_save_index()
 	end
 
 	--- load empty then check current buffer
@@ -318,8 +407,8 @@ function fb:_try_fire_data_batch(callback)
 
 			--- if fire_buffer already done
 			if #self._fire_buffer < self._fire_offset then
-				self._fire_buffer = self:_load_next_file()
-				self._fire_offset = 1
+				self:_load_next_file()
+				self:_save_index()
 			end
 			--- only process the dumped files buffer and the current buffer will be dumped in nex loop
 		end

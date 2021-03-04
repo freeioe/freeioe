@@ -40,6 +40,7 @@ local apps_devices_fired = false
 --- Cloud options
 local enable_data_upload = nil				--- Whether upload device data (boolean)
 local data_upload_max_dpp = 1024			--- Max data upload data count per packet
+local cache_index_save = 5					--- Cache buffer index saving gap (seconds)
 local enable_data_one_short_cancel = nil	--- Whether enable data upload in one short time (time)
 local enable_stat_upload = nil				--- Whether upload device stat (boolean)
 local enable_event_upload = nil				--- Whether upload event data (level in number)
@@ -477,9 +478,9 @@ local function load_data_cache_conf()
 	-- Upload cached data one per gap time
 	cache_fire_freq = tonumber(datacenter.get("CLOUD", "DATA_CACHE_FIRE_FREQ") or 1000)
 
-	log.notice('Data cache option:', per_file, limit, cache_fire_freq, data_upload_max_dpp)
+	log.notice('Data cache option:', per_file, limit, cache_fire_freq, data_upload_max_dpp, cache_index_save)
 
-	data_cache_fb = filebuffer:new(cache_folder, per_file, limit, data_upload_max_dpp)
+	data_cache_fb = filebuffer:new(cache_folder, per_file, limit, data_upload_max_dpp, cache_index_save)
 	data_cache_fb:start(function(...)
 		-- Disable one data fire
 		return false 
