@@ -90,7 +90,6 @@ local function data_cache_compatitable()
 		local err = 'Data cache not allowed on /tmp'
 		log.warning(err)
 		return nil, err
-		return true
 	end
 	if not lfs.attributes(ddir, 'mode') then
 		local err = 'Data cache not exists'

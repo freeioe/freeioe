@@ -88,11 +88,11 @@ function fb:_load_index()
 			self._fire_buffer = buffer
 		else
 			-- load next avaiable file
-			self._load_next_file()
+			self:_load_next_file()
 		end
 	else
 		-- load next avaiable file
-		self._load_next_file()
+		self:_load_next_file()
 	end
 
 	return true
