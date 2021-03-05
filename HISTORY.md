@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.22.0
+v1.22.0 (2021-03-05)
 ------------------
 
 * Added time-series db api (siridb, influxdb, prometheus), API ver 9
