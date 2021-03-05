@@ -232,7 +232,7 @@ function fb:_push(...)
 	--- append to buffer
 	self._buffer[#self._buffer + 1] = {...}
 
-	log.debug(#self._buffer, self._data_count_per_file)
+	-- log.debug(#self._buffer, self._data_count_per_file)
 
 	--- dump to file if data count reach
 	if #self._buffer >= self._data_count_per_file then

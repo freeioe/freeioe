@@ -83,11 +83,13 @@ end
 local function data_cache_compatitable()
 	local ddir = sysinfo.data_dir()
 	if ddir == '/tmp' then
-		--[[
+		--- Allow in developer mode
+		if os.getenv("IOE_DEVELOPER_MODE") then
+			return true
+		end
 		local err = 'Data cache not allowed on /tmp'
 		log.warning(err)
 		return nil, err
-		]]--
 		return true
 	end
 	if not lfs.attributes(ddir, 'mode') then

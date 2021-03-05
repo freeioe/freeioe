@@ -10,6 +10,7 @@ v1.22.0
 * Improved ioe API: added: developer_mode, hpc, cloud_status
 * Improved MQTT QOS buffer handling
 * Support debug api for apps
+* Support saving index in data cache module
 
 
 v1.21.0 (2021-01-15)
