@@ -9,6 +9,7 @@ G_APP_NAME = 'APP'
 
 local app = nil
 local app_closing = false
+local app_installing = false
 local app_name = "UNKNOWN"
 local app_log = nil
 local mgr_snax = nil
@@ -164,7 +165,10 @@ function response.start()
 
 		return true
 	else
-		return nil, "app is nil"
+		if app_installing then
+			return true, "app is installing, and will started after then!"
+		end
+		return nil, "app instance missing"
 	end
 end
 
@@ -251,6 +255,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	local f, err = io.open("./ioe/apps/"..name.."/app.lua", "r")
 	if not f then
 		app_log:warning("There is no app.lua!, Try to install it")
+		app_installing = true
 		skynet.call(".upgrader", "lua", "install_missing_app", name)
 		return nil, "Application does not exits!"
 	end
