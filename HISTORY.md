@@ -3,6 +3,14 @@
 
 # Release history
 
+v1.22.1
+------------------
+
+* Improved lockable_queue
+* Show correct log when failed to start application
+* Support F20x gateway hardware
+
+
 v1.22.0 (2021-03-05)
 ------------------
 
