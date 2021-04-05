@@ -91,13 +91,6 @@ end
 ]]--
 
 local function create_task(func, task_name, ...)
-	if aborting then
-		return false, "System is aborting"
-	end
-	if ioe.mode() ~= 0 then
-		return false, 'System mode is locked to '..ioe.mode()
-	end
-
 	skynet.fork(function(task_name, ...)
 		local co = coroutine.running()
 		tasks[co] = {
@@ -142,6 +135,12 @@ local function map_app_action(func_name, lock)
 	end
 	command[func_name] = function(id, args)
 		return create_task(function()
+			if aborting then
+				return action_result('app', id, false, "System is aborting")
+			end
+			if ioe.mode() ~= 0 then
+				return action_result('app', id, false, 'System mode is locked to '..ioe.mode())
+			end
 			return action_result('app', id, app_lock(wfunc, lock, id, args))
 		end, 'Application Action '..func_name)
 	end
@@ -160,6 +159,12 @@ local function map_sys_action(func_name, lock)
 	end
 	command[func_name] = function(id, args)
 		return create_task(function()
+			if aborting then
+				return action_result('sys', id, false, "System is aborting")
+			end
+			if ioe.mode() ~= 0 then
+				return action_result('sys', id, false, 'System mode is locked to '..ioe.mode())
+			end
 			return action_result('sys', id, sys_lock(wfunc, lock, id, args))
 		end, 'System Action '..func_name)
 	end
