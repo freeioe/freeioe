@@ -94,6 +94,9 @@ local function create_task(func, task_name, ...)
 	if aborting then
 		return false, "System is aborting"
 	end
+	if ioe.mode() ~= 0 then
+		return false, 'System mode is locked to '..ioe.mode()
+	end
 
 	skynet.fork(function(task_name, ...)
 		local co = coroutine.running()

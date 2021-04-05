@@ -22,6 +22,19 @@ _M.set_beta = function(value)
 	dc.set("SYS", "USING_BETA", value)
 end
 
+_M.mode = function()
+	return tonumber(dc.get("SYS", "WORK_MODE")) or 0
+end
+
+_M.set_mode = function(value)
+	dc.set("SYS", "WORK_MODE", tonumber(value) or 0)
+end
+
+_M.MODE = {
+	NORMAL = 0,
+	LOCKED = 1,
+}
+
 _M.auth_code = function()
 	return dc.get("SYS", "AUTH_CODE")
 end

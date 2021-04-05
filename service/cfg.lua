@@ -44,6 +44,7 @@ local function _sys_defaults()
 		PKG_HOST_URL = "ioe.thingsroot.com",
 		CNF_HOST_URL = "ioe.thingsroot.com",
 		--CFG_AUTO_UPLOAD = true,
+		WORK_MODE = 0, --
 	}
 end
 
@@ -407,6 +408,8 @@ skynet.start(function()
 	skynet.sleep(10)
 
 	load_cfg(db_file)
+	log.info("BETA:", dc.get('SYS', 'USING_BETA'), 'MODE:', dc.get('SYS', 'WORK_MODE'))
+
 	init_restful()
 
 	skynet.fork(function()

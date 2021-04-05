@@ -833,6 +833,22 @@ function response.reconnect()
 	start_reconnect()
 end
 
+function response.reload()
+	if mqtt_client then
+		mqtt_client:disconnect()
+	end
+
+	mqtt_id = ioe.id() --datacenter.get("CLOUD", "ID") or datacenter.wait("SYS", "ID")
+	mqtt_host = datacenter.get("CLOUD", "HOST")
+	mqtt_port = datacenter.get("CLOUD", "PORT")
+	mqtt_keepalive = datacenter.get("CLOUD", "KEEPALIVE")
+	mqtt_secret = datacenter.get("CLOUD", "SECRET")
+
+	log.notice("connection:", mqtt_id, mqtt_host, mqtt_port, mqtt_keepalive)
+
+	start_reconnect()
+end
+
 function response.gen_sn(sid)
 	-- Frappe autoname
 	--hashlib.sha224((txt or "") + repr(time.time()) + repr(random_string(8))).hexdigest()

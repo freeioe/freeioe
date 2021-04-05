@@ -26,6 +26,10 @@ end
 ---
 -- Return instance id
 function response.start(name, conf)
+	if ioe.mode() ~= 0 then
+		return nil, "System mode locked as: "..ioe.mode()
+	end
+
 	log.info("Start application "..name)
 	-- Get application list item by name
 	applist[name] = applist[name] or {}
@@ -89,6 +93,9 @@ function response.start(name, conf)
 end
 
 function response.stop(name, reason)
+	if ioe.mode() ~= 0 then
+		return nil, "System mode locked as: "..ioe.mode()
+	end
 	local app = applist[name]
 	if not app then
 		-- For some hacks that applicaiton exists but not loaded.
@@ -132,6 +139,9 @@ end
 
 -- Used by application for restart its self
 function response.restart(name, reason)
+	if ioe.mode() ~= 0 then
+		return nil, "System mode locked as: "..ioe.mode()
+	end
 	local name = name
 	local reason = reason or "Restart"
 
@@ -158,6 +168,9 @@ function response.app_inst(name)
 end
 
 function response.set_conf(inst, conf)
+	if ioe.mode() ~= 0 then
+		return nil, "System mode locked as: "..ioe.mode()
+	end
 	local app = applist[inst]
 	if not app then
 		return nil, "There is no app instance name is "..inst
@@ -186,6 +199,9 @@ function response.get_conf(inst)
 end
 
 function response.app_option(inst, option, value)
+	if ioe.mode() ~= 0 then
+		return nil, "System mode locked as: "..ioe.mode()
+	end
 	if dc.get("APPS", inst) then
 		dc.set("APPS", inst, option, value)
 		snax.self().post.app_event('option', inst, option, value)
@@ -196,6 +212,9 @@ function response.app_option(inst, option, value)
 end
 
 function response.app_rename(inst, new_name, reason)
+	if ioe.mode() ~= 0 then
+		return nil, "System mode locked as: "..ioe.mode()
+	end
 	if not inst or not new_name then
 		return nil, "Incorrect params"
 	end
