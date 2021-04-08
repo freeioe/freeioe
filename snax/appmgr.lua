@@ -25,9 +25,11 @@ end
 
 ---
 -- Return instance id
-function response.start(name, conf)
-	if ioe.mode() ~= 0 then
-		return nil, "System mode locked as: "..ioe.mode()
+function response.start(name, conf, skip_mode_check)
+	if not skip_mode_check and ioe.mode() ~= 0 then
+		local err = "System mode locked as: "..ioe.mode()
+		log.error(err)
+		return nil, err
 	end
 
 	log.info("Start application "..name)
@@ -254,11 +256,11 @@ function accept.app_modified(inst, from)
 	snax.self().post.app_event('option', inst, 'islocal', 1)
 end
 
-function accept.app_start(inst)
+function accept.app_start(inst, skip_mode_check)
 	local v = dc.get("APPS", inst)
 	if not v then return end
 	skynet.fork(function()
-		snax.self().req.start(inst, v.conf or {})
+		snax.self().req.start(inst, v.conf or {}, skip_mode_check)
 	end)
 end
 
@@ -393,13 +395,13 @@ function init(...)
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
 			if tonumber(v.auto or 1) ~= 0 then
-				snax.self().post.app_start(k)
+				snax.self().post.app_start(k, true)
 			else
 				applist[k] = { conf = v.conf }
 			end
 		end
 		if not apps[sys_app] then
-			snax.self().req.start(sys_app, {})
+			snax.self().req.start(sys_app, {}, true)
 		end
 	end)
 	skynet.fork(function()
