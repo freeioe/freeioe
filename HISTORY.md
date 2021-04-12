@@ -10,6 +10,8 @@ v1.30.0
 * Show correct log when failed to start application
 * Support F20x gateway hardware
 * Support work mode setting which blocks user operations
+* Support table value for device input props (except value property)
+* SUpport table utils modules(ordered, equals)
 
 
 v1.22.0 (2021-03-05)

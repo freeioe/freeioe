@@ -10,7 +10,7 @@ local lfs = require 'lfs'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 9 -- 2021.1.28
+sys.API_VER = 10 -- 2021.4.12 :: supported prop table value and utils for table
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)

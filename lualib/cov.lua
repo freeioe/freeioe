@@ -2,6 +2,8 @@ local class = require 'middleclass'
 local skynet = require 'skynet'
 local coroutine = require 'skynet.coroutine'
 local ioe = require 'ioe'
+local tbl_equals = require 'utils.table.equals'
+local log = require 'utils.logger'.new()
 
 local cov = class("_ChangeOnValue_LIB")
 
@@ -58,6 +60,7 @@ function cov:handle_number(key, value, timestamp, quality, nomore)
 	end
 
 	self._retained_map[key] = org_value
+	return true
 end
 
 function cov:handle_string(key, value, timestamp, quality, nomore)
@@ -81,6 +84,32 @@ function cov:handle_string(key, value, timestamp, quality, nomore)
 	end
 
 	self._retained_map[key] = org_value
+	return true
+end
+
+function cov:handle_table(key, value, timestamp, quality, nomore)
+	assert(nomore==nil)
+	local opt = self._opt
+	local org_value = self._retained_map[key]
+	local new_value = {value, timestamp, quality}
+	self._retained_map[key] = new_value
+
+	if not org_value then
+		return self._cb(key, value, timestamp, quality)
+	end
+	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
+		return self._cb(key, value, timestamp, quality)
+	end
+	if org_value[3] ~= quality then
+		return self._cb(key, value, timestamp, quality)
+	end
+
+	if not tbl_equals(org_value, new_value, true) then
+		return self._cb(key, value, timestamp, quality)
+	end
+
+	self._retained_map[key] = org_value
+	return true
 end
 
 function cov:handle(key, value, timestamp, quality, nomore)
@@ -93,7 +122,7 @@ function cov:handle(key, value, timestamp, quality, nomore)
 
 	if type(value) == 'number' then
 		return self:handle_number(key, value, timestamp, quality)
-	else
+	elseif type(value) == 'string' then
 		if opt.try_convert_string then
 			local nval = tonumber(value)
 			if nval then
@@ -101,6 +130,11 @@ function cov:handle(key, value, timestamp, quality, nomore)
 			end
 		end
 		return self:handle_string(key, value, timestamp, quality)
+	elseif type(value) == 'table' then
+		return self:handle_table(key, value, timestamp, quality)
+	else
+		log.error('Value type error!!!')
+		return true
 	end
 end
 
