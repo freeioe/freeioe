@@ -11,7 +11,8 @@ v1.30.0
 * Support F20x gateway hardware
 * Support work mode setting which blocks user operations
 * Support table value for device input props (except value property)
-* SUpport table utils modules(ordered, equals)
+* Support table utils modules(ordered, equals)
+* Fixed command result missing issue (when app return nil)
 
 
 v1.22.0 (2021-03-05)

@@ -29,6 +29,7 @@ else
 			for k, v in ipairs({...}) do
 				t[#t + 1] = tostring(v)
 			end
+			--assert(t[1] ~= 'not enough memory')
 			skynet.send('.logger', 'lua', name, table.unpack(t))
 
 			--[[ There skynet.lua may asserts on proto[name] name is 'lua'

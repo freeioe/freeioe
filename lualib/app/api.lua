@@ -64,6 +64,10 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 			if not results[1] then
 				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, false, results[2])
 			else
+				if results[2] == nil then
+					-- Table unpack will left returns lost
+					results[2] = false
+				end
 				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, table.unpack(results, 2))
 			end
 		end, ...)
