@@ -41,7 +41,7 @@ fi
 
 mkdir ../__install_temp
 
-git archive HEAD:${APP_DIR} | tar -x -C ../__install_temp
+git archive HEAD | tar -x -C ../__install_temp
 
 cd ../__install_temp
 
