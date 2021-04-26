@@ -35,12 +35,25 @@ _M.MODE = {
 	LOCKED = 1,
 }
 
+_M.set_data_cache = function(enable)
+	dc.set("CLOUD", "DATA_CACHE", enable == true or enable == 1)
+end
+
+_M.data_cache = function()
+	return dc.get("CLOUD", "DATA_CACHE")
+end
+
 _M.auth_code = function()
 	return dc.get("SYS", "AUTH_CODE")
 end
 
 _M.set_auth_code = function(value)
 	dc.set("SYS", "AUTH_CODE", value)
+end
+
+_M.set_online_check_ip = function(ip)
+	local sysinfo = require 'utils.sysinfo'
+	return sysinfo.set_online_check_ip(ip)
 end
 
 _M.make_url = function(url)

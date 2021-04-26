@@ -532,4 +532,23 @@ _M.update_cloud_status = function(status, status_last_update_time)
 	return true
 end
 
+_M.set_online_check_ip = function(ip)
+	if not ip then
+		os.execute('rm -f /tmp/sysinfo/online_check')
+		return true
+	end
+
+	local f, err = io.open('/tmp/sysinfo/online_check', 'w+')
+	if not f then
+		return nil, err
+	end
+	local r, str = pcall(string.format, '%s', ip)
+	if not r then
+		return nil, str
+	end
+	f:write(str)
+	f:close()
+	return true
+end
+
 return _M
