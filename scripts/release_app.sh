@@ -3,21 +3,22 @@
 set -e
 
 if [ $# -lt 1 ] ; then
-	echo "Usage: release_app.sh <app name>"
+	echo "Usage: release_app.sh <feed dir> <app name>"
 	exit 0
 fi
 
 # echo "Release App:" $1
 
 BASE_DIR=`pwd`
-RELEASE_DIR=$BASE_DIR'/__release/'$1
-APP_DIR=$1
+FEEDS_DIR=$1
+RELEASE_DIR=$BASE_DIR'/__release/'$1'/'$2
 
 mkdir -p $RELEASE_DIR
 # echo 'Base Dir:'$BASE_DIR
 # echo 'Release Dir:'$BASE_DIR
 
-cd ./feeds/example_apps/$1
+# cd ./feeds/example_apps/$1
+cd ./feeds/$FEEDS_DIR'/'$2
 
 ### Get the version by count the commits
 VERSION=`git log --oneline | wc -l | tr -d ' '`

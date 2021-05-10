@@ -52,7 +52,8 @@ cp -rL lualib/resty __install/lualib/resty
 
 # Release Applications
 
-./feeds/example_apps/release.sh ./scripts/release_app.sh
+./feeds/example_apps/release.sh ./scripts/release_app.sh example_apps
+./feeds/hj212_apps/release.sh ./scripts/release_app.sh hj212_apps
 
 # Validate platform name
 PLAT_NAMES="linux/x86_64 openwrt/17.01/arm_cortex-a9_neon openwrt/19.07/x86_64 openwrt/19.07/arm_cortex-a7_neon-vfpv4 openwrt/snapshot/mipsel_24kc openwrt/snapshot/arm_cortex-a7_neon-vfpv4"
@@ -68,7 +69,7 @@ done
 
 # For pre-installed applications
 mkdir __install/apps
-./scripts/pre_inst.sh ioe ioe
+./scripts/pre_inst.sh "example_apps/ioe" "ioe"
 
 # For ioe extensions
 mkdir __install/ext
