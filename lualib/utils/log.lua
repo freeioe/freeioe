@@ -1,3 +1,4 @@
+--- DO NOT USE THIS in application
 local inskynet, skynet = pcall(require, 'skynet')
 
 if not inskynet then
@@ -27,7 +28,12 @@ else
 		return function(...)
 			local t = {}
 			for k, v in ipairs({...}) do
-				t[#t + 1] = tostring(v)
+				local s = tostring(v)
+				if string.len(s) <= 256 then
+					t[#t + 1] = s
+				else
+					t[#t + 1] = string.sub(s, 1, 250) .. '.....'
+				end
 			end
 			--assert(t[1] ~= 'not enough memory')
 			skynet.send('.logger', 'lua', name, table.unpack(t))

@@ -51,7 +51,7 @@ echo $VERSION > __install/version
 echo $REVISION >> __install/version
 
 # Copy files
-cp -r lualib __install/lualib
+cp -r -L lualib __install/lualib
 cp -r luaclib __install/luaclib
 cp -r service __install/service
 cp -r cservice __install/cservice
