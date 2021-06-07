@@ -1,13 +1,9 @@
 local cjson = require 'cjson.safe'
 local class = require 'middleclass'
 local crypt = require "skynet.crypt"
+local basic_auth = require 'http.auth.basic'
 
 local restful = class("RESTFULL_API")
--- Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ== 
-
-local function gen_auth(auth)
-	return 'Basic '..crypt.base64encode(auth[1]..':'..auth[2])
-end
 
 function restful:initialize(host, timeout, headers, auth)
 	assert(host)
@@ -17,7 +13,11 @@ function restful:initialize(host, timeout, headers, auth)
 		Accept = "application/json",
 	}
 	if auth then
-		self._headers['Authorization'] = gen_auth(auth)
+		if type(auth) == 'table' then
+			self._auth = basic_auth:new(auth[1], auth[2])
+		else
+			self._auth = auth
+		end
 	end
 end
 
@@ -63,6 +63,10 @@ function restful:request(method, url, params, data, content_type)
 	for k, v in pairs(self._headers) do headers[k] = v end
 	if content and string.len(content) > 0 then
 		headers['content-type'] = ctype
+	end
+
+	if self._auth then
+		headers['authorization'] = self._auth(headers, method, url)
 	end
 
     local r, status, body = pcall(httpc.request, method, self._host, url, recvheader, headers, content)
