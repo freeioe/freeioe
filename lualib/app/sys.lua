@@ -10,7 +10,7 @@ local lfs = require 'lfs'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 11 -- 2021.4.26 :: supported data cache get/set
+sys.API_VER = 12 -- 2021.6.8 :: http.restful api support basic and digest auth method
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)

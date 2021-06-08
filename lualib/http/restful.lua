@@ -13,7 +13,7 @@ function restful:initialize(host, timeout, headers, auth)
 		Accept = "application/json",
 	}
 	if auth then
-		if type(auth) == 'table' then
+		if type(auth) == 'table' and not getmetatable(auth) then
 			self._auth = basic_auth:new(auth[1], auth[2])
 		else
 			self._auth = auth
@@ -73,7 +73,7 @@ function restful:request(method, url, params, data, content_type)
 	if not r then
 		return nil, status
 	else
-		return status, body
+		return status, body, recvheader
 	end
 end
 

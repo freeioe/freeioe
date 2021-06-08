@@ -19,6 +19,14 @@ function auth:initialize(user, passwd, realm, nonce, qop, algorithm, opaque)
 	self._opaque = opaque
 end
 
+function auth:set_realm(realm)
+	self._realm = realm
+end
+
+function auth:set_nonce(nonce)
+	self._nonce = nonce
+end
+
 function auth:generate_nonce ()
     return format('%08x', time())
 end
@@ -49,7 +57,7 @@ function auth:__call (headers, method, uri)
 			  .. '", algorithm="' .. self._algorithm
 			  .. '", nc=' .. nc
 			  .. ', cnonce="' .. cnonce
-			  .. '", response="' .. response
+			  .. '", response="' .. response .. '"'
 
 	if self._opaque then
 		ret = ret .. '", opaque="' .. self.opaque .. '"'
