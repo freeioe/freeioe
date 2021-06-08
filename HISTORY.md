@@ -8,6 +8,7 @@ v1.31.0 ()
 
 * Support online check ip which used by wwanleds/cloud_watch service
 * Support data cache enable command
+* Fixed file buffer index saving issue
 
 
 v1.30.0 (2021-04-22)

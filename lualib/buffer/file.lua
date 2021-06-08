@@ -141,6 +141,7 @@ function fb:start(data_callback, batch_callback)
 
 			if self._index_save then
 				if skynet.now() - last_index_save >= (self._index_save * 100) then
+					last_index_save = skynet.now()
 					self:_save_index()
 				end
 			end
