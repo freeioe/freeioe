@@ -3,7 +3,7 @@
 
 # Release history
 
-v1.31.0 ()
+v1.31.1 (2021-06-08)
 ------------------
 
 * Support online check ip which used by wwanleds/cloud_watch service
