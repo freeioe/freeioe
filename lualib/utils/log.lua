@@ -29,10 +29,10 @@ else
 			local t = {}
 			for k, v in ipairs({...}) do
 				local s = tostring(v)
-				if string.len(s) <= 256 then
+				if string.len(s) <= 512 then
 					t[#t + 1] = s
 				else
-					t[#t + 1] = string.sub(s, 1, 250) .. '.....'
+					t[#t + 1] = string.sub(s, 1, 510) .. '.....'
 				end
 			end
 			--assert(t[1] ~= 'not enough memory')
