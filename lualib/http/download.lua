@@ -18,6 +18,9 @@ end
 
 function _M.get(host, url, header, query, content)
 	assert(host and url)
+	if host:sub(1, 8) == 'https://' then
+		return nil, "HTTPS is not supported"
+	end
 	if host:sub(1, 7) == 'http://' then
 		host = host:sub(8)
 	end
@@ -32,12 +35,25 @@ function _M.get(host, url, header, query, content)
     if #q then
         url = url..'?'..table.concat(q, '&')
     end
+	print(url)
 
 	local httpc = init_httpc()
     local r, status, body = pcall(httpc.request, 'GET', host, url, recvheader, header, content)
 	if not r then
 		return nil, status
 	else
+		if status == 301 or status == 302 then
+			local location = recvheader.location or recvheader.Location
+			if not location then
+				return nil, 'Redirect location not found'
+			end
+			if location:sub(1,1) == '/' then
+				return _M.get(host, location)
+			else
+				local host, port, url = location:match("([^:]+):?(%d*)//(.+)$")
+				return _M.get(host..':'..port, url)
+			end
+		end
 		return status, recvheader, body
 	end
 end

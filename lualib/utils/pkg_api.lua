@@ -244,21 +244,23 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 			local plat = sysinfo.platform()
 			url = _M.url_packages.."/bin/"..plat.."/"..app_name.."/"..version..ext
 		end
+		local md5_url = url..'.md5'
 
 		local query = {}
 		if ioe.pkg_ver() > 1 then
 			url = _M.url_store
+			md5_url = nil
 			query = {
 				device = ioe.id(),
 				token = token,
 				app = app_name,
 				version = version,
-				core = is_extension
+				is_core = is_extension
 			}
 		end
 
 		log.notice('Start download package '..app_name..' from: '..pkg_host..url)
-		local status, header, body = httpdown.get(pkg_host, url)
+		local status, header, body = httpdown.get(pkg_host, url, {}, query)
 		if not status then
 			return nil, "Download package "..app_name.." failed. Reason:"..tostring(header)
 		end
@@ -268,7 +270,11 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 		file:write(body)
 		file:close()
 
-		local status, header, body = httpdown.get(pkg_host, url..".md5", nil, query)
+		if not md5_url then
+			return success_callback(path)
+		end
+
+		local status, header, body = httpdown.get(pkg_host, url..".md5", {}, query)
 		if status and status == 200 then
 			local sum, err = helper.md5sum(path)
 			if not sum then

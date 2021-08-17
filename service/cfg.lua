@@ -11,12 +11,14 @@ local ioe = require 'ioe'
 
 local log = require 'utils.logger'.new('CFG')
 
-local cloud_host_init = '/usr/ioe/cloud.host'
 local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
 local db_restful = nil
 local db_failure = false
+
+local cloud_host_init = '/usr/ioe/freeioe.cloud.host'
+local CLOUD_HOST_INIT = nil
 
 local lock = nil -- Critical Section
 local command = {}
@@ -73,15 +75,10 @@ local function set_sys_defaults(data)
 		data.CNF_HOST_URL = nil
 	end
 
-	if lfs.attributes(cloud_host_init, 'mode') then
-		local f, err = io.open(cloud_host_init, 'r')
-		if f then
-			local domain = f:read("*l")
-			f:close()
-			data.PKG_VER = 2
-			data.PKG_HOST_URL = domain
-			data.CNF_HOST_URL = domain
-		end
+	if CLOUD_HOST_INIT then
+		data.PKG_VER = 2
+		data.PKG_HOST_URL = CLOUD_HOST_INIT
+		data.CNF_HOST_URL = CLOUD_HOST_INIT
 	end
 
 	for k,v in pairs(defaults) do
@@ -139,6 +136,9 @@ local function set_cloud_defaults(data)
 	end
 	if string.match(data.HOST, 'cloud.thingsroot.com') then
 		data.HOST = defaults.HOST
+	end
+	if CLOUD_HOST_INIT then
+		data.HOST = CLOUD_HOST_INIT
 	end
 
 	if not data_cache_compatitable() then
@@ -199,6 +199,14 @@ local function on_cfg_failure()
 end
 
 local function load_cfg(path)
+	if lfs.attributes(cloud_host_init, 'mode') then
+		local f, err = io.open(cloud_host_init, 'r')
+		if f then
+			CLOUD_HOST_INIT = f:read("*l")
+			f:close()
+		end
+	end
+
 	log.info("Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then
