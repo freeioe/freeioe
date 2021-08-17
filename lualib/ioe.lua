@@ -65,6 +65,14 @@ _M.make_url = function(url)
 	--return tls_loaded and "https://"..url
 end
 
+_M.pkg_ver = function()
+	local ver = dc.get("SYS", "PKG_VER")
+	if not ver then
+		return 1
+	end
+	return tonumber(ver)
+end
+
 _M.pkg_host_url = function()
 	return _M.make_url(dc.get("SYS", "PKG_HOST_URL"))
 end

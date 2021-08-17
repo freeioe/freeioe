@@ -245,9 +245,10 @@ function api:add_device(sn, meta, inputs, outputs, commands)
 	if dev then
 		return dev
 	end
-	inputs = inputs and #inputs > 0 and inputs or nil
-	outputs = outputs and #outputs > 0 and outputs or nil
-	commands = commands and #commands > 0 and commands or nil
+
+	inputs = (inputs and #inputs > 0) and inputs or nil
+	outputs = (outputs and #outputs > 0) and outputs or nil
+	commands = (commands and #commands > 0) and commands or nil
 
 	local props = {meta = meta, inputs = inputs, outputs = outputs, commands = commands}
 	dev = dev_api:new(self, sn, props)

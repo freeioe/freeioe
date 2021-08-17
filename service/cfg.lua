@@ -11,6 +11,7 @@ local ioe = require 'ioe'
 
 local log = require 'utils.logger'.new('CFG')
 
+local cloud_host_init = '/usr/ioe/cloud.host'
 local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
@@ -70,6 +71,17 @@ local function set_sys_defaults(data)
 	end
 	if string.match(data.CNF_HOST_URL or '', 'cloud.thingsroot.com') then
 		data.CNF_HOST_URL = nil
+	end
+
+	if lfs.attributes(cloud_host_init, 'mode') then
+		local f, err = io.open(cloud_host_init, 'r')
+		if f then
+			local domain = f:read("*l")
+			f:close()
+			data.PKG_VER = 2
+			data.PKG_HOST_URL = domain
+			data.CNF_HOST_URL = domain
+		end
 	end
 
 	for k,v in pairs(defaults) do

@@ -1454,7 +1454,7 @@ function accept.command_to_device(id, cmd)
 		cmd.param = cjson.decode(cmd.param)
 	end
 
-	local r, err = dev:send_command(cmd.cmd, cmd.param, id)
+	local r, err = dev:send_command(cmd.cmd or cmd.command, cmd.param, id)
 	if not r then
 		snax.self().post.action_result('command', id, false, err)
 	end

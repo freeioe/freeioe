@@ -12,6 +12,7 @@ local _M = {}
 
 _M.url_base = '/download'
 _M.url_packages = '/download/packages'
+_M.url_store = '/store/download'
 
 local api_header = {
 	Accpet="application/json"
@@ -204,7 +205,7 @@ function _M.generate_tmp_path(inst_name, app_name, version, ext)
 	return "/tmp/"..inst_name..'__'..app_name_escape.."_"..version..ext
 end
 
-function _M.create_download_func(inst_name, app_name, version, ext, is_extension)
+function _M.create_download_func(inst_name, app_name, version, ext, is_extension, token)
 	local inst_name = inst_name
 	--local app_name = app_name:gsub('%.', '/')
 	local app_name = app_name
@@ -244,6 +245,18 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 			url = _M.url_packages.."/bin/"..plat.."/"..app_name.."/"..version..ext
 		end
 
+		local query = {}
+		if ioe.pkg_ver() > 1 then
+			url = _M.url_store
+			query = {
+				device = ioe.id(),
+				token = token,
+				app = app_name,
+				version = version,
+				core = is_extension
+			}
+		end
+
 		log.notice('Start download package '..app_name..' from: '..pkg_host..url)
 		local status, header, body = httpdown.get(pkg_host, url)
 		if not status then
@@ -255,7 +268,7 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 		file:write(body)
 		file:close()
 
-		local status, header, body = httpdown.get(pkg_host, url..".md5")
+		local status, header, body = httpdown.get(pkg_host, url..".md5", nil, query)
 		if status and status == 200 then
 			local sum, err = helper.md5sum(path)
 			if not sum then

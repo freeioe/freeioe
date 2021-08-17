@@ -114,7 +114,7 @@ end
 
 local function create_download(channel)
 	return function(inst_name, app_name, version, success_cb, ext)
-		local down = pkg_api.create_download_func(inst_name, app_name, version, ext or '.zip')
+		local down = pkg_api.create_download_func(inst_name, app_name, version, ext or '.zip', token)
 		return down(success_cb)
 	end
 end
@@ -233,6 +233,7 @@ function command.install_app(id, args)
 	local name = args.name
 	local inst_name = args.inst
 	local from_web = args.from_web
+	local token = args.token
 	local version, beta, editor = parse_version_string(args.version)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
@@ -266,7 +267,7 @@ function command.install_app(id, args)
 		if not version or version == 'latest' then
 			version = get_app_version(inst_name)
 		end
-		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf})
+		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf})
 		if editor then
 			datacenter.set("APPS", inst_name, "islocal", 1)
 		end
@@ -289,7 +290,7 @@ function command.install_app(id, args)
 
 			return false, "Failed to start App. Error: "..err
 		end
-	end)
+	end, '.zip', token)
 
 	return r, err
 end
@@ -425,6 +426,7 @@ function command.install_missing_app(inst_name)
 			inst = inst_name,
 			name = info.name,
 			version = info.version,
+			token = info.token,
 			sn = info.sn,
 			conf = info.conf,
 			force = true
