@@ -3,6 +3,13 @@
 
 # Release history
 
+v2.0.0 (2021-08-19)
+------------------
+
+* Support loading cloud related hosts from environment
+* Support PKG version 2 
+
+
 v1.31.1 (2021-06-08)
 ------------------
 
