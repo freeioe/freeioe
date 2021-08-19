@@ -17,9 +17,6 @@ local db_modification = 0
 local db_restful = nil
 local db_failure = false
 
-local cloud_host_init = '/usr/ioe/freeioe.cloud.host'
-local CLOUD_HOST_INIT = nil
-
 local lock = nil -- Critical Section
 local command = {}
 
@@ -75,15 +72,17 @@ local function set_sys_defaults(data)
 		data.CNF_HOST_URL = nil
 	end
 
-	if CLOUD_HOST_INIT then
-		data.PKG_VER = 2
-		data.PKG_HOST_URL = CLOUD_HOST_INIT
-		data.CNF_HOST_URL = CLOUD_HOST_INIT
+	local ioe_pkg_url = os.getenv('IOE_PKG_URL')
+	if ioe_pkg_url then
+		data.PKG_VER = 2 -- Version two will merge two url to one
+		data.PKG_HOST_URL = ioe_pkg_url
+		data.CNF_HOST_URL = ioe_pkg_url
 	end
 
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
 	end
+
 	if defaults.ID ~= sysinfo.unknown_ioe_sn then
 		data.ID = defaults.ID
 	end
@@ -137,8 +136,9 @@ local function set_cloud_defaults(data)
 	if string.match(data.HOST, 'cloud.thingsroot.com') then
 		data.HOST = defaults.HOST
 	end
-	if CLOUD_HOST_INIT then
-		data.HOST = CLOUD_HOST_INIT
+	local env_host = os.getenv('IOE_CLOUD_HOST')
+	if env_host then
+		data.HOST = env_host
 	end
 
 	if not data_cache_compatitable() then
@@ -199,14 +199,6 @@ local function on_cfg_failure()
 end
 
 local function load_cfg(path)
-	if lfs.attributes(cloud_host_init, 'mode') then
-		local f, err = io.open(cloud_host_init, 'r')
-		if f then
-			CLOUD_HOST_INIT = f:read("*l")
-			f:close()
-		end
-	end
-
 	log.info("Loading configuration...")
 	local file, err = io.open(path, "r")
 	if not file then

@@ -18,7 +18,7 @@ local api_header = {
 -- @tparam string dir Application template file saving directory. full path.
 function api:initialize(sys, app, conf, ext, dir)
 	-- Service host (ip or domain)
-	self._host = ioe.cnf_host_url() --datacenter.wait("CLOUD", "CNF_HOST_URL")
+	self._host = ioe.cnf_host_url()
 	self._sys = sys
 	self._app = app
 	self._log = sys:logger()
