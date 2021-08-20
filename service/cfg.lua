@@ -4,6 +4,7 @@ local queue = require "skynet.queue"
 local cjson = require "cjson.safe"
 local md5 = require "md5"
 local lfs = require 'lfs'
+local inifile = require 'inifile'
 local restful = require 'http.restful'
 local sysinfo = require 'utils.sysinfo'
 local disk = require 'utils.disk'
@@ -11,6 +12,8 @@ local ioe = require 'ioe'
 
 local log = require 'utils.logger'.new('CFG')
 
+local def_ini_file = 'default.ini'
+local def_conf = nil
 local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
@@ -37,20 +40,43 @@ local function get_cfg_str()
 	return str, md5.sumhexa(str)	
 end
 
+local function load_defaults()
+	if lfs.attributes(def_ini_file, 'mode') then
+		local conf = inifile.parse(def_ini_file)
+		print(conf)
+		def_conf = conf['freeioe']
+	else
+		local env_pkg_url = os.getenv('IOE_PKG_URL')
+		local env_host = os.getenv('IOE_CLOUD_HOST')
+		local env_ver = os.getenv('IOE_PKG_VERSION')
+		if env_pkg_url or env_host or env_ver then
+			def_conf = {
+				IOE_PKG_URL = env_pkg_url,
+				IOE_CLOUD_HOST = env_host,
+				IOE_PKG_VERSION = IOE_PKG_VERSION
+			}
+		end
+	end
+end
+
 local function _sys_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
+	local url_def = def_conf and def_conf.IOE_PKG_URL or 'ioe.thingsroot.com'
+	local pkg_ver = def_conf and def_conf.IOE_PKG_VERSION or 1
 	return {
 		ID = ioe_sn,
-		PKG_HOST_URL = "ioe.thingsroot.com",
-		CNF_HOST_URL = "ioe.thingsroot.com",
+		PKG_VER = pkg_ver,
+		PKG_HOST_URL = url_def,
+		CNF_HOST_URL = url_def,
 		--CFG_AUTO_UPLOAD = true,
 		WORK_MODE = 0, --
 	}
 end
 
 local function _cloud_defaults()
+	local host_def = def_conf and def_conf.IOE_CLOUD_HOST or 'ioe.thingsroot.com'
 	return {
-		HOST = "ioe.thingsroot.com",
+		HOST = host_def,
 		PORT = 1883,
 		KEEPALIVE = 60,
 		DATA_UPLOAD = false,
@@ -63,21 +89,6 @@ end
 local function set_sys_defaults(data)
 	local data = data or {}
 	local defaults = _sys_defaults()
-
-	--- Fix hacks
-	if string.match(data.PKG_HOST_URL or '', 'cloud.thingsroot.com') then
-		data.PKG_HOST_URL = nil
-	end
-	if string.match(data.CNF_HOST_URL or '', 'cloud.thingsroot.com') then
-		data.CNF_HOST_URL = nil
-	end
-
-	local ioe_pkg_url = os.getenv('IOE_PKG_URL')
-	if ioe_pkg_url then
-		data.PKG_VER = 2 -- Version two will merge two url to one
-		data.PKG_HOST_URL = ioe_pkg_url
-		data.CNF_HOST_URL = ioe_pkg_url
-	end
 
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
@@ -128,17 +139,6 @@ local function set_cloud_defaults(data)
 	local defaults = _cloud_defaults()
 	for k,v in pairs(defaults) do
 		data[k] = data[k] or v
-	end
-	--- symgrid.com domain hacks
-	if string.match(data.HOST, 'symgrid.com') then
-		data.HOST = defaults.HOST
-	end
-	if string.match(data.HOST, 'cloud.thingsroot.com') then
-		data.HOST = defaults.HOST
-	end
-	local env_host = os.getenv('IOE_CLOUD_HOST')
-	if env_host then
-		data.HOST = env_host
 	end
 
 	if not data_cache_compatitable() then
@@ -418,6 +418,9 @@ skynet.start(function()
 		end
 	end)
 	skynet.sleep(10)
+
+	--- Load defaults
+	load_defaults()
 
 	load_cfg(db_file)
 	log.info("BETA:", dc.get('SYS', 'USING_BETA'), 'MODE:', dc.get('SYS', 'WORK_MODE'))
