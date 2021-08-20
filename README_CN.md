@@ -25,6 +25,10 @@
   * Aliyun/Huawei/Baidu/联通云(Telit)/浪潮云/中信云 等物联网平台接入 (基于MQTT协议)
   * 基于Socat/Frpc 工具的网络/串口远程映射
   * 基于uci指令的网络管理应用
+  * 支持支持EtherNet/IP CIP协议的PLC接入示例
+  * 三菱MC协议PLC接入示例
+  * 欧姆龙Hostlink协议接入示例
+  * 时序数据库写入示例
 
 * [第三方应用](https://github.com/viccom/myfreeioe_apps)
   * 支持设备点表的Modbus数据采集应用

@@ -22,9 +22,14 @@
   * OpcUA applications (Server/Client)
   * Fanuc Focas CNC device data collection via ubus broker
   * DLT645 device data collection application
-  * Aliyun/Huawei/Baidu/Citic/Inspur/Telit IOT cloud connector (based on MQTT)
+  * Aliyun/Huawei/Baidu/Citic/Inspur/Telit/WeLink IOT Cloud connector
   * Socat/Frpc utils control applications
   * Device network configuration collection application (based on uci)
+  * EtherNet/IP CIP protocol based PLC
+  * Melsec protocol based PLC
+  * AB-PLC based on libplctag
+  * Omron PLC based on hostlink protocol
+  * Time-series database writer
 
 * [Thirdparty Applications](https://github.com/viccom/myfreeioe_apps)
   * Modbus device data collection application with device template support
