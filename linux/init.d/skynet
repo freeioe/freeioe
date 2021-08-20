@@ -31,7 +31,11 @@ export IOE_RUN_AS_DAEMON=1
 
 
 if [ -r /etc/default/skynet ]; then
-        . /etc/default/skynet
+	. /etc/default/skynet
+fi
+
+if [ -r /etc/freeioe.conf ]; then
+	. /etc/freeioe.conf
 fi
 
 skynet_missing() {
