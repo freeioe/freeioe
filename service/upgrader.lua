@@ -477,6 +477,11 @@ function command.pkg_enable_beta()
 		return true
 	end
 
+	if ioe.pkg_ver() > 1 then
+		os.execute('date > '..fn)
+		return true
+	end
+
 	local pkg_host = ioe.pkg_host_url()
 	local sys_id = ioe.id()
 

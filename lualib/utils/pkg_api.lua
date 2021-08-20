@@ -184,6 +184,9 @@ function _M.parse_version_string(version)
 	if type(version) == 'number' then
 		return tostring(math.floor(version)), false
 	end
+	if not version or version == '' then
+		version = 'latest'
+	end
 
 	local editor = false
 	local beta = false
