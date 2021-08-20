@@ -64,7 +64,7 @@ else
 fi
 
 if [ -f $IOE_DIR/.env ]
-	source $IOE_DIR/.env
+	set -o allexport; source $IOE_DIR/.env; set +o allexport
 fi
 
 sync &
