@@ -13,7 +13,7 @@ local ioe = require 'ioe'
 local log = require 'utils.logger'.new('CFG')
 
 local def_ini_file = 'default.ini'
-local def_conf = nil
+local def_conf = {}
 local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
@@ -43,26 +43,31 @@ end
 local function load_defaults()
 	if lfs.attributes(def_ini_file, 'mode') then
 		local conf = inifile.parse(def_ini_file)
-		print(conf)
 		def_conf = conf['freeioe']
-	else
-		local env_pkg_url = os.getenv('IOE_PKG_URL')
-		local env_host = os.getenv('IOE_CLOUD_HOST')
-		local env_ver = os.getenv('IOE_PKG_VERSION')
-		if env_pkg_url or env_host or env_ver then
-			def_conf = {
-				IOE_PKG_URL = env_pkg_url,
-				IOE_CLOUD_HOST = env_host,
-				IOE_PKG_VERSION = IOE_PKG_VERSION
-			}
-		end
+	end
+
+	--- loading environments
+
+	local env_pkg_url = os.getenv('IOE_PKG_URL')
+	if env_pkg_url then
+		def_conf.IOE_PKG_URL = env_pkg_url
+	end
+
+	local env_host = os.getenv('IOE_CLOUD_HOST')
+	if env_pkg_url then
+		def_conf.IOE_PKG_URL = env_host
+	end
+
+	local env_ver = os.getenv('IOE_PKG_VERSION')
+	if env_ver then
+		def_conf.IOE_PKG_VERSION = env_ver 
 	end
 end
 
 local function _sys_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
-	local url_def = def_conf and def_conf.IOE_PKG_URL or 'ioe.thingsroot.com'
-	local pkg_ver = def_conf and def_conf.IOE_PKG_VERSION or 1
+	local url_def = def_conf.IOE_PKG_URL or 'ioe.thingsroot.com'
+	local pkg_ver = def_conf.IOE_PKG_VERSION or 1
 	return {
 		ID = ioe_sn,
 		PKG_VER = pkg_ver,
@@ -74,7 +79,7 @@ local function _sys_defaults()
 end
 
 local function _cloud_defaults()
-	local host_def = def_conf and def_conf.IOE_CLOUD_HOST or 'ioe.thingsroot.com'
+	local host_def = def_conf.IOE_CLOUD_HOST or 'ioe.thingsroot.com'
 	return {
 		HOST = host_def,
 		PORT = 1883,
