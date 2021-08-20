@@ -14,13 +14,9 @@ ARCH=`arch`
 PID=/var/run/skynet.pid
 DAEMON=$FREEIOE_DIR/linux/$ARCH/process-monitor
 
-if [ -r /etc/default/skynet ]; then
-	. /etc/default/skynet
+if [ -f /etc/default/skynet ]; then
+        . /etc/default/skynet
 fi
-
-if [ -r /etc/freeioe.conf ]; then
-	. /etc/freeioe.conf
-end
 
 DAEMON_OPTS="-d -p $PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"

@@ -63,6 +63,10 @@ else
 	echo "NO rollback needed!" >> $STARTUP_LOG
 fi
 
+if [ -f $IOE_DIR/.env ]
+	set -o allexport; source $IOE_DIR/.env; set +o allexport
+fi
+
 sync &
 
 echo "Startup Script Done!" >> $STARTUP_LOG
