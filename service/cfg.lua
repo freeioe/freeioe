@@ -12,7 +12,7 @@ local ioe = require 'ioe'
 
 local log = require 'utils.logger'.new('CFG')
 
-local def_ini_file = 'default.ini'
+local def_file = '/etc/freeioe.conf'
 local def_conf = {}
 local db_file = "cfg.json"
 local md5sum = ""
@@ -41,8 +41,8 @@ local function get_cfg_str()
 end
 
 local function load_defaults()
-	if lfs.attributes(def_ini_file, 'mode') then
-		local conf = inifile.parse(def_ini_file)
+	if lfs.attributes(def_file, 'mode') then
+		local conf = inifile.parse(def_file)
 		def_conf = conf['freeioe']
 	end
 
