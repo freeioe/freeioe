@@ -7,7 +7,7 @@ v2.0.1 ()
 ------------------
 
 * Fixed PKG version 2 
-* Fixed run with symlink issue
+* Fixed run with symlink issue (v2)
 
 
 v2.0.0 (2021-08-19)
