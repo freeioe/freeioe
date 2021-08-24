@@ -11,6 +11,9 @@ local function init_httpc(timeout)
 end
 
 local function escape(s)
+	if type(s) == 'boolean' then
+		s = tostring(s)
+	end
 	return (string.gsub(s, "([^A-Za-z0-9_])", function(c)
 		return string.format("%%%02X", string.byte(c))
 	end))
@@ -35,7 +38,7 @@ function _M.get(host, url, header, query, content)
     if #q then
         url = url..'?'..table.concat(q, '&')
     end
-	print(url)
+	-- print(url)
 
 	local httpc = init_httpc()
     local r, status, body = pcall(httpc.request, 'GET', host, url, recvheader, header, content)

@@ -113,8 +113,8 @@ local function gen_app_sn(inst_name)
 end
 
 local function create_download(channel)
-	return function(inst_name, app_name, version, success_cb, ext)
-		local down = pkg_api.create_download_func(inst_name, app_name, version, ext or '.zip', token)
+	return function(inst_name, app_name, version, success_cb, ext, token, is_core)
+		local down = pkg_api.create_download_func(inst_name, app_name, version, ext or '.zip', false, token, is_core)
 		return down(success_cb)
 	end
 end
@@ -192,6 +192,7 @@ function command.upgrade_app(id, args)
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
 	local auto = args.auto
+	local token = args.token or app.token
 
 	local download_version = editor and version..".editor" or version
 	return create_app_download(inst_name, name, download_version, function(path)
@@ -209,7 +210,7 @@ function command.upgrade_app(id, args)
 		if not version or version == 'latest' then
 			version = get_app_version(inst_name)
 		end
-		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, auto=auto})
+		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, token=token, auto=auto})
 		if editor then
 			datacenter.set("APPS", inst_name, "islocal", 1)
 		end
@@ -226,7 +227,7 @@ function command.upgrade_app(id, args)
 			--os.execute("rm -rf "..target_folder)
 			return false, "Failed to start App. Error: "..err
 		end
-	end)
+	end, args.file_ext or '.zip', args.token)
 end
 
 function command.install_app(id, args)
@@ -254,7 +255,7 @@ function command.install_app(id, args)
 	end
 
 	-- Reserve app instance name
-	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, conf=conf, downloading=true})
+	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf, downloading=true})
 
 	local download_version = editor and version..".editor" or version
 	local r, err = create_app_download(inst_name, name, download_version, function(info)
@@ -290,7 +291,7 @@ function command.install_app(id, args)
 
 			return false, "Failed to start App. Error: "..err
 		end
-	end, '.zip', token)
+	end, args.file_ext or '.zip', token)
 
 	return r, err
 end
@@ -517,7 +518,7 @@ local function download_upgrade_skynet(id, args, cb)
 
 	--- TODO: Check about beta
 
-	return create_sys_download('__SKYNET__', kname, version, cb, ".tar.gz")
+	return create_sys_download('__SKYNET__', kname, version, cb, ".tar.gz", args.token, true)
 end
 
 --[[
@@ -749,10 +750,10 @@ function command.upgrade_core(id, args)
 		end
 	end
 
-	local skynet_args = args.skynet
+	local skynet_version = args.skynet
 	--- Upgrade skynet only
-	if not args.version or string.lower(args.version) == 'none' then
-		return download_upgrade_skynet(id, skynet_args, function(path)
+	if not args.version or tonumber(args.version) <= 0 or string.lower(args.version) == 'none' then
+		return download_upgrade_skynet(id, skynet_version, function(path)
 			return start_upgrade_proc(nil, path)
 		end)
 	end
@@ -761,14 +762,14 @@ function command.upgrade_core(id, args)
 
 	return create_sys_download('__FREEIOE__', 'freeioe', version, function(path)
 		local freeioe_path = path
-		if skynet_args then
-			return download_upgrade_skynet(id, skynet_args, function(path)
+		if skynet_version and tonumber(skynet_version) > 0 then
+			return download_upgrade_skynet(id, skynet_version, function(path)
 				return start_upgrade_proc(freeioe_path, path)
 			end)
 		else
 			return start_upgrade_proc(freeioe_path)
 		end
-	end, ".tar.gz")
+	end, ".tar.gz", args.token, true)
 end
 
 local rollback_time = nil

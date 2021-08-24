@@ -208,7 +208,9 @@ function _M.generate_tmp_path(inst_name, app_name, version, ext)
 	return "/tmp/"..inst_name..'__'..app_name_escape.."_"..version..ext
 end
 
-function _M.create_download_func(inst_name, app_name, version, ext, is_extension, token)
+--- Is Core is used by store v2
+-- is_extension is used by store v1
+function _M.create_download_func(inst_name, app_name, version, ext, is_extension, token, is_core)
 	local inst_name = inst_name
 	--local app_name = app_name:gsub('%.', '/')
 	local app_name = app_name
@@ -258,7 +260,7 @@ function _M.create_download_func(inst_name, app_name, version, ext, is_extension
 				token = token,
 				app = app_name,
 				version = version,
-				is_core = is_extension
+				is_core = is_core
 			}
 		end
 

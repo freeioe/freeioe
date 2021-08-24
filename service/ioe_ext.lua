@@ -85,8 +85,8 @@ local function map_result_action(func_name)
 	end
 end
 
-local function create_download(inst_name, ext_name, version, success_cb)
-	local down = pkg_api.create_download_func(inst_name, ext_name, version, ".tar.gz", true)
+local function create_download(inst_name, ext_name, version, success_cb, ext, token)
+	local down = pkg_api.create_download_func(inst_name, ext_name, version, ext or ".tar.gz", true, token, true)
 	return down(success_cb)
 end
 
