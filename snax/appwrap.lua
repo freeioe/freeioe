@@ -256,7 +256,12 @@ function init(name, conf, mgr_handle, mgr_type)
 	if not f then
 		app_log:warning("There is no app.lua!, Try to install it")
 		app_installing = true
-		skynet.call(".upgrader", "lua", "install_missing_app", name)
+		local r, err = skynet.call(".upgrader", "lua", "install_missing_app", name)
+		if not r then
+			app_log:info('Install missing app failed', err)
+		else
+			mgr_snax.post.app_stop(app_name, 'Install missing application')
+		end
 		return nil, "Application does not exits!"
 	end
 	f:close()

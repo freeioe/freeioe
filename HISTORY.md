@@ -8,6 +8,7 @@ v2.0.1 ()
 
 * Fixed PKG version 2 
 * Fixed run with symlink issue (v3)
+* Fixed install missing application issue
 
 
 v2.0.0 (2021-08-19)

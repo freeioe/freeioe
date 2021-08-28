@@ -307,7 +307,7 @@ function device:fire_event(level, type_, info, data, timestamp)
 end
 
 function device:stat(name)
-	assert(not self._guest, "Device permission denined!")
+	-- assert(not self._guest, "Device permission denined!")
 	local stat = stat_api:new(self._api, self._sn, name, self._guest)
 	self._stats[#self._stats + 1] = stat
 	return stat

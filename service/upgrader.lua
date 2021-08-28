@@ -418,7 +418,7 @@ function command.rename_app(id, args)
 end
 
 function command.install_missing_app(inst_name)
-	skynet.timeout(100, function()
+	skynet.timeout(500, function()
 		local info = datacenter.get("APPS", inst_name)
 		if not info or info.islocal then
 			return
