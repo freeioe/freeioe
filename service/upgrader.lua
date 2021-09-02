@@ -191,7 +191,7 @@ function command.upgrade_app(id, args)
 	end
 	local sn = args.sn or app.sn
 	local conf = args.conf or app.conf
-	local auto = args.auto
+	local auto = args.auto ~= nil and args.auto or app.auto
 	local token = args.token or app.token
 
 	local download_version = editor and version..".editor" or version
@@ -255,7 +255,7 @@ function command.install_app(id, args)
 	end
 
 	-- Reserve app instance name
-	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf, downloading=true})
+	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf, downloading=true, auto=1})
 
 	local download_version = editor and version..".editor" or version
 	local r, err = create_app_download(inst_name, name, download_version, function(info)
@@ -268,7 +268,7 @@ function command.install_app(id, args)
 		if not version or version == 'latest' then
 			version = get_app_version(inst_name)
 		end
-		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf})
+		datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf, auto=1})
 		if editor then
 			datacenter.set("APPS", inst_name, "islocal", 1)
 		end
