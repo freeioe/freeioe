@@ -14,6 +14,7 @@ _M.url_base = '/download'
 _M.url_packages = '/download/packages'
 
 _M.url_download = '/pkg/download'
+_M.url_download_hash = '/pkg/download_hash'
 _M.url_latest_version = '/pkg/latest_version' -- check version update
 _M.url_check_version = '/pkg/check_version' -- check if it is beta
 _M.url_user_access = '/pkg/user_access' -- User access device checking
@@ -58,14 +59,12 @@ function _M.latest_version(app, is_core)
 end
 
 function _M.check_version(app, version, is_core)
-	local version = tonumber(version) or 0
-
 	local data = {
 		app = app,
 		device = ioe.id(),
 		is_core = is_core,
 		platform = sysinfo.platform(),
-		version = version
+		version = tostring(version)
 	}
 
 	local data, err = _M.http_post(_M.url_check_version, data)
@@ -176,8 +175,6 @@ function _M.create_download_func_v2(app, version, ext, token, is_core)
 	--- Validate version
 	if version == 'latest' or version == 'latest.beta' then
 		version = ioe.beta() and 'latest.beta' or 'latest'
-	else
-		version = tonumber(version) or 0
 	end
 
 	return function(success_callback)
@@ -190,7 +187,7 @@ function _M.create_download_func_v2(app, version, ext, token, is_core)
 		local pkg_host = ioe.pkg_host_url()
 
 		local url = _M.url_download
-		local md5_url = _M._url_download_md5
+		local hash_url = _M.url_download_hash
 		local query = {
 			device = ioe.id(),
 			platform = sysinfo.platform(),
@@ -212,19 +209,20 @@ function _M.create_download_func_v2(app, version, ext, token, is_core)
 		file:write(body)
 		file:close()
 
-		local data, err = _M.http_post(md5_url, query)
+		query.hash = 'md5'
+		local data, err = _M.http_post(hash_url, query)
 		if not data then
 			return nil, err
 		end
 
-		if data and data.md5 then
+		if data and data.hash and string.len(data.hash) > 0 then
 			local sum, err = helper.md5sum(path)
 			if not sum then
 				return nil, "Cannot caculate md5, error:\t"..err
 			end
 			log.notice("Downloaded file md5 sum", sum)
-			if sum ~= data.md5 then
-				return nil, "Check md5 sum failed, expected:\t"..data.md5.."\t Got:\t"..sum
+			if sum ~= data.hash then
+				return nil, "Check md5 sum failed, expected:\t"..data.hash.."\t Got:\t"..sum
 			end
 		end
 		return success_callback(path)
