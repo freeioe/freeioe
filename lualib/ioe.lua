@@ -35,6 +35,10 @@ _M.MODE = {
 	LOCKED = 1,
 }
 
+_M.cloud_host = function()
+	return dc.wait("CLOUD", "HOST")
+end
+
 _M.set_data_cache = function(enable)
 	dc.set("CLOUD", "DATA_CACHE", enable == true or enable == 1)
 end

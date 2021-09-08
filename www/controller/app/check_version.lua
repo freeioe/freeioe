@@ -16,7 +16,7 @@ return {
 			return
 		end
 
-		local tp, err = skynet.call(".upgrader", "lua", "pkg_check_version", app.name, app.version)
+		local tp, err = skynet.call(".upgrader", "lua", "check_version", app.name, app.version, false)
 		local ret = {}
 		if tp then
 			ret['type'] = tp

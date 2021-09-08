@@ -156,7 +156,7 @@ end
 
 local function auth_user(user, passwd)
 	if user == 'AUTH_CODE' then
-		return skynet.call(".upgrader", "lua", "pkg_user_access", passwd)
+		return skynet.call(".upgrader", "lua", "user_access", passwd)
 	end
 	local status, body = http_api:post("/user/login", nil, {username=user, password=passwd})
 	if status == 200 then

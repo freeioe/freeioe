@@ -1,13 +1,14 @@
+local lfs = require 'lfs'
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
+local datacenter = require 'skynet.datacenter'
 --local queue = require 'skynet.queue'
 local lockable_queue = require 'skynet.lockable_queue'
 local log = require 'utils.logger'.new('UPGRADER')
 local sysinfo = require 'utils.sysinfo'
-local lfs = require 'lfs'
-local datacenter = require 'skynet.datacenter'
-local pkg_api = require 'utils.pkg_api'
 local ioe = require 'ioe'
+local pkg = require 'pkg'
+local pkg_api = require 'pkg.api'
 
 local sys_lock = nil
 local app_lock = nil
@@ -17,9 +18,9 @@ local aborting = false
 
 local command = {}
 
-local get_target_folder = pkg_api.get_app_folder
-local parse_version_string = pkg_api.parse_version_string
-local get_app_version = pkg_api.get_app_version
+local get_target_folder = pkg.get_app_folder
+local parse_version_string = pkg.parse_version_string
+local get_app_version = pkg.get_app_version
 
 local function get_ioe_dir()
 	return os.getenv('IOE_DIR') or lfs.currentdir().."/.."
@@ -113,8 +114,8 @@ local function gen_app_sn(inst_name)
 end
 
 local function create_download(channel)
-	return function(inst_name, app_name, version, success_cb, ext, token, is_core)
-		local down = pkg_api.create_download_func(inst_name, app_name, version, ext or '.zip', false, token, is_core)
+	return function(app, version, success_cb, ext, token, is_core)
+		local down = pkg_api.create_download_func(app, version, ext or '.zip', false, token, is_core)
 		return down(success_cb)
 	end
 end
@@ -176,7 +177,7 @@ function command.upgrade_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg_api.valid_inst(inst_name) then
+	if not pkg.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -195,7 +196,7 @@ function command.upgrade_app(id, args)
 	local token = args.token or app.token
 
 	local download_version = editor and version..".editor" or version
-	return create_app_download(inst_name, name, download_version, function(path)
+	return create_app_download(name, download_version, function(path)
 		log.notice("Download application finished", name)
 		local appmgr = snax.queryservice("appmgr")
 		local r, err = appmgr.req.stop(inst_name, "Upgrade Application")
@@ -239,7 +240,7 @@ function command.install_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg_api.valid_inst(inst_name) then
+	if not pkg.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -258,7 +259,7 @@ function command.install_app(id, args)
 	datacenter.set("APPS", inst_name, {name=name, version=version, sn=sn, token=token, conf=conf, downloading=true, auto=1})
 
 	local download_version = editor and version..".editor" or version
-	local r, err = create_app_download(inst_name, name, download_version, function(info)
+	local r, err = create_app_download(name, download_version, function(info)
 		log.notice("Download application finished", name)
 		local target_folder = get_target_folder(inst_name)
 		lfs.mkdir(target_folder)
@@ -304,7 +305,7 @@ function command.create_app(id, args)
 	if not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg_api.valid_inst(inst_name) then
+	if not pkg.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -346,7 +347,7 @@ function command.install_local_app(id, args)
 	if not ioe.beta() then
 		return nil, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg_api.valid_inst(inst_name) then
+	if not pkg.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -384,7 +385,7 @@ end
 function command.rename_app(id, args)
 	local inst_name = args.inst
 	local new_name = args.new_name
-	if not pkg_api.valid_inst(inst_name) or not pkg_api.valid_inst(new_name) then
+	if not pkg.valid_inst(inst_name) or not pkg.valid_inst(new_name) then
 		return false, "Application instance name invalid!!"
 	end
 	if is_inst_name_reserved(inst_name) then
@@ -438,7 +439,7 @@ end
 
 function command.uninstall_app(id, args)
 	local inst_name = args.inst
-	if not pkg_api.valid_inst(inst_name) then
+	if not pkg.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -460,65 +461,33 @@ function command.list_app()
 	return datacenter.get("APPS")
 end
 
-function command.pkg_check_update(app, beta)
-	local pkg_host = ioe.pkg_host_url()
-	local beta = beta and ioe.beta()
-	return pkg_api.pkg_check_update(pkg_host, app, beta)
+function command.latest_version(app, is_core)
+	return pkg_api.latest_version(app, is_core)
 end
 
-function command.pkg_check_version(app, version)
-	local pkg_host = ioe.pkg_host_url()
-	return pkg_api.pkg_check_version(pkg_host, app, version)
+function command.check_version(app, version, is_core)
+	return pkg_api.check_version(app, version, is_core)
 end
 
-function command.pkg_enable_beta()
+function command.enable_beta()
 	local fn = get_ioe_dir()..'/ipt/using_beta'
 
 	if lfs.attributes(fn, 'mode') then
 		return true
 	end
 
-	if ioe.pkg_ver() > 1 then
-		os.execute('date > '..fn)
-		return true
-	end
-
-	local pkg_host = ioe.pkg_host_url()
-	local sys_id = ioe.id()
-
-	local r, err = pkg_api.pkg_enable_beta(pkg_host, sys_id)
-	if r then
-		os.execute('date > '..fn)
-	end
-	return r, err
+	os.execute('date > '..fn)
+	return true
 end
 
-function command.pkg_user_access(auth_code)
-	local pkg_host = ioe.pkg_host_url()
-	local sys_id = ioe.id()
-	return pkg_api.pkg_user_access(pkg_host, sys_id, auth_code)
-end
-
-local function get_core_name(name, platform)
-	assert(name, 'Core name is required!')
-	local platform = platform or sysinfo.platform()
-	if platform then
-		--name = platform.."_"..name
-		--- FreeIOE not takes the os version before. so using openwrt/arm_cortex-a9_neon_skynet as download core name
-		---		now it switched to bin/openwrt/17.01/arm_cortex-a9_neon/skynet
-		name = string.format("bin/%s/%s", platform, name)
-	end
-	return name
+function command.user_access(auth_code)
+	return pkg_api.user_access(auth_code)
 end
 
 local function download_upgrade_skynet(id, args, cb)
 	--local is_windows = package.config:sub(1,1) == '\\'
 	local version, beta = parse_version_string(args.version)
-	local kname = get_core_name('skynet', args.platform)
-
-	--- TODO: Check about beta
-
-	return create_sys_download('__SKYNET__', kname, version, cb, ".tar.gz", args.token, true)
+	return create_sys_download('skynet', version, cb, ".tar.gz", args.token, true)
 end
 
 --[[
@@ -760,7 +729,7 @@ function command.upgrade_core(id, args)
 
 	local version, beta = parse_version_string(args.version)
 
-	return create_sys_download('__FREEIOE__', 'freeioe', version, function(path)
+	return create_sys_download('freeioe', version, function(path)
 		local freeioe_path = path
 		if skynet_version and tonumber(skynet_version) > 0 then
 			return download_upgrade_skynet(id, skynet_version, function(path)

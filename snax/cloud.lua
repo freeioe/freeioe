@@ -35,7 +35,7 @@ local mqtt_client_last = nil	--- MQTT Client connection/disconnection time
 local mqtt_client_last_msg = nil	--- MQTT Client connection/disconnection error message
 
 --- App devices data fire flag to prevent fire data when reconnected
-local apps_devices_fired = false
+local apps_devices_fired = nil
 
 --- Cloud options
 local enable_data_upload = nil				--- Whether upload device data (boolean)
@@ -744,9 +744,9 @@ local function on_mqtt_connect(client, success, msg)
 		end
 
 		-- Only fire apps and device once
-		if not apps_devices_fired then
+		if not apps_devices_fired or (skynet.now() - apps_devices_fired > 300)  then
 			log.info("ON_CONNECT upload devices and apps list")
-			apps_devices_fired = true
+			apps_devices_fired = skynet.now()
 			mqtt_last = 0  -- reset last
 			snax.self().post.fire_devices()
 			snax.self().post.fire_apps()
@@ -1006,7 +1006,7 @@ function accept.enable_beta(id, enable)
 		log.warning("Using beta is disabled from cloud!")
 		ioe.set_beta(false)
 	else
-		local r, err = skynet.call(".upgrader", "lua", "pkg_enable_beta")
+		local r, err = skynet.call(".upgrader", "lua", "enable_beta")
 		if r then
 			log.warning("Using beta is enabled from cloud!")
 			ioe.set_beta(true)

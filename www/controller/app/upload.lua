@@ -1,7 +1,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
-local pkg_api = require 'utils.pkg_api'
+local pkg = require 'pkg'
 local ioe = require 'ioe'
 
 return {
@@ -28,7 +28,7 @@ return {
 			return ngx.print(_('Application package must be zip file'))
 		end
 		--print(string.len(app_file.contents), app_file.size)
-		local path = pkg_api.generate_tmp_path(post.inst, post.app, 'latest', 'zip')
+		local path = pkg.generate_tmp_path(post.app, 'latest', 'zip')
 		local f, err = io.open(path, 'w+')
 		if not f then
 			return err

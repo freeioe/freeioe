@@ -1,12 +1,15 @@
+local lfs = require 'lfs'
+
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
 local queue = require 'skynet.queue'
 local datacenter = require 'skynet.datacenter'
+
 local log = require 'utils.logger'.new('EXT')
 local sysinfo = require 'utils.sysinfo'
-local pkg_api = require 'utils.pkg_api'
-local lfs = require 'lfs'
 local ioe = require 'ioe'
+local pkg = require 'pkg'
+local pkg_api = require 'pkg.api'
 
 local ext_lock = nil
 
@@ -14,11 +17,11 @@ local tasks = {}
 local installed = {}
 local command = {}
 
-local get_target_folder = pkg_api.get_ext_folder
-local get_target_root = pkg_api.get_ext_root
-local get_ext_version = pkg_api.get_ext_version
-local parse_version_string = pkg_api.parse_version_string
-local get_app_target_folder = pkg_api.get_app_folder
+local get_target_folder = pkg.get_ext_folder
+local get_target_root = pkg.get_ext_root
+local get_ext_version = pkg.get_ext_version
+local parse_version_string = pkg.parse_version_string
+local get_app_target_folder = pkg.get_app_folder
 
 local function make_inst_name(lib_name, version)
 	assert(lib_name, 'The instance name is required!')
@@ -85,8 +88,8 @@ local function map_result_action(func_name)
 	end
 end
 
-local function create_download(inst_name, ext_name, version, success_cb, ext, token)
-	local down = pkg_api.create_download_func(inst_name, ext_name, version, ext or ".tar.gz", true, token, true)
+local function create_download(ext_name, version, success_cb, ext, token)
+	local down = pkg_api.create_download_func(ext_name, version, ext or ".tar.gz", true, token, true)
 	return down(success_cb)
 end
 
@@ -248,21 +251,12 @@ end
 function command.install_ext(id, args)
 	local name = args.name
 	local version = args.version or 'latest'
-	--[[
-	if version == 'latest' then
-		version = command.pkg_latest_version(name, true)
-		version = tonumber(version) or 0
-		if version == 0 then
-			return false, "Extension "..name.." has no version file"
-		end
-	end
-	]]--
 	local inst = make_inst_name(name, version)
 	if installed[inst] then
 		return true, "Extension "..inst.." already installed"
 	end
 
-	return create_download(inst, name, version, function(path)
+	return create_download(name, version, function(path)
 		log.notice("Download extension finished", name, version)
 
 		local target_folder = get_target_folder(inst)
@@ -305,7 +299,7 @@ function command.upgrade_ext(id, args)
 		appmgr.req.stop(app_inst, "Upgrade Extension "..inst)
 	end
 
-	return create_download(inst, name, version, function(path)
+	return create_download(name, version, function(path)
 		log.notice("Download extension finished", name, version, beta)
 
 		local target_folder = get_target_folder(inst)
@@ -331,27 +325,14 @@ function command.upgrade_ext(id, args)
 	end)
 end
 
-function command.pkg_check_update(ext, beta)
+function command.check_version(ext, version)
 	assert(ext, "Extention name required!")
-
-	local pkg_host = ioe.pkg_host_url()
-	local beta = beta and ioe.beta()
-	return pkg_api.pkg_check_update_ext(pkg_host, ext, beta)
+	return pkg_api.check_version(ext, version, true)
 end
 
-function command.pkg_check_version(ext, version)
+function command.latest_version(ext)
 	assert(ext, "Extention name required!")
-
-	local pkg_host = ioe.pkg_host_url()
-	return pkg_api.pkg_check_version_ext(pkg_host, ext, version)
-end
-
-function command.pkg_latest_version(ext, beta)
-	assert(ext, "Extention name required!")
-
-	local pkg_host = ioe.pkg_host_url()
-	local beta = beta and ioe.beta()
-	return pkg_api.pkg_latest_version_ext(pkg_host, ext, beta)
+	return pkg_api.latest_version(ext, true)
 end
 
 function command.auto_clean()

@@ -1,13 +1,15 @@
 local skynet = require "skynet.manager"
 local dc = require "skynet.datacenter"
 local queue = require "skynet.queue"
+
 local cjson = require "cjson.safe"
 local md5 = require "md5"
 local lfs = require 'lfs'
 local inifile = require 'inifile'
-local restful = require 'http.restful'
+
 local sysinfo = require 'utils.sysinfo'
 local disk = require 'utils.disk'
+local pkg_file = require 'pkg.file'
 local ioe = require 'ioe'
 
 local log = require 'utils.logger'.new('CFG')
@@ -17,11 +19,11 @@ local def_conf = {}
 local db_file = "cfg.json"
 local md5sum = ""
 local db_modification = 0
-local db_restful = nil
 local db_failure = false
 
 local lock = nil -- Critical Section
 local command = {}
+local cfg_lock = nil
 
 function command.GET(app, ...)
 	return dc.get('APPS', app, ...)
@@ -40,6 +42,10 @@ local function get_cfg_str()
 	return str, md5.sumhexa(str)	
 end
 
+--- Order or reading pre-defaults
+-- read /etc/freeioe.conf
+-- get enviorment from system
+-- hardcode with ioe.thingsroot.com and pkg ver 1
 local function load_defaults()
 	if lfs.attributes(def_file, 'mode') then
 		local conf = inifile.parse(def_file)
@@ -73,7 +79,6 @@ local function _sys_defaults()
 		PKG_VER = pkg_ver,
 		PKG_HOST_URL = url_def,
 		CNF_HOST_URL = url_def,
-		--CFG_AUTO_UPLOAD = true,
 		WORK_MODE = 0, --
 	}
 end
@@ -270,6 +275,11 @@ local function load_cfg(path)
 end
 
 local function save_cfg(path, content, content_md5sum)
+	if cfg_lock then
+		log.info("Saving configuration failed, as it is locked")
+		return
+	end
+
 	log.info("Saving configuration...")
 	if path == db_file then
 		backup_cfg(path)
@@ -297,62 +307,65 @@ local function save_cfg(path, content, content_md5sum)
 	return true
 end
 
-local function save_cfg_cloud(content, content_md5sum, rest)
+local function save_cfg_cloud(content, content_md5sum, timestamp, comment)
 	assert(content, content_md5sum)
-	if not rest then
-		return nil, "Restful api missing, cannot upload configuration to cloud"
-	end
 
 	log.info("Start to upload configuration to cloud")
 
-	local id = dc.get("CLOUD", "ID") or dc.wait("SYS", "ID")
-	local url = "/conf_center/upload_device_conf"
-	local params = {
-		sn = id,
-		timestamp = db_modification,
-		data = content,
-		md5 = content_md5sum,
-	}
-	local status, body = rest:post(url, params)
-	if not status or status ~= 200 then
-		log.warning("Upload configuration failed. Status:", status or -1, body)
-		return nil, "Upload configuration failed!"
+	local ret, err = pkg_file.upload('cfg.json', content, content_md5sum, timestamp, comment)
+
+	if not ret then
+		log.warning("Upload configuration failed. Error:", err)
+		return nil, err
 	else
 		log.info("Upload configuration done!")
 		return true
 	end
 end
 
-local function load_cfg_cloud(cfg_id, rest)
+local function load_cfg_cloud(cfg_id)
 	assert(cfg_id)
-	if not rest then
-		return nil, "Restful api missing, cannot download configruation from cloud"
-	end
+	log.info("Start to download configuration from cloud", cfg_id)
 
-	log.info("Start to download configuration from cloud")
-
-	local id = dc.get("CLOUD", "ID") or dc.wait("SYS", "ID")
-	local status, body = rest:get("/conf_center/device_conf_data", nil, {sn=id, name=cfg_id})
-	if not status or status ~= 200 then
-		log.warning("Download configuration failed. Status:", status or -1, body)
+	local data, md5sum = pkg_file.download(cfg_id)
+	if not data then
+		log.warning("Download configuration failed. Error:", md5)
 		return nil, "Failed to download configuration, id:"..cfg_id
 	end
-	local new_cfg = cjson.decode(body) or {}
 
-	local new_content = new_cfg.data
-	local new_md5sum = new_cfg.md5
-
-	local sum = md5.sumhexa(new_content)
-	if sum ~= new_md5sum then
-		log.warning("MD5 Checksum failed.", sum, new_md5sum)
+	local sum = md5.sumhexa(data)
+	if sum ~= md5sum then
+		log.warning("MD5 Checksum failed.", sum, md5sum)
 		return nil, "The fetched configuration checksum incorrect!"
 	end
 
-	local r, err = save_cfg(db_file, new_content, new_md5sum)
+	local cfg_data, err = cjson.decode(data)
+	if not cfg_data then
+		log.warning("Loading cfg json failed.", err)
+		return nil, err
+	end
+
+	--- Make sure we will not over-write the important things
+	cfg_data.sys.ID = ioe.id()
+	cfg_data.sys.PKG_VER = ioe.pkg_ver()
+	cfg_data.sys.PKG_HOST_URL = ioe.pkg_host_url()
+	cfg_data.sys.CNF_HOST_URL = ioe.cnf_host_url()	
+	cfg_data.cloud.HOST = ioe.cloud_host()
+
+	local cfg_str, err = cjson.encode(cfg_data)
+	if not cfg_str then
+		log.warning("Encoding cfg json failed.", err)
+		return nil, err
+	end
+	local cfg_md5 = md5.sumhexa(cfg_str)
+
+	local r, err = save_cfg(db_file, cfg_str, cfg_md5)
 	if not r  then
 		log.warning("Saving configurtaion failed.", err)
 		return nil, "Saving configuration failed!"
 	end
+
+	cfg_lock = true --lock it and wait for abort
 
 	log.notice("Download configuration finished. FreeIOE is reloading!!")
 	ioe.abort()
@@ -373,14 +386,9 @@ function command.SAVE(opt_path)
 		else
 			return nil, err
 		end
-
-		local cfg_upload = dc.get("SYS", "CFG_AUTO_UPLOAD")
-		if cfg_upload then
-			return save_cfg_cloud(str, sum, db_restful)
-		else
-			return true
-		end
 	end
+
+	return true
 end
 
 --[[
@@ -389,25 +397,13 @@ function command.CLEAR()
 end
 ]]--
 
-function command.DOWNLOAD(id, host)
-	local rest = host and restful:new(host) or db_restful
-	return load_cfg_cloud(id, rest)
+function command.DOWNLOAD(id)
+	return load_cfg_cloud(id)
 end
 
 function command.UPLOAD(host)
-	local rest = host and restful:new(host) or db_restful
 	local str, sum = get_cfg_str()
-	return save_cfg_cloud(str, sum, rest)
-end
-
-local function init_restful()
-	local cfg_upload = dc.get("SYS", "CFG_AUTO_UPLOAD")
-	local cfg_host = dc.get("SYS", "CNF_HOST_URL")
-
-	if cfg_upload and cfg_host then
-		log.info("Configuration cloud upload enabled! Server:", cfg_host)
-		db_restful = restful:new(cfg_host)
-	end
+	return save_cfg_cloud(str, sum)
 end
 
 skynet.start(function()
@@ -429,8 +425,6 @@ skynet.start(function()
 
 	load_cfg(db_file)
 	log.info("BETA:", dc.get('SYS', 'USING_BETA'), 'MODE:', dc.get('SYS', 'WORK_MODE'))
-
-	init_restful()
 
 	skynet.fork(function()
 		while true do
