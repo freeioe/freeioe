@@ -1034,12 +1034,12 @@ function accept.set_cloud_conf(id, args)
 end
 
 function accept.download_cfg(id, args)
-	local r, err = skynet.call(".cfg", "lua", "download", args.name, args.host)
+	local r, err = skynet.call(".cfg", "lua", "download", args.name)
 	snax.self().post.action_result('sys', id, r, err)
 end
 
 function accept.upload_cfg(id, args)
-	local r, err = skynet.call(".cfg", "lua", "upload", args.host)
+	local r, err = skynet.call(".cfg", "lua", "upload", args.comment)
 	snax.self().post.action_result('sys', id, r, err)
 end
 

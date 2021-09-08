@@ -1,4 +1,7 @@
 local lfs = require 'lfs'
+local sha1 = require 'hashings.sha1'
+local hmac = require 'hashings.hmac'
+local ioe = require 'ioe'
 
 local _M = {}
 
@@ -83,6 +86,11 @@ end
 function _M.generate_tmp_path(app_name, version, ext)
 	local app_name_escape = string.gsub(app_name, '/', '__')
 	return "/tmp/"..app_name_escape.."_"..version..os.time()..ext
+end
+
+function _M.gen_token(id)
+	local secret = ioe.cloud_secret()
+	return hmac:new(sha1, secret, id):hexdigest() --- hash the id as token
 end
 
 return _M

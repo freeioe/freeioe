@@ -39,6 +39,14 @@ _M.cloud_host = function()
 	return dc.wait("CLOUD", "HOST")
 end
 
+_M.cloud_port = function()
+	return dc.wait("CLOUD", "PORT")
+end
+
+_M.cloud_secret = function()
+	return dc.wait("CLOUD", "SECRET")
+end
+
 _M.set_data_cache = function(enable)
 	dc.set("CLOUD", "DATA_CACHE", enable == true or enable == 1)
 end

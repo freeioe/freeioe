@@ -40,12 +40,11 @@ function _M.http_post(url, data)
 end
 
 function _M.latest_version(app, is_core)
-	local sn = ioe.id() or ioe.hw_id()
 	local beta = ioe.beta()
 
 	local query = {
 		app = app,
-		sn = sn,
+		device = ioe.id(),
 		is_core = is_core,
 		platform = sysinfo.platform(),
 		beta = (beta == true and 1 or 0)
@@ -59,19 +58,14 @@ function _M.latest_version(app, is_core)
 end
 
 function _M.check_version(app, version, is_core)
-	local sn = ioe.id() or ioe.hw_id()
-
-	local version = version
-	if type(version) == 'number' then
-		version = string.format("%d", version)
-	end
+	local version = tonumber(version) or 0
 
 	local data = {
 		app = app,
-		sn = sn,
+		device = ioe.id(),
 		is_core = is_core,
 		platform = sysinfo.platform(),
-		versio = version
+		version = version
 	}
 
 	local data, err = _M.http_post(_M.url_check_version, data)
@@ -83,15 +77,13 @@ function _M.check_version(app, version, is_core)
 end
 
 function _M.user_access(auth_code)
-	local sn = ioe.id() or ioe.hw_id()
-
 	local headers = {
 		Accpet = "application/json",
 		['user-token'] = auth_code
 	}
 
 	local data = {
-		sn = sn,
+		device = ioe.id(),
 		token = auth_code
 	}
 

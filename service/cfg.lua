@@ -271,7 +271,10 @@ local function load_cfg(path)
 	local _, csum = get_cfg_str()
 	md5sum = csum or sum
 
+	-- The config is ok, thus backup it
 	backup_cfg(path)
+
+	return true
 end
 
 local function save_cfg(path, content, content_md5sum)
@@ -307,12 +310,12 @@ local function save_cfg(path, content, content_md5sum)
 	return true
 end
 
-local function save_cfg_cloud(content, content_md5sum, timestamp, comment)
+local function save_cfg_cloud(content, content_md5sum, comment)
 	assert(content, content_md5sum)
 
 	log.info("Start to upload configuration to cloud")
 
-	local ret, err = pkg_file.upload('cfg.json', content, content_md5sum, timestamp, comment)
+	local ret, err = pkg_file.upload('cfg.json', content, content_md5sum, os.time(), comment)
 
 	if not ret then
 		log.warning("Upload configuration failed. Error:", err)
@@ -351,6 +354,8 @@ local function load_cfg_cloud(cfg_id)
 	cfg_data.sys.PKG_HOST_URL = ioe.pkg_host_url()
 	cfg_data.sys.CNF_HOST_URL = ioe.cnf_host_url()	
 	cfg_data.cloud.HOST = ioe.cloud_host()
+	cfg_data.cloud.PORT = ioe.cloud_port()
+	cfg_data.cloud.SECRET = ioe.cloud_secret()
 
 	local cfg_str, err = cjson.encode(cfg_data)
 	if not cfg_str then
@@ -401,9 +406,9 @@ function command.DOWNLOAD(id)
 	return load_cfg_cloud(id)
 end
 
-function command.UPLOAD(host)
+function command.UPLOAD(comment)
 	local str, sum = get_cfg_str()
-	return save_cfg_cloud(str, sum)
+	return save_cfg_cloud(str, sum, comment)
 end
 
 skynet.start(function()
