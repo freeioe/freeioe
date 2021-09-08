@@ -9,9 +9,12 @@ return {
 		local skynet_version = get.skynet_version
 		local plat = sysinfo.platform()
 
-		local ioe_type, err = skynet.call(".upgrader", "lua", "check_version", "freeioe", version, true)
-		local skynet_type, err = skynet.call(".upgrader", "lua", "check_version", "skynet", skynet_version, true)
+		local ioe_data, err = skynet.call(".upgrader", "lua", "check_version", "freeioe", version, true)
+		local skynet_data, err = skynet.call(".upgrader", "lua", "check_version", "skynet", skynet_version, true)
 		
-		lwf.json(self, {ioe=ioe_type, skynet=skynet_type})
+		lwf.json(self, {
+			ioe = ioe_data.beta and 'beta' or 'release',
+			skynet = skynet_data and 'beta' or 'release'
+		})
 	end,
 }
