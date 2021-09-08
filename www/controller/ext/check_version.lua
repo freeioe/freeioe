@@ -11,7 +11,7 @@ return {
 		local tp, err = skynet.call(".ioe_ext", "lua", "check_version", ext, version)
 		local ret = {}
 		if tp then
-			ret['type'] = tp
+			ret['type'] = tp.beta and 'beta' or 'release'
 		else
 			ret.message = err
 		end

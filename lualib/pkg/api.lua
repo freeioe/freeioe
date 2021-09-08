@@ -52,9 +52,9 @@ function _M.latest_version(app, is_core)
 
 	local data, err = _M.http_post(_M.url_latest_version, query)
 	if data then
-		return data -- {version: 111, beta: 0}
+		return data -- { version: 111, beta: 0 }
 	end
-	return nil, err
+	return nil, 'Pull latest version failed, error: '..err
 end
 
 function _M.check_version(app, version, is_core)
@@ -71,9 +71,9 @@ function _M.check_version(app, version, is_core)
 	local data, err = _M.http_post(_M.url_check_version, data)
 
 	if data then
-		return data.beta --- true or false
+		return data --- { version: 111, beta: 0 }
 	end
-	return nil, err
+	return nil, 'Check version failed, error: '..err
 end
 
 function _M.user_access(auth_code)

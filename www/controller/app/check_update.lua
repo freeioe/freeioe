@@ -10,7 +10,7 @@ return {
 			lwf.json(self, {version=app.version})
 			return
 		end
-		assert(app and app.name==get.app)
+		assert(app and app.name)
 		local data = skynet.call(".upgrader", "lua", "latest_version", app.name, false)
 		assert(data)
 		lwf.json(self, {version=data.version, beta=data.beta})

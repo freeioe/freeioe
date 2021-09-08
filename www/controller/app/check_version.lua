@@ -7,7 +7,7 @@ return {
 		local inst = get.inst
 		local version = get.version
 		local app = dc.get('APPS', inst)
-		assert(app and app.name==get.app)
+		assert(app and app.name)
 
 		if app.islocal then
 			lwf.json(self, {
@@ -19,7 +19,7 @@ return {
 		local tp, err = skynet.call(".upgrader", "lua", "check_version", app.name, app.version, false)
 		local ret = {}
 		if tp then
-			ret['type'] = tp
+			ret['type'] = tp.beta and 'beta' or 'release'
 		else
 			ret.message = err
 		end

@@ -464,8 +464,10 @@ end
 function command.latest_version(app, is_core)
 	local r, err = pkg_api.latest_version(app, is_core)
 	if not r then
-		log.error(err)
+		log.error(err, app, is_core)
 		r = { version = 0, beta = true }
+	else
+		log.info("Got app latest version", r.version, r.beta, app, is_core)
 	end
 	return r
 end
@@ -473,8 +475,10 @@ end
 function command.check_version(app, version, is_core)
 	local r, err = pkg_api.check_version(app, version, is_core)
 	if r == nil then
-		log.error(err)
+		log.error(err, app, is_core)
 		r = true
+	else
+		log.info("Got app version", r, app, is_core)
 	end
 	return r
 end
