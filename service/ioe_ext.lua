@@ -327,12 +327,22 @@ end
 
 function command.check_version(ext, version)
 	assert(ext, "Extention name required!")
-	return pkg_api.check_version(ext, version, true)
+	local r, err = pkg_api.check_version(ext, version, true)
+	if not r then
+		log.error(err)
+		r = { version = 0, beta = true }
+	end
+	return r
 end
 
 function command.latest_version(ext)
 	assert(ext, "Extention name required!")
-	return pkg_api.latest_version(ext, true)
+	local r, err = pkg_api.latest_version(ext, true)
+	if not r then
+		log.error(err)
+		r = true
+	end
+	return r
 end
 
 function command.auto_clean()

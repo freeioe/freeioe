@@ -19,7 +19,7 @@ function _M.upload(filename, data, md5sum, timestamp, comment)
 		sn = sn,
 		token = token,
 		timestamp = timestamp,
-		comment = comment or 'Device auto upload'
+		comment = comment or 'Device auto upload',
 		data = data,
 		md5 = sum,
 	}

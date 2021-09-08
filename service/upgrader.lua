@@ -462,11 +462,21 @@ function command.list_app()
 end
 
 function command.latest_version(app, is_core)
-	return pkg_api.latest_version(app, is_core)
+	local r, err = pkg_api.latest_version(app, is_core)
+	if not r then
+		log.error(err)
+		r = { version = 0, beta = true }
+	end
+	return r
 end
 
 function command.check_version(app, version, is_core)
-	return pkg_api.check_version(app, version, is_core)
+	local r, err = pkg_api.check_version(app, version, is_core)
+	if r == nil then
+		log.error(err)
+		r = true
+	end
+	return r
 end
 
 function command.enable_beta()

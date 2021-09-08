@@ -22,8 +22,8 @@ function _M.http_post(url, data)
 	local pkg_host = ioe.pkg_host_url()
 	local api = restful:new(pkg_host)
 
+	log.info('pkg.api.http_post', pkg_host..url)
 	local status, body, header = api:post(url, nil, data)
-	log.info('pkg.api.http_post', pkg_host..url, status, header or body)
 
 	local ret = {}
 	if status == 200 then
@@ -33,6 +33,7 @@ function _M.http_post(url, data)
 		end
 		return msg.data
 	else
+		log.error(pkg_host..url, status, body)
 		return nil, body
 	end
 
@@ -76,7 +77,7 @@ function _M.check_version(app, version, is_core)
 	local data, err = _M.http_post(_M.url_check_version, data)
 
 	if data then
-		return data.beta
+		return data.beta --- true or false
 	end
 	return nil, err
 end
@@ -86,7 +87,7 @@ function _M.user_access(auth_code)
 
 	local headers = {
 		Accpet = "application/json",
-		user-token = auth_code
+		['user-token'] = auth_code
 	}
 
 	local data = {
