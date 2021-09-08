@@ -58,7 +58,7 @@ function _M.download(id)
 	local rest = restful:new(ioe.cnf_host_url())
 
 	local query = { device = sn, token = token, id = id }
-	local status, header, body = rest:get(_M.url_download, query)
+	local status, body, header = rest:get(_M.url_download, query)
 
 	local ret = {}
 	if status == 200 then
