@@ -2,6 +2,7 @@ local datacenter = require 'skynet.datacenter'
 local cjson = require 'cjson.safe'
 local httpdown = require 'http.download'
 local class = require 'middleclass'
+local pkg_api = require 'pkg.api'
 local ioe = require 'ioe'
 local lfs = require 'lfs'
 
@@ -34,27 +35,7 @@ end
 -- Check application configuration update
 -- @treturn number(int) Latest version
 function api:version()
-	local url = '/conf_center/get_latest_version'
-	local query = { sn = self._sn, app = self._app, conf = self._conf }
-	local status, header, body = httpdown.get(self._host, url, api_header, query)
-	self._log:debug('conf_api.version', self._host..url, status, body or header)
-	local ret = {}
-	if status == 200 then
-		local msg, err = cjson.decode(body)
-		if not msg then
-			return nil, err
-		end
-		if not msg.message then
-			return nil, "No version found!"
-		end
-		if type(msg.message) == 'table' then
-			return math.tointeger(msg.message.version or msg.message.Version)
-		else
-			return math.tointeger(msg.message)
-		end
-	else
-		return nil, body
-	end
+	return pkg_api.conf_latest_version(self._sn, self._app, self._conf)
 end
 
 ---
@@ -70,31 +51,12 @@ function api:data(version)
 	if data then
 		return data, version
 	end
-	
-	local url = '/conf_center/app_conf_data'
-	local query = { sn = self._sn, app = self._app, conf = self._conf, version = version }
-	local status, header, body = httpdown.get(self._host, url, api_header, query)
-	self._log:debug('conf_api.data', self._host..url, status, body or header)
-	local ret = {}
-	if status == 200 then
-		local msg = cjson.decode(body)
-		if not msg then
-			return nil, err
-		end
-		if not msg.message then
-			return nil, "Version not valided!"
-		end
-		if math.tointeger(msg.message.version) == -1 then
-			return nil, "Cloud configuration not found in sever!"
-		end
-		if math.tointeger(msg.message.version) ~= tonumber(version) then
-			return nil, "Version is different"
-		end
-		self:_save_local_data(msg.message.data, version)
-		return msg.message.data, msg.message.version
-	else
-		return nil, body
+
+	local data, err = pkg_api.conf_download(self._sn, self._app, self._conf, version)
+	if data then
+		self:_save_local_data(data, version)
 	end
+	return data, err
 end
 
 --- Fetch and return file path
