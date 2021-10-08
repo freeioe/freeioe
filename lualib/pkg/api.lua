@@ -90,18 +90,6 @@ function _M.user_access(auth_code)
 	return _M.http_post(_M.url_user_access, data)
 end
 
-local function get_core_name(name)
-	assert(name, 'Core name is required!')
-	local platform = sysinfo.platform()
-	if platform then
-		--name = platform.."_"..name
-		--- FreeIOE not takes the os version before. so using openwrt/arm_cortex-a9_neon_skynet as download core name
-		---		now it switched to bin/openwrt/17.01/arm_cortex-a9_neon/skynet
-		name = string.format("bin/%s/%s", platform, name)
-	end
-	return name
-end
-
 --- Is Core is used by store v2
 -- is_extension is used by store v1
 function _M.create_download_func(app, version, ext, is_extension, token, is_core)
@@ -113,10 +101,6 @@ function _M.create_download_func(app, version, ext, is_extension, token, is_core
 	--- All lua5.3 extension stop on version 43
 	if is_extension and _VERSION == 'Lua 5.3' then
 		version = 43
-	end
-
-	if is_extension and app ~= 'freeioe' then
-		app = get_core_name(app)
 	end
 
 	if version == 'latest' and ioe.beta() then
