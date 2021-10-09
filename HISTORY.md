@@ -3,7 +3,7 @@
 
 # Release history
 
-v2.0.1 ()
+v2.0.1 (2021-10-09)
 ------------------
 
 * Fixed PKG version 2 
