@@ -412,13 +412,14 @@ local try_gen_ioe_sn_by_mac_addr = function()
 end
 
 local try_read_ioe_sn_by_sysinfo = function(cmd)
+	assert(cmd)
 	local s, err = _M.exec('sysinfo '..cmd)
 	if s and string.len(s) > 0 then
 		local patt = '%g'
 		if _VERSION == 'Lua 5.1' then
 			patt = '[^%s]'
 		end
-		return string.match(s, string.upper(cms)..":%s+("..patt.."+)")
+		return string.match(s, string.upper(cmd)..":%s+("..patt.."+)")
 	end
 end
 
