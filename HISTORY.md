@@ -3,6 +3,13 @@
 
 # Release history
 
+v2.0.2 ()
+------------------
+
+* Fixed siridb float value issue
+* Support using sysinfo sn reading hardware sn
+
+
 v2.0.1 (2021-10-09)
 ------------------
 

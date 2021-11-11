@@ -411,8 +411,8 @@ local try_gen_ioe_sn_by_mac_addr = function()
 	end
 end
 
-local try_read_ioe_sn_by_sysinfo = function()
-	local s, err = _M.exec('sysinfo psn')
+local try_read_ioe_sn_by_sysinfo = function(cmd)
+	local s, err = _M.exec('sysinfo '..cmd)
 	if s and string.len(s) > 0 then
 		local patt = '%g'
 		if _VERSION == 'Lua 5.1' then
@@ -428,8 +428,12 @@ local read_ioe_sn = function()
 	if _ioe_sn then
 		return _ioe_sn
 	end
+
 	-- TODO: for device sn api
-	_ioe_sn = try_read_ioe_sn_from_config() or try_read_ioe_sn_by_sysinfo()
+	_ioe_sn = try_read_ioe_sn_from_config()
+			or try_read_ioe_sn_by_sysinfo('sn')
+			or try_read_ioe_sn_by_sysinfo('psn')
+
 	if not _ioe_sn then
 		_ioe_sn = try_gen_ioe_sn_by_mac_addr() or _M.unknown_ioe_sn
 	end
