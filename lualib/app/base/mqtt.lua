@@ -424,6 +424,7 @@ end
 
 function app:_init_cov()
 	if self._disable_cov then
+		self._log:warning('COV is disabled')
 		return
 	end
 	local cov_opt = {ttl=self._ttl, float_threshold = self._float_threshold}
@@ -439,6 +440,7 @@ function app:_init_pb()
 	end
 
 	if self._period < 1 then
+		self._log:warning('Period buffer not enabled', self._period)
 		return
 	end
 
