@@ -49,7 +49,7 @@ function series:push_value(value, timestamp)
 	elseif vt == 'string' then
 		value = tostring(value) or 'ERROR_STRING'
 	else
-		value = (tonumber(value) or 0) + 0.0
+		value = (tonumber(value) or 0) + 0.0000001
 	end
 	table.insert(self._values, {timestamp or skynet.time(), value})
 end
