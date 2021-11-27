@@ -1,5 +1,6 @@
 local skynet = require 'skynet'
 local class = require 'middleclass'
+local log = require 'utils.logger'.new()
 
 local series = class('db.siridb.series')
 
@@ -49,8 +50,9 @@ function series:push_value(value, timestamp)
 	elseif vt == 'string' then
 		value = tostring(value) or 'ERROR_STRING'
 	else
-		value = (tonumber(value) or 0) + 0.0000001
+		value = (tonumber(value) or 0) + 0.0
 	end
+	log.debug('SIRIDB.series', self._name, self._value_type, value, timestamp)
 	table.insert(self._values, {timestamp or skynet.time(), value})
 end
 
