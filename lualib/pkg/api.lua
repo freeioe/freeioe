@@ -123,7 +123,7 @@ function _M.create_download_func(app, version, ext, is_extension, token, is_core
 		local pkg_host = ioe.pkg_host_url()
 
 		local url = url_base.."/"..app.."/"..version..ext
-		if is_extension then
+		if is_extension or app == 'skynet' then
 			local plat = sysinfo.platform()
 			url = _M.url_packages.."/bin/"..plat.."/"..app.."/"..version..ext
 		end
