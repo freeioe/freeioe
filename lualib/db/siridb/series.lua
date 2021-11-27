@@ -52,7 +52,7 @@ function series:push_value(value, timestamp)
 	else
 		value = (tonumber(value) or 0) + 0.0
 	end
-	log.debug('SIRIDB.series', self._name, self._value_type, value, timestamp)
+	-- log.debug('SIRIDB.series', self._name, self._value_type, value, timestamp)
 	table.insert(self._values, {timestamp or skynet.time(), value})
 end
 

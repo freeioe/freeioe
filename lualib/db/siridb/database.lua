@@ -1,7 +1,9 @@
-local qpack = require 'qpack.safe'
+local cjson = require 'cjson.safe'
 local class = require 'middleclass'
 local restful = require 'http.restful'
 local sdata = require 'db.siridb.data'
+
+local has_qpack, qpack = pcall(require, 'qpack.safe')
 
 local database = class('db.siridb.database')
 
@@ -37,6 +39,10 @@ function database:options()
 end
 
 function database:post(url, params, data)
+	if not has_qpack then
+		return self._rest:post(url, params, data)
+	end
+
 	local body = nil
 	if data then
 		local str, err = qpack.encode(data)
@@ -50,6 +56,10 @@ function database:post(url, params, data)
 end
 
 function database:get(url, params, data)
+	if not has_qpack then
+		return self._rest:get(url, params, data)
+	end
+
 	local body = nil
 	if data then
 		local str, err = qpack.encode(data)
@@ -89,7 +99,8 @@ function database:query(query, time_precision)
 		t = time_precision or self._ts
 	})
 	if status == 200 then
-		local data, err = qpack.decode(body)
+		local pk = has_qpack and qpack or cjson
+		local data, err = pk.decode(body)
 		if not data then
 			return nil, err
 		end
@@ -102,7 +113,8 @@ function database:exec(sql)
 	assert(sql, "query string missing")
 	local status, body = self:post('/query/'..self._db, nil, {q = sql})
 	if status == 200 then
-		local data, err = qpack.decode(body)
+		local pk = has_qpack and qpack or cjson
+		local data, err = pk.decode(body)
 		if not data then
 			return nil, err
 		end
