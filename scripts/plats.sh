@@ -15,6 +15,9 @@ plats["openwrt/19.07/arm_cortex-a9_neon"]="imx6_19.07.sh"
 plats["openwrt/19.07/arm_cortex-a7_neon-vfpv4"]="sunxi_a7_19.07.sh"
 plats["openwrt/19.07/x86_64"]="x86_64_glibc_19.07.sh"
 
+## 21.02
+plats["openwrt/21.02/aarch64_cortex-a72"]="brcm_a72_21.02.sh"
+
 ## openwrt master
 plats["openwrt/snapshot/arm_cortex-a7_neon-vfpv4"]="sunxi_a7_snapshot.sh"
 plats["openwrt/snapshot/aarch64_cortex-a53"]="sunxi_a53_snapshot.sh"
