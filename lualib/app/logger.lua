@@ -56,12 +56,6 @@ end
 
 local function make_func(logger, name)
 	logger[name] = function(self, ...)
-		--[[
-		if os.getenv('IOE_LOG_LEVEL') == 'trace' then
-			return self:log_with_name(name, ...)
-		end
-		return self:log(name, ...)
-		]]--
 		return self:log_with_name(name, ...)
 	end
 end

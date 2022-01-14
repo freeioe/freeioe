@@ -6,6 +6,9 @@ local log = require 'log'
 local LOG = nil
 local function create_log()
 	local max_lvl = os.getenv('IOE_LOG_LEVEL') or 'info'
+	if os.getenv('IOE_DEVELOPER_MODE') then
+		max_lvl = 'trace'
+	end
 	LOG = log.new(
 		max_lvl, -- maximum log level
 
