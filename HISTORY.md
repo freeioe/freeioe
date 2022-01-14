@@ -3,7 +3,7 @@
 
 # Release history
 
-v2.0.2 ()
+v2.0.2 (2022-01-14)
 ------------------
 
 * Fixed siridb float value issue
