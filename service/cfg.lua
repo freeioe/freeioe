@@ -61,7 +61,7 @@ local function load_defaults()
 
 	local env_host = os.getenv('IOE_CLOUD_HOST')
 	if env_pkg_url then
-		def_conf.IOE_PKG_URL = env_host
+		def_conf.IOE_CLOUD_HOST = env_host
 	end
 
 	local env_ver = os.getenv('IOE_PKG_VERSION')
