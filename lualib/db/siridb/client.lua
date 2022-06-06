@@ -25,7 +25,7 @@ end
 function client:post(url, params, data)
 	local sts, body = self._rest:post(url, params, data)
 	if tonumber(sts) == 200 then
-		return cjson.decode(body)
+		return cjson.decode(body), body
 	end
 	return nil, body
 end
