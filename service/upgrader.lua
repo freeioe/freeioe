@@ -799,9 +799,18 @@ end
 
 function command.system_quit(id, args)
 	aborting = true
-	local delay = (args.delay or 5) * 1000
-	ioe.abort(delay)
-	return true, "FreeIOE will reboot after "..delay.." ms"
+
+	local appmgr = snax.uniqueservice("appmgr")
+	if appmgr then
+		appmgr.post.close_all("FreeIOE is aborting!!!")
+	end
+
+	local delay = args.delay or 5
+	skynet.timeout(delay * 100, function()
+		skynet.abort()
+	end)
+
+	return true, "FreeIOE will reboot after "..delay.." s"
 end
 
 local function check_rollback()

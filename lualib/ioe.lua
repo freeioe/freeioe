@@ -39,12 +39,24 @@ _M.cloud_host = function()
 	return dc.wait("CLOUD", "HOST")
 end
 
+_M.set_cloud_host = function(value)
+	dc.set("CLOUD", "HOST", value)
+end
+
 _M.cloud_port = function()
 	return dc.wait("CLOUD", "PORT")
 end
 
+_M.set_cloud_port = function(value)
+	dc.set("CLOUD", "PORT", value)
+end
+
 _M.cloud_secret = function()
 	return dc.wait("CLOUD", "SECRET")
+end
+
+_M.set_cloud_secret = function(value)
+	dc.set("CLOUD", "SECRET", value)
 end
 
 _M.set_data_cache = function(enable)
@@ -83,6 +95,10 @@ _M.pkg_ver = function()
 		return 1
 	end
 	return tonumber(ver)
+end
+
+_M.set_pkg_ver = function(value)
+	dc.set("SYS", "PKG_VER", value)
 end
 
 _M.pkg_host_url = function()
@@ -136,20 +152,10 @@ _M.socketchannel = require 'socketchannel'
 _M.basexx = require 'basexx'
 ]]--
 
-_M.abort_prepare = function()
-	local appmgr = snax.uniqueservice("appmgr")
-	if appmgr then
-		appmgr.post.close_all("FreeIOE is aborting!!!")
-	end
-end
-
 _M.abort = function(timeout)
-	_M.abort_prepare()
-
-	local timeout = timeout or 5000
-	skynet.timeout(timeout / 10, function()
-		skynet.abort()
-	end)
+	local timeout = timeout or 5
+	skynet.call(".cfg", "lua", "save")
+	skynet.call(".upgrader", "lua", "system_quit", id, {delay=timeout})
 end
 
 _M.env = {

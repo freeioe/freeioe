@@ -10,7 +10,7 @@ local lfs = require 'lfs'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 12 -- 2021.6.8 :: http.restful api support basic and digest auth method
+sys.API_VER = 14 -- 2022.6.13 :: ioe module support cloud changes
 sys.API_MIN_VER = 1
 
 function sys:log(level, ...)
