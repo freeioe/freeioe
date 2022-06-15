@@ -3,7 +3,7 @@
 
 # Release history
 
-v2.0.3 ()
+v2.1.0 (2022-06-15)
 ------------------
 
 * Fixed aborting issue
