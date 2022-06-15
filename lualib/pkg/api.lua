@@ -15,13 +15,14 @@ _M.url_packages = '/download/packages'
 
 _M.url_download = '/pkg/download'
 _M.url_download_hash = '/pkg/download_hash'
+_M.url_pkg_version = '/pkg/version'
 _M.url_latest_version = '/pkg/latest_version' -- check version update
 _M.url_check_version = '/pkg/check_version' -- check if it is beta
 _M.url_user_access = '/pkg/user_access' -- User access device checking
 _M.url_conf_download = '/pkg/conf/download'
 _M.url_conf_latest_version = '/pkg/conf/latest_version'
 
-function _M.http_post(url, data)
+function _M.http_post(url, data, not_log)
 	local pkg_host = ioe.pkg_host_url()
 	local api = restful:new(pkg_host)
 
@@ -36,7 +37,9 @@ function _M.http_post(url, data)
 		end
 		return msg.data
 	else
-		log.error(pkg_host..url, status, body)
+		if not_log ~= true then
+			log.error(pkg_host..url, status, body)
+		end
 		return nil, body
 	end
 end
@@ -90,11 +93,38 @@ function _M.user_access(auth_code)
 	return _M.http_post(_M.url_user_access, data)
 end
 
+function _M.fetch_pkg_ver()
+	local pkg_host = ioe.pkg_host_url()
+	log.notice('Fetch pkg version from: '..pkg_host)
+
+	local data = {
+		device = ioe.id(),
+		platform = sysinfo.platform()
+	}
+	local resp, err = _M.http_post(_M.url_pkg_version, data, true)
+
+	local ver = 1
+
+	if resp then
+		if type(resp) == 'table' then
+			ver = tonumber(resp.version) or 1
+		else
+			ver = tonumber(resp) or 1
+		end
+	else
+		ver = 1
+	end
+
+	log.notice('Fetch pkg version'..ver)
+
+	return ver
+end
+
 --- Is Core is used by store v2
 -- is_extension is used by store v1
 function _M.create_download_func(app, version, ext, is_extension, token, is_core)
-	--- PKG Version two
-	if ioe.pkg_ver() > 1 then
+	--- PKG Version Check
+	if _M.fetch_pkg_ver() > 1 then
 		return _M.create_download_func_v2(app, version, ext, token, is_core)
 	end
 
@@ -215,7 +245,7 @@ function _M.create_download_func_v2(app, version, ext, token, is_core)
 end
 
 function _M.conf_latest_version(app_sn, app, conf)
-	if ioe.pkg_ver() >= 2 then
+	if _M.fetch_pkg_ver() > 1 then
 		return _M.conf_latest_version_v2(app, conf)
 	end
 
@@ -263,7 +293,7 @@ function _M.conf_latest_version_v2(app, conf)
 end
 
 function _M.conf_download(app_sn, app, conf, version, token)
-	if ioe.pkg_ver() >= 2 then
+	if _M.fetch_pkg_ver() > 1 then
 		return _M.conf_download_v2(app, conf, version, token)
 	end
 

@@ -63,20 +63,13 @@ local function load_defaults()
 	if env_pkg_url then
 		def_conf.IOE_CLOUD_HOST = env_host
 	end
-
-	local env_ver = os.getenv('IOE_PKG_VERSION')
-	if env_ver then
-		def_conf.IOE_PKG_VERSION = env_ver 
-	end
 end
 
 local function _sys_defaults()
 	local ioe_sn = sysinfo.ioe_sn()
 	local url_def = def_conf.IOE_PKG_URL or 'ioe.thingsroot.com'
-	local pkg_ver = def_conf.IOE_PKG_VERSION or 1
 	return {
 		ID = ioe_sn,
-		PKG_VER = pkg_ver,
 		PKG_HOST_URL = url_def,
 		CNF_HOST_URL = url_def,
 		WORK_MODE = 0, --
@@ -350,7 +343,6 @@ local function load_cfg_cloud(cfg_id)
 
 	--- Make sure we will not over-write the important things
 	cfg_data.sys.ID = ioe.id()
-	cfg_data.sys.PKG_VER = ioe.pkg_ver()
 	cfg_data.sys.PKG_HOST_URL = ioe.pkg_host_url()
 	cfg_data.sys.CNF_HOST_URL = ioe.cnf_host_url()	
 	cfg_data.cloud.HOST = ioe.cloud_host()
