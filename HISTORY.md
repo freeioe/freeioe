@@ -7,6 +7,7 @@ v2.0.3 ()
 ------------------
 
 * Fixed aborting issue
+* Using fetched PKG version for backward compatibility
 
 
 v2.0.2 (2022-01-14)
