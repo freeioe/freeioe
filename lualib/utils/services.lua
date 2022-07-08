@@ -82,6 +82,7 @@ function services:remove()
 	if self._pm then
 		return true
 	end
+
 	self:_ctrl("disable")
 	os.execute('rm -f '..self._file)
 end
@@ -90,6 +91,7 @@ function services:__gc()
 	if self._pm then
 		return self._pm:stop()
 	end
+
 	self:stop()
 	self:remove()
 end
@@ -98,6 +100,7 @@ function services:start()
 	if self._pm then
 		return self._pm:start()
 	end
+
 	return self:_ctrl("start")
 end
 
@@ -105,6 +108,7 @@ function services:stop()
 	if self._pm then
 		return self._pm:stop()
 	end
+
 	return self:_ctrl("stop")
 end
 
@@ -112,6 +116,7 @@ function services:reload()
 	if self._pm then
 		return nil, "Not support"
 	end
+
 	return self:_ctrl("reload")
 end
 
@@ -119,6 +124,7 @@ function services:restart()
 	if self._pm then
 		return nil, "Not support"
 	end
+
 	return self:_ctrl("restart")
 end
 
@@ -126,12 +132,15 @@ function services:get_pid()
 	if self._pm then
 		return self._pm:get_pid()
 	end
+
 	local f, err = io.open(self._pid, 'r')
 	if not f then
 		return nil, 'pid file not found'..err
 	end
+
 	local id = f:read('*a')
 	f:close()
+
 	local pid = tonumber(id)
 	if not pid then
 		return nil, "pid file read error"
@@ -148,6 +157,8 @@ function services:status()
 	if not pid then
 		return nil, err
 	end
+
+	--- Kill -0 just check whther the pid exists
 	return os.execute('kill -0 '..pid)
 end
 
