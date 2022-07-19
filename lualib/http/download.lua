@@ -35,7 +35,7 @@ function _M.get(host, url, header, query, content)
     for k,v in pairs(query) do
         table.insert(q, string.format("%s=%s",escape(k),escape(v)))
     end
-    if #q then
+    if #q > 0 then
         url = url..'?'..table.concat(q, '&')
     end
 	-- print(url)
