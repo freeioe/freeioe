@@ -1,6 +1,6 @@
 # FreeIOE
 
-**[FreeIOE](http://freeioe.org)** 是用于快速构建物联网边缘计算网关的开源框架。 [English|英文](/README.md)
+**[FreeIOE](http://freeioe.org)** 是用于快速构建工业物联网边缘计算网关的开源框架。 [English|英文](/README.md)
 
 ## 如何使用
 

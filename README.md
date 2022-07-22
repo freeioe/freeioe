@@ -1,6 +1,6 @@
 # FreeIOE
 
-**[FreeIOE](http://freeioe.org)** is an open source framework for building IOE (Internet Of Everything) Edge-Computing Gateway. [Chinese|中文](/README_CN.md)
+**[FreeIOE](http://freeioe.org)** is an open source edge-computing framework for Industrial Internet of Things. [Chinese|中文](/README_CN.md)
 
 ## How To Use
 
