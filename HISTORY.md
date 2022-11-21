@@ -3,6 +3,12 @@
 
 # Release history
 
+v2.1.1 (2022-11-21)
+------------------
+
+* Fixed serial in_queue error checking
+
+
 v2.1.0 (2022-06-15)
 ------------------
 
