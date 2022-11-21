@@ -94,6 +94,9 @@ function serial:start(cb, timeout)
 				if not data then
 					break
 				end
+			else
+				cb(nil, err or "in_queue error")
+				break
 			end
 			skynet.sleep(1)
 		end
