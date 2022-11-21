@@ -88,12 +88,12 @@ function serial:start(cb, timeout)
 			end
 			local len, err = port:in_queue()
 			if len == nil then
-				cb(nil, err or "in_queue error")
+				cb(nil, tostring(err) or "in_queue error")
 				break
 			elseif len > 0 then
 				local data, err = port:read(len, timeout)
 				--print("SERIAL:", len, data, err)
-				cb(data, err)
+				cb(data, tostring(err) or "read error")
 				if not data then
 					break
 				end
