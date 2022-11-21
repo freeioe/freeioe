@@ -87,16 +87,16 @@ function serial:start(cb, timeout)
 				break
 			end
 			local len, err = port:in_queue()
-			if len and len > 0 then
+			if len == nil then
+				cb(nil, err or "in_queue error")
+				break
+			elseif len > 0 then
 				local data, err = port:read(len, timeout)
 				--print("SERIAL:", len, data, err)
 				cb(data, err)
 				if not data then
 					break
 				end
-			else
-				cb(nil, err or "in_queue error")
-				break
 			end
 			skynet.sleep(1)
 		end
