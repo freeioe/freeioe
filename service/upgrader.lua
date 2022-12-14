@@ -137,7 +137,7 @@ local function map_app_action(func_name, lock)
 	command[func_name] = function(id, args)
 		return create_task(function()
 			if aborting then
-				return action_result('app', id, false, "System is aborting")
+				return action_result('app', id, false, "System is aborting before call ", func_name)
 			end
 			if ioe.mode() ~= 0 then
 				return action_result('app', id, false, 'System mode is locked to '..ioe.mode())
@@ -161,7 +161,7 @@ local function map_sys_action(func_name, lock)
 	command[func_name] = function(id, args)
 		return create_task(function()
 			if aborting then
-				return action_result('sys', id, false, "System is aborting")
+				return action_result('sys', id, false, "System is aborting before call ", func_name)
 			end
 			if ioe.mode() ~= 0 then
 				return action_result('sys', id, false, 'System mode is locked to '..ioe.mode())
@@ -720,8 +720,10 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 	end
 	write_script(base_dir.."/ipt/upgrade", os.date())
 
-	aborting = true
+	-- Call system abort
 	ioe.abort()
+	-- mark the aborting after call abort
+	aborting = true
 	log.warning("Core system upgradation done!")
 	return true, "System upgradation is done!"
 end
