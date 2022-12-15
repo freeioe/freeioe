@@ -3,6 +3,12 @@
 
 # Release history
 
+v2.2.0 (2022-12-15)
+------------------
+
+* Fixed abort blocking upgrade issue
+
+
 v2.1.1 (2022-11-21)
 ------------------
 
