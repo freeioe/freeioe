@@ -3,6 +3,12 @@
 
 # Release history
 
+v2.2.1 ()
+------------------
+
+* Fixed message queue may overload issue
+
+
 v2.2.0 (2022-12-15)
 ------------------
 

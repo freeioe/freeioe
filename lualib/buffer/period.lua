@@ -116,6 +116,7 @@ function pb:fire_all(cb)
 			break
 		end
 		offset = offset + max_batch_size
+		skynet.sleep(0) -- Resume other coroutines
 	end
 
 	if #buf >= offset then

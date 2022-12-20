@@ -496,7 +496,7 @@ local function load_pb_conf()
 	--- Data Upload Period in ms
 	local period = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD") or 1000)
 	--- Data Upload Buffer Max Size
-	local period_limit = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_LIMIT") or 10240)
+	local period_limit = tonumber(datacenter.get("CLOUD", "DATA_UPLOAD_PERIOD_LIMIT") or 102400)
 
 	log.notice('Period option:', period, period_limit, data_upload_max_dpp)
 	if period >= 1000 then
