@@ -3,7 +3,6 @@
 set -e
 
 SKYNET_DIR=$1
-RELEASE_DIR="$1/ioe/__release"
 SKYNET_PLAT="skynet"
 
 if [ ! -n "$2" ]
@@ -14,6 +13,8 @@ else
 fi
 if [ ! -n "$3" ]
 then
+	RELEASE_DIR="$1/ioe/__release"
+else
 	RELEASE_DIR="$3"
 fi
 
