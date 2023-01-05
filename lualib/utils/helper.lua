@@ -53,13 +53,13 @@ end
 
 local function check_exists(exec)
 	local lfs = require 'lfs'
-	local plat = sysinfo.platform()
-	assert(plat, "OS Platform is nil")
+	local arch = sysinfo.platform()
+	assert(arch, "OS Arch is nil")
 
 	local cur_dir = lfs.currentdir()
 	assert(cur_dir, "LFS CurrentDir is nil")
 
-	local path = cur_dir.."/ioe/linux/"..plat.."/"..exec
+	local path = cur_dir.."/ioe/linux/"..arch.."/"..exec
 
 	local m, err = lfs.attributes(path, "mode")
 	if m then

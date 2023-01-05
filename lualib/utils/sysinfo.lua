@@ -286,6 +286,7 @@ end
 ---
 -- for detecting cpu arch
 _M.cpu_arch = function()
+	_M._CPU_ARCH = _M._CPU_ARCH or os.getenv("IOE_ARCH")
 	if _M._CPU_ARCH then
 		return _M._CPU_ARCH
 	end
@@ -363,6 +364,7 @@ _M.os_version = function()
 end
 
 _M.platform = function()
+	_M._PLATFORM = _M._PLATFORM or os.getenv("IOE_PLATFORM")
 	if _M._PLATFORM then
 		return _M._PLATFORM
 	end

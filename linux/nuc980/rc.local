@@ -22,6 +22,7 @@ DAEMON_OPTS="-d -p $PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
 export IOE_RUN_AS_DAEMON=1
+export IOE_ARCH=$ARCH
 
 if [ -x $DAEMON ]; then
 	echo "Starting..." $DESC
