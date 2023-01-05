@@ -3,14 +3,14 @@
 NAME="FreeIOE"
 DESC="FreeIOE based on skynet"
 
-BASE_DIR=/mnt
+BASE_DIR=/usr/ioe
 SKYNET_DIR=$BASE_DIR/skynet
 FREEIOE_DIR=$SKYNET_DIR/ioe
 
 SKYNET_BIN=$SKYNET_DIR/skynet
 STARTUP_SH=$FREEIOE_DIR/startup.sh
 
-ARCH=mx0
+ARCH=nuc980
 PID=/var/run/skynet.pid
 DAEMON=$FREEIOE_DIR/linux/$ARCH/process-monitor
 
