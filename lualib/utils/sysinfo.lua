@@ -323,7 +323,7 @@ local function read_os_id()
 end
 
 _M.os_id = function()
-	_M._OS_ID = _M._OS_ID or read_os_id() or os.getenv("MSYSTEM")
+	_M._OS_ID = _M._OS_ID or read_os_id() or os.getenv("MSYSTEM") or os.getenv("IOE_OS_ID")
 	return assert(_M._OS_ID)
 end
 
@@ -346,7 +346,7 @@ local function read_os_version()
 end
 
 _M.os_version = function()
-	_M._OS_VERSION = _M._OS_VERSION or read_os_version() or os.getenv("MSYSTEM_CHOST")
+	_M._OS_VERSION = _M._OS_VERSION or read_os_version() or os.getenv("MSYSTEM_CHOST") or os.getenv("IOE_OS_VER")
 	if not _M._OS_VERSION then
 		if _M.os_id() == 'debian' or _M.os_id() == 'ubuntu' then
 			local s = _M.cat_file('/etc/debian_version')
