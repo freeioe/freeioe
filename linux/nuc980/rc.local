@@ -23,6 +23,8 @@ STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
 export IOE_RUN_AS_DAEMON=1
 export IOE_ARCH=$ARCH
+export IOE_OS_ID=linux
+export IOE_OS_VER=nuc980
 
 if [ -x $DAEMON ]; then
 	echo "Starting..." $DESC
