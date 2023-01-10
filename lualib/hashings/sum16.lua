@@ -9,9 +9,6 @@ local M_mt = { __metatable = {}, __index = M }
 M.digest_size = 2
 M.block_size = 2
 
-local function digest_int(cs)
-end
-
 function M:new(data)
     if self ~= M then
         return nil, "First argument must be self"
