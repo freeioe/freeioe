@@ -100,7 +100,7 @@ end
 
 
 function M:update(data)
-    local byte
+    local byte, index
 
     if data == nil then
         data = ""
@@ -110,7 +110,8 @@ function M:update(data)
 
     for i=1,#data do
         byte = string.byte(data, i)
-        self._crc  = (self._crc >> 8) ^ fcs32tab[(self._crc ^ byte) & 0xFF + 1]
+        index = ((self._crc ~ byte) & 0xFF) + 1
+        self._crc  = (self._crc >> 8) ~ fcs32tab[index:asnumber()]
     end
 end
 
