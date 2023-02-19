@@ -63,10 +63,10 @@ function stat:reset(prop)
 end
 
 function stat:inc(prop, value)
-	assert(not self._readonly, "This is not created device statistics")
+	assert(not self._readonly, "Device statistics owner issue")
 	assert(prop and value)
 	if not self._stat_map[prop] then
-		return nil, "Statistics property is not valid. "..prop
+		return nil, string.format("Statistics property [%s] is not valid. ", prop)
 	end
 
 	value = value + self:get(prop)
@@ -77,10 +77,10 @@ function stat:inc(prop, value)
 end
 
 function stat:set(prop, value)
-	assert(not self._readonly, "This is not created device statistics")
+	assert(not self._readonly, "Device statistics owner issue")
 	assert(prop and value)
 	if not self._stat_map[prop] then
-		return nil, "Statistics property is not valid. "..prop
+		return nil, string.format("Statistics property [%s] is not valid. ", prop)
 	end
 
 	dc.set('STAT', self._sn, self._name, prop, value)
