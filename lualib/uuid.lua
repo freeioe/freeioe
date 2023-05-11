@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------------
--- Copyright 2012 Rackspace (original), 2013 Thijs Schreijer (modifications)
+-- Copyright 2012 Rackspace (original), 2013-2021 Thijs Schreijer (modifications)
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -23,10 +23,14 @@
 -- Regarding the above mention on `os.time()`; the modifications use the `socket.gettime()` function from LuaSocket
 -- if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).
 --
--- **6-nov-2015 Please take note of this issue**; [https://github.com/Mashape/kong/issues/478](https://github.com/Mashape/kong/issues/478)
+-- **Important:** the random seed is a global piece of data. Hence setting it is
+-- an application level responsibility, libraries should never set it!
+--
+-- See this issue; [https://github.com/Kong/kong/issues/478](https://github.com/Kong/kong/issues/478)
 -- It demonstrates the problem of using time as a random seed. Specifically when used from multiple processes.
 -- So make sure to seed only once, application wide. And to not have multiple processes do that
--- simultaneously (like nginx does for example).
+-- simultaneously.
+
 
 local M = {}
 local math = require('math')
@@ -141,8 +145,8 @@ function M.new(hwaddr)
   bytes[7] = BITWISE(bytes[7], 0x0f, MATRIX_AND)
   bytes[7] = BITWISE(bytes[7], 0x40, MATRIX_OR)
   -- set the variant
-  bytes[9] = BITWISE(bytes[7], 0x3f, MATRIX_AND)
-  bytes[9] = BITWISE(bytes[7], 0x80, MATRIX_OR)
+  bytes[9] = BITWISE(bytes[9], 0x3f, MATRIX_AND)
+  bytes[9] = BITWISE(bytes[9], 0x80, MATRIX_OR)
   return INT2HEX(bytes[1])..INT2HEX(bytes[2])..INT2HEX(bytes[3])..INT2HEX(bytes[4]).."-"..
          INT2HEX(bytes[5])..INT2HEX(bytes[6]).."-"..
          INT2HEX(bytes[7])..INT2HEX(bytes[8]).."-"..
@@ -183,19 +187,26 @@ end
 
 ----------------------------------------------------------------------------
 -- Seeds the random generator.
--- It does so in 2 possible ways;
+-- It does so in 3 possible ways;
 --
--- 1. use `os.time()`: this only offers resolution to one second (used when
--- LuaSocket hasn't been loaded yet
+-- 1. if in ngx_lua, use `ngx.time() + ngx.worker.pid()` to ensure a unique seed
+-- for each worker. It should ideally be called from the `init_worker` context.
 -- 2. use luasocket `gettime()` function, but it only does so when LuaSocket
 -- has been required already.
+-- 3. use `os.time()`: this only offers resolution to one second (used when
+-- LuaSocket hasn't been loaded)
+--
+-- **Important:** the random seed is a global piece of data. Hence setting it is
+-- an application level responsibility, libraries should never set it!
 -- @usage
 -- local socket = require("socket")  -- gettime() has higher precision than os.time()
 -- -- LuaSocket loaded, so below line does the same as the example from randomseed()
 -- uuid.seed()
 -- print("here's a new uuid: ",uuid())
 function M.seed()
-  if package.loaded["socket"] and package.loaded["socket"].gettime then
+  if _G.ngx ~= nil then
+    return M.randomseed(ngx.time() + ngx.worker.pid())
+  elseif package.loaded["socket"] and package.loaded["socket"].gettime then
     return M.randomseed(package.loaded["socket"].gettime()*10000)
   else
     return M.randomseed(os.time())

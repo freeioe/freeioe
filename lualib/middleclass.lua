@@ -1,5 +1,5 @@
 local middleclass = {
-  _VERSION     = 'middleclass v4.1.0',
+  _VERSION     = 'middleclass v4.1.1',
   _DESCRIPTION = 'Object Orientation for Lua',
   _URL         = 'https://github.com/kikito/middleclass',
   _LICENSE     = [[
@@ -31,14 +31,22 @@ local middleclass = {
 local function _createIndexWrapper(aClass, f)
   if f == nil then
     return aClass.__instanceDict
-  else
+  elseif type(f) == "function" then
     return function(self, name)
       local value = aClass.__instanceDict[name]
 
       if value ~= nil then
         return value
-      elseif type(f) == "function" then
+      else
         return (f(self, name))
+      end
+    end
+  else -- if  type(f) == "table" then
+    return function(self, name)
+      local value = aClass.__instanceDict[name]
+
+      if value ~= nil then
+        return value
       else
         return f[name]
       end
@@ -79,7 +87,15 @@ local function _createClass(name, super)
                    subclasses = setmetatable({}, {__mode='k'})  }
 
   if super then
-    setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) or super.static[k] end })
+    setmetatable(aClass.static, {
+      __index = function(_,k)
+        local result = rawget(dict,k)
+        if result == nil then
+          return super.static[k]
+        end
+        return result
+      end
+    })
   else
     setmetatable(aClass.static, { __index = function(_,k) return rawget(dict,k) end })
   end
@@ -111,7 +127,12 @@ local DefaultMixin = {
   initialize   = function(self, ...) end,
 
   isInstanceOf = function(self, aClass)
-    return type(aClass) == 'table' and (aClass == self.class or self.class:isSubclassOf(aClass))
+    return type(aClass) == 'table'
+       and type(self) == 'table'
+       and (self.class == aClass
+            or type(self.class) == 'table'
+            and type(self.class.isSubclassOf) == 'function'
+            and self.class:isSubclassOf(aClass))
   end,
 
   static = {
@@ -134,7 +155,9 @@ local DefaultMixin = {
       local subclass = _createClass(name, self)
 
       for methodName, f in pairs(self.__instanceDict) do
-        _propagateInstanceMethod(subclass, methodName, f)
+        if not (methodName == "__index" and type(f) == "table") then
+          _propagateInstanceMethod(subclass, methodName, f)
+        end
       end
       subclass.initialize = function(instance, ...) return self.initialize(instance, ...) end
 

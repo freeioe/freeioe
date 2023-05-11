@@ -1,9 +1,9 @@
 ---------------------------------------------------------------------------------------
 -- Module for date and time calculations
 --
--- Version 2.1.2
--- Copyright (C) 2006, by Jas Latrix (jastejada@yahoo.com)
--- Copyright (C) 2013-2014, by Thijs Schreijer
+-- Version 2.2
+-- Copyright (C) 2005-2006, by Jas Latrix (jastejada@yahoo.com)
+-- Copyright (C) 2013-2021, by Thijs Schreijer
 -- Licensed under MIT, http://opensource.org/licenses/MIT
 
 --[[ CONSTANTS ]]--
@@ -21,6 +21,8 @@
   local DAYNUM_MIN = -365242500 -- Mon Jan 01 1000000 BCE 00:00:00
   local DAYNUM_DEF =  0 -- Mon Jan 01 0001 00:00:00
   local _;
+--[[ GLOBAL SETTINGS ]]--
+  local centuryflip = 0 -- year >= centuryflip == 1900, < centuryflip == 2000
 --[[ LOCAL ARE FASTER ]]--
   local type     = type
   local pairs    = pairs
@@ -196,7 +198,12 @@
   local date = {}
   setmetatable(date, date)
 -- Version:  VMMMRRRR; V-Major, M-Minor, R-Revision;  e.g. 5.45.321 == 50450321
-  date.version = 20010003 -- 2.1.3
+  do
+    local major = 2
+    local minor = 2
+    local revision = 0
+    date.version = major * 10000000 + minor * 10000 + revision
+  end
 --#end -- not DATE_OBJECT_AFX
 --[[ THE DATE OBJECT ]]--
   local dobj = {}
@@ -325,7 +332,7 @@
         elseif sw("^(%d+)[/\\%s,-]?%s*") then --print("$Digits")
           x, c = tonumber(sw[1]), len(sw[1])
           if (x >= 70) or (m and d and (not y)) or (c > 3) then
-            sety( x + ((x >= 100 or c>3)and 0 or 1900) )
+            sety( x + ((x >= 100 or c>3) and 0 or x<centuryflip and 2000 or 1900) )
           else
             if m then setd(x) else m = x end
           end
@@ -705,6 +712,11 @@
   function date.epoch() return date_epoch:copy()  end
 
   function date.isodate(y,w,d) return date_new(makedaynum_isoywd(y + 0, w and (w+0) or 1, d and (d+0) or 1), 0)  end
+  function date.setcenturyflip(y)
+    if y ~= floor(y) or y < 0 or y > 100 then date_error_arg() end
+    centuryflip = y
+  end
+  function date.getcenturyflip() return centuryflip end
 
 -- Internal functions
   function date.fmt(str) if str then fmtstr = str end; return fmtstr end

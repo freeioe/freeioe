@@ -1,11 +1,11 @@
 local ftcsv = {
-    _VERSION = 'ftcsv 1.1.5',
+    _VERSION = 'ftcsv 1.3.0',
     _DESCRIPTION = 'CSV library for Lua',
     _URL         = 'https://github.com/FourierTransformer/ftcsv',
     _LICENSE     = [[
         The MIT License (MIT)
 
-        Copyright (c) 2016-2018 Shakil Thakur
+        Copyright (c) 2016-2023 Shakil Thakur
 
         Permission is hereby granted, free of charge, to any person obtaining a copy
         of this software and associated documentation files (the "Software"), to deal
@@ -27,27 +27,29 @@ local ftcsv = {
     ]]
 }
 
--- lua 5.1 load compat
-local M = {}
-if type(jit) == 'table' or _ENV then
-    M.load = _G.load
-else
-    M.load = loadstring
-end
-
 -- perf
 local sbyte = string.byte
 local ssub = string.sub
+
+-- luajit/lua compatability layer
+local luaCompatibility = {}
+if type(jit) == 'table' or _ENV then
+    -- luajit and lua 5.2+
+    luaCompatibility.load = _G.load
+else
+    -- lua 5.1
+    luaCompatibility.load = loadstring
+end
 
 -- luajit specific speedups
 -- luajit performs faster with iterating over string.byte,
 -- whereas vanilla lua performs faster with string.find
 if type(jit) == 'table' then
+    luaCompatibility.LuaJIT = true
     -- finds the end of an escape sequence
-    function M.findClosingQuote(i, inputLength, inputString, quote, doubleQuoteEscape)
+    function luaCompatibility.findClosingQuote(i, inputLength, inputString, quote, doubleQuoteEscape)
         local currentChar, nextChar = sbyte(inputString, i), nil
         while i <= inputLength do
-            -- print(i)
             nextChar = sbyte(inputString, i+1)
 
             -- this one deals with " double quotes that are escaped "" within single quotes "
@@ -59,7 +61,6 @@ if type(jit) == 'table' then
 
             -- identifies the escape toggle
             elseif currentChar == quote and nextChar ~= quote then
-                -- print("exiting", i-1)
                 return i-1, doubleQuoteEscape
             else
                 i = i + 1
@@ -69,231 +70,24 @@ if type(jit) == 'table' then
     end
 
 else
+    luaCompatibility.LuaJIT = false
+
     -- vanilla lua closing quote finder
-    function M.findClosingQuote(i, inputLength, inputString, quote, doubleQuoteEscape)
+    function luaCompatibility.findClosingQuote(i, inputLength, inputString, quote, doubleQuoteEscape)
         local j, difference
         i, j = inputString:find('"+', i)
-        if j == nil then return end
-        if i == nil then
-            return inputLength-1, doubleQuoteEscape
+        if j == nil then
+            return nil
         end
         difference = j - i
-        -- print("difference", difference, "I", i, "J", j)
         if difference >= 1 then doubleQuoteEscape = true end
-        if difference == 1 then
-            return M.findClosingQuote(j+1, inputLength, inputString, quote, doubleQuoteEscape)
+        if difference % 2 == 1 then
+            return luaCompatibility.findClosingQuote(j+1, inputLength, inputString, quote, doubleQuoteEscape)
         end
         return j-1, doubleQuoteEscape
     end
-
 end
 
--- load an entire file into memory
-local function loadFile(textFile)
-    local file = io.open(textFile, "r")
-    if not file then error("ftcsv: File not found at " .. textFile) end
-    local allLines = file:read("*all")
-    file:close()
-    return allLines
-end
-
--- creates a new field
-local function createField(inputString, quote, fieldStart, i, doubleQuoteEscape)
-    local field
-    -- so, if we just recently de-escaped, we don't want the trailing "
-    if sbyte(inputString, i-1) == quote then
-        -- print("Skipping last \"")
-        field = ssub(inputString, fieldStart, i-2)
-    else
-        field = ssub(inputString, fieldStart, i-1)
-    end
-    if doubleQuoteEscape then
-        -- print("QUOTE REPLACE")
-        -- print(line[fieldNum])
-        field = field:gsub('""', '"')
-    end
-    return field
-end
-
--- main function used to parse
-local function parseString(inputString, inputLength, delimiter, i, headerField, fieldsToKeep)
-
-    -- keep track of my chars!
-    local currentChar, nextChar = sbyte(inputString, i), nil
-    local skipChar = 0
-    local field
-    local fieldStart = i
-    local fieldNum = 1
-    local lineNum = 1
-    local doubleQuoteEscape, emptyIdentified = false, false
-    local exit = false
-
-    --bytes
-    local CR = sbyte("\r")
-    local LF = sbyte("\n")
-    local quote = sbyte('"')
-    local delimiterByte = sbyte(delimiter)
-
-    local assignValue
-    local outResults
-    -- outResults[1] = {}
-    -- the headers haven't been set yet.
-    -- aka this is the first run!
-    if headerField == nil then
-        headerField = {}
-        assignValue = function()
-            headerField[fieldNum] = field
-            emptyIdentified = false
-            return true
-        end
-    else
-        outResults = {}
-        outResults[1] = {}
-        assignValue = function()
-            emptyIdentified = false
-            if headerField[fieldNum] then
-                outResults[lineNum][headerField[fieldNum]] = field
-            else
-                error('ftcsv: too many columns in row ' .. lineNum)
-            end
-        end
-    end
-
-    -- calculate the initial line count (note: this can include duplicates)
-    local headerFieldsExist = {}
-    local initialLineCount = 0
-    for _, value in pairs(headerField) do
-        if not headerFieldsExist[value] and (fieldsToKeep == nil or fieldsToKeep[value]) then
-            headerFieldsExist[value] = true
-            initialLineCount = initialLineCount + 1
-        end
-    end
-
-    while i <= inputLength do
-        -- go by two chars at a time! currentChar is set at the bottom.
-        -- currentChar = string.byte(inputString, i)
-        nextChar = sbyte(inputString, i+1)
-        -- print(i, string.char(currentChar), string.char(nextChar))
-
-        -- empty string
-        if currentChar == quote and nextChar == quote then
-            skipChar = 1
-            fieldStart = i + 2
-            emptyIdentified = true
-            -- print("fs+2:", fieldStart)
-
-        -- identifies the escape toggle.
-        -- This can only happen if fields have quotes around them
-        -- so the current "start" has to be where a quote character is.
-        elseif currentChar == quote and nextChar ~= quote and fieldStart == i then
-            -- print("New Quoted Field", i)
-            fieldStart = i + 1
-
-            -- if an empty field was identified before assignment, it means
-            -- that this is a quoted field that starts with escaped quotes
-            -- ex: """a"""
-            if emptyIdentified then
-                fieldStart = fieldStart - 2
-                emptyIdentified = false
-            end
-
-            i, doubleQuoteEscape = M.findClosingQuote(i+1, inputLength, inputString, quote, doubleQuoteEscape)
-            -- print("I VALUE", i, doubleQuoteEscape)
-            skipChar = 1
-
-        -- create some fields if we can!
-        elseif currentChar == delimiterByte then
-            -- create the new field
-            -- print(headerField[fieldNum])
-            if fieldsToKeep == nil or fieldsToKeep[headerField[fieldNum]] then
-                field = createField(inputString, quote, fieldStart, i, doubleQuoteEscape)
-            -- print("FIELD", field, "FIELDEND", headerField[fieldNum], lineNum)
-            -- outResults[headerField[fieldNum]][lineNum] = field
-                assignValue()
-            end
-            doubleQuoteEscape = false
-
-            fieldNum = fieldNum + 1
-            fieldStart = i + 1
-            -- print("fs+1:", fieldStart)
-
-        -- newline?!
-        elseif (currentChar == CR or currentChar == LF) then
-            if fieldsToKeep == nil or fieldsToKeep[headerField[fieldNum]] then
-                -- create the new field
-                field = createField(inputString, quote, fieldStart, i, doubleQuoteEscape)
-
-                exit = assignValue()
-                if exit then
-                    if (currentChar == CR and nextChar == LF) then
-                        return headerField, i + 1
-                    else
-                        return headerField, i
-                    end
-                end
-            end
-            doubleQuoteEscape = false
-
-            -- determine how line ends
-            if (currentChar == CR and nextChar == LF) then
-                -- print("CRLF DETECTED")
-                skipChar = 1
-            end
-
-            -- incrememnt for new line
-            if fieldNum < initialLineCount then
-                error('ftcsv: too few columns in row ' .. lineNum)
-            end
-            lineNum = lineNum + 1
-            outResults[lineNum] = {}
-            fieldNum = 1
-            fieldStart = i + 1 + skipChar
-            -- print("fs:", fieldStart)
-
-        end
-
-        i = i + 1 + skipChar
-        if (skipChar > 0) then
-            currentChar = sbyte(inputString, i)
-        else
-            currentChar = nextChar
-        end
-        skipChar = 0
-    end
-
-    -- create last new field
-    if fieldsToKeep == nil or fieldsToKeep[headerField[fieldNum]] then
-        field = createField(inputString, quote, fieldStart, i, doubleQuoteEscape)
-        assignValue()
-    end
-
-    -- if there's no newline, the parser doesn't return headers correctly...
-    -- ex: a,b,c
-    if outResults == nil then
-        return headerField, i-1
-    end
-
-    -- clean up last line if it's weird (this happens when there is a CRLF newline at end of file)
-    -- doing a count gets it to pick up the oddballs
-    local finalLineCount = 0
-    local lastValue = nil
-    for _, v in pairs(outResults[lineNum]) do
-        finalLineCount = finalLineCount + 1
-        lastValue = v
-    end
-
-    -- this indicates a CRLF
-    -- print("Final/Initial", finalLineCount, initialLineCount)
-    if finalLineCount == 1 and lastValue == "" then
-        outResults[lineNum] = nil
-
-    -- otherwise there might not be enough line
-    elseif finalLineCount < initialLineCount then
-        error('ftcsv: too few columns in row ' .. lineNum)
-    end
-
-    return outResults
-end
 
 -- determine the real headers as opposed to the header mapping
 local function determineRealHeaders(headerField, fieldsToKeep) 
@@ -313,27 +107,312 @@ local function determineRealHeaders(headerField, fieldsToKeep)
     return realHeaders
 end
 
--- runs the show!
-function ftcsv.parse(inputFile, delimiter, options)
+
+local function determineTotalColumnCount(headerField, fieldsToKeep)
+    local totalColumnCount = 0
+    local headerFieldSet = {}
+    for _, header in pairs(headerField) do
+        -- count unique columns and
+        -- also figure out if it's a field to keep
+        if not headerFieldSet[header] and
+            (fieldsToKeep == nil or fieldsToKeep[header]) then
+            headerFieldSet[header] = true
+            totalColumnCount = totalColumnCount + 1
+        end
+    end
+    return totalColumnCount
+end
+
+local function generateHeadersMetamethod(finalHeaders)
+    -- if a header field tries to escape, we will simply return nil
+    -- the parser will still parse, but wont get the performance benefit of
+    -- having headers predefined
+    for _, headers in ipairs(finalHeaders) do
+        if headers:find("]") then
+            return nil
+        end
+    end
+    local rawSetup = "local t, k, _ = ... \
+    rawset(t, k, {[ [[%s]] ]=true})"
+    rawSetup = rawSetup:format(table.concat(finalHeaders, "]] ]=true, [ [["))
+    return luaCompatibility.load(rawSetup)
+end
+
+-- main function used to parse
+local function parseString(inputString, i, options)
+
+    -- keep track of my chars!
+    local inputLength = options.inputLength or #inputString
+    local currentChar, nextChar = sbyte(inputString, i), nil
+    local skipChar = 0
+    local field
+    local fieldStart = i
+    local fieldNum = 1
+    local lineNum = 1
+    local lineStart = i
+    local doubleQuoteEscape, emptyIdentified = false, false
+
+    local skipIndex
+    local charPatternToSkip = "[" .. options.delimiter .. "\r\n]"
+
+    --bytes
+    local CR = sbyte("\r")
+    local LF = sbyte("\n")
+    local quote = sbyte('"')
+    local delimiterByte = sbyte(options.delimiter)
+
+    -- explode most used options
+    local headersMetamethod = options.headersMetamethod
+    local fieldsToKeep = options.fieldsToKeep
+    local ignoreQuotes = options.ignoreQuotes
+    local headerField = options.headerField
+    local endOfFile = options.endOfFile
+    local buffered = options.buffered
+
+    local outResults = {}
+
+    -- in the first run, the headers haven't been set yet.
+    if headerField == nil then
+        headerField = {}
+        -- setup a metatable to simply return the key that's passed in
+        local headerMeta = {__index = function(_, key) return key end}
+        setmetatable(headerField, headerMeta)
+    end
+
+    if headersMetamethod then
+        setmetatable(outResults, {__newindex = headersMetamethod})
+    end
+    outResults[1] = {}
+
+    -- totalColumnCount based on unique headers and fieldsToKeep
+    local totalColumnCount = options.totalColumnCount or determineTotalColumnCount(headerField, fieldsToKeep)
+
+    local function assignValueToField()
+        if fieldsToKeep == nil or fieldsToKeep[headerField[fieldNum]] then
+
+            -- create new field
+            if ignoreQuotes == false and sbyte(inputString, i-1) == quote then
+                field = ssub(inputString, fieldStart, i-2)
+            else
+                field = ssub(inputString, fieldStart, i-1)
+            end
+            if doubleQuoteEscape then
+                field = field:gsub('""', '"')
+            end
+
+            -- reset flags
+            doubleQuoteEscape = false
+            emptyIdentified = false
+
+            -- assign field in output
+            if headerField[fieldNum] ~= nil then
+                outResults[lineNum][headerField[fieldNum]] = field
+            else
+                error('ftcsv: too many columns in row ' .. options.rowOffset + lineNum)
+            end
+        end
+    end
+
+    while i <= inputLength do
+        -- go by two chars at a time,
+        --  currentChar is set at the bottom.
+        nextChar = sbyte(inputString, i+1)
+
+        -- empty string
+        if ignoreQuotes == false and currentChar == quote and nextChar == quote then
+            skipChar = 1
+            fieldStart = i + 2
+            emptyIdentified = true
+
+        -- escape toggle.
+        -- This can only happen if fields have quotes around them
+        -- so the current "start" has to be where a quote character is.
+        elseif ignoreQuotes == false and currentChar == quote and nextChar ~= quote and fieldStart == i then
+            fieldStart = i + 1
+            -- if an empty field was identified before assignment, it means
+            -- that this is a quoted field that starts with escaped quotes
+            -- ex: """a"""
+            if emptyIdentified then
+                fieldStart = fieldStart - 2
+                emptyIdentified = false
+            end
+            skipChar = 1
+            i, doubleQuoteEscape = luaCompatibility.findClosingQuote(i+1, inputLength, inputString, quote, doubleQuoteEscape)
+
+        -- create some fields
+        elseif currentChar == delimiterByte then
+            assignValueToField()
+
+            -- increaseFieldIndices
+            fieldNum = fieldNum + 1
+            fieldStart = i + 1
+
+        -- newline
+        elseif (currentChar == LF or currentChar == CR) then
+            assignValueToField()
+
+            -- handle CRLF
+            if (currentChar == CR and nextChar == LF) then
+                skipChar = 1
+                fieldStart = fieldStart + 1
+            end
+
+            -- incrememnt for new line
+            if fieldNum < totalColumnCount then
+                -- sometimes in buffered mode, the buffer starts with a newline
+                -- this skips the newline and lets the parsing continue.
+                if buffered and lineNum == 1 and fieldNum == 1 and field == "" then
+                    fieldStart = i + 1 + skipChar
+                    lineStart = fieldStart
+                else
+                    error('ftcsv: too few columns in row ' .. options.rowOffset + lineNum)
+                end
+            else
+                lineNum = lineNum + 1
+                outResults[lineNum] = {}
+                fieldNum = 1
+                fieldStart = i + 1 + skipChar
+                lineStart = fieldStart
+            end
+
+        elseif luaCompatibility.LuaJIT == false then
+            skipIndex = inputString:find(charPatternToSkip, i)
+            if skipIndex then
+                skipChar = skipIndex - i - 1
+            end
+
+        end
+
+        -- in buffered mode and it can't find the closing quote
+        -- it usually means in the middle of a buffer and need to backtrack
+        if i == nil then
+            if buffered then
+                outResults[lineNum] = nil
+                return outResults, lineStart
+            else
+                error("ftcsv: can't find closing quote in row " .. options.rowOffset + lineNum ..
+                 ". Try running with the option ignoreQuotes=true if the source incorrectly uses quotes.")
+            end
+        end
+
+        -- Increment Counter
+        i = i + 1 + skipChar
+        if (skipChar > 0) then
+            currentChar = sbyte(inputString, i)
+        else
+            currentChar = nextChar
+        end
+        skipChar = 0
+    end
+
+    if buffered and not endOfFile then
+        outResults[lineNum] = nil
+        return outResults, lineStart
+    end
+
+    -- create last new field
+    assignValueToField()
+
+    -- remove last field if empty
+    if fieldNum < totalColumnCount then
+
+        -- indicates last field was really just a CRLF,
+        -- so, it can be removed
+        if fieldNum == 1 and field == "" then
+            outResults[lineNum] = nil
+        else
+            error('ftcsv: too few columns in row ' .. options.rowOffset + lineNum)
+        end
+    end
+
+    return outResults, i, totalColumnCount
+end
+
+local function handleHeaders(headerField, options)
+    -- for files where there aren't headers!
+    if options.headers == false then
+        for j = 1, #headerField do
+            headerField[j] = j
+        end
+    else
+        -- make sure a header isn't empty if there are headers
+        for _, headerName in ipairs(headerField) do
+            if #headerName == 0 then
+                error('ftcsv: Cannot parse a file which contains empty headers')
+            end
+        end
+    end
+
+    -- rename fields as needed!
+    if options.rename then
+        -- basic rename (["a" = "apple"])
+        for j = 1, #headerField do
+            if options.rename[headerField[j]] then
+                headerField[j] = options.rename[headerField[j]]
+            end
+        end
+        -- files without headers, but with a options.rename need to be handled too!
+        if #options.rename > 0 then
+            for j = 1, #options.rename do
+                headerField[j] = options.rename[j]
+            end
+        end
+    end
+
+    -- apply some sweet header manipulation
+    if options.headerFunc then
+        for j = 1, #headerField do
+            headerField[j] = options.headerFunc(headerField[j])
+        end
+    end
+
+    return headerField
+end
+
+-- load an entire file into memory
+local function loadFile(textFile, amount)
+    local file = io.open(textFile, "r")
+    if not file then error("ftcsv: File not found at " .. textFile) end
+    local lines = file:read(amount)
+    if amount == "*all" then
+        file:close()
+    end
+    return lines, file
+end
+
+local function initializeInputFromStringOrFile(inputFile, options, amount)
+    -- handle input via string or file!
+    local inputString, file
+    if options.loadFromString then
+        inputString = inputFile
+    else
+        inputString, file = loadFile(inputFile, amount)
+    end
+
+    -- if they sent in an empty file...
+    if inputString == "" then
+        error('ftcsv: Cannot parse an empty file')
+    end
+    return inputString, file
+end
+
+local function parseOptions(delimiter, options, fromParseLine)
     -- delimiter MUST be one character
     assert(#delimiter == 1 and type(delimiter) == "string", "the delimiter must be of string type and exactly one character")
 
-    -- OPTIONS yo
-    local headers = true
-    local rename
     local fieldsToKeep = nil
-    local loadFromString = false
-    local headerFunc
+
     if options then
-        if options.headers ~= nil then
+
+	if options.headers ~= nil then
             assert(type(options.headers) == "boolean", "ftcsv only takes the boolean 'true' or 'false' for the optional parameter 'headers' (default 'true'). You passed in '" .. tostring(options.headers) .. "' of type '" .. type(options.headers) .. "'.")
-            headers = options.headers
         end
-        if options.rename ~= nil then
+
+	if options.rename ~= nil then
             assert(type(options.rename) == "table", "ftcsv only takes in a key-value table for the optional parameter 'rename'. You passed in '" .. tostring(options.rename) .. "' of type '" .. type(options.rename) .. "'.")
-            rename = options.rename
         end
-        if options.fieldsToKeep ~= nil then
+
+	if options.fieldsToKeep ~= nil then
             assert(type(options.fieldsToKeep) == "table", "ftcsv only takes in a list (as a table) for the optional parameter 'fieldsToKeep'. You passed in '" .. tostring(options.fieldsToKeep) .. "' of type '" .. type(options.fieldsToKeep) .. "'.")
             local ofieldsToKeep = options.fieldsToKeep
             if ofieldsToKeep ~= nil then
@@ -342,91 +421,221 @@ function ftcsv.parse(inputFile, delimiter, options)
                     fieldsToKeep[ofieldsToKeep[j]] = true
                 end
             end
-            if headers == false and options.rename == nil then
+            if options.headers == false and options.rename == nil then
                 error("ftcsv: fieldsToKeep only works with header-less files when using the 'rename' functionality")
             end
         end
-        if options.loadFromString ~= nil then
+
+	if options.loadFromString ~= nil then
             assert(type(options.loadFromString) == "boolean", "ftcsv only takes a boolean value for optional parameter 'loadFromString'. You passed in '" .. tostring(options.loadFromString) .. "' of type '" .. type(options.loadFromString) .. "'.")
-            loadFromString = options.loadFromString
         end
-        if options.headerFunc ~= nil then
+
+	if options.headerFunc ~= nil then
             assert(type(options.headerFunc) == "function", "ftcsv only takes a function value for optional parameter 'headerFunc'. You passed in '" .. tostring(options.headerFunc) .. "' of type '" .. type(options.headerFunc) .. "'.")
-            headerFunc = options.headerFunc
         end
-    end
 
-    -- handle input via string or file!
-    local inputString
-    if loadFromString then
-        inputString = inputFile
+	if options.ignoreQuotes == nil then
+            options.ignoreQuotes = false
+        else
+            assert(type(options.ignoreQuotes) == "boolean", "ftcsv only takes a boolean value for optional parameter 'ignoreQuotes'. You passed in '" .. tostring(options.ignoreQuotes) .. "' of type '" .. type(options.ignoreQuotes) .. "'.")
+        end
+
+	if options.bufferSize == nil then
+	    options.bufferSize = 2^16
+	else
+            assert(type(options.bufferSize) == "number", "ftcsv only takes a number value for optional parameter 'bufferSize'. You passed in '" .. tostring(options.bufferSize) .. "' of type '" .. type(options.bufferSize) .. "'.")
+            if fromParseLine == false then
+                error("ftcsv: bufferSize can only be specified using 'parseLine'. When using 'parse', the entire file is read into memory")
+            end
+        end
+
     else
-        inputString = loadFile(inputFile)
-    end
-    local inputLength = #inputString
-
-    -- if they sent in an empty file...
-    if inputLength == 0 then
-        error('ftcsv: Cannot parse an empty file')
-    end
-
-    -- parse through the headers!
-    local startLine = 1
-
-    -- check for BOM
-    if string.byte(inputString, 1) == 239
-        and string.byte(inputString, 2) == 187
-        and string.byte(inputString, 3) == 191 then
-        startLine = 4
-    end
-    local headerField, i = parseString(inputString, inputLength, delimiter, startLine)
-    i = i + 1 -- start at the next char
-
-    -- make sure a header isn't empty
-    for _, header in ipairs(headerField) do
-        if headers and  #header == 0 then
-            error('ftcsv: Cannot parse a file which contains empty headers')
-        end
+        options = {
+            ["headers"] = true,
+            ["loadFromString"] = false,
+            ["ignoreQuotes"] = false,
+            ["bufferSize"] = 2^16
+        }
     end
 
-    -- for files where there aren't headers!
-    if headers == false then
-        i = startLine
-        for j = 1, #headerField do
-            headerField[j] = j
-        end
-    end
+    return options, fieldsToKeep
 
-    -- rename fields as needed!
-    if rename then
-        -- basic rename (["a" = "apple"])
-        for j = 1, #headerField do
-            if rename[headerField[j]] then
-                -- print("RENAMING", headerField[j], rename[headerField[j]])
-                headerField[j] = rename[headerField[j]]
-            end
-        end
-        -- files without headers, but with a rename need to be handled too!
-        if #rename > 0 then
-            for j = 1, #rename do
-                headerField[j] = rename[j]
-            end
-        end
-    end
-
-    -- apply some sweet header manipulation
-    if headerFunc then
-        for j = 1, #headerField do
-            headerField[j] = headerFunc(headerField[j])
-        end
-    end
-
-    local output = parseString(inputString, inputLength, delimiter, i, headerField, fieldsToKeep)
-    local realHeaders = determineRealHeaders(headerField, fieldsToKeep)
-    return output, realHeaders
 end
 
--- a function that delimits " to "", used by the writer
+local function findEndOfHeaders(str, entireFile)
+    local i = 1
+    local quote = sbyte('"')
+    local newlines = {
+        [sbyte("\n")] = true,
+        [sbyte("\r")] = true
+    }
+    local quoted = false
+    local char = sbyte(str, i)
+    repeat
+        -- this should still work for escaped quotes
+        -- ex: " a "" b \r\n " -- there is always a pair around the newline
+        if char == quote then
+            quoted = not quoted
+        end
+        i = i + 1
+        char = sbyte(str, i)
+    until (newlines[char] and not quoted) or char == nil
+
+    if not entireFile and char == nil then
+        error("ftcsv: bufferSize needs to be larger to parse this file")
+    end
+
+    local nextChar = sbyte(str, i+1)
+    if nextChar == sbyte("\n") and char == sbyte("\r") then
+        i = i + 1
+    end
+    return i
+end
+
+local function determineBOMOffset(inputString)
+    -- BOM files start with bytes 239, 187, 191
+    if sbyte(inputString, 1) == 239
+        and sbyte(inputString, 2) == 187
+        and sbyte(inputString, 3) == 191 then
+        return 4
+    else
+        return 1
+    end
+end
+
+local function parseHeadersAndSetupArgs(inputString, delimiter, options, fieldsToKeep, entireFile)
+    local startLine = determineBOMOffset(inputString)
+
+    local endOfHeaderRow = findEndOfHeaders(inputString, entireFile)
+
+    local parserArgs = {
+        delimiter = delimiter,
+        headerField = nil,
+        fieldsToKeep = nil,
+        inputLength = endOfHeaderRow,
+        buffered = false,
+        ignoreQuotes = options.ignoreQuotes,
+        rowOffset = 0
+    }
+
+    local rawHeaders, endOfHeaders = parseString(inputString, startLine, parserArgs)
+
+    -- manipulate the headers as per the options
+    local modifiedHeaders = handleHeaders(rawHeaders[1], options)
+    parserArgs.headerField = modifiedHeaders
+    parserArgs.fieldsToKeep = fieldsToKeep
+    parserArgs.inputLength = nil
+
+    if options.headers == false then endOfHeaders = startLine end
+
+    local finalHeaders = determineRealHeaders(modifiedHeaders, fieldsToKeep)
+    if options.headers ~= false then
+        local headersMetamethod = generateHeadersMetamethod(finalHeaders)
+        parserArgs.headersMetamethod = headersMetamethod
+    end
+
+    return endOfHeaders, parserArgs, finalHeaders
+end
+
+-- runs the show!
+function ftcsv.parse(inputFile, delimiter, options)
+    local options, fieldsToKeep = parseOptions(delimiter, options, false)
+
+    local inputString = initializeInputFromStringOrFile(inputFile, options, "*all")
+
+    local endOfHeaders, parserArgs, finalHeaders = parseHeadersAndSetupArgs(inputString, delimiter, options, fieldsToKeep, true)
+
+    local output = parseString(inputString, endOfHeaders, parserArgs)
+
+    return output, finalHeaders
+end
+
+local function getFileSize (file)
+    local current = file:seek()
+    local size = file:seek("end")
+    file:seek("set", current)
+    return size
+end
+
+local function determineAtEndOfFile(file, fileSize)
+    if file:seek() >= fileSize then
+        return true
+    else
+        return false
+    end
+end
+
+local function initializeInputFile(inputString, options)
+    if options.loadFromString == true then
+        error("ftcsv: parseLine currently doesn't support loading from string")
+    end
+    return initializeInputFromStringOrFile(inputString, options, options.bufferSize)
+end
+
+function ftcsv.parseLine(inputFile, delimiter, userOptions)
+    local options, fieldsToKeep = parseOptions(delimiter, userOptions, true)
+    local inputString, file = initializeInputFile(inputFile, options)
+
+
+    local fileSize, atEndOfFile = 0, false
+    fileSize = getFileSize(file)
+    atEndOfFile = determineAtEndOfFile(file, fileSize)
+
+    local endOfHeaders, parserArgs, _ = parseHeadersAndSetupArgs(inputString, delimiter, options, fieldsToKeep, atEndOfFile)
+    parserArgs.buffered = true
+    parserArgs.endOfFile = atEndOfFile
+
+    local parsedBuffer, endOfParsedInput, totalColumnCount = parseString(inputString, endOfHeaders, parserArgs)
+    parserArgs.totalColumnCount = totalColumnCount
+
+    inputString = ssub(inputString, endOfParsedInput)
+    local bufferIndex, returnedRowsCount = 0, 0
+    local currentRow, buffer
+
+    return function()
+        -- check parsed buffer for value
+        bufferIndex = bufferIndex + 1
+        currentRow = parsedBuffer[bufferIndex]
+        if currentRow then
+            returnedRowsCount = returnedRowsCount + 1
+            return returnedRowsCount, currentRow
+        end
+
+        -- read more of the input
+        buffer = file:read(options.bufferSize)
+        if not buffer then
+            file:close()
+            return nil
+        else
+            parserArgs.endOfFile = determineAtEndOfFile(file, fileSize)
+        end
+
+        -- appends the new input to what was left over
+        inputString = inputString .. buffer
+
+        -- re-analyze and load buffer
+        parserArgs.rowOffset = returnedRowsCount
+        parsedBuffer, endOfParsedInput = parseString(inputString, 1, parserArgs)
+        bufferIndex = 1
+
+        -- cut the input string down
+        inputString = ssub(inputString, endOfParsedInput)
+
+        if #parsedBuffer == 0 then
+            error("ftcsv: bufferSize needs to be larger to parse this file")
+        end
+
+        returnedRowsCount = returnedRowsCount + 1
+        return returnedRowsCount, parsedBuffer[bufferIndex]
+    end
+end
+
+
+
+-- The ENCODER code is below here
+-- This could be broken out, but is kept here for portability
+
+
 local function delimitField(field)
     field = tostring(field)
     if field:find('"') then
@@ -436,39 +645,102 @@ local function delimitField(field)
     end
 end
 
+local function generateDelimitAndQuoteField(delimiter)
+    local generatedFunction = function(field)
+        field = tostring(field)
+        if field:find('"') then
+            return '"' .. field:gsub('"', '""') .. '"'
+        elseif field:find('[\n' .. delimiter .. ']') then
+            return '"' .. field .. '"'
+        else
+            return field
+        end
+    end
+    return generatedFunction
+end
+
+local function escapeHeadersForLuaGenerator(headers)
+    local escapedHeaders = {}
+    for i = 1, #headers do
+        if headers[i]:find('"') then
+            escapedHeaders[i] = headers[i]:gsub('"', '\\"')
+        else
+            escapedHeaders[i] = headers[i]
+        end
+    end
+    return escapedHeaders
+end
+
 -- a function that compiles some lua code to quickly print out the csv
-local function writer(inputTable, dilimeter, headers)
-    -- they get re-created here if they need to be escaped so lua understands it based on how
-    -- they came in
+local function csvLineGenerator(inputTable, delimiter, headers, options)
+    local escapedHeaders = escapeHeadersForLuaGenerator(headers)
+
+    local outputFunc = [[
+        local args, i = ...
+        i = i + 1;
+        if i > ]] .. #inputTable .. [[ then return nil end;
+        return i, '"' .. args.delimitField(args.t[i]["]] ..
+            table.concat(escapedHeaders, [["]) .. '"]] ..
+            delimiter .. [["' .. args.delimitField(args.t[i]["]]) ..
+            [["]) .. '"\r\n']]
+
+    if options and options.onlyRequiredQuotes == true then
+        outputFunc = [[
+            local args, i = ...
+            i = i + 1;
+            if i > ]] .. #inputTable .. [[ then return nil end;
+            return i, args.delimitField(args.t[i]["]] ..
+                table.concat(escapedHeaders, [["]) .. ']] ..
+                delimiter .. [[' .. args.delimitField(args.t[i]["]]) ..
+                [["]) .. '\r\n']]
+    end
+
+    local arguments = {}
+    arguments.t = inputTable
+    -- we want to use the same delimitField throughout,
+    -- so we're just going to pass it in
+    if options and options.onlyRequiredQuotes == true then
+        arguments.delimitField = generateDelimitAndQuoteField(delimiter)
+    else
+        arguments.delimitField = delimitField
+    end
+
+    return luaCompatibility.load(outputFunc), arguments, 0
+
+end
+
+local function validateHeaders(headers, inputTable)
     for i = 1, #headers do
         if inputTable[1][headers[i]] == nil then
             error("ftcsv: the field '" .. headers[i] .. "' doesn't exist in the inputTable")
         end
-        if headers[i]:find('"') then
-            headers[i] = headers[i]:gsub('"', '\\"')
-        end
     end
-
-    local outputFunc = [[
-        local state, i = ...
-        local d = state.delimitField
-        i = i + 1;
-        if i > state.tableSize then return nil end;
-        return i, '"' .. d(state.t[i]["]] .. table.concat(headers, [["]) .. '"]] .. dilimeter .. [["' .. d(state.t[i]["]]) .. [["]) .. '"\r\n']]
-
-    -- print(outputFunc)
-
-    local state = {}
-    state.t = inputTable
-    state.tableSize = #inputTable
-    state.delimitField = delimitField
-
-    return M.load(outputFunc), state, 0
-
 end
 
--- takes the values from the headers in the first row of the input table
-local function extractHeaders(inputTable)
+local function initializeOutputWithEscapedHeaders(escapedHeaders, delimiter, options)
+    local output = {}
+    if options and options.onlyRequiredQuotes == true then
+        output[1] = table.concat(escapedHeaders, delimiter) .. '\r\n'
+    else
+        output[1] = '"' .. table.concat(escapedHeaders, '"' .. delimiter .. '"') .. '"\r\n'
+    end
+    return output
+end
+
+local function escapeHeadersForOutput(headers, delimiter, options)
+    local escapedHeaders = {}
+    local delimitField = delimitField
+    if options and options.onlyRequiredQuotes == true then
+        delimitField = generateDelimitAndQuoteField(delimiter)
+    end
+    for i = 1, #headers do
+        escapedHeaders[i] = delimitField(headers[i])
+    end
+
+    return escapedHeaders
+end
+
+local function extractHeadersFromTable(inputTable)
     local headers = {}
     for key, _ in pairs(inputTable[1]) do
         headers[#headers+1] = key
@@ -480,42 +752,42 @@ local function extractHeaders(inputTable)
     return headers
 end
 
--- turns a lua table into a csv
--- works really quickly with luajit-2.1, because table.concat life
-function ftcsv.encode(inputTable, delimiter, options)
-    local output = {}
-
-    -- dilimeter MUST be one character
-    assert(#delimiter == 1 and type(delimiter) == "string", "the delimiter must be of string type and exactly one character")
-
-    -- grab the headers from the options if they are there
+local function getHeadersFromOptions(options)
     local headers = nil
     if options then
         if options.fieldsToKeep ~= nil then
-            assert(type(options.fieldsToKeep) == "table", "ftcsv only takes in a list (as a table) for the optional parameter 'fieldsToKeep'. You passed in '" .. tostring(options.headers) .. "' of type '" .. type(options.headers) .. "'.")
+            assert(
+                type(options.fieldsToKeep) == "table", "ftcsv only takes in a list (as a table) for the optional parameter 'fieldsToKeep'. You passed in '" .. tostring(options.headers) .. "' of type '" .. type(options.headers) .. "'.")
             headers = options.fieldsToKeep
         end
     end
+    return headers
+end
+
+local function initializeGenerator(inputTable, delimiter, options)
+    -- delimiter MUST be one character
+    assert(#delimiter == 1 and type(delimiter) == "string", "the delimiter must be of string type and exactly one character")
+
+    local headers = getHeadersFromOptions(options)
     if headers == nil then
-        headers = extractHeaders(inputTable)
+        headers = extractHeadersFromTable(inputTable)
     end
+    validateHeaders(headers, inputTable)
 
-    -- newHeaders are needed if there are quotes within the header
-    -- because they need to be escaped
-    local newHeaders = {}
-    for i = 1, #headers do
-        if headers[i]:find('"') then
-            newHeaders[i] = headers[i]:gsub('"', '""')
-        else
-            newHeaders[i] = headers[i]
-        end
-    end
-    output[1] = '"' .. table.concat(newHeaders, '"' .. delimiter .. '"') .. '"\r\n'
+    local escapedHeaders = escapeHeadersForOutput(headers, delimiter, options)
+    local output = initializeOutputWithEscapedHeaders(escapedHeaders, delimiter, options)
+    return output, headers
+end
 
-    -- add each line by line.
-    for i, line in writer(inputTable, delimiter, headers) do
+-- works really quickly with luajit-2.1, because table.concat life
+function ftcsv.encode(inputTable, delimiter, options)
+    local output, headers = initializeGenerator(inputTable, delimiter, options)
+
+    for i, line in csvLineGenerator(inputTable, delimiter, headers, options) do
         output[i+1] = line
     end
+
+    -- combine and return final string
     return table.concat(output)
 end
 
