@@ -53,3 +53,4 @@ examples
 bin
 feeds
 changelog
+feeds.conf
