@@ -44,22 +44,24 @@ function cov:handle_number(key, value, timestamp, quality, nomore)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
 	local new_value = {value, timestamp, quality}
-	self._retained_map[key] = new_value
 
 	if not org_value then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if org_value[3] ~= quality then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if math.abs(value - org_value[1]) > opt.float_threshold then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 
-	self._retained_map[key] = org_value
 	return true
 end
 
@@ -68,22 +70,24 @@ function cov:handle_string(key, value, timestamp, quality, nomore)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
 	local new_value = {value, timestamp, quality}
-	self._retained_map[key] = new_value
 
 	if not org_value then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if org_value[3] ~= quality then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if value ~= org_value[1] then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 
-	self._retained_map[key] = org_value
 	return true
 end
 
@@ -92,23 +96,25 @@ function cov:handle_table(key, value, timestamp, quality, nomore)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
 	local new_value = {value, timestamp, quality}
-	self._retained_map[key] = new_value
 
 	if not org_value then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 	if org_value[3] ~= quality then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 
 	if not tbl_equals(org_value, new_value, true) then
+		self._retained_map[key] = new_value
 		return self._cb(key, value, timestamp, quality)
 	end
 
-	self._retained_map[key] = org_value
 	return true
 end
 
