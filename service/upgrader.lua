@@ -791,8 +791,13 @@ end
 
 function command.system_reboot(id, args)
 	aborting = true
+
+	local appmgr = snax.uniqueservice("appmgr")
+	if appmgr then
+		appmgr.post.close_all("System is rebooting!!!")
+	end
+
 	local delay = args.delay or 5
-	ioe.abort_prepare()
 	skynet.timeout(delay * 100, function()
 		os.execute("reboot &")
 	end)
