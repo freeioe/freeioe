@@ -211,7 +211,7 @@ local msg_handler = {
 -- MQTT Message Callback
 --
 local msg_callback = function(client, packet_id, topic, data, qos, retained)
-	log.info("message:", packet_id, topic, data, qos, retained)
+	log.info("message:", packet_id or -1, topic, data, qos, retained)
 	local id, t, sub = topic:match('^([^/]+)/([^/]+)(.-)$')
 	if id ~= mqtt_id and id ~= "ALL" then
 		log.error("msg_callback recevied incorrect topic message")
@@ -1055,6 +1055,7 @@ end
 -- Fire data snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_data_snapshot(id)
+	log.notice("Data snapshot required")
 	cov:fire_snapshot()
 	if id then
 		snax.self().post.action_result('input', id, true)
@@ -1065,6 +1066,7 @@ end
 -- Fire stat snapshot (skip peroid buffer if zlib loaded)
 ---
 function accept.fire_stat_snapshot(id)
+	log.debug("Stat data snapshot required")
 	stat_cov:fire_snapshot()
 	if id then
 		snax.self().post.action_result('input', id, true)

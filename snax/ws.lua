@@ -102,10 +102,10 @@ function handler.message(id, message)
 		local msg, err = cjson.decode(message)
 
 		assert(msg and msg.id and tostring(msg.code), err or "id or code missing")
-		assert(client or msg.code == 'login')
+		local authed_client = client.authed or msg.code == 'login'
 
 		local f = msg_handler[msg.code]
-		if not f then
+		if not f or not authed_client then
 			return client:send({
 				id = id,
 				code = code,
@@ -179,6 +179,23 @@ end
 local function __fire_result(client, id, code, r, err)
 	local result = r and true or false
 	return client:send({id = id, code = code, data = { result = result, message = err or "Done" }})
+end
+
+function msg_handler.switch_cloud(client, id, code, data)
+	if not data.cloud or not data.pkg or not data.cnf then
+		return __fire_result(client, id, code, false, "Params missing!")
+	end
+
+    log.warning(string.format('WebSocket[%d] Switch cloud to: ', client.id), data.cloud, data.port or 1883, data.pkg, data.cnf)
+	ioe.set_cloud_host(data.cloud)
+	ioe.set_cloud_port(data.port or 1883)
+	ioe.set_pkg_host_url(data.pkg)
+	ioe.set_cnf_host_url(data.cnf)
+
+	--- abort freeioe and will be restarted
+	ioe.abort()
+
+	return __fire_result(client, id, code, true, 'Switch is done')
 end
 
 function msg_handler.app_new(client, id, code, data)
