@@ -107,11 +107,11 @@ function handler.message(id, message)
 		local f = msg_handler[msg.code]
 		if not f or not authed_client then
 			return client:send({
-				id = id,
+				id = msg.id,
 				code = code,
 				data = {
 					result = false,
-					message = "Unkown operation code "..msg.code
+					message = "Unknown operation code "..msg.code
 				}
 			})
 		else
