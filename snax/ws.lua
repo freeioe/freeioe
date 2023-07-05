@@ -183,7 +183,15 @@ end
 
 function msg_handler.switch_cloud(client, id, code, data)
 	if not data.cloud or not data.pkg or not data.cnf then
-		return __fire_result(client, id, code, false, "Params missing!")
+		log.warning(string.format('WebSocket[%d] Switch cloud to default ', client.id))
+		--return __fire_result(client, id, code, false, "Params missing!")
+		ioe.set_cloud_host(nil)
+		ioe.set_cloud_port(nil)
+		ioe.set_pkg_host_url(nil)
+		ioe.set_cnf_host_url(nil)
+		--- abort freeioe and will be restarted
+		ioe.abort()
+		return __fire_result(client, id, code, true, 'Switch to default cloud is done')
 	end
 
     log.warning(string.format('WebSocket[%d] Switch cloud to: ', client.id), data.cloud, data.port or 1883, data.pkg, data.cnf)
