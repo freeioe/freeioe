@@ -498,15 +498,10 @@ function command.user_access(auth_code)
 	return pkg_api.user_access(auth_code)
 end
 
-local function download_upgrade_skynet(id, args, cb)
-	local skynet_version = args
-	if type(args) == 'table' then
-		skynet_version = args.version
-	end
-
+local function download_upgrade_skynet(id, skynet_version, token, cb)
 	--local is_windows = package.config:sub(1,1) == '\\'
 	local version, beta = parse_version_string(skynet_version)
-	return create_sys_download('skynet', version, cb, ".tar.gz", args.token, true)
+	return create_sys_download('skynet', version, cb, ".tar.gz", token, true)
 end
 
 --[[
@@ -740,22 +735,22 @@ function command.upgrade_core(id, args)
 		end
 	end
 
+	local skynet_version = type(args.skynet) == 'table' and args.skynet.version or args.skynet
 
 	--- Upgrade skynet only
 	if not args.version or tonumber(args.version) <= 0 or string.lower(args.version) == 'none' then
-		return download_upgrade_skynet(id, args.skynet, function(path)
+		return download_upgrade_skynet(id, skynet_version, args.token, function(path)
 			return start_upgrade_proc(nil, path)
 		end)
 	end
 
 	-- Upgrade both
 	local version, beta = parse_version_string(args.version)
-	local skynet_version = type(args.skynet) == 'table' and args.skynet.version or args.skynet
 
 	return create_sys_download('freeioe', version, function(path)
 		local freeioe_path = path
 		if skynet_version then
-			return download_upgrade_skynet(id, args.skynet, function(path)
+			return download_upgrade_skynet(id, skynet_version, args.token, function(path)
 				return start_upgrade_proc(freeioe_path, path)
 			end)
 		else
