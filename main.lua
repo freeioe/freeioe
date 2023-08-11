@@ -1,26 +1,10 @@
-local skynet = require "skynet"
+local skynet = require "skynet.manager"
 local snax = require "skynet.snax"
 local lfs = require 'lfs'
 
 local is_windows = package.config:sub(1,1) == '\\'
 
-skynet.start(function()
-	skynet.error("FreeIOE Starting...")
-	if not lfs.currentdir() then
-		skynet.error("FreeIOE Current Directory is nil!")
-		skynet.sleep(5)
-		skynet.abort()
-		return
-	end
-
-	if _VERSION ~= 'Lua 5.4' then
-		skynet.error("FreeIOE required run with skynet built with Lua 5.4!!!!")
-	end
-
-	--skynet.newservice("exec_sal")
-	if not is_windows and not os.getenv("IOE_RUN_AS_DAEMON") then
-		local console = skynet.newservice("console")
-	end
+local function start_ioe_services()
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
 	skynet.newservice("ioe_ext")
@@ -44,6 +28,32 @@ skynet.start(function()
 		skynet.error("Unix socket for ubus not found, ubus service will not be started!!!")
 		--local ubus = snax.uniqueservice('ubus', '172.30.11.230', 11000)
 		--local ubus = snax.uniqueservice('ubus', '/tmp/ubus.sock')
+	end
+end
+
+skynet.start(function()
+	skynet.error("FreeIOE starting...")
+	if not lfs.currentdir() then
+		skynet.error("FreeIOE current directory is nil!")
+		skynet.sleep(5)
+		skynet.abort()
+		return
+	end
+
+	if _VERSION ~= 'Lua 5.4' then
+		skynet.error("FreeIOE required run with skynet built with Lua 5.4!!!!")
+	end
+
+	--skynet.newservice("exec_sal")
+	if not is_windows and not os.getenv("IOE_RUN_AS_DAEMON") then
+		local console = skynet.newservice("console")
+	end
+
+	local r, err = pcall(start_ioe_services)
+	if not r then
+		skynet.error("FreeIOE start services failed!")
+		skynet.sleep(5)
+		skynet.abort()
 	end
 
 	skynet.exit()
