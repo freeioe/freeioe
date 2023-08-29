@@ -1,0 +1,129 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:	  skynet
+# Required-Start:    $local_fs $remote_fs $network $syslog $named
+# Required-Stop:     $local_fs $remote_fs $network $syslog $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts skynet 
+# Description:       starts skynet using start-stop-daemon
+### END INIT INFO
+
+NAME=skynet
+DESC="FreeIOE based on skynet"
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+BASE_DIR=/usr/ioe
+SKYNET_DIR=$BASE_DIR/skynet
+FREEIOE_DIR=$SKYNET_DIR/ioe
+
+SKYNET_BIN=$SKYNET_DIR/skynet
+SKYNET_PID=/var/run/skynet_real.pid
+STARTUP_SH=$FREEIOE_DIR/startup.sh
+
+ARCH=`arch`
+DAEMON=/usr/sbin/process-monitor
+DAEMON_OPTS="-p $SKYNET_PID -M 2 -D $SKYNET_DIR"
+STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
+
+export IOE_RUN_AS_DAEMON=1
+export IOE_PLATFORM="htnice/gt675x/$ARCH"
+export IOE_DATA_DIR="/home"
+
+
+if [ -r /etc/default/skynet ]; then
+        . /etc/default/skynet
+fi
+
+skynet_missing() {
+	echo $DAEMON "is missing"
+	exit 0
+}
+
+test -x $DAEMON || skynet_missing
+
+PID=/var/run/skynet.pid
+
+start_skynet() {
+	# Start the daemon/service
+	#
+	# Returns:
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+	start-stop-daemon -S -q -m -p $PID -b -x $DAEMON -- \
+		$DAEMON_OPTS -S "$STARTUP_OPTS" $SKYNET_BIN ioe/config 2>/dev/null \
+		|| return 2
+}
+
+stop_skynet() {
+	# Stops the daemon/service
+	#
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+	start-stop-daemon -K -q -p $PID
+	RETVAL="$?"
+	sleep 1
+	return "$RETVAL"
+}
+
+reload_skynet() {
+	# Function that sends a SIGHUP to the daemon/service
+	start-stop-daemon -K -s HUP -q -p $PID
+	return 0
+}
+
+case "$1" in
+	start)
+		printf "Starting $DESC "
+		start_skynet
+		case "$?" in
+			0|1) echo 0 ;;
+			2)   echo 1 ;;
+		esac
+		;;
+	stop)
+		printf "Stopping $DESC "
+		stop_skynet
+		case "$?" in
+			0|1) echo 0 ;;
+			2)   echo 1 ;;
+		esac
+		;;
+	restart)
+		printf "Restarting $DESC "
+
+		stop_skynet
+		case "$?" in
+			0|1)
+				start_skynet
+				case "$?" in
+					0) echo 0 ;;
+					1) echo 1 ;; # Old process is still running
+					*) echo 1 ;; # Failed to start
+				esac
+				;;
+			*)
+				# Failed to stop
+				echo 1
+				;;
+		esac
+		;;
+	reload|force-reload)
+		printf "Reloading $DESC configuration "
+
+		reload_skynet
+		echo $?
+		;;
+	status)
+		status_of_proc -p $PID "$DAEMON" "$NAME" && exit 0 || exit $?
+		;;
+	*)
+		echo "Usage: $NAME {start|stop|restart|reload|force-reload|status}" >&2
+		exit 3
+		;;
+esac

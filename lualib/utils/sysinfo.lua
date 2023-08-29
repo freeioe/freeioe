@@ -497,7 +497,7 @@ local data_dir_list = {
 _M.data_dir = function()
 	local os_id = _M.os_id()
 	if os_id ~= 'openwrt' then
-		return '/tmp'
+		return os.getenv("IOE_DATA_DIR") or '/tmp'
 	end
 	local result = nil
 	local s, err = _M.cat_file('/tmp/sysinfo/board_name')

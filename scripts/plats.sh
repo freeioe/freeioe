@@ -3,6 +3,7 @@
 declare -A plats
 
 plats["linux/x86_64"]="native"
+plats["linux/htnice_gt675x"]="htnice_gt675x.sh"
 # plats["openwrt/14.07/mipsel_24kc"]="bmr200.sh"
 
 plats["openwrt/17.01/arm_cortex-a9_neon"]="tgw3030_exports.sh"
