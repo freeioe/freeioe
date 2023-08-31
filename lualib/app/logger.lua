@@ -48,6 +48,8 @@ function logger:log(level, info, ...)
 end
 
 function logger:log_with_name(level, info, ...)
+	assert(level)
+	assert(info)
 	local info = self._name and '::'..self._name..':: '..info or info
 	--lvl = log.lvl2number(level)
 	local f = assert(self._log[level])

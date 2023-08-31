@@ -141,7 +141,7 @@ _M.basexx = require 'basexx'
 ]]--
 
 _M.abort = function(timeout)
-	local timeout = timeout or 5
+	local timeout = timeout or 5000
 	skynet.call(".cfg", "lua", "save")
 	skynet.call(".upgrader", "lua", "system_quit", id, {delay=timeout})
 end

@@ -3,11 +3,12 @@
 
 # Release history
 
-v2.2.1 ()
+v2.2.1 (2023-08-31)
 ------------------
 
 * Fixed message queue may overload issue
 * Support IOE_ARCH/PLATFORM/OS_ID/OS_VER env 
+* Fixed ioe.abort time unit issue
 
 
 v2.2.0 (2022-12-15)

@@ -807,12 +807,12 @@ function command.system_quit(id, args)
 		appmgr.post.close_all("FreeIOE is aborting!!!")
 	end
 
-	local delay = args.delay or 5
-	skynet.timeout(delay * 100, function()
+	local delay = args.delay or 5000
+	skynet.timeout(delay // 10, function()
 		skynet.abort()
 	end)
 
-	return true, "FreeIOE will reboot after "..delay.." s"
+	return true, "FreeIOE will quit after "..delay.." ms"
 end
 
 local function check_rollback()
