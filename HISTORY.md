@@ -8,6 +8,13 @@ v2.2.1 (2023-08-31)
 
 * Fixed message queue may overload issue
 * Support IOE_ARCH/PLATFORM/OS_ID/OS_VER env 
+* Fixed FCS16/32 hashing algrithm
+* Increase the thread to be 8
+* Updated 3rd party libs: date, ftcsv, json.lua middleclass, uuid.lua
+* Support local configuration tool
+* Abort skynet when service throw errors
+* Update skynet startup sequence for openwrt
+* Support HTnice devices
 * Fixed ioe.abort time unit issue
 
 
