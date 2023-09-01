@@ -142,8 +142,10 @@ _M.basexx = require 'basexx'
 
 _M.abort = function(timeout)
 	local timeout = timeout or 5000
-	skynet.call(".cfg", "lua", "save")
-	skynet.call(".upgrader", "lua", "system_quit", id, {delay=timeout})
+	skynet.timeout(100, function()
+		skynet.call(".cfg", "lua", "save")
+		skynet.call(".upgrader", "lua", "system_quit", id, {delay=timeout})
+	end)
 end
 
 _M.env = {
