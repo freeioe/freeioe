@@ -23,7 +23,7 @@ plats["openwrt/21.02/mipsel_24kc"]="ramips_mt76x8_21.02.sh"
 
 ## 22.03
 plats["openwrt/22.03/aarch64_generic"]="aarch64_generic_22.03.sh"
-plats["openwrt/22.03/arm_arm926ej-s"]="nuc980_arm926ej-s.sh"
+# plats["openwrt/22.03/arm_arm926ej-s"]="nuc980_arm926ej-s.sh"
 
 ## openwrt master
 plats["openwrt/snapshot/arm_cortex-a7_neon-vfpv4"]="sunxi_a7_snapshot.sh"
