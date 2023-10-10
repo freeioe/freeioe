@@ -100,6 +100,7 @@ function serial:start(cb, timeout)
 			end
 			skynet.sleep(1)
 		end
+		skynet.error("Serial port "..self._port_name.." closed!")
 	end)
 end
 

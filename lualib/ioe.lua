@@ -4,6 +4,7 @@
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local dc = require 'skynet.datacenter'
+local tls_loaded, tls = pcall(require, "http.tlshelper")
 
 local _M = {}
 
@@ -97,6 +98,17 @@ end
 _M.set_online_check_ip = function(ip)
 	local sysinfo = require 'utils.sysinfo'
 	return sysinfo.set_online_check_ip(ip)
+end
+
+---
+-- Get only url address
+_M.make_url = function(url)
+	local protocol, _url = string.match(url, "^([^:]+)://(.+)$")
+	if protocol then
+		return url
+	end
+	return url
+	--return tls_loaded and "https://"..url
 end
 
 -- Get app store server address
