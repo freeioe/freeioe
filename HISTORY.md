@@ -3,6 +3,11 @@
 
 # Release history
 
+v2.2.3 ()
+------------------
+
+* Add log when serialdriver.start quit
+
 v2.2.2 (2023-09-01)
 ------------------
 
