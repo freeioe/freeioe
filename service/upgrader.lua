@@ -717,8 +717,6 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 
 	-- Call system abort
 	ioe.abort()
-	-- mark the aborting after call abort
-	aborting = true
 	log.warning("Core system upgradation done!")
 	return true, "System upgradation is done!"
 end

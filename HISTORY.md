@@ -3,10 +3,11 @@
 
 # Release history
 
-v2.2.3 ()
+v2.2.3 (2023-10-10)
 ------------------
 
 * Add log when serialdriver.start quit
+* Fixed FreeIOE upgrade issue
 
 v2.2.2 (2023-09-01)
 ------------------
