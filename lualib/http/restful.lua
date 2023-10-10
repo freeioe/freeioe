@@ -27,6 +27,8 @@ local function init_httpc(timeout)
 	--httpc.dns()
 	if timeout then
 		httpc.timeout = timeout / 10
+	else
+		httpc.timeout = nil
 	end
 	return httpc
 end
@@ -57,6 +59,7 @@ function restful:request(method, url, params, data, content_type)
         url = url..'?'..table.concat(q, '&')
     end
 
+	-- Set the timeout and get httpc
 	local httpc = init_httpc(self._timeout)
 
 	local headers = {}
@@ -70,6 +73,10 @@ function restful:request(method, url, params, data, content_type)
 	end
 
     local r, status, body = pcall(httpc.request, method, self._host, url, recvheader, headers, content)
+
+	-- Reset the timeout
+	httpc.timeout = nil
+
 	if not r then
 		return nil, status
 	else

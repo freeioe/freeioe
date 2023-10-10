@@ -6,6 +6,8 @@ local function init_httpc(timeout)
 	--httpc.dns()
 	if timeout then
 		httpc.timeout = timeout
+	else
+		httpc.timeout = nil
 	end
 	return httpc
 end
@@ -42,6 +44,9 @@ function _M.get(host, url, header, query, content)
 
 	local httpc = init_httpc()
     local r, status, body = pcall(httpc.request, 'GET', host, url, recvheader, header, content)
+	-- Reset httpc.timeout
+	httpc.timeout = nil
+
 	if not r then
 		return nil, status
 	else
