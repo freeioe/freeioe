@@ -723,6 +723,9 @@ end
 
 function command.upgrade_core(id, args)
 	--local is_windows = package.config:sub(1,1) == '\\'
+	
+	local cjson = require 'cjson.safe'
+	log.warning("Upgrade Core", cjson.encode(args) or 'failed to json args')
 
 	if args.no_ack then
 		local base_dir = get_ioe_dir()

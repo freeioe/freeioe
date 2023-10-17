@@ -176,7 +176,7 @@ function create_methods(bus)
 				}
 				if msg.skynet then
 					data.skynet = {
-						version = data.skynet
+						version = msg.skynet
 					}
 				end
 				local r, err = skynet.call(".upgrader", "lua", "upgrade_core", req.peer, data)
