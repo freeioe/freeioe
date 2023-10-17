@@ -3,6 +3,12 @@
 
 # Release history
 
+V2.3.0 ()
+------------------
+
+* Fixed ubus upgrade command cannot upgrade skynet version
+
+
 V2.2.4 (2023-10-11)
 ------------------
 * Fixed httpc timeout issue
