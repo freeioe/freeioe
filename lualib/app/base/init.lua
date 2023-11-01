@@ -103,6 +103,21 @@ end
 function app:start()
 	self._api:set_handler(self:_map_handler())
 
+	if self.on_input then
+		-- If we watching data
+		self._sys:timeout(0, function()
+			local devs = self._api:list_devices(true)
+			for sn, props in pairs(devs or {}) do
+				for _, input in ipairs(props.inputs or {}) do
+					for prop, val in pairs(input.props or {}) do
+						local app_name = props.app_name or '_FAKE_NAME_FROM_START_'
+						self:on_input(app_name, sn, input.name, prop, val.value, val.timestamp, val.quality)
+					end
+				end
+			end
+		end)
+	end
+
 	return self:on_start()
 end
 

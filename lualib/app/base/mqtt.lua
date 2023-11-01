@@ -427,7 +427,10 @@ function app:_init_cov()
 		self._log:warning('COV is disabled')
 		return
 	end
-	local cov_opt = {ttl=self._ttl, float_threshold = self._float_threshold}
+	local cov_opt = {
+		ttl = self._ttl,
+		float_threshold = self._float_threshold,
+	}
 	self._cov = cov:new(function(...)
 		return self:_handle_cov_data(...)
 	end, cov_opt)

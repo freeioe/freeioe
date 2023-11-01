@@ -194,8 +194,31 @@ end
 --[[
 -- List devices
 --]]
-function api:list_devices()
-	return dc.get('DEVICES')
+function api:list_devices(with_data)
+	local devs = dc.get('DEVICES')
+	if not with_data then
+		return devs
+	end
+
+	-- Get dc snapshot
+	local inputs = dc.get('INPUT') or {}
+	local outputs = dc.get('OUTPUT') or {}
+	local dev_in_apps = dc.get('DEV_IN_APP') or {}
+
+	for sn, props in pairs(devs) do
+		props.app_name = dev_in_apps[sn]
+
+		local vals = inputs[sn] or {}
+		for _, input in ipairs(props.inputs or {}) do
+			input.props = vals[input.name]
+		end
+		local ovals = outputs[sn] or {}
+		for _, output in ipairs(props.outputs or {}) do
+			output.props = ovals[output.name]
+		end
+	end
+	-- Return all devices with their data
+	return devs
 end
 
 function valid_device_meta(meta)

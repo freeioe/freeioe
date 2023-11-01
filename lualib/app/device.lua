@@ -254,6 +254,11 @@ function device:sn()
 	return self._sn
 end
 
+-- return app instance name which create this device
+function device:app_name()
+	return self._app_name
+end
+
 function device:list_props()
 	return self._props
 end

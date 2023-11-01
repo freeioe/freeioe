@@ -11,7 +11,7 @@ local lfs = require 'lfs'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
-sys.API_VER = 14 -- 2022.6.13 :: ioe module support cloud changes
+sys.API_VER = 15 -- 2023.11.1 :: added app_name method in device object
 sys.API_MIN_VER = 1
 
 ---
