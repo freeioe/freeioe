@@ -151,6 +151,14 @@ function cov:fire_snapshot(cb)
 	end
 end
 
+function cov:snapshot()
+	local ret = {}
+	for key, v in pairs(self._retained_map) do
+		ret[key] = {table.unpack(v)}
+	end
+	return ret
+end
+
 --- Call this timer function manually if you won't using start/stop method
 -- @tparam now number Skynet time in seconds ( float )
 -- @tparam cb function  Callback function for fire data out

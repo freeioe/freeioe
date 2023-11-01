@@ -21,8 +21,8 @@ local base_app = require 'app.base'
 -- tls_client_cert -- MQTT client cert
 -- tls_client_key -- MQTT client key
 --
--- period - 周期上送的周期时间 (默认60秒)
--- ttl - 变化传输的强制上传周期（数据不变，但是经过ttl的时间数据必须上传一次, 默认300秒)
+-- period - 周期上送的周期时间 (默认60秒), 0 则禁用
+-- ttl - 变化传输的强制上传周期（数据不变，但是经过ttl的时间数据必须上传一次, 默认300秒), 0 则禁用
 -- float_threshold - 变化传输浮点数据变化的最小量值 (默认0.0000001)
 -- data_upload_dpp - 数据上传单包最多的数据点数量(默认1024)
 -- data_upload_buffer - 周期上送最多缓存数据点数量(默认10240)
