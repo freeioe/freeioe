@@ -541,8 +541,8 @@ _M.update_cloud_status = function(status, status_last_update_time)
 	return true
 end
 
-_M.set_online_check_ip = function(ip)
-	if not ip then
+_M.set_online_check_host = function(host)
+	if not host then
 		os.execute('rm -f /tmp/sysinfo/online_check')
 		return true
 	end
@@ -551,7 +551,7 @@ _M.set_online_check_ip = function(ip)
 	if not f then
 		return nil, err
 	end
-	local r, str = pcall(string.format, '%s', ip)
+	local r, str = pcall(string.format, '%s', host)
 	if not r then
 		return nil, str
 	end
@@ -559,5 +559,8 @@ _M.set_online_check_ip = function(ip)
 	f:close()
 	return true
 end
+
+-- [Deprecated: set_online_check_ip]
+_M.set_online_check_ip = _M.set_online_check_host
 
 return _M

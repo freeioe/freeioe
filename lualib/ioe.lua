@@ -94,10 +94,16 @@ _M.set_auth_code = function(value)
 	dc.set("SYS", "AUTH_CODE", value)
 end
 
--- Set online check IP address (using ping)
-_M.set_online_check_ip = function(ip)
+-- Set online check host address (using ping)
+_M.set_online_check_host = function(host)
 	local sysinfo = require 'utils.sysinfo'
-	return sysinfo.set_online_check_ip(ip)
+	return sysinfo.set_online_check_host(host)
+end
+
+-- [Deprecated] Set online check IP address (using ping)
+-- !USE set_online_check_host instead
+_M.set_online_check_ip = function(ip)
+	return _M.set_online_check_host(ip)
 end
 
 ---
