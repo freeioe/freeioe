@@ -31,6 +31,8 @@ local base_app = require 'app.base'
 -- data_cache_limit - 断线缓存文件数量上限 1~ 256 默认128
 -- data_cache_fire_gap - 断线缓存上送时的包间隔时间默认 1000ms (1000 ~ nnnn)
 --
+-- host_as_online_check - 使用MQTT主机作为网关网络在线监测主机(只有当设备支持此设置时生效) (boolean or 0/1)
+--
 -- Your handlers are:
 -- pack_key [o] -- 用于打包: src_app:采集应用名称 sn:采集设备序列号 input: 输入项名称 prop: 属性名, return nil will skip data
 -- on_publish_devices [o] -- 打包所有设备信息上送回调
@@ -76,6 +78,8 @@ function app:initialize(name, sys, conf)
 	self._data_max_count = self._data_max_count > 256 and 256 or self._data_max_count
 	self._data_cache_fire_gap = tonumber(conf.data_cache_fire_gap) or 1000 -- ms
 	self._data_cache_fire_gap = self._data_cache_fire_gap < 1000 and 1000 or self._data_cache_fire_gap
+
+	self._host_as_online_check = conf.host_as_online_check == true or tonumber(conf.host_as_online_check) == 1
 
 	self._connecting = nil
 	self._close_connection = nil
@@ -317,6 +321,12 @@ function app:_connect_proc()
 
 	-- 创建MQTT客户端实例
 	log:info("MQTT Connect:", option.client_id, option.host, option.port, option.username, option.password)
+	if self._host_as_online_check then
+		if option.host ~= self._online_check_host then
+			self._online_check_host = host
+			ioe.set_online_check_host(self._online_check_host)
+		end
+	end
 
 	local client = mqtt_client:new(option, self._log)
 
@@ -498,6 +508,12 @@ function app:on_start()
 	assert(self.on_publish_data, "on_publish_data missing!!!")
 	assert(self.on_publish_data_list, "on_publish_data_list missing!!!")
 
+	-- Is host need and nost set
+	if self._host_as_online_check and not self._online_check_host then
+		self._online_check_host = self._mqtt_opt.host
+		ioe.set_online_check_host(self._online_check_host)
+	end
+
 	-- initialize COV PB, FB
 	self:_init_cov()
 	self:_init_pb()
@@ -512,6 +528,10 @@ end
 
 --- 应用退出函数
 function app:on_close(reason)
+	if self._online_check_host then
+		ioe.set_online_check_host(nil) -- clear online host check
+	end
+
 	self:disconnect()
 	return true
 end

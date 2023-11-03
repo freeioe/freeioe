@@ -541,13 +541,20 @@ _M.update_cloud_status = function(status, status_last_update_time)
 	return true
 end
 
+local ONLINE_CHECK_FILE = '/tmp/sysinfo/online_check'
+-- G_ONLINE_SET_BY_THIS is global var in lua (_G.G_ONLINE_SET_BY_THIS)
 _M.set_online_check_host = function(host)
-	if not host then
-		os.execute('rm -f /tmp/sysinfo/online_check')
+	if not host and G_ONLINE_SET_BY_THIS then
+		os.execute('rm -f '..ONLINE_CHECK_FILE)
 		return true
 	end
 
-	local f, err = io.open('/tmp/sysinfo/online_check', 'w+')
+	-- Check online file exists
+	if lfs.attributes(ONLINE_CHECK_FILE, "mode") == 'file' then
+		return nil, 'Online check set by other app already'
+	end
+
+	local f, err = io.open(ONLINE_CHECK_FILE, 'w+')
 	if not f then
 		return nil, err
 	end
@@ -557,6 +564,9 @@ _M.set_online_check_host = function(host)
 	end
 	f:write(str)
 	f:close()
+
+	G_ONLINE_SET_BY_THIS = true
+
 	return true
 end
 
