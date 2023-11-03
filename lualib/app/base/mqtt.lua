@@ -43,6 +43,7 @@ local base_app = require 'app.base'
 -- mqtt_auth [o] -- 用于更新认证信息
 -- mqtt_will [o] -- Will message
 -- on_mqtt_connect_ok [o] -- 用于MQTT连接成功回调
+-- on_mqtt_disconnect [o] -- 用于MQTT连接断开
 -- on_mqtt_message -- MQTT消息接收函数
 -- on_mqtt_publish -- MQTT发布回调， qos=1,2
 --
@@ -82,7 +83,6 @@ function app:initialize(name, sys, conf)
 	self._host_as_online_check = conf.host_as_online_check == true or tonumber(conf.host_as_online_check) == 1
 
 	self._connecting = nil
-	self._close_connection = nil
 	self._mqtt_reconnect_timeout = 1000
 	self._max_mqtt_reconnect_timeout = 512 * 1000 -- about 8.5 minutes
 
@@ -212,6 +212,9 @@ end
 function app:on_mqtt_connect_ok()
 end
 
+function app:on_mqtt_disconnect()
+end
+
 function app:mqtt_auth()
 end
 
@@ -240,14 +243,26 @@ function app:_start_reconnect()
 	local client = self._mqtt_client
 	self._mqtt_client = nil
 
-	self._sys:fork(function()
+	self._sys:timeout(self._mqtt_reconnect_timeout, function()
 		if client then
 			client:disconnect()
 		end
+
+		-- If this is connecting
+		if self._connecting then
+			self._log:error("There is one more reconnecting???")
+			return
+		end
+
 		self._connecting = true
 		self:_connect_proc()
 		self._connecting = false
 	end)
+
+	self._mqtt_reconnect_timeout = self._mqtt_reconnect_timeout * 2
+	if self._mqtt_reconnect_timeout > self._max_mqtt_reconnect_timeout then
+		self._mqtt_reconnect_timeout = 1000
+	end
 end
 
 function app:map_tls_option(opt)
@@ -277,7 +292,7 @@ function app:_connect_proc()
 	if self.mqtt_auth then
 		info, err = self:mqtt_auth()
 		if not info then
-			log:error("ON_MQTT_PREPARE failed", err)
+			log:error("mqtt_auth() failed", err)
 			return self:_start_reconnect()
 		end
 	end
@@ -355,6 +370,12 @@ function app:_connect_proc()
 	client.on_mqtt_disconnect = function(success, rc, msg) 
 		if not self._mqtt_client or self._mqtt_client == client then
 			self._mqtt_client_last = sys:time()
+
+			if self.on_mqtt_disconnect then
+				self._sys:fork(function()
+					self._safe_call(self.on_mqtt_disconnect, self)
+				end)
+			end
 		end
 	end
 

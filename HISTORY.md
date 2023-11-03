@@ -10,8 +10,8 @@ V2.3.0 ()
 * API_VER 15 added app_name method in device object
 * Traverse devices' data when app watches input
 * Added snapshot in cov class
-* When ttl is less than 1 second then disable
 * Using set_online_check_host instead of set_online_check_ip
+* app.base.mqtt added timeout for reconnect
 
 
 V2.2.4 (2023-10-11)
