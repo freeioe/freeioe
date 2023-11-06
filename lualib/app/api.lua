@@ -205,7 +205,7 @@ function api:list_devices(with_data)
 	local outputs = dc.get('OUTPUT') or {}
 	local dev_in_apps = dc.get('DEV_IN_APP') or {}
 
-	for sn, props in pairs(devs) do
+	for sn, props in pairs(devs or {}) do
 		props.app_name = dev_in_apps[sn]
 
 		local vals = inputs[sn] or {}
