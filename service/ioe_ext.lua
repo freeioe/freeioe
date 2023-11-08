@@ -106,6 +106,18 @@ local function get_app_depends(app_inst)
 			table.insert(exts, { name = name, version = version})
 		end
 		f:close()
+	else
+		local f = io.open(dir.."/depends.json", "r")
+		local str = f:read('a')
+		local deps, err = cjson.decode(str)
+		if not deps then
+			log.error('depends.json format error', err)
+		else
+			for _, v in ipairs(deps) do
+				v.version = v.version or 'latest'
+				table.insert(exts, { name = v.name, version = v.version, local_path = local_path, download_url = download_url })
+			end
+		end
 	end
 	return exts
 end
@@ -254,6 +266,20 @@ function command.install_ext(id, args)
 	local inst = make_inst_name(name, version)
 	if installed[inst] then
 		return true, "Extension "..inst.." already installed"
+	end
+	if args.local_path then
+		local mode = lfs.attributes(args.local_path, 'mode')
+		if mode then
+			log.notice("Install extension from local", name, version, args.local_path)
+			local target_folder = get_target_folder(inst)
+			os.execute('ln -s '..args.local_path..' '..target_folder)
+			installed[inst] = {
+				name = name,
+				version = version,
+			}
+			--- Trigger extension list upgrade
+			cloud_update_ext_list()
+		end
 	end
 
 	return create_download(name, version, function(path)

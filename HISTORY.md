@@ -12,6 +12,7 @@ V2.3.0 ()
 * Added snapshot in cov class
 * Using set_online_check_host instead of set_online_check_ip
 * app.base.mqtt added timeout for reconnect
+* Support depends.json for supporting local extension files
 
 
 V2.2.4 (2023-10-11)
