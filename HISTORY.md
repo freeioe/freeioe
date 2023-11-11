@@ -3,7 +3,7 @@
 
 # Release history
 
-V2.3.0 ()
+V2.3.0 (2023-11-11)
 ------------------
 
 * Fixed ubus upgrade command cannot upgrade skynet version

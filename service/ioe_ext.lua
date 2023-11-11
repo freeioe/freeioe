@@ -1,4 +1,5 @@
 local lfs = require 'lfs'
+local cjson = require 'cjson.safe'
 
 local skynet = require 'skynet.manager'
 local snax = require 'skynet.snax'
@@ -93,6 +94,24 @@ local function create_download(ext_name, version, success_cb, ext, token)
 	return down(success_cb)
 end
 
+local function get_app_depends_json(app_inst)
+	local exts = {}
+	local dir = get_app_target_folder(app_inst)
+	local f = io.open(dir.."/depends.json", "r")
+	if f then
+		local str = f:read('a')
+		local deps, err = cjson.decode(str)
+		if not deps then
+			log.error('depends.json format error', err)
+		else
+			for _, v in ipairs(deps) do
+				v.version = v.version or 'latest'
+				table.insert(exts, { name = v.name, version = v.version, local_path = v.local_path, download_url = v.download_url })
+			end
+		end
+	end
+	return exts
+end
 
 local function get_app_depends(app_inst)
 	local exts = {}
@@ -107,23 +126,13 @@ local function get_app_depends(app_inst)
 		end
 		f:close()
 	else
-		local f = io.open(dir.."/depends.json", "r")
-		local str = f:read('a')
-		local deps, err = cjson.decode(str)
-		if not deps then
-			log.error('depends.json format error', err)
-		else
-			for _, v in ipairs(deps) do
-				v.version = v.version or 'latest'
-				table.insert(exts, { name = v.name, version = v.version, local_path = local_path, download_url = download_url })
-			end
-		end
+		return get_app_depends_json(app_inst)
 	end
 	return exts
 end
 
 local function install_depends_to_app_ext(ext_inst, app_inst, folder)
-	local src_folder = get_target_folder(ext_inst)..folder.."/"
+	local src_folder = get_target_folder(ext_inst).."/"..folder.."/"
 	if lfs.attributes(src_folder, 'mode') ~= 'directory' then
 		return
 	end
@@ -160,6 +169,7 @@ end
 local function list_installed()
 	local list = {}
 	local root = get_target_root()
+	lfs.mkdir(root) --- make sure folder exits
 	for filename in lfs.dir(root) do
 		if filename ~= '.' and filename ~= '..' then
 			if lfs.attributes(root..filename, 'mode') == 'directory' then
@@ -232,7 +242,13 @@ function command.install_depends(app_inst)
 		local inst = make_inst_name(ext.name, ext.version)
 		if not installed[inst] then
 			create_task(function()
-				return command.install_ext(nil, {name=ext.name, version=ext.version, inst=inst})
+				return command.install_ext(nil, {
+					inst = inst,
+					name = ext.name,
+					version = ext.version,
+					local_path = ext.local_path,
+					download_url = ext.download_url,
+				})
 			end, "Download extension "..inst)
 			skynet.sleep(20) -- wait for installation started
 		end
@@ -272,6 +288,7 @@ function command.install_ext(id, args)
 		if mode then
 			log.notice("Install extension from local", name, version, args.local_path)
 			local target_folder = get_target_folder(inst)
+			print(target_folder)
 			os.execute('ln -s '..args.local_path..' '..target_folder)
 			installed[inst] = {
 				name = name,
@@ -280,6 +297,8 @@ function command.install_ext(id, args)
 			--- Trigger extension list upgrade
 			cloud_update_ext_list()
 		end
+		-- download will not be needed
+		return true, 'Extension installed from local'
 	end
 
 	return create_download(name, version, function(path)
@@ -288,7 +307,7 @@ function command.install_ext(id, args)
 		local target_folder = get_target_folder(inst)
 		lfs.mkdir(target_folder)
 		log.debug("tar xzf "..path.." -C "..target_folder)
-		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
+		local r, status = os.execute("tar xzf "..path.." -C "..target_folder.."/")
 		os.execute("rm -rf "..path)
 		if r and status == 'exit' then
 			log.notice("Install extension finished", name, version, r, status)
@@ -329,7 +348,7 @@ function command.upgrade_ext(id, args)
 		log.notice("Download extension finished", name, version, beta)
 
 		local target_folder = get_target_folder(inst)
-		log.debug("tar xzf "..path.." -C "..target_folder)
+		log.debug("tar xzf "..path.." -C "..target_folder.."/")
 		local r, status = os.execute("tar xzf "..path.." -C "..target_folder)
 		os.execute("rm -rf "..path)
 		if not r or status ~= 'exit' then

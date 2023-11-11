@@ -57,7 +57,7 @@ end
 
 function _M.get_ext_folder(inst_name)
 	assert(string.len(inst_name or '') > 0, "Instance name cannot be empty")
-	return lfs.currentdir().."/ioe/ext/"..inst_name.."/"
+	return lfs.currentdir().."/ioe/ext/"..inst_name
 end
 
 function _M.parse_version_string(version)
