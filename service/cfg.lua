@@ -44,7 +44,7 @@ end
 
 --- Order or reading pre-defaults
 -- read /etc/freeioe.conf
--- get enviorment from system
+-- get environment from system
 -- hardcode with ioe.thingsroot.com and pkg ver 1
 local function load_defaults()
 	if lfs.attributes(def_file, 'mode') then
@@ -145,7 +145,7 @@ local function set_cloud_defaults(data)
 	end
 
 	if not data_cache_compatitable() then
-		log.info("Data cache not allowed in currect device")
+		log.info("Data cache not allowed in current device")
 		data.DATA_CACHE = false
 	end
 
@@ -241,7 +241,7 @@ local function load_cfg(path)
 
 	local db = cjson.decode(str) or {}
 
-	--- The eariler version of FreeIOE put the ID/CLOUD_ID/USING_BETA in cloud sub-node
+	--- The earlier version of FreeIOE put the ID/CLOUD_ID/USING_BETA in cloud sub-node
 	if not db.sys and db.cloud then
 		db.sys = {}
 		db.sys.ID = db.cloud.ID
