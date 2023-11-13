@@ -204,6 +204,9 @@ function response.app_option(inst, option, value)
 	if ioe.mode() ~= 0 then
 		return nil, "System mode locked as: "..ioe.mode()
 	end
+	if not option then
+		return nil, "Option name is missing!"
+	end
 	if dc.get("APPS", inst) then
 		dc.set("APPS", inst, option, value)
 		snax.self().post.app_event('option', inst, option, value)
