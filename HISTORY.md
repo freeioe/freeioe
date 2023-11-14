@@ -3,6 +3,12 @@
 
 # Release history
 
+V2.3.1 ()
+------------------
+
+* HTNice device OS id detect
+
+
 V2.3.0 (2023-11-11)
 ------------------
 

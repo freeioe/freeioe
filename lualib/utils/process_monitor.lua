@@ -2,6 +2,7 @@
 -- Using process-monitor to start/stop 3rd binary process
 --
 
+local lfs = require 'lfs'
 local skynet = require 'skynet'
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
@@ -33,6 +34,10 @@ function pm:start()
 	assert(os_id, arch)
 
 	local pm_file = './ioe/'..os_id..'/'..arch..'/process-monitor'
+	if lfs.attributes(pm_file, "mode") == nil then
+		pm_file = 'process-monitor' -- use os bin file
+	end
+
 	local cmd = { pm_file, "-z", "-d", "-p", self._pid }
 
 	if self._options.user then
