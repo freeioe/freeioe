@@ -28,7 +28,7 @@ DAEMON_OPTS="-p $SKYNET_PID -M 2 -D $SKYNET_DIR"
 STARTUP_OPTS="sh $STARTUP_SH $BASE_DIR"
 
 export IOE_RUN_AS_DAEMON=1
-export IOE_PLATFORM="htnice/gt675x/$ARCH"
+#export IOE_PLATFORM="htnice/gt675x/$ARCH"
 export IOE_DATA_DIR="/home"
 
 

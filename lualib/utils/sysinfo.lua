@@ -324,6 +324,11 @@ end
 
 _M.os_id = function()
 	_M._OS_ID = _M._OS_ID or read_os_id() or os.getenv("MSYSTEM") or os.getenv("IOE_OS_ID")
+	if string.lower(_M._OS_ID) == 'buildroot' then
+		if lfs.attributes('/dev/htniceid', "mode") ~= nil then
+			_M._OS_ID = 'htnice'
+		end
+	end
 	return assert(_M._OS_ID)
 end
 
