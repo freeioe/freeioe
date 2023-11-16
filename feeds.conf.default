@@ -1,6 +1,4 @@
-# src-git example_apps https://github.com/freeioe/freeioe_example_apps.git
-# src-git prebuild_exts https://github.com/freeioe/freeioe_prebuild_exts.git
-src-link example_apps /home/cch/mycode/freeioe_example_apps
-src-link hj212_apps /home/cch/mycode/freeioe_hj212_apps
-src-link prebuild_exts /home/cch/mycode/freeioe_prebuild_exts
+src-git example_apps https://github.com/freeioe/freeioe_example_apps.git
+src-git prebuild_exts https://github.com/freeioe/freeioe_prebuild_exts.git
+src-git prebuild_exts https://github.com/kooiot/lwf.git
 #src-link custom /usr/src/openwrt/custom-feed

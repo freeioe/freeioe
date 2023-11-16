@@ -1,1 +1,1 @@
-/home/cch/mycode/lwf/lwf.lua
+../feeds/lwf/lwf.lua
