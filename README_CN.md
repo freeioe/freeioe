@@ -6,8 +6,7 @@
 
 * [FreeIOE 社区](http://freeioe.org)
 * [FreeIOE WIKI 知识库](http://wiki.freeioe.org)
-* [快速使用指南](http://help.cloud.thingsroot.com/quick_start/)
-* [冬笋云平台](http://cloud.thingsroot.com)
+* [KooIoT 云平台](http://iot.kooiot.cn)
 
 ## 应用开发
 
@@ -55,7 +54,7 @@ FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 
 ## 购买FreeIOE 物联网智能网关
 
-* 冬笋科技: [ThingsLink系列](https://www.thingsroot.com/product/)
+* 冬笋科技: [ThingsLink系列](https://www.kooiot.com/)
 * 旋思科技: [SymLink系列](http://www.symid.com/)
 
 ## 已知问题

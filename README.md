@@ -6,8 +6,7 @@
 
 * [FreeIOE forum](http://freeioe.org)
 * [FreeIOE wiki](http://wiki.freeioe.org)
-* [Quick guide (Chinese only)](http://help.cloud.thingsroot.com/quick_start/)
-* [ThingsRoot cloud](http://cloud.thingsroot.com)
+* [KooIoT Cloud](http://iot.kooiot.cn)
 
 ## App Development
 
@@ -56,7 +55,7 @@ Please use [issue list](https://github.com/freeioe/freeioe/issues).
 
 ## Where To Buy
 
-* [ThingsLink](https://www.thingsroot.com/product/)
+* [ThingsLink](https://www.kooiot.com/)
 * [SymLink](http://www.symid.com/)
 
 ## Known Issue
