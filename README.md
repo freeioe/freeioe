@@ -4,9 +4,8 @@
 
 ## How To Use
 
-* [FreeIOE forum](http://freeioe.org)
 * [FreeIOE wiki](http://wiki.freeioe.org)
-* [KooIoT Cloud](http://iot.kooiot.cn)
+* [FreeIOE Cloud](https://wiki.freeioe.org/cloud/index)
 
 ## App Development
 
@@ -55,8 +54,7 @@ Please use [issue list](https://github.com/freeioe/freeioe/issues).
 
 ## Where To Buy
 
-* [ThingsLink](https://www.kooiot.com/)
-* [SymLink](http://www.symid.com/)
+* [Hardwares](https://wiki.freeioe.org/hardwares/start)
 
 ## Known Issue
 

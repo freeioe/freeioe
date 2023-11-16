@@ -4,9 +4,8 @@
 
 ## 如何使用
 
-* [FreeIOE 社区](http://freeioe.org)
-* [FreeIOE WIKI 知识库](http://wiki.freeioe.org)
-* [KooIoT 云平台](http://iot.kooiot.cn)
+* [FreeIOE WIKI 知识库](https://wiki.freeioe.org)
+* [FreeIOE 配套云平台](https://wiki.freeioe.org/cloud/index)
 
 ## 应用开发
 
@@ -54,8 +53,7 @@ FreeIOE 基于 [Skynet] (https://github.com/cloudwu/skynet) 框架.
 
 ## 购买FreeIOE 物联网智能网关
 
-* 冬笋科技: [ThingsLink系列](https://www.kooiot.com/)
-* 旋思科技: [SymLink系列](http://www.symid.com/)
+* [支持的硬件列表](https://wiki.freeioe.org/hardwares/start)
 
 ## 已知问题
 
