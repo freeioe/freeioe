@@ -28,7 +28,7 @@
   * 欧姆龙Hostlink协议接入示例
   * 时序数据库写入示例
 
-* [第三方应用](https://github.com/viccom/myfreeioe_apps)
+* [FreeIOE 应用示例 #2](https://github.com/viccom/myfreeioe_apps)
   * 支持设备点表的Modbus数据采集应用
   * 华为UPS2000设备数据采集应用（基于Modbus)
   * 华为UPS2000数据导出到Redis数据库

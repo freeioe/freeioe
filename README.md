@@ -29,7 +29,7 @@
   * Omron PLC based on hostlink protocol
   * Time-series database writer
 
-* [Thirdparty Applications](https://github.com/viccom/myfreeioe_apps)
+* [Example Applications #2](https://github.com/viccom/myfreeioe_apps)
   * Modbus device data collection application with device template support
   * Huawei UPS2000 data collection application (based on modbus)
   * Huawei UPS2000 data to redis application
