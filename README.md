@@ -41,12 +41,19 @@
   * MQTT data upload application demo
   * Huaray laser 355 device connector
 
+## Build and Use on Linux
+
+1. Checkout [Skynet](https://github.com/freeioe/skynet) repo, and build it with ```make linux```
+2. Checkout FreeIOE repo, and create an soft link (ioe) in Skynet repo folder
+3. Goto FreeIOE repo, run ```./scripts/feeds update -a```
+4. Goto Skynet repo, run ```./skynet ioe/config``` to start FreeIOE
+
 ## Core Development
 
 FreeIOE is based on [Skynet](https://github.com/cloudwu/skynet) framework.
 
 > More information can be found in its [wiki](https://github.com/cloudwu/skynet/wiki)
-> FreeIOE works with on [skynet](https://github.com/srdgame/skynet) with a few more lua C modules
+> FreeIOE works with on [skynet](https://github.com/freeioe/skynet) with a few more lua C modules
 
 ## Report Issues
 
