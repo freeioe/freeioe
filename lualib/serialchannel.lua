@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local rs232 = require "rs232"
+local uevent = require 'uevent'
 
 -- channel support auto reconnect , and capture serial error in request/response transaction
 -- { port = "", opt = {}, auth = function(so) , response = function(so) session, data }
@@ -60,6 +61,7 @@ function serial_channel.channel(desc)
 		__nodelay = desc.nodelay,
 		__overload_notify = desc.overload,
 		__overload = false,
+		__dev_removed = false,
 	}
 
 	return setmetatable(c, channel_meta)
@@ -231,6 +233,17 @@ local function open_rs232(port, opt)
 		skynet.sleep(300)
 		return nil, tostring(err)
 	end
+
+	local uevent_h = nil
+	uevent_h = uevent.serial:new(port, function(action, msg)
+		if string.lower(action) == 'remove' then
+			-- Close the port
+			uevent_h:close()
+			uevent_h = nil
+			port:close()
+		end
+	end)
+
 	return port
 end
 

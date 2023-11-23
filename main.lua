@@ -8,6 +8,7 @@ local function start_ioe_services()
 	skynet.newservice("cfg")
 	skynet.newservice("upgrader")
 	skynet.newservice("ioe_ext")
+	skynet.newservice("uevent")
 
 	pcall(skynet.newservice, "debug_console", 6606)
 	pcall(skynet.newservice, "lwf", 8808)

@@ -1,5 +1,6 @@
 local skynet = require 'skynet'
 local rs232 = require 'rs232'
+local uevent = require 'uevent'
 local class = require 'middleclass'
 
 local serial = class("SerialClass")
@@ -33,6 +34,14 @@ function serial:open()
 		return nil, tostring(err)
 	end
 	self._port = port
+
+	self._uevent_h = uevent.serial:new(self._port_name, function(action, msg)
+		if string.lower(action) == 'remove' then
+			self._uevent_h:close()
+			self._uevent_h = nil
+			self:close()
+		end
+	end)
 
 	return port
 end
