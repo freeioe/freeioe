@@ -3,10 +3,11 @@
 
 # Release history
 
-V2.3.1 ()
+V2.4.0 ()
 ------------------
 
 * HTNice device OS id detect
+* Close serial port when received tty remove uevent from kernel
 
 
 V2.3.0 (2023-11-11)
