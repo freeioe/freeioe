@@ -10,7 +10,7 @@ local regex = {
 	websocket = "^(wss?)://([^/]+)(.*)$",
 }
 
-function dns_resolve(hostname)
+local function dns_resolve(hostname)
     if hostname:match("^[%.%d]+$") then
         return hostname
     else

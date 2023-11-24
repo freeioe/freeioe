@@ -75,7 +75,7 @@ function client:initialize(opt, logger)
 	self._connecting = nil
 	self._close_connection = nil
 	self._max_mqtt_reconnect_timeout = 128 * 100 -- about two mins
-	
+
 	if not mqtt.get_ioloop(false) then
 		mqtt.get_ioloop(true, {
 			timeout = 1,
@@ -135,8 +135,8 @@ function client:socket()
 end
 
 function client:publish(topic, payload, qos, retain, props, user_props)
-	local qos = qos == nil and 0 or qos
-	local retain = retain == nil and false or retain
+	qos = qos == nil and 0 or qos
+	retain = retain == nil and false or retain
 
 	if not self:connected() then
 		self._log:trace("MQTT not connected!")
@@ -147,7 +147,7 @@ function client:publish(topic, payload, qos, retain, props, user_props)
 	end
 
 	local packet_id, err = self._client:publish({
-		topic = topic, 
+		topic = topic,
 		payload = payload,
 		qos = qos,
 		retain = retain,
@@ -183,7 +183,7 @@ function client:subscribe(topic, qos, no_local, retain_as_published, retain_hand
 		return nil, "MQTT not connected!"
 	end
 	return self._client:subscribe({
-		topic = topic, 
+		topic = topic,
 		qos = qos or 1,
 		no_local = no_local,
 		retain_as_published = retain_as_published,
@@ -209,14 +209,14 @@ function client:connect()
 		return nil, "Already connected"
 	end
 
-	local client = mqtt.client(self._opt)
+	local cli = mqtt.client(self._opt)
 
-	client:on({
+	cli:on({
 		connect = function(ack)
 			self._safe_call(self.ON_CONNECT, self, ack.rc == 0, ack.rc, ack:reason_string())
 		end,
 		message = function(msg)
-			client:acknowledge(msg)
+			cli:acknowledge(msg)
 			self._safe_call(self.on_mqtt_message, self, msg.packet_id, msg.topic, msg.payload, msg.qos, msg.retain)
 		end,
 		error = function(err)
@@ -232,7 +232,7 @@ function client:connect()
 			print('auth', ...)
 		end
 	})
-	self._client = client
+	self._client = cli
 
 	skynet.fork(function()
 		self:_connect_proc()
@@ -325,15 +325,15 @@ end
 function client:on_mqtt_message(packet_id, topic, payload, qos, retain)
 end
 
-function client:on_mqtt_connect(success, msg)
+function client:on_mqtt_connect(success, rc, msg)
 end
 
 function client:on_mqtt_disconnect(msg)
 end
 
-function client:ON_CONNECT(success, rc, msg) 
+function client:ON_CONNECT(success, rc, msg)
 	if success then
-		self._log:notice("ON_CONNECT SUCCESS", self:socket(), rc, msg) 
+		self._log:notice("ON_CONNECT SUCCESS", self:socket(), rc, msg)
 	end
 
 	if success then
@@ -341,12 +341,12 @@ function client:ON_CONNECT(success, rc, msg)
 		self:mqtt_resend_qos_msg()
 	end
 
-	self._safe_call(self.on_mqtt_connect, self, success, msg)
+	self._safe_call(self.on_mqtt_connect, self, success, rc, msg)
 end
 
 function client:ON_DISCONNECT(conn)
 	local msg = conn and conn.close_reason or 'Unknown disconnect reason'
-	self._log:warning("ON_DISCONNECT", msg) 
+	self._log:warning("ON_DISCONNECT", msg)
 	self._connected = false
 
 	self._safe_call(self.on_mqtt_disconnect, self, msg)

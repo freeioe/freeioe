@@ -93,8 +93,8 @@ function recv:__call(size)
 	end
 
 	--- Read buffer data and pop specified size
-	local read_size = function(size)
-		assert(size)
+	local read_size = function(sz)
+		assert(sz)
 		if #self._buf == 0 then
 			return
 		end
@@ -103,17 +103,17 @@ function recv:__call(size)
 		local buf = table.concat(self._buf)
 		self._buf = {}
 		--- check size
-		if string.len(buf) >= size then
-			if string.len(buf) == size then
+		if string.len(buf) >= sz then
+			if string.len(buf) == sz then
 				return buf
 			else
-				self._buf[1] = string.sub(buf, size + 1)
-				return string.sub(buf, 1, size)
+				self._buf[1] = string.sub(buf, sz + 1)
+				return string.sub(buf, 1, sz)
 			end
 		else
 			--- set back buffer
 			self._buf[1] = buf
-			return 
+			return
 		end
 	end
 

@@ -3,7 +3,6 @@ local cov = require 'cov'
 local periodbuffer = require 'buffer.period'
 local filebuffer = require 'buffer.file'
 local sysinfo = require 'utils.sysinfo'
-local index_stack = require 'utils.index_stack'
 local ioe = require 'ioe'
 local base_app = require 'app.base'
 
@@ -165,7 +164,7 @@ end
 function app:compress(data)
 	local deflate = self._zlib.deflate()
 	local deflated, eof, bytes_in, bytes_out = deflate(data, 'finish')
-	self:_calc_compress(bytes_in, bytes_out) 
+	self:_calc_compress(bytes_in, bytes_out)
 	return deflated, eof, bytes_in, bytes_out
 end
 
@@ -204,7 +203,7 @@ function app:on_mod_device(src_app, sn, props)
 end
 
 --- 处理COV时需要打包app, sn, input到key
-function app:pack_key(app, sn, input, prop)
+function app:pack_key(src_app, sn, input, prop)
 	return string.format("%s/%s/%s", sn, input, prop)
 end
 
@@ -338,17 +337,17 @@ function app:_connect_proc()
 	log:info("MQTT Connect:", option.client_id, option.host, option.port, option.username, option.password)
 	if self._host_as_online_check then
 		if option.host ~= self._online_check_host then
-			self._online_check_host = host
+			self._online_check_host = option.host
 			ioe.set_online_check_host(self._online_check_host)
 		end
 	end
 
-	local client = mqtt_client:new(option, self._log)
+	local cli = mqtt_client:new(option, self._log)
 
 	-- 注册回调函数
-	client.on_mqtt_connect = function(client, success, rc, msg) 
+	cli.on_mqtt_connect = function(client, success, rc, msg)
 		if success then
-			log:notice("ON_CONNECT", success, rc, msg) 
+			log:notice("ON_CONNECT", success, rc, msg)
 			if self._mqtt_client ~= client then
 				self._log:warning("There is one client already connected!")
 				self._mqtt_client:disconnect()
@@ -367,7 +366,8 @@ function app:_connect_proc()
 		end
 	end
 
-	client.on_mqtt_disconnect = function(success, rc, msg) 
+	cli.on_mqtt_disconnect = function(client, msg)
+		log:warning("ON_DISCONNECT", msg)
 		if not self._mqtt_client or self._mqtt_client == client then
 			self._mqtt_client_last = sys:time()
 
@@ -380,13 +380,13 @@ function app:_connect_proc()
 	end
 
 	if self.on_mqtt_publish then
-		client.on_mqtt_publish = function(client, packet_id)
+		cli.on_mqtt_publish = function(client, packet_id)
 			self._safe_call(self.on_mqtt_publish, self, packet_id)
 		end
 	end
 
 	if self.on_mqtt_message then
-		client.on_mqtt_message = function(client, packet_id, topic, data, qos, retained)
+		cli.on_mqtt_message = function(client, packet_id, topic, data, qos, retained)
 			--print(packet_id, topic, data, qos, retained)
 			if self.on_mqtt_message then
 				self._safe_call(self.on_mqtt_message, self, packet_id, topic, data, qos, retained)
@@ -394,9 +394,9 @@ function app:_connect_proc()
 		end
 	end
 
-	self._mqtt_client = client
+	self._mqtt_client = cli
 
-	return client:connect()
+	return cli:connect()
 end
 
 function app:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
@@ -415,7 +415,7 @@ function app:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
 end
 
 function app:_fire_devices(timeout)
-	local timeout = timeout or 1000
+	timeout = timeout or 1000
 	if not self.on_publish_devices or not self._mqtt_client then
 		return
 	end
@@ -481,7 +481,7 @@ function app:_init_pb()
 	local period = self._period * 1000 -- seconds to ms
 
 	self._log:notice('Loading period buffer! Period:', period, self._max_data_buffer, self._max_data_upload_dpp)
-	self._pb = periodbuffer:new(period, self._max_data_buffer, self._max_data_upload_dpp) 
+	self._pb = periodbuffer:new(period, self._max_data_buffer, self._max_data_upload_dpp)
 
 	self._pb:start(function(...)
 		if not self:connected() then
@@ -505,17 +505,16 @@ function app:_init_fb()
 	local cache_folder = sysinfo.data_dir().."/app_cache_"..self._name
 	self._log:notice('Data caches folder:', cache_folder)
 
-	log:notice('Data caches option:', 
-	self._data_per_file, 
-	self._data_max_count, 
-	self._data_cache_fire_gap,
-	self._max_data_upload_dpp)
+	self._log:notice('Data caches option:', self._data_per_file,
+		self._data_max_count, self._data_cache_fire_gap, self._max_data_upload_dpp)
 
-	self._fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count, max_data_upload_dpp)
+	self._fb_file = filebuffer:new(cache_folder, self._data_per_file,
+		self._data_max_count, self._max_data_upload_dpp)
+
 	self._fb_file:start(function(...)
 		-- Disable one data fire
 		return false
-	end, function(...) 
+	end, function(...)
 		if not self:connected() then
 			return nil, "Not connected"
 		end
