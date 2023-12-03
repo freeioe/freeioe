@@ -64,6 +64,11 @@ function helper:_real_fetch()
 	local templates = self._conf[self._templates_node] or {}
 	local devices = self._conf[self._devices_node] or {}
 
+	--[[
+	local inspect = require 'inspect'
+	print(inspect(devices))
+	]]--
+
 	if #templates == 0 then
 		self._log:warning('Cannot detect template list from configuration, by node name', self._templates_node)
 		for _, dev in ipairs(devices) do

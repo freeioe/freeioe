@@ -4,9 +4,9 @@
 --]]
 local skynet = require 'skynet.manager'
 local mc = require 'skynet.multicast'
-local uevent = require 'luevent'
+local uevent_loaded, uevent = pcall(require, 'luevent')
 local inspect = require 'inspect'
-local log = require 'utils.logger'.new('uevent')
+local log = require 'utils.logger'.new('UEVENT')
 
 local uevent_chn = nil -- mc.new()
 local uevent_msg_list = {}
@@ -66,6 +66,11 @@ skynet.start(function()
 	end)
 
 	skynet.fork(function()
+		if not uevent_loaded then
+			log.error("luevent moduole not found!")
+			return
+		end
+
 		local uevent_conn = uevent.new(function(msg)
 			return handle_msg(msg)
 		end)
