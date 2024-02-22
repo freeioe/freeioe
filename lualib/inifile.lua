@@ -1,7 +1,7 @@
 local inifile = {
 	_VERSION = "inifile 1.0",
 	_DESCRIPTION = "Inifile is a simple, complete ini parser for lua",
-	_URL = "http://docs.bartbes.com/inifile",
+	_URL = "https://github.com/bartbes/inifile",
 	_LICENSE = [[
 		Copyright 2011-2015 Bart van Strien. All rights reserved.
 
@@ -36,7 +36,11 @@ local defaultBackend = "io"
 local backends = {
 	io = {
 		lines = function(name) return assert(io.open(name)):lines() end,
-		write = function(name, contents) assert(io.open(name, "w")):write(contents):flush() end,
+		write = function(name, contents)
+			local file = assert(io.open(name, "w"))
+			file:write(contents)
+			file:close()
+		end,
 	},
 	memory = {
 		lines = function(text) return text:gmatch("([^\r\n]+)\r?\n") end,
@@ -59,8 +63,12 @@ function inifile.parse(name, backend)
 	local comments = {}
 	local sectionorder = {}
 	local cursectionorder
+	local lineNumber = 0
+	local errors = {}
 
 	for line in backends[backend].lines(name) do
+		lineNumber = lineNumber + 1
+		local validLine = false
 
 		-- Section headers
 		local s = line:match("^%[([^%]]+)%]$")
@@ -69,6 +77,7 @@ function inifile.parse(name, backend)
 			t[section] = t[section] or {}
 			cursectionorder = {name = section}
 			table.insert(sectionorder, cursectionorder)
+			validLine = true
 		end
 
 		-- Comments
@@ -77,6 +86,7 @@ function inifile.parse(name, backend)
 			local commentsection = section or comments
 			comments[commentsection] = comments[commentsection] or {}
 			table.insert(comments[commentsection], s)
+			validLine = true
 		end
 
 		-- Key-value pairs
@@ -84,9 +94,14 @@ function inifile.parse(name, backend)
 		if tonumber(value) then value = tonumber(value) end
 		if value == "true" then value = true end
 		if value == "false" then value = false end
-		if key and value ~= nil then
+		if key and value ~= nil and section ~= nil then
 			t[section][key] = value
 			table.insert(cursectionorder, key)
+			validLine = true
+		end
+
+		if not validLine then
+			table.insert(errors, ("Line %d: Invalid data found '%s'"):format(lineNumber, line))
 		end
 	end
 
@@ -96,7 +111,7 @@ function inifile.parse(name, backend)
 			comments = comments,
 			sectionorder = sectionorder,
 		}
-	})
+	}), errors
 end
 
 function inifile.save(name, t, backend)
@@ -129,11 +144,21 @@ function inifile.save(name, t, backend)
 		table.insert(contents, ("%s=%s"):format(key, tostring(value)))
 	end
 
+	local function tableLike(value)
+		local function index()
+			return value[1]
+		end
+
+		return pcall(index) and pcall(next, value)
+	end
+
 	local function writesection(section, order)
 		local s = t[section]
 		-- Discard if it doesn't exist (anymore)
 		if not s then return end
 		table.insert(contents, ("[%s]"):format(section))
+
+		assert(tableLike(s), ("Invalid section %s: not table-like"):format(section))
 
 		-- Write our comments out again, sadly we have only achieved
 		-- section-accuracy so far
