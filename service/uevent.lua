@@ -34,7 +34,11 @@ local handle_msg = function(msg)
 	for i, v in ipairs(t) do
 		if i ~= 1 then
 			local key, val = string.match(v, '(.-)=(.+)')
-			tmsg[key] = val
+			if key and val then
+				tmsg[key] = val
+			else
+				log.error('Cannot parse string', v)
+			end
 		end
 	end
 	if action ~= tmsg.ACTION then
