@@ -76,6 +76,7 @@ function app:_map_handler()
 	__map_handler(handler, self, 'on_del_device')
 
 	__map_handler(handler, self, 'on_input')
+	__map_handler(handler, self, 'on_input_batch')
 	__map_handler(handler, self, 'on_input_em')
 
 	__map_handler(handler, self, 'on_output')

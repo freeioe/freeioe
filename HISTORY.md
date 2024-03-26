@@ -3,11 +3,12 @@
 
 # Release history
 
-V2.4.0 ()
+V3.0.0 ()
 ------------------
 
 * HTNice device OS id detect
 * Close serial port when received tty remove uevent from kernel
+* Support set_input_prop_batch in device interface
 
 
 V2.3.0 (2023-11-11)

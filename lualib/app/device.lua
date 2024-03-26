@@ -7,6 +7,8 @@ local stat_api = require 'app.stat'
 
 local device = class("APP_MGR_DEV_API")
 
+local USE_NEW_BATCH_UPDATE = 1
+
 --- Do not call this directly, but throw the api.lua
 function device:initialize(api, sn, props, guest, secret)
 	self._api = api
@@ -38,6 +40,23 @@ function device:initialize(api, sn, props, guest, secret)
 		dc.set('DEVICES', sn, props)
 		dc.set('DEV_IN_APP', sn, self._app_name)
 	end
+
+	if USE_NEW_BATCH_UPDATE then
+		self._data_cache_map = {}
+		self._data_cache_map_token = {}
+		skynet.fork(function()
+			while not self._close_wait do
+				skynet.sleep(300, self._data_cache_map_token)
+				if #self._data_cache_map > 0 then
+					skynet.sleep(5) -- wait more data coming
+					local data = self._data_cache_map
+					self._data_cache_map = {}
+					self._data_chn:publish('input_batch', self._app_name, self._sn, data)
+				end
+			end
+			skynet.wakeup(self._close_wait)
+		end)
+	end
 end
 
 function device:_cleanup()
@@ -58,6 +77,13 @@ function device:cleanup()
 	if self._guest then
 		return
 	end
+	if USE_NEW_BATCH_UPDATE and self._data_cache_map_token then
+		self._close_wait = {}
+		-- wakeup just mark this token is to be wakeup
+		skynet.wakeup(self._data_cache_map_token)
+		skynet.sleep(200, self._close_wait)
+	end
+
 	if self._cov then
 		self._cov:stop()
 	end
@@ -138,7 +164,48 @@ function device:get_input_prop(input, prop)
 end
 
 function device:_publish_input(input, prop, value, timestamp, quality)
-	return self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
+	assert(timestamp)
+	if not USE_NEW_BATCH_UPDATE then
+		return self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
+	end
+	--- New mode for data fires
+	self._data_cache_map[#self._data_cache_map + 1] = { input, prop, value, timestamp, quality }
+	skynet.wakeup(self._data_cache_map_token)
+end
+
+function device:set_input_prop_batch(...)
+	local inputs = {...}
+	if #inputs == 0 then
+		return nil, 'No input data'
+	end
+
+	if inputs[1].input then
+		local map_inputs = {}
+		for _, v in ipairs(inputs) do
+			map_inputs[#map_inputs + 1] = {v.input, v.prop, v.value, v.timestamp or ioe.time(), v.quality or 0 }
+		end
+		inputs = map_inputs
+	else
+		for _, v in ipairs(inputs) do
+			inputs[4] = inputs[4] or ioe.time()
+			inputs[5] = inputs[5] or 0
+		end
+	end
+
+	if self._cov then
+		local changed_inputs = self._cov:handle_batch(inputs)
+		if #changed_inputs == 0 then
+			return true -- all input data are not changed
+		end
+		inputs = changed_inputs
+	end
+
+	-- Copy inputs into cached map then wakeup data_cache_map_token
+	table.move(inputs, 1, #inputs, #self._data_cache_map + 1, #self._data_cache_map)
+	skynet.wakeup(self._data_cache_map_token)
+	-- TODO: Should we sleep here?
+
+	return true
 end
 
 function device:set_input_prop(input, prop, value, timestamp, quality)

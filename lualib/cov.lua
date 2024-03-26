@@ -39,109 +39,145 @@ function cov:clean_with_match(mfunc)
 	end
 end
 
-function cov:handle_number(key, value, timestamp, quality, nomore)
+function cov:_handle_number(key, value, timestamp, quality, cb, nomore)
 	assert(nomore==nil)
+	assert(cb)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
 	local new_value = {value, timestamp, quality}
 
 	if not org_value then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if org_value[3] ~= quality then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if math.abs(value - org_value[1]) > opt.float_threshold then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 
 	return true
 end
 
-function cov:handle_string(key, value, timestamp, quality, nomore)
+function cov:_handle_string(key, value, timestamp, quality, cb, nomore)
 	assert(nomore==nil)
+	assert(cb)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
 	local new_value = {value, timestamp, quality}
 
 	if not org_value then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if org_value[3] ~= quality then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if value ~= org_value[1] then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 
 	return true
 end
 
-function cov:handle_table(key, value, timestamp, quality, nomore)
+function cov:_handle_table(key, value, timestamp, quality, cb, nomore)
 	assert(nomore==nil)
+	assert(cb)
 	local opt = self._opt
 	local org_value = self._retained_map[key]
 	local new_value = {value, timestamp, quality}
 
 	if not org_value then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if opt.ttl and ((timestamp - org_value[2]) >= opt.ttl) then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 	if org_value[3] ~= quality then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 
 	if not tbl_equals(org_value, new_value, true) then
 		self._retained_map[key] = new_value
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 
 	return true
 end
 
-function cov:handle(key, value, timestamp, quality, nomore)
+function cov:_handle(key, value, timestamp, quality, cb, nomore)
 	assert(nomore==nil)
 	assert(key and value and timestamp)
+	assert(cb)
 	local opt = self._opt
 	if opt.disable then
-		return self._cb(key, value, timestamp, quality)
+		return cb(key, value, timestamp, quality)
 	end
 
 	if type(value) == 'number' then
-		return self:handle_number(key, value, timestamp, quality)
+		return self:_handle_number(key, value, timestamp, quality, cb)
 	elseif type(value) == 'string' then
 		if opt.try_convert_string then
 			local nval = tonumber(value)
 			if nval then
-				return self:handle_number(key, value, timestamp, quality)
+				return self:_handle_number(key, value, timestamp, quality, cb)
 			end
 		end
-		return self:handle_string(key, value, timestamp, quality)
+		return self:_handle_string(key, value, timestamp, quality, cb)
 	elseif type(value) == 'table' then
-		return self:handle_table(key, value, timestamp, quality)
+		return self:_handle_table(key, value, timestamp, quality, cb)
 	else
 		log.error('Value type error!!!')
 		return true
 	end
+end
+
+
+function cov:handle(key, value, timestamp, quality, nomore)
+	assert(nomore == nil)
+	return self:_handle(key, value, timestamp, quality, self._cb)
+end
+
+---
+-- return the changed data list
+-- if fire_cb is true then call the cov handler callback
+--
+function cov:handle_batch(datas, fire_cb, key_cb, nomore)
+	assert(nomore == nil)
+	local ret = {}
+	local cb = fire_cb or function(...) return true end
+	if key_cb then
+		for _, v in ipairs(datas) do
+			local key, v_s = key_cb(v)
+			if self:_handle(key, v[v_s], v[v_s + 1], v[v_s + 2], cb) then
+				ret[#ret + 1] = v
+			end
+		end
+	else
+		for _, v in ipairs(datas) do
+			local key = v[1]..'/'..v[2]
+			if self:_handle(key, v[3], v[4], v[5], cb) then
+				ret[#ret + 1] = v
+			end
+		end
+	end
+	return ret
 end
 
 function cov:fire_snapshot(cb)

@@ -27,12 +27,26 @@ function api:cleanup()
 	self._devices = {}
 end
 
+function api:input_batch_split(f, app, sn, datas)
+	for _, v in ipairs(datas) do
+		f(app, sn, table.unpack(v))
+	end
+	return true
+end
+
 function api:data_dispatch(channel, source, cmd, app, ...)
 	--self._logger:trace('Data Dispatch', channel, source, cmd, app, ...)
 	local f = self._handler['on_'..cmd]
 	if f then
 		return f(app, ...)
 	else
+		if channel == 'input_batch' then
+			self._logger:trace('Data Batch Dispatch', channel, source, cmd, app, 'fallback to on_input')
+			local f = self._handler['on_input']
+			if f then
+				return self:input_batch_split(f, app, ...)
+			end
+		end
 		self._logger:trace('No handler for '..cmd)
 	end
 end

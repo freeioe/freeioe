@@ -660,7 +660,7 @@ local Handler = {
 		snax.self().post.device_mod(app, sn, props)
 	end,
 	on_input = function(app, sn, input, prop, value, timestamp, quality)
-		--log.trace('on_set_device_prop', app, sn, input, prop, value, timestamp, quality)
+		--log.trace('on_input_prop', app, sn, input, prop, value, timestamp, quality)
 		--- disable data upload from the very begining here.
 		if not enable_data_upload and sn ~= mqtt_id then
 			return  -- Skip data
@@ -668,6 +668,17 @@ local Handler = {
 
 		local key = table.concat({sn, input, prop}, '/')
 		cov:handle(key, value, timestamp or ioe.time(), quality or 0)
+	end,
+	on_input_batch = function(app, sn, datas)
+		-- log.trace('on_input_batch', app, sn, #datas)
+		if not enable_data_upload and sn ~= mqtt_id then
+			return  -- Skip data
+		end
+
+		local changed = cov:handle_batch(datas, publish_data, function(data) 
+			return table.concat({sn, data[1], data[2]}, '/'), 3
+		end)
+		-- log.trace('on_input_batch pushed', #changed)
 	end,
 	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
 		log.trace('on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
