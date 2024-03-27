@@ -244,6 +244,28 @@ function app:on_input_em(src_app, sn, input, prop, value, timestamp, quality)
 	return self._safe_call(self.on_publish_data_em, self, key, value, timestamp, quality)
 end
 
+function app:on_input_batch(src_app, sn, datas)
+	if self._cov then
+		local changed = self._cov:handle_batch(datas, function(...)
+			return self:_handle_cov_data(...)
+		end, function(data)
+			local input, prop, value, timestamp, quality = table.unpack(data)
+			return self._safe_call(self.pack_key, self, src_app, sn, input, prop)
+		end)
+	else
+		if not self:connected() then
+			return nil, "MQTT not connected"
+		end
+		for _, v in ipairs(datas) do
+			local input, prop, value, timestamp, quality = table.unpack(v)
+			local key = self._safe_call(self.pack_key, self, src_app, sn, input, prop)
+			if key then
+				self._safe_call(self.on_publish_data, self, key, value, timestamp, quality)
+			end
+		end
+	end
+end
+
 function app:_start_reconnect()
 	if self._mqtt_client then
 		self._log:error('****Cannot start reconnection when client is there!****')

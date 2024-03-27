@@ -669,6 +669,16 @@ local Handler = {
 		local key = table.concat({sn, input, prop}, '/')
 		cov:handle(key, value, timestamp or ioe.time(), quality or 0)
 	end,
+	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
+		log.trace('on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
+		if not enable_data_upload and sn ~= mqtt_id then
+			return -- Skip data
+		end
+
+		local key = table.concat({sn, input, prop}, '/')
+		--cov:handle(key, value, timestamp, quality)
+		publish_data_no_pb(key, value, timestamp or ioe.time(), quality or 0)
+	end,
 	on_input_batch = function(app, sn, datas)
 		-- log.trace('on_input_batch', app, sn, #datas)
 		if not enable_data_upload and sn ~= mqtt_id then
@@ -679,16 +689,6 @@ local Handler = {
 			return table.concat({sn, data[1], data[2]}, '/'), 3
 		end)
 		-- log.trace('on_input_batch pushed', #changed)
-	end,
-	on_input_em = function(app, sn, input, prop, value, timestamp, quality)
-		log.trace('on_set_device_prop_em', app, sn, input, prop, value, timestamp, quality)
-		if not enable_data_upload and sn ~= mqtt_id then
-			return -- Skip data
-		end
-
-		local key = table.concat({sn, input, prop}, '/')
-		--cov:handle(key, value, timestamp, quality)
-		publish_data_no_pb(key, value, timestamp or ioe.time(), quality or 0)
 	end,
 	on_output_result = function(app_src, priv, result, err)
 		log.trace('on_output_result', app_src, priv, result, err)

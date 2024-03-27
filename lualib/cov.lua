@@ -165,8 +165,12 @@ function cov:handle_batch(datas, fire_cb, key_cb, nomore)
 	if key_cb then
 		for _, v in ipairs(datas) do
 			local key, v_s = key_cb(v)
-			if self:_handle(key, v[v_s], v[v_s + 1], v[v_s + 2], cb) then
-				ret[#ret + 1] = v
+			if key and v_s then
+				if self:_handle(key, v[v_s], v[v_s + 1], v[v_s + 2], cb) then
+					ret[#ret + 1] = v
+				end
+			else
+				--- do nothing
 			end
 		end
 	else

@@ -214,6 +214,11 @@ local function create_handler(calc)
 		on_input = function(app_src, sn, input, prop, value, timestamp, quality)
 			calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 		end
+		on_input_batch = function(app_src, sn, datas)
+			for k, v in ipairs(datas) do
+				calc:_on_input(app_src, sn, table.unpack(v))
+			end
+		end
 	}
 end
 
