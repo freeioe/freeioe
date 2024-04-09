@@ -20,7 +20,7 @@ local index_stack = require 'utils.index_stack'
 -- tls:cert --
 -- tls:key --
 -- tls:key_password
--- qos - QOS buffer
+-- qos - QOS buffer option (or true enable with default options)
 -- qos:max
 --
 
@@ -44,6 +44,7 @@ function client:initialize(opt, logger)
 		reconnect = opt.reconnect ~= nil and opt.reconnect or 5,
 		version = opt.version,
 		will = opt.will,
+		-- qos = true, -- default QOS is not enabled
 	}
 	if opt.tls then
 		local tls = opt.tls
@@ -155,7 +156,8 @@ function client:publish(topic, payload, qos, retain, props, user_props)
 		user_properities = user_props
 	})
 
-	if qos == 1 and packet_id and self._qos_msg_buf then
+	-- QOS 1 or 2
+	if qos > 0 and packet_id and self._qos_msg_buf then
 		self._qos_msg_buf:push(packet_id, topic, payload, qos, retain, props, user_props)
 	end
 	return packet_id, err
