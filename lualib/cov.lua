@@ -157,6 +157,8 @@ end
 ---
 -- return the changed data list
 -- if fire_cb is true then call the cov handler callback
+-- key_cb need return data's key (normally is sn, input, prop) and the offset
+--	of data value item in list
 --
 function cov:handle_batch(datas, fire_cb, key_cb, nomore)
 	assert(nomore == nil)
@@ -166,6 +168,7 @@ function cov:handle_batch(datas, fire_cb, key_cb, nomore)
 		for _, v in ipairs(datas) do
 			local key, v_s = key_cb(v)
 			if key and v_s then
+				-- assert(type(v_s) == 'number')
 				if self:_handle(key, v[v_s], v[v_s + 1], v[v_s + 2], cb) then
 					ret[#ret + 1] = v
 				end

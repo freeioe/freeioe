@@ -244,7 +244,7 @@ function app:on_input_batch(src_app, sn, datas)
 			return self:_handle_cov_data(...)
 		end, function(data)
 			local input, prop, value, timestamp, quality = table.unpack(data)
-			return self._safe_call(self.pack_key, self, src_app, sn, input, prop)
+			return self._safe_call(self.pack_key, self, src_app, sn, input, prop), 3
 		end)
 	else
 		if not self:connected() then
