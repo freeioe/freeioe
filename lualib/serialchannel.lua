@@ -61,8 +61,18 @@ function serial_channel.channel(desc)
 		__nodelay = desc.nodelay,
 		__overload_notify = desc.overload,
 		__overload = false,
+		__serial_meta = channel_serial_meta,
 		__dev_removed = false,
 	}
+	if desc.serial_read or desc.serial_readline then
+		c.__serial_meta = {
+			__index = {
+				read = desc.serial_read or channel_serial.read,
+				readline = desc.serial_readline or channel_serial.readline,
+			},
+			__gc = channel_serial_meta.__gc
+		}
+	end
 
 	return setmetatable(c, channel_meta)
 end
@@ -71,6 +81,10 @@ local function close_channel_serial(self)
 	if self.__serial then
 		local so = self.__serial
 		self.__serial = false
+		if self.__wait_response then
+			skynet.wakeup(self.__wait_response)
+			self.__wait_response = nil
+		end
 		-- never raise error
 		pcall(so[1].close,so[1])
 	end
@@ -139,13 +153,23 @@ local function dispatch_by_session(self)
 end
 
 local function pop_response(self)
-	while true do
+	while self.__serial do
 		local func,co = table.remove(self.__request, 1), table.remove(self.__thread, 1)
 		if func then
 			return func, co
 		end
 		self.__wait_response = coroutine.running()
 		skynet.wait(self.__wait_response)
+	end
+end
+
+-- on close callback
+local function autoclose_cb(self, fd)
+	local serial = self.__serial
+	if self.__wait_response and serial and serial[1] == fd then
+		-- closed by peer
+		skynet.error("serial closed by peer : ", self.__port)
+		close_channel_serial(self)
 	end
 end
 
@@ -191,7 +215,15 @@ local function dispatch_by_order(self)
 			wakeup_all(self, "channel_closed")
 			break
 		end
-		local ok, result_ok, result_data = pcall(get_response, func, self.__serial)
+		local serial = self.__serial
+		if not serial then
+			-- closed by peer
+			self.__result[co] = serial_error
+			skynet.wakeup(co)
+			wakeup_all(self)
+			break
+		end
+		local ok, result_ok, result_data = pcall(get_response, func, serial)
 		if ok then
 			self.__result[co] = result_ok
 			if result_ok and self.__result_data[co] then
@@ -218,6 +250,11 @@ local function dispatch_function(self)
 	if self.__response then
 		return dispatch_by_session
 	else
+		--[[
+		socket.onclose(self.__sock[1], function(fd)
+			autoclose_cb(self, fd)
+		end)
+		]]--
 		return dispatch_by_order
 	end
 end
@@ -247,27 +284,6 @@ local function open_rs232(port, opt)
 	return port
 end
 
-local function connect_backup(self)
-	if self.__backup then
-		for _, addr in ipairs(self.__backup) do
-			local port, opt 
-			if type(addr) == "table" then
-				port, opt = addr.port, addr.opt
-			else
-				port = addr
-				opt = self.__opt
-			end
-			skynet.error("serial: connect to backup serial port", port, opt)
-			local fd = open_rs232(port, opt)
-			if fd then
-				self.__port = port 
-				self.__opt = opt 
-				return fd
-			end
-		end
-	end
-end
-
 local function term_dispatch_thread(self)
 	if not self.__response and self.__dispatch_thread then
 		-- dispatch by order, send close signal to dispatch thread
@@ -279,75 +295,130 @@ local function connect_once(self)
 	if self.__closed then
 		return false
 	end
-	assert(not self.__serial and not self.__authcoroutine)
-	-- term current dispatch thread (send a signal)
-	term_dispatch_thread(self)
 
-	local fd, err = open_rs232(self.__port, self.__opt)
-	if not fd then
-		fd = connect_backup(self)
-		if not fd then
-			return false, err
-		end
-	end
+	local addr_list = {}
+	local addr_set = {}
 
-	-- register overload warning
-
-	local overload = self.__overload_notify
-	if overload then
-		local function overload_trigger(id, size)
-			if id == self.__sock[1] then
-				if size == 0 then
-					if self.__overload then
-						self.__overload = false
-						overload(false)
-					end
+	local function _add_backup()
+		if self.__backup then
+			for _, addr in ipairs(self.__backup) do
+				local port, opt
+				if type(addr) == "table" then
+					host, port = addr.port, addr.opt
 				else
-					if not self.__overload then
-						self.__overload = true
-						overload(true)
-					else
-						skynet.error(string.format("WARNING: %d K bytes need to send out (fd = %d %s:%s)", size, id, self.__host, self.__port))
-					end
+					port = addr
+					opt = self.__opt
+				end
+
+				-- don't add the same host
+				local hostkey = port
+				if not addr_set[hostkey] then
+					addr_set[hostkey] = true
+					table.insert(addr_list, { port = port, opt = opt })
 				end
 			end
 		end
-
-		skynet.fork(overload_trigger, fd, 0)
-		socket.warning(fd, overload_trigger)
 	end
 
-	while self.__dispatch_thread do
-		-- wait for dispatch thread exit
-		skynet.yield()
+	local function _next_addr()
+		local addr =  table.remove(addr_list,1)
+		if addr then
+			skynet.error("serial: connect to backup serial port", addr.port, addr.opt)
+		end
+		return addr
 	end
 
-	self.__serial = setmetatable( {fd} , channel_serial_meta )
-	self.__dispatch_thread = skynet.fork(function()
-		pcall(dispatch_function(self), self)
-		-- clear dispatch_thread
-		self.__dispatch_thread = nil
-	end)
+	local function _connect_once(self, addr)
+		local fd, err = open_rs232(addr.port, addr.opt)
+		if not fd then
+			-- try next one
+			addr = _next_addr()
+			if addr == nil then
+				return false, err
+			end
+			return _connect_once(self, addr)
+		end
 
-	if self.__auth then
-		self.__authcoroutine = coroutine.running()
-		local ok , message = pcall(self.__auth, self)
-		if not ok then
-			close_channel_serial(self)
-			if message ~= serial_error then
-				self.__authcoroutine = false
-				skynet.error("serial: auth failed", message)
+		self.__port = addr.port
+		self.__opt = addr.opt
+
+		assert(not self.__serial and not self.__authcoroutine)
+		-- term current dispatch thread (send a signal)
+		term_dispatch_thread(self)
+
+		-- register overload warning
+		local overload = self.__overload_notify
+		if overload then
+			local function overload_trigger(id, size)
+				if id == self.__serial[1] then
+					if size == 0 then
+						if self.__overload then
+							self.__overload = false
+							overload(false)
+						end
+					else
+						if not self.__overload then
+							self.__overload = true
+							overload(true)
+						else
+							skynet.error(string.format("WARNING: %d K bytes need to send out (fd = %d port:%s)", size, id, self.__port))
+						end
+					end
+				end
+			end
+
+			skynet.fork(overload_trigger, fd, 0)
+			socket.warning(fd, overload_trigger)
+		end
+
+		while self.__dispatch_thread do
+			-- wait for dispatch thread exit
+			skynet.yield()
+		end
+
+		self.__serial = setmetatable( {fd} , self.__serial_meta )
+		self.__dispatch_thread = skynet.fork(function()
+			if self.__serial then
+				-- self.__serial can be false (serial closed) if error during connecting, See #1513
+				pcall(dispatch_function(self), self)
+			end
+			-- clear dispatch_thread
+			self.__dispatch_thread = nil
+		end)
+
+		if self.__auth then
+			self.__authcoroutine = coroutine.running()
+			local ok , message = pcall(self.__auth, self)
+			if not ok then
+				close_channel_serial(self)
+				if message ~= serial_error then
+					self.__authcoroutine = false
+					skynet.error("serial: auth failed", message)
+				end
+			end
+			self.__authcoroutine = false
+			if ok then
+				if not self.__serial then
+					-- auth may change host, so connect again
+					return connect_once(self)
+				end
+				-- auth succ, go through
+			else
+				-- auth failed, try next addr
+				_add_backup()	-- auth may add new backup hosts
+				addr = _next_addr()
+				if addr == nil then
+					return false, "no more backup host"
+				end
+				return _connect_once(self, addr)
 			end
 		end
-		self.__authcoroutine = false
-		if ok and not self.__serial then
-			-- auth may change port, so connect again
-			return connect_once(self)
-		end
-		return ok
+
+		return true
 	end
 
-	return true
+	_add_backup()
+	return _connect_once(self, { port = self.__port, opt = self.__opt })
 end
 
 local function try_connect(self , once)
@@ -377,15 +448,19 @@ end
 
 local function check_connection(self)
 	if self.__serial then
+		local authco = self.__authcoroutine
 		--[[
 		if socket.disconnected(self.__serial[1]) then
 			-- closed by peer
-			skynet.error("socket: disconnect detected ", self.__host, self.__port)
-			close_channel_socket(self)
+			skynet.error("serial: disconnect detected ", self.__host, self.__port)
+			close_channel_serial(self)
+			if authco and authco == coroutine.running() then
+				-- disconnected during auth, See #1513
+				return false
+			end
 			return
 		end
 		]]--
-		local authco = self.__authcoroutine
 		if not authco then
 			return true
 		end
@@ -414,12 +489,12 @@ local function block_connect(self, once)
 	else
 		self.__connecting[1] = true
 		err = try_connect(self, once)
-		self.__connecting[1] = nil
 		for i=2, #self.__connecting do
 			local co = self.__connecting[i]
 			self.__connecting[i] = nil
 			skynet.wakeup(co)
 		end
+		self.__connecting[1] = nil
 	end
 
 	r = check_connection(self)
