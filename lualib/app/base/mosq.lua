@@ -21,8 +21,8 @@ local base_app = require 'app.base'
 -- tls_client_cert -- MQTT client cert
 -- tls_client_key -- MQTT client key
 --
--- period - 周期上送的周期时间 (默认60秒)
--- ttl - 变化传输的强制上传周期（数据不变，但是经过ttl的时间数据必须上传一次, 默认300秒)
+-- period - 周期上送的周期时间 (默认60秒), 0 则禁用
+-- ttl - 变化传输的强制上传周期（数据不变，但是经过ttl的时间数据必须上传一次, 默认300秒), 0 则禁用
 -- float_threshold - 变化传输浮点数据变化的最小量值 (默认0.0000001)
 -- data_upload_dpp - 数据上传单包最多的数据点数量(默认1024)
 -- data_upload_buffer - 周期上送最多缓存数据点数量(默认10240)
@@ -30,6 +30,8 @@ local base_app = require 'app.base'
 -- cache_per_file - 断线缓存单文件数据点数量(默认4096) 1024 ~ 4096
 -- data_cache_limit - 断线缓存文件数量上限 1~ 256 默认128
 -- data_cache_fire_gap - 断线缓存上送时的包间隔时间默认 1000ms (1000 ~ nnnn)
+--
+-- host_as_online_check - 使用MQTT主机作为网关网络在线监测主机(只有当设备支持此设置时生效) (boolean or 0/1)
 --
 -- Your handlers are:
 -- pack_key [o] -- 用于打包: src_app:采集应用名称 sn:采集设备序列号 input: 输入项名称 prop: 属性名, return nil will skip data
@@ -41,6 +43,7 @@ local base_app = require 'app.base'
 -- mqtt_auth [o] -- 用于更新认证信息
 -- mqtt_will [o] -- Will message
 -- on_mqtt_connect_ok [o] -- 用于MQTT连接成功回调
+-- on_mqtt_disconnect [o] -- 用于MQTT连接断开
 -- on_mqtt_message -- MQTT消息接收函数
 -- on_mqtt_publish -- MQTT发布回调， qos=1,2
 --
@@ -98,6 +101,8 @@ function app:initialize(name, sys, conf)
 	self._data_max_count = self._data_max_count > 256 and 256 or self._data_max_count
 	self._data_cache_fire_gap = tonumber(conf.data_cache_fire_gap) or 1000 -- ms
 	self._data_cache_fire_gap = self._data_cache_fire_gap < 1000 and 1000 or self._data_cache_fire_gap
+
+	self._host_as_online_check = conf.host_as_online_check == true or tonumber(conf.host_as_online_check) == 1
 
 	self._connecting = nil
 	self._close_connection = nil
@@ -165,7 +170,7 @@ end
 function app:compress(data)
 	local deflate = self._zlib.deflate()
 	local deflated, eof, bytes_in, bytes_out = deflate(data, 'finish')
-	self:_calc_compress(bytes_in, bytes_out) 
+	self:_calc_compress(bytes_in, bytes_out)
 	return deflated, eof, bytes_in, bytes_out
 end
 
@@ -212,12 +217,15 @@ function app:on_mod_device(src_app, sn, props)
 end
 
 --- 处理COV时需要打包app, sn, input到key
-function app:pack_key(app, sn, input, prop)
+function app:pack_key(src_app, sn, input, prop)
 	return string.format("%s/%s/%s", sn, input, prop)
 end
 
 --[[
 function app:on_mqtt_connect_ok()
+end
+
+function app:on_mqtt_disconnect()
 end
 
 function app:mqtt_auth()
@@ -250,7 +258,7 @@ function app:on_input_batch(src_app, sn, datas)
 			return self:_handle_cov_data(...)
 		end, function(data)
 			local input, prop, value, timestamp, quality = table.unpack(data)
-			return self._safe_call(self.pack_key, self, src_app, sn, input, prop)
+			return self._safe_call(self.pack_key, self, src_app, sn, input, prop), 3
 		end)
 	else
 		if not self:connected() then
@@ -295,7 +303,7 @@ function app:_connect_proc()
 	end
 
 	local mqtt_id = info and info.client_id or self._mqtt_id
-	local mqtt_host = info and info.host or self._mqtt_host
+	local mqtt_host = info and ( info.host or info.server) or self._mqtt_host
 	local mqtt_port = info and info.port or self._mqtt_port
 	local clean_session = info and info.clean_session or self._clean_session
 	local username = info and info.username or self._mqtt_username
@@ -372,6 +380,11 @@ function app:_connect_proc()
 
 		if not self._mqtt_client or self._mqtt_client == client then
 			self._mqtt_client_last = sys:time()
+			if self.on_mqtt_disconnect then
+				self._sys:fork(function()
+					self._safe_call(self.on_mqtt_disconnect, self)
+				end)
+			end
 			self._mqtt_client = nil
 			if self._close_connection == nil then
 				self:_start_reconnect()
@@ -463,7 +476,7 @@ function app:_handle_input(src_app, sn, input, prop, value, timestamp, quality)
 end
 
 function app:_fire_devices(timeout)
-	local timeout = timeout or 1000
+	timeout = timeout or 1000
 	if not self.on_publish_devices or not self._mqtt_client then
 		return
 	end
@@ -503,6 +516,7 @@ end
 
 function app:_init_cov()
 	if self._disable_cov then
+		self._log:warning('COV is disabled')
 		return
 	end
 	local cov_opt = {ttl=self._ttl, float_threshold = self._float_threshold}
@@ -518,13 +532,14 @@ function app:_init_pb()
 	end
 
 	if self._period < 1 then
+		self._log:warning('Period buffer not enabled', self._period)
 		return
 	end
 
 	local period = self._period * 1000 -- seconds to ms
 
 	self._log:notice('Loading period buffer! Period:', period, self._max_data_buffer, self._max_data_upload_dpp)
-	self._pb = periodbuffer:new(period, self._max_data_buffer, self._max_data_upload_dpp) 
+	self._pb = periodbuffer:new(period, self._max_data_buffer, self._max_data_upload_dpp)
 
 	self._pb:start(function(...)
 		if not self:connected() then
@@ -548,17 +563,14 @@ function app:_init_fb()
 	local cache_folder = sysinfo.data_dir().."/app_cache_"..self._name
 	self._log:notice('Data caches folder:', cache_folder)
 
-	log:notice('Data caches option:', 
-	self._data_per_file, 
-	self._data_max_count, 
-	self._data_cache_fire_gap,
-	self._max_data_upload_dpp)
+	self._log:notice('Data caches option:', self._data_per_file,
+		self._data_max_count, self._data_cache_fire_gap, self._max_data_upload_dpp)
 
 	self._fb_file = filebuffer:new(cache_folder, data_per_file, data_max_count, max_data_upload_dpp)
 	self._fb_file:start(function(...)
 		-- Disable one data fire
 		return false
-	end, function(...) 
+	end, function(...)
 		if not self:connected() then
 			return nil, "Not connected"
 		end
@@ -570,8 +582,13 @@ end
 --- 应用启动函数
 function app:on_start()
 	assert(self.on_publish_data, "on_publish_data missing!!!")
-	assert(self.on_publish_data_list, "on_publish_data_list missing!!!")
 	mosq.init()
+
+	-- Is host need and nost set
+	if self._host_as_online_check and not self._online_check_host then
+		self._online_check_host = self._mqtt_opt.host
+		ioe.set_online_check_host(self._online_check_host)
+	end
 
 	-- initialize COV PB, FB
 	self:_init_cov()
@@ -587,9 +604,28 @@ end
 
 --- 应用退出函数
 function app:on_close(reason)
+	if self._online_check_host then
+		ioe.set_online_check_host(nil) -- clear online host check
+	end
+
 	self:disconnect()
 	mosq.cleanup()
 	return true
+end
+
+function app:on_publish_data_list(val_list)
+	for _, v in ipairs(val_list) do
+		self:on_publish_data(table.unpack(v))
+	end
+	return true
+end
+
+function app:on_publish_cached_data_list(val_list)
+	local r, err = self:on_publish_data_list(val_list)
+	if r then
+		return #val_list
+	end
+	return nil, err
 end
 
 --- 返回应用对象类
