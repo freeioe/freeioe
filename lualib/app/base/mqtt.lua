@@ -109,7 +109,7 @@ function app:initialize(name, sys, conf)
 		clean_session = conf.clean_session ~= nil and conf.clean_session == true or false,
 		username = conf.username,
 		password = conf.password,
-		host = conf.server,
+		host = conf.server or conf.host,
 		port = conf.port,
 		keep_alive = conf.keep_alive,
 		version = conf.version,
@@ -322,7 +322,7 @@ function app:_connect_proc()
 		client_id = info.client_id,
 		username = info.username,
 		password = info.password,
-		host = info.host,
+		host = info.server or info.host,
 		port = info.port,
 		clean_session = info.clean_session ~= nil and info.clean_session == true or false,
 		keep_alive = info.keep_alive,
@@ -548,7 +548,6 @@ end
 --- 应用启动函数
 function app:on_start()
 	assert(self.on_publish_data, "on_publish_data missing!!!")
-	assert(self.on_publish_data_list, "on_publish_data_list missing!!!")
 
 	-- Is host need and nost set
 	if self._host_as_online_check and not self._online_check_host then
@@ -576,6 +575,21 @@ function app:on_close(reason)
 
 	self:disconnect()
 	return true
+end
+
+function app:on_publish_data_list(val_list)
+	for _, v in ipairs(val_list) do
+		self:on_publish_data(table.unpack(v))
+	end
+	return true
+end
+
+function app:on_publish_cached_data_list(val_list)
+	local r, err = self:on_publish_data_list(val_list)
+	if r then
+		return #val_list
+	end
+	return nil, err
 end
 
 --- 返回应用对象类
