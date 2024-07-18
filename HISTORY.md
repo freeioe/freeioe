@@ -3,12 +3,13 @@
 
 # Release history
 
-V3.0.0 ()
+V3.0.0 (2024-07-18)
 ------------------
 
 * HTNice device OS id detect
 * Close serial port when received tty remove uevent from kernel
 * Support set_input_prop_batch in device interface
+* AP_VER 16 improved mqtt app base module
 
 
 V2.3.0 (2023-11-11)

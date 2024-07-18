@@ -33,7 +33,7 @@ function conf:_load_defaults(filename)
 		self._log:error('Load app config file '..filename..' failed!', data)
 		return {}
 	else
-		self._log:info('Loaded app config template file!!')
+		self._log:info('Loaded app config template file'..filename..'!!')
 	end
 	return data or {}
 end
