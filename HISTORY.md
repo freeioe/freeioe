@@ -3,6 +3,12 @@
 
 # Release history
 
+V3.0.1 (2024-07-19)
+------------------
+
+* Fixed on_input_batch not fallback to on_input issue
+
+
 V3.0.0 (2024-07-18)
 ------------------
 

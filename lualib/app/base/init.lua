@@ -104,16 +104,29 @@ end
 function app:start()
 	self._api:set_handler(self:_map_handler())
 
-	if self.on_input then
+	if self.on_input or self.on_input_batch then
 		-- If we watching data
 		self._sys:timeout(0, function()
 			local devs = self._api:list_devices(true)
 			for sn, props in pairs(devs or {}) do
-				for _, input in ipairs(props.inputs or {}) do
-					for prop, val in pairs(input.props or {}) do
-						local app_name = props.app_name or '_FAKE_NAME_FROM_START_'
-						self:on_input(app_name, sn, input.name, prop, val.value, val.timestamp, val.quality)
+				if not self.on_input_batch then
+					-- Call on_input for exists devices input
+					for _, input in ipairs(props.inputs or {}) do
+						for prop, val in pairs(input.props or {}) do
+							local app_name = props.app_name or '_FAKE_NAME_FROM_START_'
+							self:on_input(app_name, sn, input.name, prop, val.value, val.timestamp, val.quality)
+						end
 					end
+				else
+					-- Call on_input_batch for exists devices input
+					local datas = {}
+					for _, input in ipairs(props.inputs or {}) do
+						for prop, val in pairs(input.props or {}) do
+							local app_name = props.app_name or '_FAKE_NAME_FROM_START_'
+							datas[#datas + 1] = { input.name, prop, val.value, val.timestamp, val.quality }
+						end
+					end
+					self:on_input_batch(app_name, sn, datas)
 				end
 			end
 		end)
