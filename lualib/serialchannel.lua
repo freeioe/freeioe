@@ -137,6 +137,11 @@ local function dispatch_by_session(self)
 					end
 					skynet.wakeup(co)
 				end
+				if not self.__serial then
+					-- closed
+					wakeup_all(self, "channel_closed")
+					break
+				end
 			else
 				self.__thread[session] = nil
 				skynet.error("serial: unknown session :", session)
@@ -232,6 +237,11 @@ local function dispatch_by_order(self)
 				self.__result_data[co] = result_data
 			end
 			skynet.wakeup(co)
+			if not self.__serial then
+				-- closed
+				wakeup_all(self, "channel_closed")
+				break
+			end
 		else
 			close_channel_serial(self)
 			local errmsg
