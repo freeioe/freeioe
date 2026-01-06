@@ -21,8 +21,10 @@ echo "Make Clean Up"
 make cleanall > /dev/null 2>&1
 
 if [ "$TOOLCHAIN" == "native" ]; then
-	unset CC
-	unset CXX
+#	unset CC
+#	unset CXX
+	export CC=gcc-10
+	export CXX=g++-10
 	unset AR
 	unset STRIP
 	make linux -j8 > /dev/null 2>&1
