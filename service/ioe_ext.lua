@@ -11,6 +11,7 @@ local sysinfo = require 'utils.sysinfo'
 local ioe = require 'ioe'
 local pkg = require 'pkg'
 local pkg_api = require 'pkg.api'
+local pkg_gitee = require 'pkg.gitee'
 
 local ext_lock = nil
 
@@ -24,16 +25,14 @@ local get_ext_version = pkg.get_ext_version
 local parse_version_string = pkg.parse_version_string
 local get_app_target_folder = pkg.get_app_folder
 
-local function make_inst_name(lib_name, version)
-	assert(lib_name, 'The instance name is required!')
-	return lib_name..'.'..(version or 'latest')
-end
-
-local function parse_inst_name(inst_name)
-	if string.len(inst_name) > 8 and string.sub(inst_name, -7) == '.latest' then
-		return string.sub(inst_name, 1, -8), 'latest'
+local function make_inst_name(ext)
+	assert(ext.name, 'The instance name is required!')
+	if not ext.proto or ext.proto == 'local' then
+		return ext.name..'.'..(ext.version or 'latest')
 	end
-	return string.match(inst_name, '^(.+).(%d+)$')
+	if ext.proto == 'gitee' then
+		return pkg_gitee.gen_inst_name(ext)
+	end
 end
 
 local function action_result(id, result, ...)
@@ -94,6 +93,11 @@ local function create_download(ext_name, version, success_cb, ext, token)
 	return down(success_cb)
 end
 
+local function create_gitee_download(ext, success_cb)
+	local down = pkg_gitee.create_download_func(ext)
+	return down(success_cb)
+end
+
 local function get_app_depends_json(app_inst)
 	local exts = {}
 	local dir = get_app_target_folder(app_inst)
@@ -106,7 +110,13 @@ local function get_app_depends_json(app_inst)
 		else
 			for _, v in ipairs(deps) do
 				v.version = v.version or 'latest'
-				table.insert(exts, { name = v.name, version = v.version, local_path = v.local_path, download_url = v.download_url })
+				table.insert(exts, {
+					name = v.name,
+					version = v.version,
+					proto = string.lower(v.proto),
+					path = v.path, -- local & gitee
+					repo = v.repo, -- gitee
+				})
 			end
 		end
 	end
@@ -166,6 +176,16 @@ local function remove_depends(inst)
 	os.execute("rm -rf "..target_folder)
 end
 
+local function load_ext_info(folder)
+	local f, err = io.open(folder.."/.freeioe.ext.info", "r")
+	if not f then
+		return nil, err
+	end
+	local str = f:read('a')
+	f:close()
+	return cjson.decode(str)
+end
+
 local function list_installed()
 	local list = {}
 	local root = get_target_root()
@@ -173,14 +193,15 @@ local function list_installed()
 	for filename in lfs.dir(root) do
 		if filename ~= '.' and filename ~= '..' then
 			if lfs.attributes(root..filename, 'mode') == 'directory' then
-				local name, version = parse_inst_name(filename)
-				log.debug('Installed extension', name, version)
-				list[filename] = {
-					name = name,
-					version = version
-				}
-				if version == 'latest' then
-					list[filename].real_version = get_ext_version(filename)
+				local info, err = load_ext_info(root..filename)
+				if not info then
+					log.error('Extension load failed. err:', err)
+				else
+					log.debug('Installed extension', name, version)
+					list[filename] = info
+					if version == 'latest' then
+						list[filename].real_version = get_ext_version(filename)
+					end
 				end
 			end
 		end
@@ -194,7 +215,7 @@ local function list_depends()
 	for app_inst, _ in pairs(app_list) do
 		local exts = get_app_depends(app_inst)
 		for _, ext in ipairs(exts) do
-			local inst_name = make_inst_name(ext.name, ext.version)
+			local inst_name = make_inst_name(ext)
 			local dep = depends[inst_name] or {}
 			table.insert(dep, app_inst)
 			depends[inst_name] = dep
@@ -229,9 +250,13 @@ end
 -- @tparam app_inst string application instance name
 -- @treturn bool, string
 function command.install_depends(app_inst)
+	--[[
 	if os.getenv('IOE_DEVELOPER_MODE') then
-		return true, "Developer mode will not install extenstion from server!!!"
+		local info = "Developer mode will not install extenstion from server!!!"
+		log.warning(info)
+		return true, info
 	end
+	]]--
 
 	local exts = get_app_depends(app_inst)
 	if #exts == 0 then
@@ -239,16 +264,14 @@ function command.install_depends(app_inst)
 	end
 
 	for _, ext in ipairs(exts) do
-		local inst = make_inst_name(ext.name, ext.version)
+		local inst = make_inst_name(ext)
 		if not installed[inst] then
 			create_task(function()
-				return command.install_ext(nil, {
-					inst = inst,
-					name = ext.name,
-					version = ext.version,
-					local_path = ext.local_path,
-					download_url = ext.download_url,
-				})
+				local info = { inst = inst }
+				for k, v in pairs(ext) do
+					info[k] = v
+				end
+				return command.install_ext(nil, info)
 			end, "Download extension "..inst)
 			skynet.sleep(20) -- wait for installation started
 		end
@@ -260,7 +283,7 @@ function command.install_depends(app_inst)
 		local failed_depends = {}
 
 		for _, ext in pairs(exts) do
-			local inst = make_inst_name(ext.name, ext.version)
+			local inst = make_inst_name(ext)
 			if not installed[inst] then
 				result = false
 				failed_depends[#failed_depends + 1] = inst
@@ -276,54 +299,127 @@ function command.install_depends(app_inst)
 	end)
 end
 
+local function write_ext_info(inst, ext)
+	local info, err = cjson.encode(ext)
+	if not info then
+		return err
+	end
+	local target_folder = get_target_folder(inst)
+	local f, err = io.open(target_folder.."/.freeioe.ext.info", "w+")
+	if not f then 
+		return nil, err
+	end
+	f:write(info)
+	f:close()
+	return true
+end
+
+local function install_ext_done(inst, ext)
+	assert(not installed[inst])
+	local r, err = write_ext_info(inst, ext)
+	if not r then
+		return nil, err
+	end
+	installed[inst] = ext
+	--- Trigger extension list upgrade
+	cloud_update_ext_list()
+	return true, "Extension "..ext.name.." installation is done!"
+end
+
+local function install_ext_file_gz(inst, ext, path)
+	local target_folder = get_target_folder(inst)
+	lfs.mkdir(target_folder)
+	log.debug("tar xzf "..path.." -C "..target_folder)
+	local r, status = os.execute("tar xzf "..path.." -C "..target_folder.."/")
+	os.execute("rm -rf "..path)
+	if r and status == 'exit' then
+		if ext.proto == 'gitee' then
+			pkg_gitee.post_install(inst, ext, target_folder)
+		end
+		log.notice("Install extension finished", ext.name, ext.version, r, status)
+		return install_ext_done(inst, ext)
+	else
+		log.error("Install extention failed", ext.name, ext.version, r, status)
+		os.execute("rm -rf "..target_folder)
+		return false, "failed to unzip Extension"
+	end
+end
+
+local function install_ext_file_zip(inst, ext, path)
+	local target_folder = get_target_folder(inst)
+	lfs.mkdir(target_folder)
+	log.debug("unzip -oq "..path.." -d "..target_folder)
+	local r, status = os.execute("unzip -oq "..path.." -d "..target_folder)
+	-- os.execute("rm -rf "..path)
+	if r and status == 'exit' then
+		if ext.proto == 'gitee' then
+			pkg_gitee.post_install(inst, ext, target_folder)
+		end
+		log.notice("Install extension finished", ext.name, ext.version, r, status)
+		return install_ext_done(inst, ext)
+	else
+		log.error("Install extention failed", ext.name, ext.version, r, status)
+		os.execute("rm -rf "..target_folder)
+		return false, "failed to unzip Extension"
+	end
+end
+
+local function install_ext_file_raw(inst, ext, path)
+	local target_folder = get_target_folder(inst)
+	lfs.mkdir(target_folder)
+	log.debug("mv "..path.." "..target_folder)
+	local r, status = os.execute("mv "..path.." "..target_folder)
+	if r and status == 'exit' then
+		log.notice("Install extension finished", ext.name, ext.version, r, status)
+		return install_ext_done(inst, ext)
+	else
+		log.error("Install extention failed", ext.name, ext.version, r, status)
+		os.execute("rm -rf "..target_folder)
+		return false, "failed to unzip Extension"
+	end
+end
+
+local function install_ext_file(inst, ext, path)
+	local file_ext = string.match(path, '%.(%w+)$')
+	if file_ext == 'zip' then
+		return install_ext_file_zip(inst, ext, path)
+	elseif file_ext == 'gz' or file_ext == 'tgz' then
+		return install_ext_file_gz(inst, ext, path)
+	else
+		return install_ext_file_raw(inst, ext, path)
+	end
+end
+
 function command.install_ext(id, args)
 	local name = args.name
 	local version = args.version or 'latest'
-	local inst = make_inst_name(name, version)
+	local inst = make_inst_name(args)
 	if installed[inst] then
 		return true, "Extension "..inst.." already installed"
 	end
-	if args.local_path then
-		local mode = lfs.attributes(args.local_path, 'mode')
+	if args.proto == 'local' then
+		local mode = lfs.attributes(args.path, 'mode')
 		if mode then
-			log.notice("Install extension from local", name, version, args.local_path)
+			log.notice("Install extension from local", name, version, args.path)
 			local target_folder = get_target_folder(inst)
 			print(target_folder)
-			os.execute('ln -s '..args.local_path..' '..target_folder)
-			installed[inst] = {
-				name = name,
-				version = version,
-			}
-			--- Trigger extension list upgrade
-			cloud_update_ext_list()
+			os.execute('ln -s '..args.path..' '..target_folder)
+			return install_ext_done(inst, name, version)
 		end
 		-- download will not be needed
 		return true, 'Extension installed from local'
 	end
 
-	return create_download(name, version, function(path)
-		log.notice("Download extension finished", name, version)
+	local down_cb = function(path)
+		log.notice("Download extension finished", name, version, path)
+		return install_ext_file(inst, args, path)
+	end
 
-		local target_folder = get_target_folder(inst)
-		lfs.mkdir(target_folder)
-		log.debug("tar xzf "..path.." -C "..target_folder)
-		local r, status = os.execute("tar xzf "..path.." -C "..target_folder.."/")
-		os.execute("rm -rf "..path)
-		if r and status == 'exit' then
-			log.notice("Install extension finished", name, version, r, status)
-			installed[inst] = {
-				name = name,
-				version = version,
-			}
-			--- Trigger extension list upgrade
-			cloud_update_ext_list()
-			return true, "Extension "..name.." installation is done!"
-		else
-			log.error("Install extention failed", name, version, r, status)
-			os.execute("rm -rf "..target_folder)
-			return false, "failed to unzip Extension"
-		end
-	end)
+	if args.proto == 'gitee' then
+		return create_gitee_download(args, down_cb)
+	else
+		return create_download(name, version, down_cb) 
+	end
 end
 
 function command.upgrade_ext(id, args)

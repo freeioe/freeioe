@@ -250,17 +250,86 @@ _M.skynet_version = function()
 	return v, gv
 end
 
-local arch_short_names = {
-	armv5tejl = 'arm', --mx0
-	armv7l = 'arm', --imx6
-	x86_64 = 'x86_64',
-	mips = 'mips',
-}
-
 -- for detecting cpu arch short name. when calling binrary built by go-lang
 _M.cpu_arch_short = function()
-	local machine_arch = _M.uname('-m')
-	return arch_short_names[machine_arch] or machine_arch
+	return _M.go_arch()
+end
+
+-- 获取 CPU 信息，判断 ARM 版本（用于 arm / armhf 区分）
+local function get_arm_version()
+    local f = io.popen("grep -m1 'CPU architecture' /proc/cpuinfo 2>/dev/null")
+    local line = f:read("*l")
+    f:close()
+    if not line then return nil end
+
+    local ver = line:match("(%d+)")
+    if ver then
+        return tonumber(ver)
+    end
+    return nil
+end
+
+-- 映射 uname -m → GOARCH
+local function get_go_arch(arch)
+    local mapping = {
+        ["x86_64"]    = "amd64",
+        ["i386"]      = "386",
+        ["i686"]      = "386",
+        ["aarch64"]   = "arm64",
+        ["mips"]      = "mips",
+        ["mipsel"]    = "mipsle",
+        ["mips64"]    = "mips64",
+        ["mips64el"]  = "mips64le",
+        ["ppc64"]     = "ppc64",
+        ["ppc64le"]   = "ppc64le",
+        ["riscv64"]   = "riscv64",
+        ["s390x"]     = "s390x",
+        ["loongarch64"] = "loong64"
+    }
+
+    -- ARM 前缀统一返回 arm
+    if arch:sub(1, 3) == "arm" then
+        return "arm"
+    end
+
+    return mapping[arch] or "unknown"
+end
+
+-- 自动判断 arm 版本
+local function get_arm_ver(arch)
+    -- 从 uname 快速判断
+    if arch:find("v7") or arch:find("v8") then
+        return 7
+    end
+    if arch:find("v6") then
+        return 6
+    end
+    if arch:find("v5") then
+        return 5
+    end
+
+    -- 从 /proc/cpuinfo 精确判断
+    local armv = get_arm_version()
+    if armv then
+        if armv >= 7 then return 7 end
+        if armv == 6 then return 6 end
+        if armv == 5 then return 5 end
+    end
+
+    -- 默认兼容
+    return 6
+end
+
+_M.go_arch = function()
+	local system_arch = _M.uname('-m')
+	local goarch = get_go_arch(system_arch)
+	if goarch ~= 'arm' then
+		return goarch
+	end
+	if get_arm_ver(system_arch) >= 7 then
+		return 'armhf'
+	end
+	return goarch
 end
 
 local function read_openwrt_arch()

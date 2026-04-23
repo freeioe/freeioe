@@ -23,12 +23,6 @@ end
 
 function _M.get(host, url, header, query, content)
 	assert(host and url)
-	if host:sub(1, 8) == 'https://' then
-		return nil, "HTTPS is not supported"
-	end
-	if host:sub(1, 7) == 'http://' then
-		host = host:sub(8)
-	end
     local query = query or {}
     local header = header or {}
 	local recvheader = {}
@@ -44,6 +38,7 @@ function _M.get(host, url, header, query, content)
 
 	local httpc = init_httpc()
     local r, status, body = pcall(httpc.request, 'GET', host, url, recvheader, header, content)
+
 	-- Reset httpc.timeout
 	httpc.timeout = nil
 
@@ -58,8 +53,11 @@ function _M.get(host, url, header, query, content)
 			if location:sub(1,1) == '/' then
 				return _M.get(host, location)
 			else
-				local host, port, url = location:match("([^:]+):?(%d*)//(.+)$")
-				return _M.get(host..':'..port, url)
+				--local host, port, url = location:match("([^:]+):?(%d*)//(.+)$")
+				--return _M.get(host..':'..port, url)
+				local host, url = string.match(location, "^(https?://[^/?#]+)(.*)$")
+				header.Host = nil
+				return _M.get(host, url, header)
 			end
 		end
 		return status, recvheader, body

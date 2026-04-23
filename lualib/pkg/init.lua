@@ -84,6 +84,7 @@ function _M.parse_version_string(version)
 end
 
 function _M.generate_tmp_path(app_name, version, ext)
+	assert(app_name, "App name is nil")
 	local app_name_escape = string.gsub(app_name, '/', '__')
 	return "/tmp/"..app_name_escape.."_"..version..os.time()..ext
 end
