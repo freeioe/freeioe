@@ -3,10 +3,17 @@
 
 # Release history
 
+V4.1.0 ()
+------------------
+
+* Support download depends from gitee repo
+
+
 V4.0.0 (2026-01-11)
 ------------------
 
 * Make FreeIOE is Lua5.5 compatable 
+
 
 V3.0.1 (2024-07-19)
 ------------------
