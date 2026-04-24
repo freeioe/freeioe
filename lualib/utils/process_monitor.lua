@@ -29,11 +29,11 @@ function pm:start()
 		return nil, "Process-monitor already started!"
 	end
 
-	local os_id = sysinfo.os_id()
-	local arch = sysinfo.cpu_arch()
-	assert(os_id, arch)
+	local os_kind = sysinfo.os_kind()
+	local cpu_arch = sysinfo.cpu_arch()
+	assert(os_kind and cpu_arch)
 
-	local pm_file = './ioe/'..os_id..'/'..arch..'/process-monitor'
+	local pm_file = './ioe/'..os_kind..'/'..cpu_arch..'/process-monitor'
 	if lfs.attributes(pm_file, "mode") == nil then
 		pm_file = 'process-monitor' -- use os bin file
 	end

@@ -401,6 +401,24 @@ _M.os_id = function()
 	return assert(_M._OS_ID)
 end
 
+-- 获取系统类型
+_M.os_kind = function()
+	-- openwrt hacks
+	if _M.os_id() == 'openwrt' then
+		return 'openwrt'
+	end
+
+    local f = io.popen("uname -s 2>/dev/null")
+    local os = f:read("*l")
+    f:close()
+    if not os then return "unknown" end
+    os = os:lower()
+    if os:find("linux") then return "linux"
+    elseif os:find("darwin") then return "darwin"
+    elseif os:find("win") then return "windows"
+    else return "unknown" end
+end
+
 local function read_os_version()
 	local f, err = io.open('/etc/os-release', 'r')
 	if not f then
