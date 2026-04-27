@@ -1,1277 +1,2275 @@
---[[lit-meta
-    name = "lil-evil/toml"
-    version = "0.1.0"
-    dependencies = {}
-    description = "A toml v1.0.0 encoder and decoder"
-    tags = { "toml", "parser" }
-    license = "MIT"
-    author = { name = "lilevil", email = "/" }
-    homepage = "https://github.com/lil-evil/toml.lua"
-  ]]
+--- TOML 1.0.0 Parser and Serializer for Lua 5.4 (Single File Version)
+-- Pure Lua implementation of TOML 1.0.0 specification
+-- This file combines all modules into one for easy integration
 
---[[
-MIT License
+-- ============================================================================
+-- ERROR MODULE
+-- ============================================================================
 
-Copyright (c) 2023 lil-evil
+local toml_error = {}
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+--- ParseError: Represents a parsing error with location information
+toml_error.ParseError = {}
+toml_error.ParseError.__index = toml_error.ParseError
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-]]
-
-
-
-
--- ========== errors ==========
-local error_code = {
-  expected_header_close_bracket = "EXP_HEAD_BRACKET",
-  expected_array_header_close_bracket = "EXP_ARR_HEAD_BRACKET",
-  expected_comment_or_ws = "EXP_COM_OR_WS",
-  expected_dot = "EXP_DOT",
-
-  invalid_bare_key_ws = "INV_BK_WS",
-  invalid_bare_key_char = "INV_BK_CHAR",
-  invalid_string_term = "INV_STR_TERM",
-  invalid_escape_char = "INV_ESC_SEQ",
-  invalid_escape_utf8 = "INV_ESC_UTF8",
-  invalid_number = "INV_NUMB",
-  invalid_number_exp = "INV_NUMB_EXP",
-  invalid_number_oct = "INV_NUMB_OCT",
-  invalid_number_bin = "INV_NUMB_BIN",
-  invalid_number_hex = "INV_NUMB_HEX",
-  invalid_value = "INV_VALUE",
-  invalid_inline_term = "INV_TBL_INL_TERM",
-  invalid_local_date = "INV_LDATE",
-  invalid_date = "INV_DATE",
-  invalid_date_offset = "INV_DATE_OFFSET",
-  invalid_date_sec = "INV_DATE_SEC",
-  invalid_date_min = "INV_DATE_MIN",
-  invalid_date_hour = "INV_DATE_HOUR",
-  invalid_date_day = "INV_DATE_DAY",
-  invalid_date_month = "INV_DATE_MONTH",
-  invalid_unicode_char = "INV_UNICODE_CHAR",
-
-  redefine = "REDEF",
-  redefine_inline = "REDEF_INLINE",
-  no_value = "NO_VALUE",
-  missing_value = "MISSING_VALUE",
-}
-
-local error_message = {
-  [error_code.expected_header_close_bracket] = "Invalid header at line %s: expected close bracket",
-  [error_code.expected_array_header_close_bracket] =
-  "Invalid array header at line %s, pos %s: expected double close bracket",
-  [error_code.expected_comment_or_ws] = "Expected comment or white space until end of the line %s, pos %s",
-  [error_code.expected_dot] = "Expected . to start new key at line %s, pos %s",
-
-  [error_code.invalid_bare_key_ws] = "Invalid bare-key at line %s, pos %s: unexpected white space",
-  [error_code.invalid_bare_key_char] = "Invalid bare-key at line %s, pos %s: unexpected character",
-  [error_code.invalid_string_term] = "Unterminated string at line %s, pos %s",
-  [error_code.invalid_escape_char] = "Invalid escape character at line %s, pos %s",
-  [error_code.invalid_escape_utf8] = "Invalid unicode sequence at line %s, pos %s",
-  [error_code.invalid_number] = "Invalid number at line %s, pos %s",
-  [error_code.invalid_number_exp] = "Invalid number exponent at line %s, pos %s",
-  [error_code.invalid_number_oct] = "Invalid octal number at line %s, pos %s",
-  [error_code.invalid_number_bin] = "Invalid binary number at line %s, pos %s",
-  [error_code.invalid_number_hex] = "Invalid hexadecimal number at line %s, pos %s",
-  [error_code.invalid_value] = "Unknown value at line %s, pos %s",
-  [error_code.invalid_inline_term] = "Unterminated inline table at line %s, pos %s",
-  [error_code.invalid_local_date] = "Invalid local date at line %s, pos %s",
-  [error_code.invalid_date] = "Invalid rfc3339 date at line %s, pos %s",
-  [error_code.invalid_date_offset] = "Invalid rfc3339 date offset at line %s, pos %s",
-  [error_code.invalid_date_sec] = "Invalid date at line %s, pos %s: invalid number of seconds",
-  [error_code.invalid_date_min] = "Invalid date at line %s, pos %s: invalid number of minutes",
-  [error_code.invalid_date_hour] = "Invalid date at line %s, pos %s: invalid number of hours",
-  [error_code.invalid_date_day] = "Invalid date at line %s, pos %s: invalid number of days",
-  [error_code.invalid_date_month] = "Invalid date at line %s, pos %s: invalid number of months",
-  [error_code.invalid_unicode_char] = "Invalid utf-8 char at line %s, pos %s",
-
-  [error_code.redefine] = "Can't redefine existing key at line %s, pos %s",
-  [error_code.redefine_inline] = "Can't add or redefine key inside of an inline table at line %s, pos %s",
-  [error_code.no_value] = "Invalid key-value pair at line %s, pos %s",
-  [error_code.missing_value] = "No value provided at line %s, pos %s"
-}
-
-
--- ========== utilities ==========
-local stringchar, stringbyte, stringmatch, stringsub, stringgsub, stringfind = string.char, string.byte, string.match,
-    string.sub, string.gsub, string.find
-local mathinf, mathnan = math.huge, math.abs(0/0)
-local TAB, SPACE, LF, CR = stringchar(0x09), stringchar(0x20), stringchar(0x0a), stringchar(0x0d)
-
-
-local function stringtrim(str)
-  return str:gsub("^%s*(.-)%s*$", "%1")
+--- Create a new ParseError
+-- @param msg string Error message
+-- @param line number Line number (1-based)
+-- @param column number Column number (1-based)
+-- @return table ParseError object
+function toml_error.ParseError.new(msg, line, column)
+  return setmetatable({
+    type = "ParseError",
+    message = msg or "Parse error",
+    line = line or 1,
+    column = column or 1
+  }, toml_error.ParseError)
 end
 
-local function is_table_empty(tbl)
-  local empty = true
-  for k, v in pairs(tbl) do
-    local v_meta = getmetatable(v)
-    if type(v) ~= "table" or v and (v.__tomlinline or (v_meta.__tomlheader and v_meta.__tomltype ~= "array")) then
-      empty = false
-      break
-    end
-  end
-  return empty
+--- ValidationError: Represents a validation error with path information
+toml_error.ValidationError = {}
+toml_error.ValidationError.__index = toml_error.ValidationError
+
+--- Create a new ValidationError
+-- @param msg string Error message
+-- @param path table Array of path components (e.g., {"users", "admin"})
+-- @return table ValidationError object
+function toml_error.ValidationError.new(msg, path)
+  return setmetatable({
+    type = "ValidationError",
+    message = msg or "Validation error",
+    path = path or {}
+  }, toml_error.ValidationError)
 end
 
-
-local pattern_barkey, pattern_quote = "[%w%-_]", "[\"']"
-
-local escape = {
-  b = "\b",
-  t = "\t",
-  n = "\n",
-  f = "\f",
-  r = "\r",
-  ['"'] = '"',
-  ["'"] = "'",
-  ["\\"] = "\\",
-}
-
-local pattern_date = "^(%d%d%d%d%-%d%d%-%d%d)([Tt%s])(%d%d:%d%d:%d%d%.?%d*)([Zz%-%+]?)(%d?%d?:?%d?%d?)$"
-local pattern_ldate = "^%d%d%d%d%-%d%d%-%d%d$"
-local pattern_ltime = "^%d%d:%d%d:%d%d%.?%d*$"
-
-local match_date = "^(%d%d%d%d)-(%d%d)-(%d%d)$"
-local match_time = "^(%d%d):(%d%d):(%d%d)(.?%d*)$"
-local match_offset = "(%d%d):(%d%d)"
-
-local date_meta = {
-  __index = function(t, k)
-    if k == "ms" then
-      return stringmatch(tostring(t.timestamp / 1000), "%.(.-)$") or "0"
-    end
-
-    local f = {
-      year = "%Y",
-      month = "%m",
-      day = "%d",
-      hour = "%H",
-      min = "%M",
-      sec = "%S"
-    }
-    return f[k] and os.date(f[k], t.timestamp / 1000)
-  end
-}
-
-local function validate_date(tbl, parser)
-  --{ year, month, day, hour, min, sec }
-
-  if (tbl.sec < 0 or tbl.sec > 60) then
-    parser:error(error_code.invalid_date_sec)
-  elseif (tbl.min < 0 or tbl.min > 59) then
-    parser:error(error_code.invalid_date_min)
-  elseif (tbl.hour < 0 or tbl.hour > 23) then
-    parser:error(error_code.invalid_date_hour)
-  elseif (tbl.month < 1 or tbl.month > 12) then
-    parser:error(error_code.invalid_date_month)
+--- Format error object to string
+-- @param err table|nil|string Error object
+-- @return string Formatted error message
+function toml_error.to_string(err)
+  if err == nil then
+    return "Unknown error"
   end
 
-  local is_leap_year = (tbl.year % 4) == 0
-  if (tbl.year % 100) == 0 and (tbl.year % 400) ~= 0 then
-    is_leap_year = false
+  if type(err) == "string" then
+    return err
   end
 
-  local days = { 31, is_leap_year and 29 or 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
-
-  if tbl.day < 1 or tbl.day > days[tbl.month] then
-    parser:error(error_code.invalid_date_day)
+  if err.type == "ParseError" then
+    return string.format("Parse error at line %d, column %d: %s",
+      err.line, err.column, err.message)
   end
+
+  if err.type == "ValidationError" then
+    local path_str = table.concat(err.path, ".")
+    return string.format("Validation error at %s: %s", path_str, err.message)
+  end
+
+  return tostring(err.message or err)
 end
 
--- https://stackoverflow.com/a/26071044
-local function utf8(decimal, parser)
-  --https://unicode.org/glossary/#unicode_scalar_value
-  if (decimal < 0 or decimal > 0xd7ff) and (decimal < 0xe000 or decimal > 0x10ffff ) then
-    parser:error(error_code.invalid_escape_utf8)
-  end
-  local bytemarkers = { {0x7FF,192}, {0xFFFF,224}, {0x1FFFFF,240} }
-    if decimal<128 then return string.char(decimal) end
-    local charbytes = {}
-    for bytes,vals in ipairs(bytemarkers) do
-      if decimal<=vals[1] then
-        for b=bytes+1,2,-1 do
-          local mod = decimal%64
-          decimal = (decimal-mod)/64
-          charbytes[b] = string.char(128+mod)
-        end
-        charbytes[1] = string.char(vals[2]+decimal)
-        break
-      end
-    end
-    return table.concat(charbytes)
-end
-
--- https://toml.io/en/v1.0.0#string
-local function validate_unicode(char, parser)
-  local byte = stringbyte(char)
-
-  if (byte <= 0x8) or (byte >= 0xa and byte <= 0x1f) or byte == 0x7f then
-    parser:error(error_code.invalid_unicode_char)
-  end
-
-  return char
-end
-
-
-
-
-local function create_table(t, inline, header)
-  return setmetatable(t or {},
-    { __tomltype = "table", __jsontype = "object", __tomlinline = inline or false, __tomlheader = header or false })
-end
-
-local function create_array(t, inline, header)
-  return setmetatable({ t },
-    { __tomltype = "array", __jsontype = "array", __tomlinline = inline or false, __tomlheader = header or false })
-end
--- ========== core functions ==========
-
---- get the char at current step or at custom position (not relative to cursor!)
----@param self table Parser
----@param at number|nil current step or at custom position (not relative to cursor!)
----@return string char the char at the requested place. empty string if out of bound
-local function parser_get_char(self, at)
-  at = at or self.cursor
-  if not self.buffer[at] then
+--- Generate context snippet for error location
+-- @param input string Full input text
+-- @param line number Line number (1-based)
+-- @param column number Column number (1-based)
+-- @return string Context snippet with pointer
+function toml_error.generate_context(input, line, column)
+  if not input or line < 1 then
     return ""
   end
 
-  return stringchar(self.buffer[at])
-end
-
---- step the cursor from 1 step or custom steps (can be negative)
----@param self table Parser
----@param step number|nil next step (1) or custom steps (can be negative)
-local function parser_step(self, step)
-  self.cursor = self.cursor + (step or 1)
-  self.pos = self.pos + (step or 1)
-end
-
----act like step, but do not move the cursor. basically an handy fucntion to not type get_char(cursor+step)
----@param self table parser
----@param step number|nil next step (1) or custom steps (can be negative)
----@return string char the char at the effective step
-local function parser_poke(self, step)
-  local at = self.cursor + (step or 1)
-  return self:get_char(at)
-end
-
---- loop until cursor points at non white space char
----@param self table parser
-local function parser_skip_ws(self)
-  local char = self:get_char()
-  while char == TAB or char == SPACE do
-    self:step()
-    char = self:get_char()
-  end
-end
-
---- checks if not out of bound of the buffer
----@param self table Parser
----@param step number|nil next step (1) or custom steps (can be negative)
----@return boolean in_of_bounds
-local function parser_bound(self, step)
-  local at = self.cursor + (step or 1)
-  return at <= #self.buffer and at > 0
-end
-
----throw an error catched by the "decode" function
----@param self table parser
----@param id any
-local function parser_error(self, id)
-  if not error_message[id] then
-    error(id, 2)
-  else
-    error({
-      id = id,
-      message = error_message[id],
-      line = self.line,
-      pos = self.pos,
-    })
-  end
-end
-
---- lines iterator
----@param self table parser
----@return function next
-local function parser_lines(self)
-  return function()
-    return self:get_line()
-  end
-end
-
----get a line *shrug*
----@param self table parser
----@return string|nil line
----@return boolean is_crlf
-local function parser_get_line(self)
-  local line = ""
-
-  while self:bound(0) do
-    local nl, crlf = self:is_new_line()
-    if nl then
-      return line, crlf
-    end
-    line = line .. self:get_char()
-
-    self:step()
-  end
-  if #line > 0 then -- the last line will not be skipped
-    return line, false
+  -- Split input into lines
+  local lines = {}
+  for l in input:gmatch("[^\r\n]+") do
+    table.insert(lines, l)
   end
 
-  return nil, false
-end
-
----handle new line logic
----@param self table parser
----@param crlf boolean is_crlf (steps 2 or 1)
-local function parser_new_line(self, crlf)
-  self:step(crlf and 2 or 1)
-  self.line = self.line + 1
-  self.pos = 1
-end
-
----check if the next chars (2 max) is a toml defined new line (CRLF or LF)
----@param self table parser
----@param steps number|nil
----@return boolean is_new_line
----@return boolean is_crlf
-local function parser_is_new_line(self, steps)
-  steps = steps or 0
-  local char1 = self:poke(0 + steps)
-  local char2 = self:poke(1 + steps)
-
-  -- who tf use crlf excepts shitdows
-  if (char1 == CR and char2 == LF) or char1 == LF then
-    return true, char1 == CR
+  -- Get the error line (1-based index)
+  local error_line = lines[line]
+  if not error_line then
+    return ""
   end
-  return false, false
+
+  -- Build pointer with carets
+  local pointer = string.rep(" ", column - 1) .. "^"
+
+  -- Format context
+  local context = string.format("  | %s\n  | %s", error_line, pointer)
+
+  return context
 end
 
-local function Parser(buffer)
-  -- look mom, oop!
-  local parser = {
-    cursor = 1,
-    buffer = { stringbyte(buffer, 1, #buffer) },
+-- ============================================================================
+-- DATETIME MODULE
+-- ============================================================================
 
-    line = 1,
-    pos = 1,
+local datetime = {}
 
-    parsed = {},
+--- DateTime types
+local TYPE_OFFSET = "datetime_offset"
+local TYPE_LOCAL = "datetime_local"
+local TYPE_DATE = "date_local"
+local TYPE_TIME = "time_local"
 
-    -- members
-    get_char = parser_get_char,
-    get_line = parser_get_line,
-    lines = parser_lines,
-    step = parser_step,
-    poke = parser_poke,
-    new_line = parser_new_line,
-    bound = parser_bound,
-    skip_ws = parser_skip_ws,
-    is_new_line = parser_is_new_line,
+--- Parse an offset date-time (RFC 3339 with offset)
+-- Format: 1979-05-27T07:32:00Z or 1979-05-27T07:32:00.123456-08:00
+-- @param str string DateTime string
+-- @return table|nil Parsed datetime or nil on error
+function datetime.parse_offset(str)
+  -- Pattern: YYYY-MM-DDTHH:MM:SS[.ffffffff]Z
+  -- Pattern: YYYY-MM-DDTHH:MM:SS[.ffffffff]±HH:MM
+  local pattern = "^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)%.?(%d*)Z?$"
+  local year, month, day, hour, min, sec, frac = str:match(pattern)
 
-    error = parser_error,
-  }
+  if year then
+    return {
+      type = TYPE_OFFSET,
+      year = tonumber(year),
+      month = tonumber(month),
+      day = tonumber(day),
+      hour = tonumber(hour),
+      min = tonumber(min),
+      sec = tonumber(sec),
+      nanosec = datetime._parse_frac(frac),
+      offset = "Z"
+    }
+  end
 
-  parser.current = parser.parsed
+  -- Try with offset ±HH:MM
+  pattern = "^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)%.?(%d*)([+-])(%d%d):(%d%d)$"
+  year, month, day, hour, min, sec, frac, sign, off_hour, off_min = str:match(pattern)
 
-  return parser
+  if year then
+    return {
+      type = TYPE_OFFSET,
+      year = tonumber(year),
+      month = tonumber(month),
+      day = tonumber(day),
+      hour = tonumber(hour),
+      min = tonumber(min),
+      sec = tonumber(sec),
+      nanosec = datetime._parse_frac(frac),
+      offset = string.format("%s%02d:%02d", sign, tonumber(off_hour), tonumber(off_min))
+    }
+  end
+
+  return nil
 end
 
--- ========== parse functions ==========
+--- Parse a local date-time (RFC 3339 without offset)
+-- Format: 1979-05-27T07:32:00.123456
+-- @param str string DateTime string
+-- @return table|nil Parsed datetime or nil on error
+function datetime.parse_local(str)
+  -- Pattern: YYYY-MM-DDTHH:MM:SS[.ffffffff]
+  local pattern = "^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d):(%d%d)%.?(%d*)$"
+  local year, month, day, hour, min, sec, frac = str:match(pattern)
 
-local parse_string, parse_number, process_key, parse_header, parse_table_inline, parse_array_inline, parse_local_date, parse_local_time, parse_date, parse_key, parse_value, apply_kv
+  if year then
+    return {
+      type = TYPE_LOCAL,
+      year = tonumber(year),
+      month = tonumber(month),
+      day = tonumber(day),
+      hour = tonumber(hour),
+      min = tonumber(min),
+      sec = tonumber(sec),
+      nanosec = datetime._parse_frac(frac)
+    }
+  end
 
---TODO refactor and comment
-parse_table_inline = function(parser)
-  parser:step() -- consume {
-  local t, current = {}, parser.current
-  local table, valid = t, false
-  local key, value, nxt
-  local continue
+  return nil
+end
 
-  while parser:bound() do
-    continue = false
-    if parser:is_new_line() then
-      parser:error(error_code.no_value)
-    end
+--- Parse a local date
+-- Format: 1979-05-27
+-- @param str string Date string
+-- @return table|nil Parsed date or nil on error
+function datetime.parse_date(str)
+  -- Pattern: YYYY-MM-DD
+  local pattern = "^(%d%d%d%d)%-(%d%d)%-(%d%d)$"
+  local year, month, day = str:match(pattern)
 
-    parser:skip_ws()
-    local char = parser:get_char()
+  if year then
+    return {
+      type = TYPE_DATE,
+      year = tonumber(year),
+      month = tonumber(month),
+      day = tonumber(day)
+    }
+  end
 
-    if char == "}" then
-      valid = true
-      parser:step()
-      break
-    elseif char == "," then
-      if nxt then
-        parser:error(error_code.invalid_bare_key_char)
-      end
+  return nil
+end
 
-      apply_kv(parser, key, value, table)
-      -- reset
-      key, value, nxt = nil, nil, true
-      table = t
-    elseif not key then
-      parser.current = table
-      nxt = false
+--- Parse a local time
+-- Format: 07:32:00.123456
+-- @param str string Time string
+-- @return table|nil Parsed time or nil on error
+function datetime.parse_time(str)
+  -- Pattern: HH:MM:SS[.ffffffff]
+  local pattern = "^(%d%d):(%d%d):(%d%d)%.?(%d*)$"
+  local hour, min, sec, frac = str:match(pattern)
 
-      key = parse_key(parser, true)
+  if hour then
+    return {
+      type = TYPE_TIME,
+      hour = tonumber(hour),
+      min = tonumber(min),
+      sec = tonumber(sec),
+      nanosec = datetime._parse_frac(frac)
+    }
+  end
 
-      table = parser.current
-      parser.current = current
+  return nil
+end
 
-      continue = true
+--- Parse any TOML datetime format
+-- @param str string DateTime string
+-- @return table|nil Parsed datetime or nil on error
+function datetime.parse(str)
+  -- Check for T separator (datetime vs date/time)
+  local has_t = str:find("T") ~= nil
+
+  -- Check for offset indicator
+  local has_offset = str:match("[+-]%d%d:%d%d$") or str:match("Z$")
+
+  -- Parse based on format
+  if has_t then
+    -- Has T: date-time
+    if has_offset then
+      return datetime.parse_offset(str)
     else
-      value = parse_value(parser, true)
-      continue = true
+      return datetime.parse_local(str)
     end
-
-    if not continue then
-      parser:step()
-    end
-  end
-
-  if not valid then
-    parser:error(error_code.invalid_inline_term)
-  end
-  if key then
-    apply_kv(parser, key, value, table)
-  end
-
-  return create_table(t, true)
-end
-
---TODO refactor and comment
-parse_array_inline = function(parser)
-  parser:step() -- consume [
-  local table, current = create_array(nil, true), parser.current
-  local valid, value = false, nil
-  local index, nxt = 1, false
-
-  local continue
-
-  while parser:bound() do
-    continue = false
-    parser:skip_ws()
-    local char = parser:get_char()
-
-    local nl, crlf = parser:is_new_line()
-    if nl then
-      parser:new_line(crlf)
-      continue = true
-    elseif char == "]" then
-      valid = true
-      parser:step()
-      break
-    elseif char == "," then
-      if nxt or index == 1 then
-        parser:error(error_code.missing_value)
-      end
-      nxt = true
-    elseif char == "#" then -- comments
-      parser:get_line()
-      continue = true
+  else
+    -- No T: either date or time
+    -- Try date first (YYYY-MM-DD pattern)
+    if str:match("^%d%d%d%d%-%d%d%-%d%d$") then
+      return datetime.parse_date(str)
     else
-      nxt = false
-      value = parse_value(parser, true, true)
-      apply_kv(parser, index, value, table)
-      -- reset
-      value = nil
-      index = index + 1
-      continue = true
+      return datetime.parse_time(str)
     end
-
-    if not continue then
-      parser:step()
-    end
-  end
-
-  if not valid then
-    parser:error(error_code.invalid_inline_term)
-  end
-  if value then
-    apply_kv(parser, index, value, table)
-  end
-
-  return table
-end
-
-parse_header = function(parser)
-  -- goes back to the root
-  parser.current = parser.parsed
-  -- table = [...] array = [[...]]
-  local array, key = false, nil
-  local last_pos
-
-  -- check header type and consume brackets
-  if parser:poke() == "[" then
-    array = true
-    parser:step(2)
-  else
-    parser:step()
-  end
-
-  while parser:bound(0) do
-    last_pos = parser.line .. ":" .. parser.pos
-    if parser:is_new_line() then
-      parser:error(error_code.expected_header_close_bracket)
-    end
-
-    local char = parser:get_char()
-
-    if char == "]" then
-      if array and parser:poke() ~= "]" then
-        parser:error(error_code.expected_array_header_close_bracket)
-      end
-
-      -- consume close bracket
-      parser:step(array and 2 or 1)
-      break
-    end
-
-    -- parse key
-    parser:skip_ws()
-    key = parse_key(parser, true, true, array)
-    parser.current = process_key(parser, key, parser.current, array, true, true)
-
-    --TODO remove if not useful
-    if last_pos == parser.line .. ":" .. parser.pos then
-      error(("infinite loop at line %s:%s"):format(parser.line, parser.pos))
-    end
-  end -- loop
-
-  if not key then
-    parser:error(error_code.invalid_bare_key_char)
   end
 end
 
-parse_string = function(parser, can_multiline)
-  local quote = parser:get_char()
-
-  local litteral = (quote == "'")
-  local multiline = false
-
-  if can_multiline then
-    if parser:poke(1) == quote and parser:poke(2) == quote then
-      multiline = true
-    end
+--- Parse fractional seconds to nanoseconds
+-- @param frac string Fractional part (may be empty)
+-- @return number Nanoseconds (0-999999999)
+function datetime._parse_frac(frac)
+  if not frac or frac == "" then
+    return 0
   end
 
-  -- consume the quote(s)
-  if multiline then
-    parser:step(3)
-    -- if theres a new line after quotes, ignore it as it's multiline
-    local nl, crlf = parser:is_new_line()
-    if nl then
-      parser:new_line(crlf)
-    end
-  else
-    parser:step()
-  end
+  -- Pad or truncate to 9 digits (nanoseconds)
+  frac = frac .. string.rep("0", 9 - #frac):sub(1, 9 - #frac)
+  frac = frac:sub(1, 9)
 
-  local str = ""
-  local backslash = false
-  -- if the loop exit for other reason than a quote, need to know if it was a valid reason to exit
-  local closed = false
-  local continue = false
-  local last_pos
-
-  while parser:bound(0) do
-    last_pos = parser.line .. ":" .. parser.pos
-    continue = false
-
-    local char = parser:get_char()
-
-    local nl, crlf = parser:is_new_line()
-    if nl then -- throw an error if not multiline
-      if not multiline then
-        parser:error(error_code.invalid_string_term)
-      else
-        -- handle backslash at the end of line in multiline strings
-        if backslash then
-          parser:new_line(crlf)
-
-          -- skip all empty line (ws and nl are empty lines)
-          while parser:bound() do
-            parser:skip_ws()
-            local nl, crlf = parser:is_new_line()
-            if not nl then
-              break
-            end
-
-            if nl then
-              parser:new_line(crlf)
-            end
-            parser:step()
-          end -- loop
-
-          parser:step(-1)
-          continue = true
-          backslash = false
-        else
-          str = str .. LF
-          parser:new_line(crlf)
-          continue = true
-          parser:step(-1) -- don't consumes the next char (skipped by the step at the end of the loop)
-        end
-      end
-      -- new line
-    elseif backslash then
-      if char == "u" or char == "U" then -- unicode yey
-        local len = (char == "u") and 4 or 8
-        local code = ""
-
-        for i=1, len do
-          parser:step()
-          code = code .. parser:get_char()
-        end
-        
-        if #code ~= len or not stringmatch(code, "^[0-9a-fA-F]+$") then
-          parser:error(error_code.invalid_escape_utf8)
-        end
-
-        str = str .. utf8(tonumber(code, 16), parser)
-       
-      elseif (char == SPACE or char == TAB) and multiline then
-        -- skip all empty line (ws and nl are empty lines)
-        local seen_nl = false
-        while parser:bound() do
-          parser:skip_ws()
-          local nl, crlf = parser:is_new_line()
-          if not nl then
-            if not seen_nl then
-              parser:error(error_code.invalid_escape_char)
-            end
-            break
-          end
-
-          if nl then
-            seen_nl = true
-            parser:new_line(crlf)
-          end
-          parser:step()
-        end -- loop
-
-        parser:step(-1)
-      else
-        local seq = escape[char]
-        if not seq then
-          parser:error(error_code.invalid_escape_char)
-        else
-          str = str .. seq
-        end
-      end
-      backslash = false
-      continue = true
-      -- backslash
-    elseif char == quote then
-      if multiline then
-        -- stupid toml thing for having multiline string closing with 3, 4 or 5 quotes
-        if parser:poke(1) == quote and parser:poke(2) == quote then
-          for i = 0, 2 do
-            parser:step()
-            if parser:poke(2) == quote then
-              str = str .. quote
-            else
-              break
-            end
-          end
-
-          parser:step(1) -- consumes double quotes
-          closed = true
-          break
-        end
-      else
-        -- not a multiline string, so it's valid
-        closed = true
-        break
-      end
-      -- quote
-    elseif char == "\\" and not litteral and not backslash then
-      backslash = true
-      continue = true
-    end
-
-    -- don't include the current char, useful for escaped char
-    if not continue then
-      str = str .. validate_unicode(char, parser)
-    end
-
-    parser:step()
-
-    --TODO remove if not useful
-    if last_pos == parser.line .. ":" .. parser.pos then
-      error(("infinite loop at line %s:%s"):format(parser.line, parser.pos))
-    end
-  end -- loop
-
-  if not closed then
-    parser:error(error_code.invalid_string_term)
-  end
-
-  -- consumes the last quote
-  parser:step()
-  return str
+  return tonumber(frac) or 0
 end
 
-parse_number = function(buffer, parser)
-  local old_pos = parser.pos
-  parser.pos = parser.pos - #buffer
-
-  if not stringmatch(stringsub(buffer, 1, 1), "[0-9-+in]") then
+--- Serialize a datetime table to TOML format
+-- @param dt table DateTime table
+-- @return string|nil TOML datetime string or nil on error
+function datetime.serialize(dt)
+  if not dt or not dt.type then
     return nil
   end
 
-  local value, has_value
-
-  if stringmatch(buffer, "^[%+%-]?inf$") then
-    value = (stringsub(buffer, 1,1) == "-" and -mathinf) or mathinf
-    has_value = true
-  elseif stringmatch(buffer, "^[%+%-]?nan$") then
-    value = mathnan
-    has_value = true
-  elseif stringmatch(buffer, "^0[xob].*$") then -- match hex, bin and oct escapes
-    local f, num = stringmatch(buffer, "^0([xob])(.*)$")
-    if f == "x" then                        -- hex
-      if not stringmatch(num, "^[0-9a-fA-F_]+$") or stringmatch("_" .. num .. "_", "__") then
-        parser:error(error_code.invalid_number_hex)
-      else
-        num = stringgsub(num, "_", "")
-        has_value, value = pcall(tonumber, num, 16)
-      end
-    elseif f == "b" then -- binary
-      if not stringmatch(num, "^[0-1_]+$") or stringmatch("_" .. num .. "_", "__") then
-        parser:error(error_code.invalid_number_bin)
-      else
-        num = stringgsub(num, "_", "")
-        has_value, value = pcall(tonumber, num, 2)
-      end
-    else -- octal
-      if not stringmatch(num, "^[0-7_]+$") or stringmatch("_" .. num .. "_", "__") then
-        parser:error(error_code.invalid_number_oct)
-      else
-        num = stringgsub(num, "_", "")
-        has_value, value = pcall(tonumber, num, 8)
-      end
-    end -- f ==
-  else  -- all the other nums
-    -- tonumber is awesome, but toml wants to be the special kid and do things on his way, so let's follow
-    local sign, number, is_exp, exp = stringmatch(buffer, "^([-+]?)([0-9%._]*[0-9]*)([eE]?)([-+0-9_]*)$")
-
-    --     not a number            leading, trailing or double us             leading us on float           trailling us before float     leading dot                       trailling dot
-    if not sign or #number <= 0 or stringmatch("_" .. number .. "_", "__") or stringmatch(number, "%._") or stringmatch(number, "_%.") or stringsub(number, 1, 1) == "." or stringsub(number, -1) == "." then
-      parser:error(error_code.invalid_number)
-    end
-
-
-    if #is_exp > 0 then
-      if stringmatch("_" .. exp .. "_", "__") or stringsub(exp, 1, 1) == "." or stringsub(exp, -1) == "." then
-        parser:error(error_code.invalid_number_exp)
-      end
-
-      exp = stringgsub(exp, "_", "")
-    elseif #exp > 0 then
-      parser:error(error_code.invalid_number_exp)
-    end
-
-    number = stringgsub(number, "_", "")
-    -- checks for leading 0
-    if stringmatch(number, "^0+[0-9]+") then
-      parser:error(error_code.invalid_number)
-    end
-
-    --TODO checks for integer imprecision with non exponent numbers
-
-    has_value, value = pcall(tonumber, sign .. number .. is_exp .. exp)
+  if dt.type == TYPE_OFFSET then
+    return datetime._serialize_offset(dt)
+  elseif dt.type == TYPE_LOCAL then
+    return datetime._serialize_local(dt)
+  elseif dt.type == TYPE_DATE then
+    return datetime._serialize_date(dt)
+  elseif dt.type == TYPE_TIME then
+    return datetime._serialize_time(dt)
   end
 
-  if not has_value or not value then
-    parser:error(error_code.invalid_number)
-  end
-  parser.pos = old_pos
-  return value
+  return nil
 end
 
-parse_local_date = function(input, parser)
-  local y, m, d = stringmatch(input, match_date)
+--- Serialize offset date-time to TOML format
+-- @param dt table DateTime table
+-- @return string TOML datetime string
+function datetime._serialize_offset(dt)
+  local date_part = string.format("%04d-%02d-%02d", dt.year, dt.month, dt.day)
+  local time_part = string.format("%02d:%02d:%02d", dt.hour, dt.min, dt.sec)
 
-  local data = { __type = "localdate", input = input, timestamp = 0 }
-  y, m, d = tonumber(y), tonumber(m), tonumber(d)
-  if not y or not m or not d then
-    parser:error(error_code.invalid_local_date)
-    return {} -- to reassure the linter about error checking, even so "error" stops the code
+  local result = date_part .. "T" .. time_part
+
+  -- Add fractional seconds if present
+  if dt.nanosec and dt.nanosec > 0 then
+    result = result .. string.format(".%09d", dt.nanosec):gsub("0+$", "")
   end
 
-  local _date = { year = y, month = m, day = d, hour = 1, min = 0, sec = 0 }
-  validate_date(_date, parser) -- throw if not valid
-  data.timestamp = os.time(_date)
-  -- convert to ms
-  data.timestamp = data.timestamp * 1e3
-
-  return setmetatable(data, date_meta)
-end
-
-parse_local_time = function(input, parser)
-  local h, m, s, ms = stringmatch(input, match_time)
-
-  local data = { __type = "localtime", input = input }
-  local _date = { year = 1970, month = 1, day = 1, hour = tonumber(h), min = tonumber(m), sec = tonumber(s) }
-  validate_date(_date, parser) -- throw if not valid
-  data.timestamp = os.time(_date)
-  -- convert to ms
-  data.timestamp = data.timestamp * 1e3
-  data.timestamp = data.timestamp + math.floor((tonumber(ms) or 0) * 1e3)
-
-
-  return setmetatable(data, date_meta)
-end
-
-parse_date = function(input, parser)
-  local time = stringmatch(input, pattern_ltime)
-  if time then
-    return parse_local_time(time, parser)
-  end
-
-  local date = stringmatch(input, pattern_ldate)
-  if date then
-    return parse_local_date(date, parser)
-  end
-
-  local date, sep, time, sep_off, offset = stringmatch(input, pattern_date)
-
-
-  if not date then
-    parser:error(error_code.invalid_date)
-    return {} -- to reassure the linter about error checking, even so "error" stops the code
-  end
-
-  local data = { __type = "datetime", timestamp = 0, input = input }
-  local date_data = parse_local_date(date, parser)
-  local time_data = parse_local_time(time, parser)
-
-  data.timestamp = date_data.timestamp + time_data.timestamp
-  date_data, time_data = nil, nil
-
-  local h_off, m_off = stringmatch(offset, match_offset)
-  if not h_off and stringmatch(sep_off, "[%+%-]") then
-    parser:error(error_code.invalid_date_offset)
-    return {} -- to reassure the linter about error checking, even so "error" stops the code
-  end
-
-  if sep_off == "Z" or sep_off == "z" or sep_off == "" then
-    h_off, m_off = 0, 0
-  elseif sep_off == "-" then
-    h_off, m_off = -tonumber(h_off), -tonumber(m_off)
+  -- Add offset
+  if dt.offset then
+    result = result .. dt.offset
   else
-    h_off, m_off = tonumber(h_off), tonumber(m_off)
+    result = result .. "Z"
   end
 
-  data.offset = (h_off * 60 * 60 * 1000) + (m_off * 60 * 1000)
-  data.timestamp = data.timestamp + (data.offset or 0)
-
-  if sep_off == "" then data.offset = nil end
-
-  return setmetatable(data, date_meta)
+  return result
 end
 
-process_key = function(parser, key, root, is_array, is_last, is_header)
-  local root_meta = getmetatable(root)
-  local key_meta = getmetatable(root[key])
+--- Serialize local date-time to TOML format
+-- @param dt table DateTime table
+-- @return string TOML datetime string
+function datetime._serialize_local(dt)
+  local date_part = string.format("%04d-%02d-%02d", dt.year, dt.month, dt.day)
+  local time_part = string.format("%02d:%02d:%02d", dt.hour, dt.min, dt.sec)
 
-  -- checks if trying to apply to inline table/array or header
-  do
-    if is_last then
-      local meta = key_meta
-      if meta and meta.__tomlheader and meta.__tomltype == "table" then
-        parser:error(error_code.redefine)
-      end
+  local result = date_part .. "T" .. time_part
+
+  -- Add fractional seconds if present
+  if dt.nanosec and dt.nanosec > 0 then
+    result = result .. string.format(".%09d", dt.nanosec):gsub("0+$", "")
+  end
+
+  return result
+end
+
+--- Serialize local date to TOML format
+-- @param dt table Date table
+-- @return string TOML date string
+function datetime._serialize_date(dt)
+  return string.format("%04d-%02d-%02d", dt.year, dt.month, dt.day)
+end
+
+--- Serialize local time to TOML format
+-- @param dt table Time table
+-- @return string TOML time string
+function datetime._serialize_time(dt)
+  local result = string.format("%02d:%02d:%02d", dt.hour, dt.min, dt.sec)
+
+  -- Add fractional seconds if present
+  if dt.nanosec and dt.nanosec > 0 then
+    result = result .. string.format(".%09d", dt.nanosec):gsub("0+$", "")
+  end
+
+  return result
+end
+
+--- Validate a datetime table
+-- @param dt table DateTime table
+-- @return boolean True if valid
+function datetime.validate(dt)
+  if not dt or not dt.type then
+    return false
+  end
+
+  -- Check required fields based on type
+  if dt.type == TYPE_OFFSET or dt.type == TYPE_LOCAL then
+    if not dt.year or not dt.month or not dt.day then
+      return false
     end
+    if not dt.hour or not dt.min or not dt.sec then
+      return false
+    end
+  elseif dt.type == TYPE_DATE then
+    if not dt.year or not dt.month or not dt.day then
+      return false
+    end
+  elseif dt.type == TYPE_TIME then
+    if not dt.hour or not dt.min or not dt.sec then
+      return false
+    end
+  else
+    return false
+  end
 
-    local meta = is_array and root_meta or key_meta
-    if meta and meta.__tomlinline then
-      parser:error(error_code.redefine_inline)
+  -- Validate ranges
+  if dt.month and (dt.month < 1 or dt.month > 12) then
+    return false
+  end
+
+  if dt.day and (dt.day < 1 or dt.day > 31) then
+    return false
+  end
+
+  if dt.hour and (dt.hour < 0 or dt.hour > 23) then
+    return false
+  end
+
+  if dt.min and (dt.min < 0 or dt.min > 59) then
+    return false
+  end
+
+  if dt.sec and (dt.sec < 0 or dt.sec > 60) then -- 60 for leap second
+    return false
+  end
+
+  if dt.nanosec and (dt.nanosec < 0 or dt.nanosec > 999999999) then
+    return false
+  end
+
+  return true
+end
+
+--- Create a current offset date-time
+-- @return table DateTime table for now (UTC)
+function datetime.now()
+  local now = os.time(os.date("!*t"))  -- UTC
+  local date = os.date("!*t", now)
+
+  return {
+    type = TYPE_OFFSET,
+    year = date.year,
+    month = date.month,
+    day = date.day,
+    hour = date.hour,
+    min = date.min,
+    sec = date.sec,
+    nanosec = 0,
+    offset = "Z"
+  }
+end
+
+-- Export type constants
+datetime.TYPE_OFFSET = TYPE_OFFSET
+datetime.TYPE_LOCAL = TYPE_LOCAL
+datetime.TYPE_DATE = TYPE_DATE
+datetime.TYPE_TIME = TYPE_TIME
+
+-- ============================================================================
+-- AST MODULE
+-- ============================================================================
+
+local ast = {}
+
+--- AST node types
+ast.NodeType = {
+  DOCUMENT = "Document",
+  TABLE = "Table",
+  KEY_VALUE = "KeyValue",
+  ARRAY = "Array",
+  INLINE_TABLE = "InlineTable",
+  STRING = "String",
+  INTEGER = "Integer",
+  FLOAT = "Float",
+  BOOLEAN = "Boolean",
+  DATETIME = "DateTime",
+}
+
+--- Create a document node
+-- @return table Document node
+function ast.document()
+  return {
+    type = ast.NodeType.DOCUMENT,
+    tables = {},  -- Map of table key path to table node
+    root = ast.table()
+  }
+end
+
+--- Create a table node
+-- @param string|table key The table key (string or array of strings for dotted keys)
+-- @return table Table node
+function ast.table(key)
+  return {
+    type = ast.NodeType.TABLE,
+    key = key or "",
+    values = {},  -- Map of key to value node
+    is_array = false  -- True if this is an array of tables element
+  }
+end
+
+--- Create a key-value node
+-- @param table key The key (array of strings for dotted keys)
+-- @param table value The value node
+-- @return table Key-value node
+function ast.key_value(key, value)
+  return {
+    type = ast.NodeType.KEY_VALUE,
+    key = key,
+    value = value
+  }
+end
+
+--- Create an array node
+-- @param table values Array of value nodes
+-- @return table Array node
+function ast.array(values)
+  return {
+    type = ast.NodeType.ARRAY,
+    values = values or {}
+  }
+end
+
+--- Create an inline table node
+-- @param table values Map of key to value nodes
+-- @return table Inline table node
+function ast.inline_table(values)
+  return {
+    type = ast.NodeType.INLINE_TABLE,
+    values = values or {}
+  }
+end
+
+--- Create a string node
+-- @param string value The string value
+-- @param string quote_type The quote type ("basic", "literal", "ml_basic", "ml_literal")
+-- @return table String node
+function ast.string(value, quote_type)
+  return {
+    type = ast.NodeType.STRING,
+    value = value,
+    quote_type = quote_type or "basic"
+  }
+end
+
+--- Create an integer node
+-- @param number value The integer value
+-- @param string base The number base ("10", "16", "8", "2")
+-- @return table Integer node
+function ast.integer(value, base)
+  return {
+    type = ast.NodeType.INTEGER,
+    value = value,
+    base = base or "10"
+  }
+end
+
+--- Create a float node
+-- @param number value The float value
+-- @return table Float node
+function ast.float(value)
+  return {
+    type = ast.NodeType.FLOAT,
+    value = value
+  }
+end
+
+--- Create a boolean node
+-- @param boolean value The boolean value
+-- @return table Boolean node
+function ast.boolean(value)
+  return {
+    type = ast.NodeType.BOOLEAN,
+    value = value
+  }
+end
+
+--- Create a datetime node
+-- @param table value Datetime components
+-- @param string datetime_type Type of datetime ("offset", "local", "date", "time")
+-- @return table DateTime node
+function ast.datetime(value, datetime_type)
+  return {
+    type = ast.NodeType.DATETIME,
+    value = value,
+    datetime_type = datetime_type or "offset"
+  }
+end
+
+-- ============================================================================
+-- LEXER MODULE
+-- ============================================================================
+
+local Lexer = {}
+Lexer.__index = Lexer
+
+--- Create a new lexer
+-- @param input string TOML input text
+-- @return table Lexer object
+function Lexer.new(input)
+  return setmetatable({
+    input = input or "",
+    pos = 1,
+    line = 1,
+    column = 1,
+    peeked_token = nil
+  }, Lexer)
+end
+
+--- Get current character
+-- @return string|nil Current character or nil
+function Lexer:current()
+  if self.pos > #self.input then
+    return nil
+  end
+  return self.input:sub(self.pos, self.pos)
+end
+
+--- Peek ahead at next character
+-- @param number offset Number of characters to peek ahead (default 1)
+-- @return string|nil Character at offset or nil
+function Lexer:peek(offset)
+  offset = offset or 1
+  return self.input:sub(self.pos + offset, self.pos + offset)
+end
+
+--- Advance to next character
+-- @return string Character that was advanced past
+function Lexer:advance()
+  local ch = self:current()
+  self.pos = self.pos + 1
+
+  if ch == "\n" then
+    self.line = self.line + 1
+    self.column = 1
+  else
+    self.column = self.column + 1
+  end
+
+  return ch
+end
+
+--- Skip whitespace (space and tab only, not newlines)
+function Lexer:skip_whitespace()
+  while self:current() == " " or self:current() == "\t" do
+    self:advance()
+  end
+end
+
+--- Check if at end of input
+-- @return boolean True if at EOF
+function Lexer:is_eof()
+  return self.pos > #self.input
+end
+
+--- Create a token
+-- @param token_type string Token type
+-- @param value any Token value
+-- @return table Token object
+function Lexer:token(token_type, value)
+  return {
+    type = token_type,
+    value = value,
+    line = self.token_line or self.line,
+    column = self.token_column or self.column
+  }
+end
+
+--- Lex an identifier (bare key)
+-- @return table|nil Token or nil if not an identifier
+function Lexer:lex_identifier()
+  local start_pos = self.pos
+  local start_col = self.column
+  local start_line = self.line
+
+  -- Bare keys: ASCII letters, digits, underscore, dash
+  local ch = self:current()
+  if not (ch:match("[A-Za-z_]") or (ch:match("[0-9]") and self.pos > start_pos)) then
+    return nil
+  end
+
+  local value = ""
+  while self:current() do
+    ch = self:current()
+    if ch:match("[A-Za-z0-9_-]") then
+      value = value .. ch
+      self:advance()
+    else
+      break
     end
   end
 
-  if is_array then
-    if #root > 0 then
-      if type(root[#root][key]) == "table" then
-        if #root[#root][key] > 0 then
-          root[#root][key][#root[#root][key] + 1] = {}
-          return root[#root][key][#root[#root][key]]
-        else
-          parser:error(error_code.redefine)
-        end
-      elseif root[#root][key] == nil then
-        root[#root][key] = create_array(create_table(nil, nil, is_header), nil, is_header)
-        return root[#root][key][1]
-      else
-        parser:error(error_code.redefine)
-      end
-    elseif root[key] == nil then
-      if is_last then
-        root[key] = create_array(create_table(nil, nil, is_header), nil, is_header)
-        return root[key][1]
-      end
+  if #value == 0 then
+    return nil
+  end
 
-      root[key] = create_table(nil, nil, false)
-      return root[key]
-    elseif type(root[key]) == "table" then
-      if #root[key] <= 0 and is_last then
-        parser:error(error_code.redefine)
-      end
+  -- Check for reserved keywords (boolean)
+  if value == "true" or value == "false" then
+    return self:token("boolean", value == "true")
+  end
 
-      if is_last then
-        root[key][#root[key] + 1] = create_table(nil, nil, is_header)
-        return root[key][#root[key]]
-      end
+  -- Check for special float values
+  if value == "inf" or value == "nan" then
+    return self:token("float", self:parse_special_float(value))
+  end
 
-      return root[key]
-    else
-      parser:error(error_code.redefine)
+  return self:token("identifier", value)
+end
+
+--- Parse special float values (inf, nan)
+-- @param value string The string value
+-- @return number Float value
+function Lexer:parse_special_float(value)
+  if value == "inf" then
+    return math.huge
+  elseif value == "nan" then
+    return 0 / 0 -- NaN
+  end
+  return 0 / 0
+end
+
+--- Lex a number (integer or float)
+-- @return table|nil Token or nil if not a number
+function Lexer:lex_number()
+  local start_pos = self.pos
+  local start_line = self.line
+  local start_col = self.column
+
+  local ch = self:current()
+
+  -- Check for sign
+  local has_sign = false
+  if ch == "+" or ch == "-" then
+    has_sign = true
+    self:advance()
+    ch = self:current()
+  end
+
+  -- Check for special float values
+  if ch == "i" or ch == "n" then
+    local value = ""
+    while self:current() and self:current():match("[a-z]") do
+      value = value .. self:current()
+      self:advance()
     end
-  else -- is_table
-    if #root > 0 then
-      if is_last then
-        if root[#root][key] ~= nil then
-          parser:error(error_code.redefine)
+
+    if value == "inf" or value == "nan" then
+      local num_value = self:parse_special_float(value)
+      if has_sign and value == "inf" then
+        -- Handle +inf and -inf
+        local sign = self.input:sub(start_pos, start_pos)
+        if sign == "-" then
+          num_value = -math.huge
         else
-          root[#root][key] = create_table(nil, nil, is_header)
-          return root[#root][key]
-        end
-      else
-        if type(root[#root][key]) == "table" then
-          return root[#root][key]
-        else
-          parser:error(error_code.redefine)
+          num_value = math.huge
         end
       end
-    elseif root[key] == nil then
-      root[key] = create_table(nil, nil, is_last and is_header)
-      return root[key]
-    elseif type(root[key]) == "table" then
-      if #root[key] > 0 and is_last then
-        parser:error(error_code.redefine)
+      return self:token("float", num_value)
+    end
+
+    -- Not a special value, rewind
+    self.pos = start_pos
+    self.column = start_col
+    return nil
+  end
+
+  -- Check for base prefixes
+  local base = 10
+  if ch == "0" then
+    local next_ch = self:peek()
+    if next_ch == "x" or next_ch == "X" then
+      base = 16
+      self:advance()
+      self:advance()
+    elseif next_ch == "o" or next_ch == "O" then
+      base = 8
+      self:advance()
+      self:advance()
+    elseif next_ch == "b" or next_ch == "B" then
+      base = 2
+      self:advance()
+      self:advance()
+    end
+  end
+
+  -- Collect digits and underscores
+  local value = ""
+  local has_digit = false
+  local has_underscore = false
+
+  while self:current() do
+    ch = self:current()
+    if base == 10 and ch:match("[0-9]") then
+      value = value .. ch
+      has_digit = true
+      self:advance()
+    elseif base == 16 and ch:match("[0-9a-fA-F]") then
+      value = value .. ch
+      has_digit = true
+      self:advance()
+    elseif base == 8 and ch:match("[0-7]") then
+      value = value .. ch
+      has_digit = true
+      self:advance()
+    elseif base == 2 and ch:match("[01]") then
+      value = value .. ch
+      has_digit = true
+      self:advance()
+    elseif ch == "_" then
+      has_underscore = true
+      self:advance()
+    else
+      break
+    end
+  end
+
+  if not has_digit then
+    self.pos = start_pos
+    self.column = start_col
+    return nil
+  end
+
+  -- Remove underscores for conversion
+  local clean_value = value:gsub("_", "")
+
+  -- Check if it's a float
+  local next_ch = self:current()
+  if next_ch == "." then
+    -- Float with fractional part
+    local peek1 = self:peek(1)
+    if peek1 and peek1:match("[0-9]") then
+      local is_negative = has_sign and self.input:sub(start_pos, start_pos) == "-"
+      return self:lex_float_fractional(clean_value, start_pos, start_col, is_negative)
+    end
+  end
+
+  if next_ch == "e" or next_ch == "E" then
+    -- Float with exponent part
+    local is_negative = has_sign and self.input:sub(start_pos, start_pos) == "-"
+    return self:lex_float_exponent(clean_value, start_pos, start_col, is_negative)
+  end
+
+  -- It's an integer
+  local num_value = tonumber(clean_value, base)
+  if has_sign then
+    local sign = self.input:sub(start_pos, start_pos)
+    if sign == "-" then
+      num_value = -num_value
+    end
+  end
+
+  return self:token("integer", num_value)
+end
+
+--- Lex a float with fractional part
+-- @param int_part string Integer part as string
+-- @param start_pos number Starting position (for error recovery)
+-- @param start_col number Starting column (for error recovery)
+-- @param is_negative boolean Whether the number is negative
+-- @return table Float token
+function Lexer:lex_float_fractional(int_part, start_pos, start_col, is_negative)
+  self:advance() -- Skip the decimal point
+
+  local frac_part = ""
+  while self:current() and self:current():match("[0-9]") do
+    frac_part = frac_part .. self:current()
+    self:advance()
+  end
+
+  local value_str = int_part .. "." .. frac_part
+  local value = tonumber(value_str)
+  if not value then
+    self.pos = start_pos
+    return nil
+  end
+
+  -- Apply negative sign
+  if is_negative then
+    value = -value
+  end
+
+  -- Check for exponent
+  if self:current() == "e" or self:current() == "E" then
+    local exp_token = self:lex_float_exponent(tostring(value), start_pos, start_col)
+    if exp_token then
+      return exp_token
+    end
+  end
+
+  return self:token("float", value)
+end
+
+--- Lex a float with exponent part
+-- @param base_str string Base number as string
+-- @param start_pos number Starting position (for error recovery)
+-- @param start_col number Starting column (for error recovery)
+-- @param is_negative boolean Whether the base number is negative
+-- @return table Float token
+function Lexer:lex_float_exponent(base_str, start_pos, start_col, is_negative)
+  self:advance() -- Skip 'e' or 'E'
+
+  local exp_str = ""
+
+  -- Optional sign in exponent (this is separate from the base sign)
+  if self:current() == "+" or self:current() == "-" then
+    exp_str = exp_str .. self:current()
+    self:advance()
+  end
+
+  -- Digits
+  while self:current() and self:current():match("[0-9]") do
+    exp_str = exp_str .. self:current()
+    self:advance()
+  end
+
+  local value_str = base_str .. "e" .. exp_str
+  local value = tonumber(value_str)
+  if not value then
+    self.pos = start_pos
+    return nil
+  end
+
+  -- Apply negative sign from the base number
+  if is_negative then
+    value = -value
+  end
+
+  return self:token("float", value)
+end
+
+--- Lex a basic string (double-quoted)
+-- @return table|nil Token or nil if not a string
+function Lexer:lex_string_basic()
+  if self:current() ~= '"' then
+    return nil
+  end
+
+  local start_col = self.column
+  self:advance() -- Skip opening quote
+
+  -- Check for multi-line string
+  if self:current() == '"' and self:peek() == '"' then
+    return self:lex_string_ml_basic()
+  end
+
+  local value = ""
+  while self:current() do
+    local ch = self:current()
+
+    if ch == "\\" then
+      self:advance()
+      local escape = self:current()
+
+      if escape == "b" then
+        value = value .. "\b"
+      elseif escape == "t" then
+        value = value .. "\t"
+      elseif escape == "n" then
+        value = value .. "\n"
+      elseif escape == "f" then
+        value = value .. "\f"
+      elseif escape == "r" then
+        value = value .. "\r"
+      elseif escape == '"' then
+        value = value .. '"'
+      elseif escape == "\\" then
+        value = value .. "\\"
+      elseif escape == "u" then
+        -- Unicode escape \uXXXX
+        local hex = ""
+        for i = 1, 4 do
+          self:advance()
+          if not self:current() or not self:current():match("[0-9a-fA-F]") then
+            return nil -- Invalid unicode escape
+          end
+          hex = hex .. self:current()
+        end
+        value = value .. utf8.char(tonumber(hex, 16))
+      elseif escape == "U" then
+        -- Unicode escape \UXXXXXXXX
+        local hex = ""
+        for i = 1, 8 do
+          self:advance()
+          if not self:current() or not self:current():match("[0-9a-fA-F]") then
+            return nil -- Invalid unicode escape
+          end
+          hex = hex .. self:current()
+        end
+        value = value .. utf8.char(tonumber(hex, 16))
+      else
+        -- Unknown escape, treat as literal
+        value = value .. escape
       end
 
-      if is_last then
-        root[key] = create_table(root[key], nil, is_header)
-      end
-      if key_meta.__tomltype == "array" and not is_header then
-        parser:error(error_code.redefine)
-      end
-      if is_header and is_last and not is_table_empty(root[key]) then
-        parser:error(error_code.redefine)
-      end
-      return root[key]
+      self:advance()
+    elseif ch == '"' then
+      self:advance() -- Skip closing quote
+      return self:token("string_basic", value)
     else
-      parser:error(error_code.redefine)
+      value = value .. ch
+      self:advance()
+    end
+  end
+
+  return nil -- Unclosed string
+end
+
+--- Lex a multi-line basic string
+-- @return table Multi-line string token
+function Lexer:lex_string_ml_basic()
+  self:advance() -- Skip second quote
+  self:advance() -- Skip third quote
+
+  local value = ""
+
+  -- Skip first newline if present
+  if self:current() == "\r" or self:current() == "\n" then
+    if self:current() == "\r" then
+      self:advance()
+    end
+    if self:current() == "\n" then
+      self:advance()
+    end
+  end
+
+  while self:current() do
+    local ch = self:current()
+
+    if ch == "\\" then
+      self:advance()
+      local next_ch = self:current()
+
+      -- Line ending backslash
+      if next_ch == "\r" or next_ch == "\n" then
+        if next_ch == "\r" then
+          self:advance()
+        end
+        if self:current() == "\n" then
+          self:advance()
+        end
+        -- Skip whitespace until next non-whitespace
+        while self:current() == " " or self:current() == "\t" or self:current() == "\r" or self:current() == "\n" do
+          self:advance()
+        end
+      else
+        -- Normal escape sequence
+        if next_ch == "b" then
+          value = value .. "\b"
+        elseif next_ch == "t" then
+          value = value .. "\t"
+        elseif next_ch == "n" then
+          value = value .. "\n"
+        elseif next_ch == "f" then
+          value = value .. "\f"
+        elseif next_ch == "r" then
+          value = value .. "\r"
+        elseif next_ch == '"' then
+          value = value .. '"'
+        elseif next_ch == "\\" then
+          value = value .. "\\"
+        else
+          value = value .. next_ch
+        end
+        self:advance()
+      end
+    elseif ch == '"' then
+      if self:peek() == '"' and self:peek(2) == '"' then
+        self:advance() -- Skip first quote
+        self:advance() -- Skip second quote
+        self:advance() -- Skip third quote
+        return self:token("string_ml_basic", value)
+      else
+        value = value .. ch
+        self:advance()
+      end
+    else
+      value = value .. ch
+      self:advance()
+    end
+  end
+
+  return nil -- Unclosed string
+end
+
+--- Lex a literal string (single-quoted)
+-- @return table|nil Token or nil if not a literal string
+function Lexer:lex_string_literal()
+  if self:current() ~= "'" then
+    return nil
+  end
+
+  self:advance() -- Skip opening quote
+
+  -- Check for multi-line string
+  if self:current() == "'" and self:peek() == "'" then
+    return self:lex_string_ml_literal()
+  end
+
+  local value = ""
+  while self:current() do
+    local ch = self:current()
+    if ch == "'" then
+      self:advance() -- Skip closing quote
+      return self:token("string_literal", value)
+    else
+      value = value .. ch
+      self:advance()
+    end
+  end
+
+  return nil -- Unclosed string
+end
+
+--- Lex a multi-line literal string
+-- @return table Multi-line literal string token
+function Lexer:lex_string_ml_literal()
+  self:advance() -- Skip second quote
+  self:advance() -- Skip third quote
+
+  local value = ""
+
+  -- Skip first newline if present
+  if self:current() == "\r" or self:current() == "\n" then
+    if self:current() == "\r" then
+      self:advance()
+    end
+    if self:current() == "\n" then
+      self:advance()
+    end
+  end
+
+  while self:current() do
+    local ch = self:current()
+    if ch == "'" then
+      if self:peek() == "'" and self:peek(2) == "'" then
+        self:advance() -- Skip first quote
+        self:advance() -- Skip second quote
+        self:advance() -- Skip third quote
+        return self:token("string_ml_literal", value)
+      else
+        value = value .. ch
+        self:advance()
+      end
+    else
+      value = value .. ch
+      self:advance()
+    end
+  end
+
+  return nil -- Unclosed string
+end
+
+--- Lex a comment
+-- @return table|nil Token or nil if not a comment
+function Lexer:lex_comment()
+  if self:current() ~= "#" then
+    return nil
+  end
+
+  self:advance() -- Skip #
+  local value = ""
+
+  while self:current() and self:current() ~= "\r" and self:current() ~= "\n" do
+    value = value .. self:current()
+    self:advance()
+  end
+
+  -- Trim leading whitespace (space, tab) from comment
+  value = value:match("^[ \t]*(.-)$") or value
+
+  return self:token("comment", value)
+end
+
+--- Get the next token
+-- @return table Next token
+function Lexer:next_token()
+  -- Return peeked token if available
+  if self.peeked_token then
+    local token = self.peeked_token
+    self.peeked_token = nil
+    return token
+  end
+
+  -- Skip whitespace
+  self:skip_whitespace()
+
+  -- Check for EOF or only newlines remaining (whitespace-only input)
+  if self:is_eof() then
+    return self:token("eof", nil)
+  end
+
+  -- Check if remaining input is only newlines (whitespace-only input)
+  local ch = self:current()
+  if ch == "\r" or ch == "\n" then
+    -- Peek ahead to see if there's any actual content
+    local has_content = false
+    local temp_pos = self.pos
+    while temp_pos <= #self.input do
+      local c = self.input:sub(temp_pos, temp_pos)
+      if c ~= "\r" and c ~= "\n" and c ~= " " and c ~= "\t" then
+        has_content = true
+        break
+      elseif c == " " or c == "\t" then
+        temp_pos = temp_pos + 1
+      else
+        temp_pos = temp_pos + 1
+      end
+    end
+
+    if not has_content then
+      -- Only whitespace/newlines remaining, skip to EOF
+      self.pos = #self.input + 1
+      return self:token("eof", nil)
+    end
+  end
+
+  -- Save token start position
+  self.token_line = self.line
+  self.token_column = self.column
+
+  -- Check for EOF again after processing
+  if self:is_eof() then
+    return self:token("eof", nil)
+  end
+
+  ch = self:current()
+
+  -- Newline
+  if ch == "\r" or ch == "\n" then
+    if ch == "\r" then
+      self:advance()
+    end
+    if self:current() == "\n" then
+      self:advance()
+    end
+    return self:token("newline", nil)
+  end
+
+  -- Structural characters
+  if ch == "=" then
+    self:advance()
+    return self:token("equal", nil)
+  end
+
+  if ch == "," then
+    self:advance()
+    return self:token("comma", nil)
+  end
+
+  if ch == "." then
+    self:advance()
+    return self:token("dot", nil)
+  end
+
+  if ch == "{" then
+    self:advance()
+    return self:token("brace_left", nil)
+  end
+
+  if ch == "}" then
+    self:advance()
+    return self:token("brace_right", nil)
+  end
+
+  if ch == "[" then
+    self:advance()
+    -- Check for double bracket
+    if self:current() == "[" then
+      self:advance()
+      return self:token("bracket_double_left", nil)
+    end
+    return self:token("bracket_left", nil)
+  end
+
+  if ch == "]" then
+    self:advance()
+    -- Check for double bracket
+    if self:current() == "]" then
+      self:advance()
+      return self:token("bracket_double_right", nil)
+    end
+    return self:token("bracket_right", nil)
+  end
+
+  -- Comment
+  if ch == "#" then
+    return self:lex_comment()
+  end
+
+  -- Strings
+  if ch == '"' then
+    return self:lex_string_basic()
+  end
+
+  if ch == "'" then
+    return self:lex_string_literal()
+  end
+
+  -- Sign characters (can start signed numbers)
+  if ch == "+" or ch == "-" then
+    local token = self:lex_number()
+    if token then
+      return token
+    end
+  end
+
+  -- Check for datetime or number (both start with digits)
+  if ch:match("[0-9]") then
+    -- Try to parse as datetime first
+    local token = self:lex_datetime()
+    if token then
+      return token
+    end
+
+    -- Fall back to number parsing
+    token = self:lex_number()
+    if token then
+      return token
+    end
+  end
+
+  -- Identifiers (includes boolean and special values)
+  local token = self:lex_identifier()
+  if token then
+    return token
+  end
+
+  -- Unknown character
+  local err = toml_error.ParseError.new(
+    string.format("Unexpected character: %s", ch or "EOF"),
+    self.line,
+    self.column
+  )
+  error(err)
+end
+
+--- Peek at the next token without consuming it
+-- @return table Next token
+function Lexer:peek_token()
+  if not self.peeked_token then
+    self.peeked_token = self:next_token()
+  end
+  return self.peeked_token
+end
+
+--- Expect a specific token type
+-- @param token_type string Expected token type
+-- @return table Token if type matches
+-- @raise error if type doesn't match
+function Lexer:expect(token_type)
+  local token = self:next_token()
+
+  if token.type ~= token_type then
+    local err = toml_error.ParseError.new(
+      string.format("Expected %s, got %s", token_type, token.type),
+      token.line,
+      token.column
+    )
+    error(err)
+  end
+
+  return token
+end
+
+--- Lex a datetime value
+-- @return table|nil Datetime token or nil if not a datetime
+function Lexer:lex_datetime()
+  local start_col = self.column
+  local start_line = self.line
+  local start_pos = self.pos
+
+  -- Datetime patterns: YYYY-MM-DDTHH:MM:SS[Z or +/-HH:MM]
+  -- Or: YYYY-MM-DDTHH:MM:SS
+  -- Or: YYYY-MM-DD
+  -- Or: HH:MM:SS[.ffffffff]
+
+  local ch = self:current()
+
+  -- Must start with a digit
+  if not ch:match("[0-9]") then
+    return nil
+  end
+
+  -- Collect the potential datetime value
+  -- Datetime can be: YYYY-MM-DDTHH:MM:SS[.ffffffff][Z|±HH:MM]
+  -- Or: YYYY-MM-DDTHH:MM:SS[.ffffffff]
+  -- Or: YYYY-MM-DD
+  -- Or: HH:MM:SS[.ffffffff]
+  local value = ""
+
+  -- First, collect while we see datetime characters
+  while self:current() and #value < 35 do
+    ch = self:current()
+    -- Stop at whitespace or other delimiters
+    if ch == " " or ch == "\t" or ch == "\n" or ch == "\r" or
+       ch == "=" or ch == "," or ch == "]" or ch == "}" or
+       ch == "#" then
+      break
+    end
+    value = value .. ch
+    self:advance()
+  end
+
+  -- Check if it matches datetime patterns
+  -- Note: Order matters - more specific patterns first
+  local patterns = {
+    -- Offset date-time: 1979-05-27T07:32:00.123456Z or 1979-05-27T07:32:00-08:00
+    "^%d%d%d%d%-%d%d%-%d%dT%d%d:%d%d:%d%d%.%d+[Z%+%-]%d*:?%d*$",
+    "^%d%d%d%d%-%d%d%-%d%dT%d%d:%d%d:%d%d[Z%+%-]%d*:?%d*$",
+    -- Local date-time: 1979-05-27T07:32:00.123456 or 1979-05-27T07:32:00
+    "^%d%d%d%d%-%d%d%-%d%dT%d%d:%d%d:%d%d%.%d+$",
+    "^%d%d%d%d%-%d%d%-%d%dT%d%d:%d%d:%d%d$",
+    -- Local date: 1979-05-27
+    "^%d%d%d%d%-%d%d%-%d%d$",
+    -- Local time: 07:32:00.123456 or 07:32:00
+    "^%d%d:%d%d:%d%d%.%d+$",
+    "^%d%d:%d%d:%d%d$"
+  }
+
+  for _, pattern in ipairs(patterns) do
+    if value:match(pattern) then
+      return self:token("datetime", value)
+    end
+  end
+
+  -- Not a valid datetime, rewind
+  self.pos = start_pos
+  self.column = start_col
+  self.line = start_line
+
+  return nil
+end
+
+-- ============================================================================
+-- PARSER MODULE
+-- ============================================================================
+
+local Parser = {}
+Parser.__index = Parser
+
+--- Create a new parser
+-- @param lexer Lexer The lexer to use
+-- @return table Parser object
+function Parser.new(lexer)
+  return setmetatable({
+    lexer = lexer,
+    current_token = nil,
+    cached_token = nil  -- Cached peek token
+  }, Parser)
+end
+
+--- Get the next token from the lexer
+-- @return table Next token
+function Parser:next_token()
+  if self.cached_token then
+    local token = self.cached_token
+    self.cached_token = nil
+    self.current_token = token
+    return token
+  end
+
+  local token = self.lexer:next_token()
+  self.current_token = token
+  return token
+end
+
+--- Peek at the next token without consuming it
+-- @return table Next token
+function Parser:peek_token()
+  if not self.cached_token then
+    self.cached_token = self.lexer:next_token()
+  end
+  return self.cached_token
+end
+
+--- Expect a specific token type
+-- @param token_type string Expected token type
+-- @return table Token if type matches
+-- @raise error if type doesn't match
+function Parser:expect(token_type)
+  local token = self:next_token()
+
+  if token.type ~= token_type then
+    self:error(string.format("Expected %s, got %s", token_type, token.type))
+  end
+
+  return token
+end
+
+--- Raise a parse error
+-- @param msg string Error message
+-- @raise error always
+function Parser:error(msg)
+  local token = self.current_token or {line = 1, column = 1}
+  local err = toml_error.ParseError.new(msg, token.line, token.column)
+  error(err)
+end
+
+--- Skip newlines and comments
+function Parser:skip_newlines_and_comments()
+  while true do
+    local tok = self:peek_token()
+    if tok.type == "newline" or tok.type == "comment" then
+      self:next_token()
+    else
+      break
     end
   end
 end
 
-parse_key = function(parser, inline, is_header, is_array)
-  local key, key_end = nil, false
-  local seen_ws, seen_char = false, false
-  local continue
+--- Parse a TOML document
+-- @return table AST document node
+function Parser:parse()
+  local doc = ast.document()
+  self:skip_newlines_and_comments()
 
-  while parser:bound(0) do
-    continue = false
-    -- a new line here means that there is a missing piece ( "=", "]" for inline)
-    if parser:is_new_line() then
-      parser:error(inline and error_code.expected_header_close_bracket or error_code.no_value)
-    end
+  while self:peek_token().type ~= "eof" do
+    self:parse_statement(doc)
+    self:skip_newlines_and_comments()
+  end
 
-    local char = parser:get_char()
-
-    if char == "=" and not is_header then
-      parser:step() -- consumes the =
-      break
-    elseif (char == "]" or char == "}") and inline then
-      -- should not consume it as parse_header need it to flags the end of the header
-      break
-    end
-
-    if char == "." then
-      if not seen_char and not key_end then
-        parser:error(error_code.invalid_bare_key_char)
-      end
-
-      parser.current = process_key(parser, key, parser.current, is_array, false, is_header)
-
-      key, key_end = "", false
-      seen_char, seen_ws = false, false
-    elseif key_end then
-      parser:error(error_code.expected_dot)
-    elseif stringmatch(char, pattern_quote) then
-      if seen_char then
-        parser:error(error_code.invalid_bare_key_char)
-      end
-      key = parse_string(parser, false)
-      parser:skip_ws()
-      seen_char, key_end, continue = true, true, true
-    else
-      if char == SPACE or char == TAB then
-        if seen_char then seen_ws = true end
-      elseif stringmatch(char, pattern_barkey) then
-        if seen_ws and seen_char then
-          parser.pos = parser.pos - 1
-          parser:error(error_code.invalid_bare_key_ws)
-        end
-        key = (key or "") .. char
-        seen_char = true
-      else
-        parser:error(error_code.invalid_bare_key_char)
-      end
-    end
-
-    if not continue then
-      parser:step()
-    end
-  end -- loop
-
-  return key
+  return doc
 end
 
-parse_value = function(parser, inline, is_array)
-  local value
+--- Parse a statement (table header or key-value pair)
+-- @param doc table Document node to modify
+function Parser:parse_statement(doc)
+  local tok = self:peek_token()
 
-  while parser:bound() do
-    local char = parser:get_char()
+  if tok.type == "bracket_left" then
+    self:parse_table_header(doc)
+  elseif tok.type == "bracket_double_left" then
+    self:parse_array_table_header(doc)
+  elseif tok.type == "identifier" or tok.type == "string_basic" or tok.type == "string_literal" then
+    self:parse_key_value(doc.root.values)
+  else
+    self:error("Expected table header or key-value pair")
+  end
+end
 
-    if stringmatch(char, pattern_quote) then
-      value = parse_string(parser, true)
-      break
-    elseif char == "[" then
-      value = parse_array_inline(parser)
-      break
-    elseif char == "{" then
-      value = parse_table_inline(parser)
-      break
+--- Parse a key (identifier or string)
+-- @return table Key (array of strings for dotted keys)
+function Parser:parse_key()
+  local key_parts = {}
+
+  while true do
+    local token = self:next_token()
+
+    if token.type == "identifier" then
+      table.insert(key_parts, token.value)
+    elseif token.type == "string_basic" or token.type == "string_literal" then
+      table.insert(key_parts, token.value)
     else
-      -- number date or boolean
-      -- get the value, and try to guess by poking around
+      self:error("Expected key")
+    end
 
-      --TODO refactor and reallocate number parsing to his own function
-      -- insanely awful
-      parser:skip_ws()
-      local buffer_pos = parser.pos
-      local buffer = ""
+    -- Check for dotted key
+    local next_token = self:peek_token()
+    if next_token.type == "dot" then
+      self:next_token() -- Consume dot
+    else
+      break
+    end
+  end
 
-      if inline then -- get the buffer until eol, ",", "]" or "}"
-        while parser:bound() do
-          char = parser:get_char()
-          local nl, crlf = parser:is_new_line()
-          if nl then
-            if not is_array then
-              parser:error(error_code.no_value)
-            else
-              parser:new_line(crlf)
-              parser:step(-1)
+  return key_parts
+end
+
+--- Parse a key-value pair
+-- @param current_table table Current table to add key-value to
+function Parser:parse_key_value(current_table)
+  local key = self:parse_key()
+  self:expect("equal")
+
+  local value = self:parse_value()
+
+  -- Handle dotted keys (create nested tables)
+  if #key > 1 then
+    local current = current_table
+    for i = 1, #key - 1 do
+      if not current[key[i]] then
+        current[key[i]] = ast.inline_table({})
+      end
+      current = current[key[i]].values
+    end
+    current[key[#key]] = value
+  else
+    current_table[key[1]] = value
+  end
+end
+
+--- Parse a value
+-- @return table AST value node
+function Parser:parse_value()
+  local tok = self:peek_token()
+
+  if tok.type == "string_basic" or tok.type == "string_literal" or
+     tok.type == "string_ml_basic" or tok.type == "string_ml_literal" then
+    return self:parse_string()
+  elseif tok.type == "integer" then
+    return self:parse_integer()
+  elseif tok.type == "float" then
+    return self:parse_float()
+  elseif tok.type == "boolean" then
+    return self:parse_boolean()
+  elseif tok.type == "datetime" then
+    return self:parse_datetime()
+  elseif tok.type == "brace_left" then
+    return self:parse_inline_table()
+  elseif tok.type == "bracket_left" then
+    return self:parse_array()
+  else
+    self:error("Expected value")
+  end
+end
+
+--- Parse a string value
+-- @return table AST string node
+function Parser:parse_string()
+  local token = self:next_token()
+
+  local quote_type = "basic"
+  if token.type == "string_literal" then
+    quote_type = "literal"
+  elseif token.type == "string_ml_basic" then
+    quote_type = "ml_basic"
+  elseif token.type == "string_ml_literal" then
+    quote_type = "ml_literal"
+  end
+
+  return ast.string(token.value, quote_type)
+end
+
+--- Parse an integer value
+-- @return table AST integer node
+function Parser:parse_integer()
+  local token = self:expect("integer")
+  return ast.integer(token.value, "10")
+end
+
+--- Parse a float value
+-- @return table AST float node
+function Parser:parse_float()
+  local token = self:expect("float")
+  return ast.float(token.value)
+end
+
+--- Parse a boolean value
+-- @return table AST boolean node
+function Parser:parse_boolean()
+  local token = self:expect("boolean")
+  return ast.boolean(token.value)
+end
+
+--- Parse a datetime value
+-- @return table AST datetime node
+function Parser:parse_datetime()
+  local token = self:expect("datetime")
+  local dt = datetime.parse(token.value)
+
+  if not dt then
+    self:error("Invalid datetime format: " .. token.value)
+  end
+
+  return ast.datetime(dt, dt.type)
+end
+
+--- Parse an inline table
+-- @return table AST inline table node
+function Parser:parse_inline_table()
+  self:expect("brace_left")
+  self:skip_newlines_and_comments()
+
+  local values = {}
+
+  while self:peek_token().type ~= "brace_right" do
+    local key = self:parse_key()
+    self:expect("equal")
+    local value = self:parse_value()
+    values[key[1]] = value
+
+    self:skip_newlines_and_comments()
+
+    local next_token = self:peek_token()
+    if next_token.type == "comma" then
+      self:next_token()
+      self:skip_newlines_and_comments()
+    end
+  end
+
+  self:expect("brace_right")
+
+  return ast.inline_table(values)
+end
+
+--- Parse an array
+-- @return table AST array node
+function Parser:parse_array()
+  self:expect("bracket_left")
+  self:skip_newlines_and_comments()
+
+  local values = {}
+
+  while self:peek_token().type ~= "bracket_right" do
+    local value = self:parse_value()
+    table.insert(values, value)
+
+    self:skip_newlines_and_comments()
+
+    local next_token = self:peek_token()
+    if next_token.type == "comma" then
+      self:next_token()
+      self:skip_newlines_and_comments()
+    end
+  end
+
+  self:expect("bracket_right")
+
+  return ast.array(values)
+end
+
+--- Parse a table header [section]
+-- @param doc table Document node to modify
+function Parser:parse_table_header(doc)
+  self:expect("bracket_left")
+  local key_parts = self:parse_key()
+  self:expect("bracket_right")
+
+  local key = table.concat(key_parts, ".")
+
+  local table_node = ast.table(key)
+  doc.tables[key] = table_node
+
+  -- Parse key-value pairs for this table
+  self:skip_newlines_and_comments()
+
+  while self:peek_token().type ~= "eof" and
+        self:peek_token().type ~= "bracket_left" and
+        self:peek_token().type ~= "bracket_double_left" do
+    self:parse_key_value(table_node.values)
+    self:skip_newlines_and_comments()
+  end
+end
+
+--- Parse an array of tables header [[section]]
+-- @param doc table Document node to modify
+function Parser:parse_array_table_header(doc)
+  self:expect("bracket_double_left")
+  local key_parts = self:parse_key()
+  self:expect("bracket_double_right")
+
+  local key = table.concat(key_parts, ".")
+
+  -- Create array table if it doesn't exist
+  if not doc.tables[key] then
+    doc.tables[key] = ast.table(key)
+    doc.tables[key].is_array = true
+    doc.tables[key].array_items = {}
+  end
+
+  local table_node = ast.table(key)
+  table_node.is_array = true
+  table.insert(doc.tables[key].array_items, table_node)
+
+  -- Parse key-value pairs for this array item
+  self:skip_newlines_and_comments()
+
+  while self:peek_token().type ~= "eof" and
+        self:peek_token().type ~= "bracket_left" and
+        self:peek_token().type ~= "bracket_double_left" do
+    self:parse_key_value(table_node.values)
+    self:skip_newlines_and_comments()
+  end
+end
+
+-- ============================================================================
+-- SERIALIZER MODULE
+-- ============================================================================
+
+local serializer = {}
+
+--- Default options
+local DEFAULT_OPTIONS = {
+  indent = 2,
+  sort_keys = false,
+  inline_max_keys = 3,
+  use_table_headers = false,
+  array_huge_threshold = 5,
+  use_array_table_format = true  -- Use [[array]] format for arrays of tables
+}
+
+--- Check if a table is an array (sequential integer keys)
+-- @param tbl table Table to check
+-- @return boolean True if array
+local function is_array(tbl)
+  if type(tbl) ~= "table" then
+    return false
+  end
+
+  local count = 0
+  for k, v in pairs(tbl) do
+    if type(k) ~= "number" or k <= 0 or math.floor(k) ~= k then
+      return false
+    end
+    count = count + 1
+  end
+
+  return count > 0
+end
+
+--- Escape a string for TOML basic string
+-- @param str string String to escape
+-- @return string Escaped string
+local function escape_string(str)
+  -- Escape special characters
+  local escaped = str:gsub("\\", "\\\\")
+                  :gsub('"', '\\"')
+                  :gsub("\b", "\\b")
+                  :gsub("\f", "\\f")
+                  :gsub("\n", "\\n")
+                  :gsub("\r", "\\r")
+                  :gsub("\t", "\\t")
+
+  return escaped
+end
+
+--- Serialize a value to TOML format
+-- @param value any Value to serialize
+-- @param table options Serializer options
+-- @return string TOML representation
+function serializer.serialize_value(value, options)
+  local value_type = type(value)
+
+  if value_type == "string" then
+    -- Check if we can use literal string (no escape needed)
+    if value:match("^[%w%s%-_%./]+$") and not value:match("[\']") then
+      return '"' .. escape_string(value) .. '"'
+    else
+      return '"' .. escape_string(value) .. '"'
+    end
+  elseif value_type == "number" then
+    -- Check if integer or float
+    if math.floor(value) == value then
+      return tostring(math.floor(value))
+    else
+      -- Handle special float values
+      if value == math.huge then
+        return "inf"
+      elseif value == -math.huge then
+        return "-inf"
+      elseif value ~= value then
+        return "nan"
+      end
+      return tostring(value)
+    end
+  elseif value_type == "boolean" then
+    return tostring(value)
+  elseif value_type == "table" then
+    -- Check if it's a datetime table
+    if value.type and (value.type == "datetime_offset" or
+                       value.type == "datetime_local" or
+                       value.type == "date_local" or
+                       value.type == "time_local") then
+      local serialized = datetime.serialize(value)
+      if serialized then
+        return serialized
+      else
+        error("Failed to serialize datetime")
+      end
+    elseif is_array(value) then
+      local elements = {}
+      for _, v in ipairs(value) do
+        table.insert(elements, serializer.serialize_value(v, options))
+      end
+      return "[" .. table.concat(elements, ", ") .. "]"
+    else
+      -- Inline table
+      local kv_pairs = {}
+      for k, v in pairs(value) do
+        if type(k) == "string" then
+          table.insert(kv_pairs, k .. " = " .. serializer.serialize_value(v, options))
+        end
+      end
+      return "{" .. table.concat(kv_pairs, ", ") .. "}"
+    end
+  else
+    error("Cannot serialize type: " .. value_type)
+  end
+end
+
+--- Check if a table should be inline
+-- @param tbl table Table to check
+-- @param options table Serializer options
+-- @return boolean True if should be inline
+local function should_be_inline(tbl, options)
+  local count = 0
+  for k, v in pairs(tbl) do
+    count = count + 1
+    if count > options.inline_max_keys then
+      return false
+    end
+  end
+
+  -- Check if all values are simple (non-table)
+  for k, v in pairs(tbl) do
+    if type(v) == "table" and not is_array(v) then
+      return false
+    end
+  end
+
+  return true
+end
+
+--- Get sorted keys from a table
+-- @param tbl table Table to get keys from
+-- @return table Sorted keys
+local function get_sorted_keys(tbl)
+  local keys = {}
+  for k, v in pairs(tbl) do
+    if type(k) == "string" then
+      table.insert(keys, k)
+    end
+  end
+  table.sort(keys)
+  return keys
+end
+
+--- Serialize a table to TOML format
+-- @param data table Data to serialize
+-- @param options table Serializer options
+-- @param string prefix Key prefix for nested tables
+-- @param number indent_level Current indentation level
+-- @return string TOML representation
+function serializer.encode(data, options, prefix, indent_level)
+  options = options or {}
+  for k, v in pairs(DEFAULT_OPTIONS) do
+    if options[k] == nil then
+      options[k] = v
+    end
+  end
+
+  -- When using array table format, prefer dotted keys over inline tables
+  if options.use_array_table_format then
+    options.inline_max_keys = 1
+  end
+
+  prefix = prefix or ""
+  indent_level = indent_level or 0
+
+  local lines = {}
+  local indent_str = string.rep(" ", indent_level * options.indent)
+
+  if type(data) ~= "table" then
+    return indent_str .. serializer.serialize_value(data, options)
+  end
+
+  -- Get keys to process
+  local keys
+  if options.sort_keys then
+    keys = get_sorted_keys(data)
+  else
+    keys = {}
+    for k, v in pairs(data) do
+      if type(k) == "string" then
+        table.insert(keys, k)
+      end
+    end
+  end
+
+  -- Separate simple values, arrays, and tables
+  local simple_values = {}
+  local arrays = {}
+  local nested_tables = {}
+
+  for _, key in ipairs(keys) do
+    local value = data[key]
+    local value_type = type(value)
+
+    if value_type == "table" then
+      if is_array(value) then
+        arrays[key] = value
+      else
+        nested_tables[key] = value
+      end
+    else
+      simple_values[key] = value
+    end
+  end
+
+  -- Serialize simple values first (to maintain order like original file)
+  for key, value in pairs(simple_values) do
+    local full_key = prefix ~= "" and prefix .. "." .. key or key
+    local serialized = serializer.serialize_value(value, options)
+    table.insert(lines, indent_str .. full_key .. " = " .. serialized)
+  end
+
+  -- Serialize nested tables (before arrays when use_array_table_format is true)
+  for key, value in pairs(nested_tables) do
+    local full_key = prefix ~= "" and prefix .. "." .. key or key
+
+    -- Check if it's a datetime table - serialize inline as single value
+    if value.type and (value.type == "datetime_offset" or
+                       value.type == "datetime_local" or
+                       value.type == "date_local" or
+                       value.type == "time_local") then
+      local serialized = datetime.serialize(value)
+      if serialized then
+        table.insert(lines, indent_str .. full_key .. " = " .. serialized)
+      else
+        error("Failed to serialize datetime: " .. full_key)
+      end
+    elseif options.use_table_headers then
+      -- Use table header syntax
+      table.insert(lines, "")
+      table.insert(lines, indent_str .. "[" .. full_key .. "]")
+
+      -- Get nested table content
+      local nested_lines = {}
+      local nested_keys = options.sort_keys and get_sorted_keys(value) or {}
+      if #nested_keys == 0 then
+        for k, v in pairs(value) do
+          if type(k) == "string" then
+            table.insert(nested_keys, k)
+          end
+        end
+      end
+
+      for _, nested_key in ipairs(nested_keys) do
+        local nested_value = value[nested_key]
+        if type(nested_value) ~= "table" or (type(nested_value) == "table" and should_be_inline(nested_value, options)) then
+          local serialized = serializer.serialize_value(nested_value, options)
+          table.insert(nested_lines, indent_str .. string.rep(" ", options.indent) .. nested_key .. " = " .. serialized)
+        end
+      end
+
+      for _, line in ipairs(nested_lines) do
+        table.insert(lines, line)
+      end
+    elseif should_be_inline(value, options) then
+      -- Inline table
+      local full_key = prefix ~= "" and prefix .. "." .. key or key
+      local serialized = serializer.serialize_value(value, options)
+      table.insert(lines, indent_str .. full_key .. " = " .. serialized)
+    else
+      -- Recursive nested table (dotted keys)
+      local nested_result = serializer.encode(value, options, full_key, indent_level)
+      for line in nested_result:gmatch("[^\r\n]+") do
+        if line ~= "" then
+          table.insert(lines, line)
+        end
+      end
+    end
+  end
+
+  -- Serialize arrays last
+  for key, value in pairs(arrays) do
+    local full_key = prefix ~= "" and prefix .. "." .. key or key
+
+    -- Check if this is an array of tables and we should use array table format
+    local use_array_table = options.use_array_table_format and
+                           #value > 0 and
+                           type(value[1]) == "table"
+
+    if use_array_table then
+      -- Use [[arrayname]] format for each element
+      for idx, element in ipairs(value) do
+        -- Add blank line before first element only if there's already content
+        if idx == 1 and #lines > 0 then
+          table.insert(lines, "")
+        end
+
+        table.insert(lines, indent_str .. "[[" .. full_key .. "]]")
+
+        -- Serialize each field in the element
+        if type(element) == "table" then
+          local elem_keys = options.sort_keys and get_sorted_keys(element) or {}
+          if #elem_keys == 0 then
+            for k in pairs(element) do
+              table.insert(elem_keys, k)
             end
           end
 
-          if char == "#" then
-            parser:get_line()
-            parser:step(-1)
+          for _, elem_key in ipairs(elem_keys) do
+            if type(element[elem_key]) ~= "table" then
+              local serialized = serializer.serialize_value(element[elem_key], options)
+              table.insert(lines, indent_str .. string.rep(" ", options.indent) .. elem_key .. " = " .. serialized)
+            end
           end
-          if char == "," or char == "}" or char == "]" then
-            break
-          end
-
-          buffer = buffer .. char
-
-          parser:step()
-        end
-      else
-        buffer = parser:get_line()
-      end
-
-      -- clean the string and remove comments
-      buffer = stringtrim(stringgsub(buffer, "#.-$", ""))
-
-      -- try for a boolean
-      if buffer == "true" then
-        value = true
-      elseif buffer == "false" then
-        value = false
-      else
-        -- it's pattern time !
-        -- ugly af
-        if stringmatch(buffer, pattern_date) then
-          local current_pos = parser.pos
-          parser.pos = buffer_pos
-          value = parse_date(buffer, parser)
-          parser.pos = current_pos
-        elseif stringmatch(buffer, pattern_ldate) then
-          local current_pos = parser.pos
-          parser.pos = buffer_pos
-          value = parse_local_date(buffer, parser)
-          parser.pos = current_pos
-        elseif stringmatch(buffer, pattern_ltime) then
-          local current_pos = parser.pos
-          parser.pos = buffer_pos
-          value = parse_local_time(buffer, parser)
-          parser.pos = current_pos
         else
-          value = parse_number(buffer, parser)
-
-          if not value then
-            parser.pos = buffer_pos
-            parser:error(error_code.invalid_value)
-          end
+          -- Primitive value in array
+          local serialized = serializer.serialize_value(element, options)
+          table.insert(lines, indent_str .. string.rep(" ", options.indent) .. full_key .. " = " .. serialized)
         end
       end
-      break
+
+      -- Add blank line after array table section to separate from other content
+      table.insert(lines, "")
+    else
+      -- Use inline array format
+      local serialized = serializer.serialize_value(value, options)
+      table.insert(lines, indent_str .. full_key .. " = " .. serialized)
     end
-
-
-    parser:step()
-  end -- loop
-
-  return value
-end
-
-apply_kv = function(parser, key, value, tbl)
-  if key and value == nil then
-    parser:error(error_code.missing_value)
-  end
-  if tbl[key] ~= nil then
-    parser:error(error_code.redefine)
   end
 
-  tbl[key] = value
+  local result = table.concat(lines, "\n")
+  -- Ensure file ends with newline
+  if result ~= "" then
+    result = result .. "\n"
+  end
+  return result
 end
 
-local function parse_toml(buffer)
-  local parser = Parser(buffer)
+--- Encode Lua table to TOML string (convenience wrapper)
+-- @param data table Lua data
+-- @param table options Serializer options
+-- @return string TOML string
+function serializer.encode_to_string(data, options)
+  return serializer.encode(data, options)
+end
 
-  local key, value
-  -- used when key specify a table (eg path.to.key = value), it pollutes parser.current and override the current header
-  local current_header = parser.parsed
-  -- means that nothing is expected until end of line excepts comments or white spaces
-  local line_end = false
-  -- I hate lua5.1 for not having goto statement or simply a continue keyword
-  local continue = false
-  -- just in case, to avoid infinite loops
-  local last_pos
+-- ============================================================================
+-- MAIN TOML MODULE
+-- ============================================================================
 
+local toml = {}
 
-  -- while cursor points at a valid value
-  while parser:bound(0) do
-    continue = false
-    last_pos = parser.line .. ":" .. parser.pos
+--- Parse TOML string into Lua table
+-- @param input string TOML document
+-- @return table|nil parsed_data Parsed TOML as nested Lua tables
+-- @return string|nil error_msg Error message if parsing failed
+function toml.parse(input)
+  if type(input) ~= "string" then
+    return nil, "Input must be a string"
+  end
 
-    -- cleans white spaces
-    parser:skip_ws()
+  local ok, result = pcall(function()
+    local lexer = Lexer.new(input)
+    local parser = Parser.new(lexer)
+    local ast_doc = parser:parse()
+    return toml.ast_to_table(ast_doc)
+  end)
 
-    local char = parser:get_char()
+  if not ok then
+    local err_msg = toml_error.to_string(result)
+    return nil, err_msg
+  end
 
-    local nl, crlf = parser:is_new_line()
-    if nl then -- new line babe
-      if line_end and key then
-        apply_kv(parser, key, value, parser.current)
-        key, value = nil, nil
-        parser.current = current_header
-      end
+  return result
+end
 
-      parser:new_line(crlf)
+--- Parse TOML file
+-- @param path string File path
+-- @return table|nil parsed_data Parsed TOML as nested Lua tables
+-- @return string|nil error_msg Error message if parsing failed
+function toml.parse_file(path)
+  local file, err = io.open(path, "r")
+  if not file then
+    return nil, "Cannot open file: " .. err
+  end
 
-      -- the cursor is placed to the first pos of the next line
-      continue, line_end = true, false
-    elseif char == "#" then -- comments
-      parser:get_line()
-      -- get_line actually stops the cursor at the lf/crlf char and do not apply new line logic by himself
-      continue = true
-    elseif line_end then                -- should be nothing expect comments, ws or new line, that are hanlded earlier in the loop
-      parser:error(error_code.expected_comment_or_ws)
-    elseif char == "[" and not key then -- table and array header
-      -- sets parser.current to the header
-      parse_header(parser)
-      current_header = parser.current
-      --  parser_header stops after the close bracket
-      continue, line_end = true, true
-    else -- key-value
-      if not key then
-        key = parse_key(parser)
+  local content = file:read("*all")
+  file:close()
+
+  return toml.parse(content)
+end
+
+--- Convert AST node to Lua table
+-- @param node table AST node
+-- @return table Lua table representation
+function toml.ast_to_table(node)
+  if not node then
+    return {}
+  end
+
+  local node_type = node.type
+
+  if node_type == "Document" then
+    local result = toml.ast_to_table(node.root)
+    -- Merge all tables into result
+    for key, tbl_node in pairs(node.tables) do
+      if tbl_node.is_array then
+        result[key] = {}
+        for _, item in ipairs(tbl_node.array_items) do
+          table.insert(result[key], toml.ast_to_table(item))
+        end
       else
-        value = parse_value(parser)
-        line_end = true
+        result[key] = toml.ast_to_table(tbl_node)
       end
-      continue = true
     end
-
-
-
-    -- if some operations place the cursor to the actual next step, continue avoid to take
-    -- another step, which would ignore the preceding step
-    if not continue then
-      parser:step()
-    end
-
-
-    --TODO remove if not useful
-    if last_pos == parser.line .. ":" .. parser.pos then
-      error(("infinite loop at line %s:%s"):format(parser.line, parser.pos))
-    end
-  end -- loop
-
-  if key then
-    apply_kv(parser, key, value, parser.current)
+    return result
   end
 
-  return parser.parsed
-end
-
--- ========== export ==========
-
-local function decode(toml)
-  if type(toml) ~= "string" then
-    error("Expected string to parse, got " .. type(toml))
+  if node_type == "Table" then
+    local result = {}
+    for key, value_node in pairs(node.values) do
+      result[key] = toml.ast_to_table(value_node)
+    end
+    return result
   end
 
-  local status, err = pcall(parse_toml, toml)
-
-  if not status then
-    if type(err) ~= "table" then
-      error(err)
+  if node_type == "InlineTable" then
+    local result = {}
+    for key, value_node in pairs(node.values) do
+      result[key] = toml.ast_to_table(value_node)
     end
-    return nil, err.message and err.message:format(err.line or -1, err.pos or -1), err
-  end -- status
+    return result
+  end
 
-  return err
+  if node_type == "Array" then
+    local result = {}
+    for _, value_node in ipairs(node.values) do
+      table.insert(result, toml.ast_to_table(value_node))
+    end
+    return result
+  end
+
+  if node_type == "String" then
+    return node.value
+  end
+
+  if node_type == "Integer" then
+    return node.value
+  end
+
+  if node_type == "Float" then
+    return node.value
+  end
+
+  if node_type == "Boolean" then
+    return node.value
+  end
+
+  if node_type == "DateTime" then
+    return node.value
+  end
+
+  -- Unknown node type
+  return nil
 end
 
-local function encode()
+--- Encode Lua table to TOML string
+-- @param data table Lua data
+-- @param table options Serializer options (indent, sort_keys, etc.)
+-- @return string toml_string
+function toml.encode(data, options)
+  if type(data) ~= "table" then
+    error("Data must be a table")
+  end
 
+  return serializer.encode(data, options)
 end
 
-return {
-  error_code = error_code,
-  error_message = error_message,
+--- Encode Lua table to TOML file
+-- @param data table Lua data
+-- @param path string Output path
+-- @param table options Serializer options
+-- @return boolean success
+-- @return string|nil error_msg
+function toml.encode_file(data, path, options)
+  if type(data) ~= "table" then
+    return false, "Data must be a table"
+  end
 
-  encode = encode,
-  decode = decode,
-  parse = decode,
+  if type(path) ~= "string" then
+    return false, "Path must be a string"
+  end
 
-  version = "0.1.0"
-}
+  local toml_string
+  local ok, err = pcall(function()
+    toml_string = toml.encode(data, options)
+  end)
+
+  if not ok then
+    return false, "Encoding failed: " .. tostring(err)
+  end
+
+  local file, err = io.open(path, "w")
+  if not file then
+    return false, "Cannot open file for writing: " .. err
+  end
+
+  file:write(toml_string)
+  file:close()
+
+  return true
+end
+
+--- Validate parsed data structure
+-- @param data table Parsed TOML data
+-- @return boolean valid
+-- @return string|nil error_msg
+function toml.validate(data)
+  -- Basic validation: check if it's a table
+  if type(data) ~= "table" then
+    return false, "Data must be a table"
+  end
+
+  return true
+end
+
+return toml
