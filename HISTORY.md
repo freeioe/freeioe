@@ -7,6 +7,7 @@ V4.1.0 ()
 ------------------
 
 * Support download depends from gitee repo
+* Added toml.lua utility
 
 
 V4.0.0 (2026-01-11)

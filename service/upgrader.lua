@@ -207,7 +207,7 @@ function command.upgrade_app(id, args)
 		local target_folder = get_target_folder(inst_name)
 		local r, status = os.execute("unzip -oq "..path.." -d "..target_folder)
 		os.execute("rm -rf "..path)
-		if not r or status == 'exit' then
+		if not r or status ~= 'exit' then
 			log.error("Install application failed", isnt_name, r, status)
 			os.execute("rm -rf "..target_folder)
 			return false, "Failed to unzip application"
