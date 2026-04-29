@@ -5,17 +5,6 @@ local ioe = require 'ioe'
 
 local _M = {}
 
---- trim instance name
-function _M.trim_inst(s)
-	return (string.gsub(s, "([^A-Za-z0-9_])", function(c)
-		return string.format("", string.byte(c))
-	end))
-end
-
-function _M.valid_inst(s)
-	return s and #s > 0 and s == _M.trim_inst(s)
-end
-
 function _M.get_app_version(inst_name)
 	local dir = _M.get_app_folder(inst_name)
 	local f, err = io.open(dir.."/version", "r")

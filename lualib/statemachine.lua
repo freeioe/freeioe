@@ -1,8 +1,12 @@
+-- https://github.com/kyleconroy/lua-state-machine
 local machine = {}
 machine.__index = machine
 
 local NONE = "none"
 local ASYNC = "async"
+
+-- Compatibility for Lua 5.1 vs 5.2+
+local unpack = unpack or table.unpack
 
 local function call_handler(handler, params)
   if handler then
@@ -120,6 +124,7 @@ end
 
 function machine:todot(filename)
   local dotfile = io.open(filename,'w')
+  assert(dotfile~=nil)
   dotfile:write('digraph {\n')
   local transition = function(event,from,to)
     dotfile:write(string.format('%s -> %s [label=%s];\n',from,to,event))
