@@ -7,6 +7,7 @@ local skynet = require 'skynet'
 local class = require 'middleclass'
 local sysinfo = require 'utils.sysinfo'
 local log = require 'utils.logger'.new()
+local ioe = require 'ioe'
 
 local pm = class("FREEIOE_PROCESS_MONITOR_WRAP")
 
@@ -33,7 +34,7 @@ function pm:start()
 	local cpu_arch = sysinfo.cpu_arch()
 	assert(os_kind and cpu_arch)
 
-	local pm_file = './ioe/'..os_kind..'/'..cpu_arch..'/process-monitor'
+	local pm_file = ioe.dir()..'/'..os_kind..'/'..cpu_arch..'/process-monitor'
 	if lfs.attributes(pm_file, "mode") == nil then
 		pm_file = 'process-monitor' -- use os bin file
 	end

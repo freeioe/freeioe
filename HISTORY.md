@@ -8,6 +8,7 @@ V4.1.0 ()
 
 * Support download depends from gitee repo
 * Added toml.lua utility
+* Support developer entry script (scripts/run.dev)
 
 
 V4.0.0 (2026-01-11)

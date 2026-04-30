@@ -241,7 +241,8 @@ local function get_versions(fn)
 end
 
 _M.version = function()
-	local v, gv = get_versions("./ioe/version")
+	local ioe = require 'ioe'
+	local v, gv = get_versions(ioe.dir().."/version")
 	return v, gv
 end
 

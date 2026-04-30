@@ -3,6 +3,7 @@ local snax = require 'skynet.snax'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local ioe = require 'ioe'
+local app_util = require 'app.util'
 local event = require 'app.event'
 local cjson = require 'cjson.safe'
 
@@ -11,7 +12,6 @@ local applist = {}
 local mc_map = {}
 local listeners = {}
 local closing = false
-local sys_app = 'ioe'
 
 local function fire_exception_event(app_name, info, data)
 	local data = data or {}
@@ -32,7 +32,12 @@ function response.start(name, conf, skip_mode_check)
 		return nil, err
 	end
 
-	log.info("Start application "..name)
+	if name == app_util.dev_app_name() and conf.__app_path then
+		log.info("Start developing application in "..conf.__app_path)
+	else
+		log.info("Start application "..name)
+	end
+
 	-- Get application list item by name
 	applist[name] = applist[name] or {}
 	local app = applist[name]
@@ -223,6 +228,9 @@ function response.app_rename(inst, new_name, reason)
 	if not inst or not new_name then
 		return nil, "Incorrect params"
 	end
+	if not app_util.valid_inst(new_name) then
+		return nil, 'Invalid new instance name'
+	end
 	local reason = reason or "Rename from "..inst.." to "..new_name
 	if not applist[inst] then
 		return nil, "App not exists!"
@@ -264,6 +272,16 @@ function accept.app_start(inst, skip_mode_check)
 	if not v then return end
 	skynet.fork(function()
 		snax.self().req.start(inst, v.conf or {}, skip_mode_check)
+	end)
+end
+
+function accept.dev_app_start(app_path)
+	local inst = app_util.dev_app_name()
+	local conf = { __app_path = local_dev_path }
+	applist[inst] = { conf = conf }
+	dc.set("APPS", inst, 'conf', app.conf)
+	skynet.fork(function()
+		snax.self().req.start(inst, conf, true)
 	end)
 end
 
@@ -397,14 +415,28 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
+			if not app_util.valid_inst(k) then
+				apps[k] = nil -- 删除不合法的inst_name
+			end
+		end
+		-- 启动apps
+		for k,v in pairs(apps) do
 			if tonumber(v.auto or 1) ~= 0 then
 				snax.self().post.app_start(k, true)
 			else
 				applist[k] = { conf = v.conf }
 			end
 		end
-		if not apps[sys_app] then
-			snax.self().req.start(sys_app, {}, true)
+
+		-- 启动 ioe 应用
+		local sys_app = app_util.sys_app_name()
+		assert(not apps[sys_app])
+		snax.self().req.start(sys_app, {}, true)
+
+		-- 探测是否有开发的应用
+		local dev_app_path = os.getenv('FREEIOE_DEV_APP')
+		if dev_app_path and string.len(dev_app_path) > 3 then
+			snax.self().post.dev_app_start(dev_app_path)
 		end
 	end)
 	skynet.fork(function()
@@ -414,6 +446,7 @@ function init(...)
 			skynet.sleep(500) -- five seconds.
 		end
 	end)
+
 end
 
 function exit(...)

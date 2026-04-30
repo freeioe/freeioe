@@ -2,6 +2,8 @@
 --  FreeIOE Application utility functions
 --]]
 --
+local ioe = require 'ioe'
+local dc = require 'skynet.datacenter'
 local _M = {}
 
 --- trim instance name
@@ -21,9 +23,21 @@ _M.dev_app_name = function()
 	return '_app'
 end
 
+_M.dev_app_path = function()
+	return dc.get('DEV_APP_PATH')
+end
+
 -- FreeIOE system app inst name
 _M.sys_app_name = function()
 	return 'ioe'
+end
+
+-- Return FreeIOE application local folder path by app's instance name
+_M.app_path = function(app_inst)
+	if app_inst == _M.dev_app_name() then
+		return _M.dev_app_path()
+	end
+	return ioe.dir(true).."/apps/"..app_inst.."/"
 end
 
 return _M

@@ -2,6 +2,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local cache = require "skynet.codecache"
 local app_sys = require 'app.sys'
+local app_util = require 'app.util'
 local event = require 'app.event'
 local ioe = require 'ioe'
 
@@ -247,12 +248,17 @@ function init(name, conf, mgr_handle, mgr_type)
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 	app_log = sys_api:logger()
 
+	local app_folder = ioe.dir()..'/apps/'..name
+	if name == app_util.dev_app_name() and conf.__dev_app_path then
+		app_folder =  conf.__dev_app_path
+	end
+
 	app_log:info("Application starting...")
-	package.path = package.path..';./ioe/lualib/compat/?.lua'
-	package.path = package.path..";./ioe/apps/"..name.."/?.lua;./ioe/apps/"..name.."/?.luac"..";./ioe/apps/"..name.."/lualib/?.lua;./ioe/apps/"..name.."/lualib/?.luac"
-	package.cpath = package.cpath..";./ioe/apps/"..name.."/luaclib/?.so"
+	--package.path = package.path..';'..ioe.dir()..'/lualib/compat/?.lua' 
+	package.path = package.path..";"..app_folder.."/?.lua;"..app_folder.."/?.luac"..";"..app_folder.."/lualib/?.lua;"..app_folder.."/lualib/?.luac"
+	package.cpath = package.cpath..";"..app_folder.."/luaclib/?.so"
 	--local r, m = pcall(require, "app")
-	local f, err = io.open("./ioe/apps/"..name.."/app.lua", "r")
+	local f, err = io.open(""..app_folder.."/app.lua", "r")
 	if not f then
 		app_log:warning("There is no app.lua!, Try to install it")
 		app_installing = true
@@ -274,7 +280,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, info
 	end
 
-	local lf, err = loadfile("./ioe/apps/"..name.."/app.lua")
+	local lf, err = loadfile(""..app_folder.."/app.lua")
 	if not lf then
 		local info = "Loading application failed."
 		app_log:error(info, err)

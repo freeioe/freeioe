@@ -28,6 +28,9 @@ mkdir __install
 
 # Copy files
 git archive HEAD | tar -x -C __install
+cp __install/scripts/upgrade_check.sh __intall/.upgrade_check
+
+# Delete files
 rm -rf __install/test
 rm -rf __install/scripts
 # rm -rf __install/www

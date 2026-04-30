@@ -41,8 +41,9 @@ skynet.start(function()
 		return
 	end
 
-	if _VERSION ~= 'Lua 5.4' then
-		skynet.error("FreeIOE required run with skynet built with Lua 5.4!!!!")
+	local v = tonumber(_VERSION:match("%d+%.%d+"))
+	if not v or v < 5.4 then
+		skynet.error("FreeIOE required run with skynet built with Lua 5.4 or later!!!!")
 	end
 
 	--skynet.newservice("exec_sal")

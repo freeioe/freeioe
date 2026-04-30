@@ -43,9 +43,11 @@
 ## 本机编译和运行
 
 1. 下载 [Skynet](https://github.com/freeioe/skynet) 仓库, 并使用 ```make linux``` 指令来完成编译 Skynet
-2. 下载 FreeIOE 仓库，并在Skynet仓库中创建到FreeIOE目录的软连接(ioe)
-3. 在 FreeIOE 仓库目录下，运行 ```./scripts/feeds update -a```
-4. 进入 Skynet仓库目录，执行 ```./skynet ioe/config``` 以启动 FreeIOE
+2. 在 FreeIOE 仓库目录下，运行 ```./scripts/feeds update -a```
+3. 进入 Skynet仓库目录，执行 ```./skynet <FreeIOE仓库路径>/config``` 以启动 FreeIOE  或者:
+4. 在 FreeIOE 仓库目录下，运行 ```./scripts/run.dev``` 以启动 FreeIOE
+
+tips: run.dev脚本如果找不到skynet程序，会让你手动选择skynet的目录
 
 ## 框架开发
 

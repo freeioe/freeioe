@@ -55,14 +55,11 @@ _M.md5sum_lua = function(file_path)
 end
 
 local function check_exists(exec)
-	local lfs = require 'lfs'
+	local ioe = require 'ioe'
 	local arch = sysinfo.platform()
 	assert(arch, "OS Arch is nil")
 
-	local cur_dir = lfs.currentdir()
-	assert(cur_dir, "LFS CurrentDir is nil")
-
-	local path = cur_dir.."/ioe/linux/"..arch.."/"..exec
+	local path = ioe.dir(true).."/linux/"..arch.."/"..exec
 
 	local m, err = lfs.attributes(path, "mode")
 	if m then

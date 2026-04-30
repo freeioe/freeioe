@@ -9,9 +9,9 @@ cd $IOE_DIR
 date > $START_TIME_FILE
 date +%s >> $START_TIME_FILE
 
-echo "Starting...." > $STARTUP_LOG
+echo "Starting..." > $STARTUP_LOG
 date +"Start Time: %c" >> $STARTUP_LOG
-
+# Wait for strip_done
 if [ -f $IOE_DIR/ipt/strip_mode ]
 then
 	i=1
@@ -29,38 +29,37 @@ then
 		let i++
 	done
 fi
-
+# User startup script
 if [ -f $IOE_DIR/ipt/startup.sh ]
 then
-	sh $IOE_DIR/ipt/startup.sh
+	sh $IOE_DIR/ipt/startup.sh >> $STARTUP_LOG
 fi
-
+# Do upgrade if required
 if [ -f $IOE_DIR/ipt/upgrade ]
 then
-	echo "Upgrade Script detected! Upgrade ioe system!" >> $STARTUP_LOG
-	sh $IOE_DIR/ipt/upgrade.sh
-	if [ $? -eq 0 ]
-		rm -f $IOE_DIR/ipt/upgrade
-	then
-		echo "Failed to run upgrage script" >> $STARTUP_LOG
+	echo "Upgrade script detected! Upgrading FreeIOE system!" >> $STARTUP_LOG
+	sh $IOE_DIR/ipt/upgrade.sh >> $STARTUP_LOG
+	rm -f $IOE_DIR/ipt/upgrade # delete upgrade flag file always
+	if [ $? -ne 0 ]; then
+		echo "Failed to run upgrade script" >> $STARTUP_LOG
 		exit $?
 	fi
 else
-	echo "NO upgrade needed!" >> $STARTUP_LOG
+	echo "No upgrade needed!" >> $STARTUP_LOG
 fi
-
+# Do rollback
 if [ -f $IOE_DIR/ipt/rollback ]
 then
-	echo "RollBack Script detected! Roll back ioe system!" >> $STARTUP_LOG
-	sh $IOE_DIR/ipt/rollback.sh
-	if [ $? -eq 0 ]
+	echo "Rollback script detected! Rolling back FreeIOE system!" >> $STARTUP_LOG
+	sh $IOE_DIR/ipt/rollback.sh >> $STARTUP_LOG
+	if [ $? -eq 0 ]; then
 		rm -f $IOE_DIR/ipt/rollback
-	then
+	else
 		echo "Failed to run rollback script" >> $STARTUP_LOG
 		exit $?
 	fi
 else
-	echo "NO rollback needed!" >> $STARTUP_LOG
+	echo "No rollback needed!" >> $STARTUP_LOG
 fi
 
 if [ -f $IOE_DIR/.env ]
@@ -70,4 +69,4 @@ fi
 
 sync &
 
-echo "Startup Script Done!" >> $STARTUP_LOG
+echo "Startup script completed!" >> $STARTUP_LOG

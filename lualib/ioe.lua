@@ -44,6 +44,20 @@ _M.MODE = {
 	LOCKED = 1, --- Locked mode (system is read-only)
 }
 
+-- FreeIOE folder path (the path from config.env)
+_M.dir = function(absolute_path)
+	if absolute_path then
+		local dir = skynet.getenv('ioe_root') or './ioe/'
+		if string.sub(dir, 1, 1) == '.' then
+			local lfs = require 'lfs'
+			return lfs.currentdir()..string.sub(dir, 2)
+		else
+			return dir
+		end
+	end
+	return skynet.getenv('ioe_root') or './ioe/'
+end
+
 -- Cloud host address
 _M.cloud_host = function()
 	return dc.wait("CLOUD", "HOST")

@@ -1,0 +1,10 @@
+root = "./"
+-- ioe_root = root.."ioe/"
+ioe_root = "@/" -- This is an new added feature in skynet by me
+-- luaservice = root.."service/?.lua;"..ioe_root.."?.lua;"..ioe_root.."service/?.lua"
+luaservice = root.."service/?.lua;"..ioe_root.."?.lua;"..ioe_root.."service/?.lua;"..ioe_root.."test/?.lua"
+lualoader = root .. "lualib/loader.lua"
+lua_path = root.."lualib/?.lua;"..root.."lualib/?/init.lua;"..ioe_root.."lualib/?.lua;"..ioe_root.."lualib/?/init.lua"
+lua_cpath = root .. "luaclib/?.so;"..ioe_root.."luaclib/?.so"
+snax = ioe_root.."snax/?.lua"
+cpath = root.."cservice/?.so"

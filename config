@@ -1,11 +1,6 @@
-root = "./"
--- luaservice = root.."service/?.lua;"..root.."ioe/?.lua;"..root.."ioe/service/?.lua"
-luaservice = root.."service/?.lua;"..root.."ioe/?.lua;"..root.."ioe/service/?.lua;"..root.."ioe/test/?.lua"
-lualoader = root .. "lualib/loader.lua"
-lua_path = root.."lualib/?.lua;"..root.."lualib/?/init.lua;"..root.."ioe/lualib/?.lua;"..root.."ioe/lualib/?/init.lua"
-lua_cpath = root .. "luaclib/?.so;"..root.."ioe/luaclib/?.so"
+include "config.path"
 
--- preload = root.."ioe/preload.lua"	-- run preload.lua before every lua service run
+-- preload = ioe_root.."preload.lua"	-- run preload.lua before every lua service run
 thread = 8
 logger = "vlogger"
 logservice = "snlua"
@@ -14,7 +9,5 @@ harbor = 0
 start = "main"	-- main script
 enablessl = 1
 bootstrap = "snlua bootstrap"	-- The service for bootstrap
-snax = root.."ioe/snax/?.lua"
 -- snax_interface_g = "snax_g"
-cpath = root.."cservice/?.so"
 -- daemon = "./skynet.pid"

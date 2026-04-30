@@ -7,7 +7,7 @@ local ioe = require 'ioe'
 local api = require 'app.api'
 local logger = require 'app.logger'
 local conf_api = require 'app.conf.api'
-local lfs = require 'lfs'
+local util = require 'app.util'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
@@ -180,8 +180,7 @@ end
 ---
 -- Get current application dir
 function sys:app_dir()
-	return lfs.currentdir().."/ioe/apps/"..self._app_name.."/"
-	--return os.getenv("PWD").."/ioe/apps/"..self._app_name.."/"
+	return util.app_path(self._app_name)
 end
 
 ---

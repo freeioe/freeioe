@@ -128,7 +128,8 @@ skynet.start(function()
 
 	if option_web then
 		local lfs = require 'lfs'
-		if not lfs.attributes(lfs.currentdir().."/ioe/www", "mode") then
+		local ioe = require 'ioe'
+		if not lfs.attributes(ioe.dir().."/www", "mode") then
 			skynet.error("Web not detected, web server closed!!")
 			skynet.exit()
 		end

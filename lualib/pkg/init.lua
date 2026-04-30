@@ -22,8 +22,7 @@ end
 
 function _M.get_app_folder(inst_name)
 	assert(string.len(inst_name or '') > 0, "Instance name cannot be empty")
-	return lfs.currentdir().."/ioe/apps/"..inst_name.."/"
-	--return os.getenv("PWD").."/ioe/apps/"..inst_name
+	return ioe.dir().."/apps/"..inst_name.."/"
 end
 
 function _M.get_ext_version(inst_name)
@@ -41,12 +40,12 @@ function _M.get_ext_version(inst_name)
 end
 
 function _M.get_ext_root()
-	return lfs.currentdir().."/ioe/ext/"
+	return ioe.dir(true).."/ext/"
 end
 
 function _M.get_ext_folder(inst_name)
 	assert(string.len(inst_name or '') > 0, "Instance name cannot be empty")
-	return lfs.currentdir().."/ioe/ext/"..inst_name
+	return ioe.dir(true).."/ext/"..inst_name
 end
 
 function _M.parse_version_string(version)

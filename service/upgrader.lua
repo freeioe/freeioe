@@ -7,6 +7,7 @@ local lockable_queue = require 'skynet.lockable_queue'
 local log = require 'utils.logger'.new('UPGRADER')
 local sysinfo = require 'utils.sysinfo'
 local ioe = require 'ioe'
+local app_util = require 'app.util'
 local pkg = require 'pkg'
 local pkg_api = require 'pkg.api'
 
@@ -177,7 +178,7 @@ function command.upgrade_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg.valid_inst(inst_name) then
+	if not app_util.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -245,7 +246,7 @@ function command.install_app(id, args)
 	if beta and not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg.valid_inst(inst_name) then
+	if not app_util.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -310,7 +311,7 @@ function command.create_app(id, args)
 	if not ioe.beta() then
 		return false, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg.valid_inst(inst_name) then
+	if not app_util.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -331,7 +332,7 @@ function command.create_app(id, args)
 	local target_folder = get_target_folder(inst_name)
 	lfs.mkdir(target_folder)
 	local target_folder_escape = string.gsub(target_folder, ' ', '\\ ')
-	os.execute('cp ./ioe/doc/app/example_app.lua '..target_folder_escape..'/app.lua')
+	os.execute('cp '..ioe.dir()..'/doc/app/example_app.lua '..target_folder_escape..'/app.lua')
 	os.execute('echo 0 > '..target_folder.."/version")
 	os.execute('echo editor >> '..target_folder.."/version")
 
@@ -352,7 +353,7 @@ function command.install_local_app(id, args)
 	if not ioe.beta() then
 		return nil, "Device is not in beta mode! Cannot install beta version"
 	end
-	if not pkg.valid_inst(inst_name) then
+	if not app_util.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -390,7 +391,7 @@ end
 function command.rename_app(id, args)
 	local inst_name = args.inst
 	local new_name = args.new_name
-	if not pkg.valid_inst(inst_name) or not pkg.valid_inst(new_name) then
+	if not app_util.valid_inst(inst_name) or not app_util.valid_inst(new_name) then
 		return false, "Application instance name invalid!!"
 	end
 	if is_inst_name_reserved(inst_name) then
@@ -444,7 +445,7 @@ end
 
 function command.uninstall_app(id, args)
 	local inst_name = args.inst
-	if not pkg.valid_inst(inst_name) then
+	if not app_util.valid_inst(inst_name) then
 		return false, "Application instance name invalid!!"
 	end
 
@@ -576,6 +577,14 @@ then
 	fi
 fi
 
+if [ -f $FREEIOE_PATH/.upgrade_check ]
+	sh $FREEIOE_PATH/.upgrade_check $FREEIOE_PATH $SKYNET_PATH
+	if [ $? -ne 0 ]; then
+		echo "FreeIOE upgrade checking failed!"
+		exit $?
+	fi
+fi
+
 if [ -f $IOE_DIR/ipt/strip_mode ]
 then
 	rm -f $IOE_DIR/ipt/rollback
@@ -622,6 +631,8 @@ else
 fi
 
 sync
+
+exit 0
 
 ]]
 

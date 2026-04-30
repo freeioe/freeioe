@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# .freeioe.env
+# SKYNET_DIR :=
+# FREEIOE_DIR :=
+# 
+
+# 帮助信息
+usage() {
+  echo "用法: $0 [--help]"
+}
+
+# 判断 --help
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  usage
+  exit 0
+fi
+
+# 获取测试程序路径
+DEV_APP_DIR=$1
+
+# 根据script文件路径获取FreeIOE路径,并推测Skynet目录
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+FREEIOE_DIR=${SCRIPT_DIR}/..
+SKYNET_DIR=${FREEIOE_DIR}/../skynet
+ENV_FILE=${FREEIOE_DIR}/.freeioe.env
+
+# 查看是否有.freeioe.env文件
+if [ -f "${ENV_FILE}" ]; then
+	# shellcheck source=/dev/null
+	. "${ENV_FILE}"
+else
+	echo "FreeIOE runing env not found..."
+fi
+
+# 输出当前的路径
+echo "FreeIOE path: ${FREEIOE_DIR}"
+echo "Skynet path: ${SKYNET_DIR}"
+
+# 检查skynet文件
+while [ ! -f "${SKYNET_DIR}/skynet" ]; do
+	echo "Skynet binary file not found in folder: ${SKYNET_DIR}"
+
+	# 选择文件夹
+	SKYNET_DIR=$(dialog --stdout --title "选择SKYNET目录" --dselect "${FREEIOE_DIR}" 20 60)
+
+	# 如果没选则退出
+	if [ -n "${SKYNET_DIR}" ]; then
+		# 如果skynet文件存在，输出到环境变量
+		if [ -f "${SKYNET_DIR}/skynet" ]; then
+			echo "SKYNET_DIR=${SKYNET_DIR}" > "${ENV_FILE}"
+			echo "FREEIOE_DIR=${FREEIOE_DIR}" >> "${ENV_FILE}"
+		fi
+		# echo "开始处理目录：${SKYNET_DIR}"
+	fi
+done
+
+# 执行skynet
+echo "cd ${SKYNET_DIR} && ./skynet ${FREEIOE_DIR}/config"
+if [ -n "${DEV_APP_DIR}" ]; then
+	# 输出测试程序路径，并导出环境变量
+	echo "Dev app dir ${DEV_APP_DIR}"
+	( export FREEIOE_DEV_APP="${DEV_APP_DIR}" && cd "${SKYNET_DIR}" && ./skynet "${FREEIOE_DIR}/config" )
+else
+	( cd "${SKYNET_DIR}" && ./skynet "${FREEIOE_DIR}/config" )
+fi

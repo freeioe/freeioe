@@ -44,9 +44,11 @@
 ## Build and Use on Linux
 
 1. Checkout [Skynet](https://github.com/freeioe/skynet) repo, and build it with ```make linux```
-2. Checkout FreeIOE repo, and create an soft link (ioe) in Skynet repo folder
-3. Goto FreeIOE repo, run ```./scripts/feeds update -a```
-4. Goto Skynet repo, run ```./skynet ioe/config``` to start FreeIOE
+2. Goto FreeIOE repo, run ```./scripts/feeds update -a```
+3. Goto Skynet repo, run ```./skynet <your_freeioe_rego_path>/config``` to start FreeIOE or
+4. In FreeIOE repo, run ```./scripts/run.dev``` to start FreeIOE
+
+tips: run.dev script will ask for Skynet folder when it cannot find by itself
 
 ## Core Development
 
