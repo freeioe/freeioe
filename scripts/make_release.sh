@@ -3,7 +3,7 @@
 set -e
 
 echo "--------------------------------------------"
-echo "FreeIOE System IN:" $PWD
+echo "FreeIOE in:" $PWD
 
 ### Get the version by count the commits
 VERSION=`git log --oneline | wc -l | tr -d ' '`
@@ -28,15 +28,17 @@ mkdir __install
 
 # Copy files
 git archive HEAD | tar -x -C __install
-cp __install/scripts/upgrade_check.sh __intall/.upgrade_check
+# copy upgrade check script
+cp __install/scripts/upgrade_check.sh __install/.upgrade_check
 
 # Delete files
 rm -rf __install/test
 rm -rf __install/scripts
 # rm -rf __install/www
-
 rm -f __install/feeds.conf.default
 rm -rf __install/doc/app/example_app.lua
+
+# copy example app file
 cp feeds/example_apps/sample/app.lua __install/doc/app/example_app.lua
 
 # Echo version
