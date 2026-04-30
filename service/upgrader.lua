@@ -577,8 +577,8 @@ then
 	fi
 fi
 
-if [ -f $FREEIOE_PATH/.upgrade_check ]
-	sh $FREEIOE_PATH/.upgrade_check $FREEIOE_PATH $SKYNET_PATH
+if [ -f $FREEIOE_PATH/scripts/upgrade_check.sh ]
+	sh $FREEIOE_PATH/scripts/upgrade_check.sh $FREEIOE_PATH $SKYNET_PATH
 	if [ $? -ne 0 ]; then
 		echo "FreeIOE upgrade checking failed!"
 		exit $?

@@ -62,6 +62,15 @@ else
 	echo "No rollback needed!" >> $STARTUP_LOG
 fi
 
+# skynet's config compat
+if [ -f $IOE_DIR/skynet/ioe/config.path.compat ]; then
+	set -- $(read_version "${IOE_DIR}/skynet/version")
+	fver=$1
+	if [ fver -lt 2547 ]; then
+		mv $IOE_DIR/skynet/ioe/config.path.compat $IOE_DIR/skynet/ioe/config.path
+	fi
+fi
+
 if [ -f $IOE_DIR/.env ]
 then
 	set -o allexport; source $IOE_DIR/.env; set +o allexport

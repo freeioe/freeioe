@@ -28,8 +28,11 @@ mkdir __install
 
 # Copy files
 git archive HEAD | tar -x -C __install
+
 # copy upgrade check script
-cp __install/scripts/upgrade_check.sh __install/.upgrade_check
+mkdir -p __install/scripts.keep
+cp __install/scripts/functions.sh __install/scripts.keep/
+cp __install/scripts/upgrade_check.sh __install/scripts.keep/
 
 # Delete files
 rm -rf __install/test
@@ -38,6 +41,8 @@ rm -rf __install/scripts
 rm -f __install/feeds.conf.default
 rm -rf __install/doc/app/example_app.lua
 
+# move scripts.keep to scripts
+mv __install/scripts.keep __install/scripts
 # copy example app file
 cp feeds/example_apps/sample/app.lua __install/doc/app/example_app.lua
 
