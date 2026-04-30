@@ -64,6 +64,7 @@ fi
 
 # skynet's config compat
 if [ -f $IOE_DIR/skynet/ioe/config.path.compat ]; then
+	. $IOE_DIR/skynet/ioe/scripts/functions.sh
 	set -- $(read_version "${IOE_DIR}/skynet/version")
 	fver=$1
 	if [ fver -lt 2547 ]; then
