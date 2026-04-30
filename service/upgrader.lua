@@ -226,7 +226,6 @@ function command.upgrade_app(id, args)
 		if r then
 			--- Post to appmgr for instance added
 			appmgr.post.app_event('upgrade', inst_name)
-
 			return true, "Application upgradation is done!"
 		else
 			-- Upgrade will not remove app folder
@@ -285,17 +284,14 @@ function command.install_app(id, args)
 		if r then
 			--- Post to appmgr for instance added
 			appmgr.post.app_event('install', inst_name)
-
-			return true, "Application installtion is done"
+			return true, "Application installation is done!"
 		else
 			-- Keep the application there.
 			-- datacenter.set("APPS", inst_name, nil)
 			-- os.execute("rm -rf "..target_folder)
 			--
 			datacenter.set("APPS", inst_name, 'auto', 0)
-
 			appmgr.post.app_event('install', inst_name)
-
 			return false, "Failed to start App. Error: "..err
 		end
 	end, args.file_ext or '.zip', token)
@@ -470,10 +466,10 @@ end
 function command.latest_version(app, is_core)
 	local r, err = pkg_api.latest_version(app, is_core)
 	if not r then
-		log.error(err, app, is_core)
+		--log.error(err, app, is_core)
 		r = { version = 0, beta = true }
 	else
-		log.info("Got app latest version", r.version, r.beta, app, is_core)
+		--log.info("Got app latest version", r.version, r.beta, app, is_core)
 	end
 	return r
 end
@@ -481,10 +477,10 @@ end
 function command.check_version(app, version, is_core)
 	local r, err = pkg_api.check_version(app, version, is_core)
 	if r == nil then
-		log.error(err, app, is_core)
+		--log.error(err, app, is_core)
 		r = true
 	else
-		log.info("Got app version", r, app, is_core)
+		--log.info("Got app version", r, app, is_core)
 	end
 	return r
 end
@@ -733,7 +729,6 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 
 	-- Call system abort
 	ioe.abort()
-	log.warning("Core system upgradation done!")
 	return true, "System upgradation is done!"
 end
 
