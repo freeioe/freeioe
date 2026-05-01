@@ -64,11 +64,30 @@ fi
 
 # skynet's config compat
 if [ -f $IOE_DIR/skynet/ioe/config.path.compat ]; then
+	echo "Found config.path.compat file..." >> $STARTUP_LOG
 	. $IOE_DIR/skynet/ioe/scripts/functions.sh
 	set -- $(read_version "${IOE_DIR}/skynet/version")
-	fver=$1
-	if [ "$fver" -lt 2547 ]; then
+	sver=$1
+	echo "Skynet Ver: $sver" >> $STARTUP_LOG
+	if [ "$sver" -lt 2547 ]; then
+		echo "Using config.path.compat instead of config.path" >> $STARTUP_LOG
+
+		# Backup existing config.path if present
+		if [ -f $IOE_DIR/skynet/ioe/config.path ]; then
+			backup_file="$IOE_DIR/skynet/ioe/config.path.backup"
+			echo "Backing up existing config.path to: $(basename "$backup_file")" >> $STARTUP_LOG
+			mv $IOE_DIR/skynet/ioe/config.path "$backup_file"
+			if [ $? -ne 0 ]; then
+				echo "Failed to backup config.path" >> $STARTUP_LOG
+			fi
+		fi
+
 		mv $IOE_DIR/skynet/ioe/config.path.compat $IOE_DIR/skynet/ioe/config.path
+		if [ $? -ne 0 ]; then
+			echo "Failed to move config.path.compat to config.path" >> $STARTUP_LOG
+			exit 1
+		fi
+		echo "Successfully applied config.path.compat" >> $STARTUP_LOG
 	fi
 fi
 
