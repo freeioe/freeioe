@@ -1,4 +1,4 @@
-# !/usr/bin/env sh
+#!/usr/bin/env sh
 
 set -e
 
@@ -11,12 +11,11 @@ PLAT_ARCH=$1
 TOOLCHAIN=$2
 TARGET_DIR=$3
 
-rm build -rf
-rm bin -rf
+rm -rf build bin
 
 printf "ARCH: $PLAT_ARCH \t TOOLCHAINE: $TOOLCHAIN \t TARGET: $TARGET_DIR \n"
 
-if [ "$TOOLCHAIN" == "native" ]; then
+if [ "$TOOLCHAIN" = "native" ]; then
 	premake5 gmake
 else
 	echo "export toolchain"
@@ -24,7 +23,7 @@ else
 	. ~/toolchains/$TOOLCHAIN
 fi
 
-echo $CC
+echo "$CC"
 cd build
 make config=release
 

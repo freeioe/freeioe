@@ -32,27 +32,25 @@ toolchains["openwrt/snapshot/arm_cortex-a7_neon-vfpv4"]="Toolchain-arm-openwrt-l
 toolchains["openwrt/snapshot/aarch64_cortex-a53"]="Toolchain-aarch64-openwrt-linux-gcc.cmake"
 toolchains["openwrt/snapshot/mipsel_24kc"]="Toolchain-mipsel_24kc-openwrt-linux-gcc.cmake"
 
-cd $SOURCE_DIR
+cd "$SOURCE_DIR"
 
-if [ ! -f ${SOURCE_DIR}/open62541.spec ]; then
+if [ ! -f "${SOURCE_DIR}/open62541.spec" ]; then
 	echo "Incorrect build folder. You need to run build_ext_all in binding/lua"
-	exit -1
+	exit 1
 fi
 
-if [ "$TOOLCHAIN" == "native" ]; then
-	rm bin -rf
-	rm build -rf
+if [ "$TOOLCHAIN" = "native" ]; then
+	rm -rf bin build
 	mkdir build/
 	cd build
 	../build_lib.sh > /dev/null
 	make > /dev/null
 else
-	. ~/toolchains/$TOOLCHAIN
-	rm bin -rf
-	rm build_openwrt -rf
+	. ~/toolchains/"$TOOLCHAIN"
+	rm -rf bin build_openwrt
 	mkdir build_openwrt
 	cd build_openwrt
-	../build_lib_openwrt.sh ${toolchains[$PLAT_ARCH]} > /dev/null
+	../build_lib_openwrt.sh "${toolchains[$PLAT_ARCH]}" > /dev/null
 	make > /dev/null
 fi
 
