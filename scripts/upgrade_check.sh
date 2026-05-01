@@ -41,9 +41,6 @@ fi
 FREEIOE_PATH="$1"
 SKYNET_PATH="$2"
 
-# Source functions.sh for read_version function
-. "${FREEIOE_PATH}/scripts/functions.sh"
-
 if [ ! -d "${FREEIOE_PATH}" ]; then
     log_error "FreeIOE directory not found: ${FREEIOE_PATH}"
     exit 1
@@ -53,6 +50,9 @@ if [ ! -d "${SKYNET_PATH}" ]; then
     log_error "Skynet directory not found: ${SKYNET_PATH}"
     exit 1
 fi
+
+# Source functions.sh for read_version function
+. "${FREEIOE_PATH}/scripts/functions.sh"
 
 # ============================================================================
 # Version Compatibility Check
