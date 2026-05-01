@@ -3,12 +3,14 @@
 
 # Release history
 
-V4.1.0 ()
+
+V4.1.0 (2026-05-01)
 ------------------
 
 * Support download depends from gitee repo
 * Added toml.lua utility
 * Support developer entry script (scripts/run.dev)
+* Do upgrade check before run upgraded files
 
 
 V4.0.0 (2026-01-11)

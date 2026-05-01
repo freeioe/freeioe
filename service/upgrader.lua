@@ -26,6 +26,12 @@ local get_app_version = pkg.get_app_version
 local function get_ioe_dir()
 	return os.getenv('IOE_DIR') or lfs.currentdir().."/.."
 end
+local function get_skynet_dir()
+	return lfs.currentdir() -- skynet must be current dir
+end
+local function get_freeioe_dir()
+	return ioe.dir(true) -- the absolute path  of FreeIOE
+end
 
 local reserved_list = {
 	"ioe", "ioe_frpc", "ioe_symlink",
@@ -209,7 +215,7 @@ function command.upgrade_app(id, args)
 		local r, status = os.execute("unzip -oq "..path.." -d "..target_folder)
 		os.execute("rm -rf "..path)
 		if not r or status ~= 'exit' then
-			log.error("Install application failed", isnt_name, r, status)
+			log.error("Install application failed", inst_name, r, status)
 			os.execute("rm -rf "..target_folder)
 			return false, "Failed to unzip application"
 		end
@@ -518,174 +524,189 @@ end
 
 local upgrade_sh_str = [[
 #!/bin/sh
+# strict mode: exit on error and undefined variable
+set -eu
 
-IOE_DIR=%s
-SKYNET_FILE=%s
-SKYNET_PATH=%s
-FREEIOE_FILE=%s
-FREEIOE_PATH=%s
+IOE_DIR="%s"
+SKYNET_FILE="%s"
+SKYNET_PATH="%s"
+FREEIOE_FILE="%s"
+FREEIOE_PATH="%s"
 
-date > $IOE_DIR/ipt/rollback
-cp -f $SKYNET_PATH/cfg.json $IOE_DIR/ipt/cfg.json.bak
-cp -f $SKYNET_PATH/cfg.json.md5 $IOE_DIR/ipt/cfg.json.md5.bak
+# Backup configuration
+date > "${IOE_DIR}/ipt/rollback"
+cp -f "${SKYNET_PATH}/cfg.json" "${IOE_DIR}/ipt/cfg.json.bak"
+cp -f "${SKYNET_PATH}/cfg.json.md5" "${IOE_DIR}/ipt/cfg.json.md5.bak"
 
-cd $IOE_DIR
-if [ -f $SKYNET_FILE ]
-then
-	cd $SKYNET_PATH
-	rm ./lualib -rf
-	rm ./luaclib -rf
-	rm ./service -rf
-	rm ./cservice -rf
-	tar xzf $SKYNET_FILE
+log() {
+    echo "[$(date '+%%Y-%%m-%%d %%H:%%M:%%S')] $*"
+}
 
-	if [ $? -eq 0 ]
-	then
-		echo "Skynet upgrade is done!"
+# Verify IOE_DIR is accessible
+cd "${IOE_DIR}"
+if [ $? -ne 0 ]; then
+	log "ERROR: Cannot cd to folder ${IOE_DIR}"
+	exit 1
+fi
+
+# ============================================================================
+# Upgrade Skynet
+# ============================================================================
+if [ -f "${SKYNET_FILE}" ]; then
+	cd "${SKYNET_PATH}" || exit 1
+	rm -rf ./lualib ./luaclib ./service ./cservice
+	tar xzf "${SKYNET_FILE}"
+
+	if [ $? -eq 0 ]; then
+		log "INFO: Skynet upgrade is done!"
 	else
-		echo "Skynet uncompress error!! Rollback..."
-		rm -f $SKYNET_FILE
-		sh $IOE_DIR/ipt/rollback.sh
+		log "ERROR: Skynet uncompress failed!! Rollback..."
+		rm -f "${SKYNET_FILE}"
+		sh "${IOE_DIR}/ipt/rollback.sh"
 		exit $?
 	fi
 fi
 
-cd "$IOE_DIR"
-if [ -f $FREEIOE_FILE ]
-then
-	cd $FREEIOE_PATH
-	rm ./www -rf
-	rm ./lualib -rf
-	rm ./snax -rf
-	rm ./test -rf
-	rm ./service -rf
-	rm ./ext -rf
-	tar xzf $FREEIOE_FILE
+# ============================================================================
+# Upgrade FreeIOE
+# ============================================================================
+cd "${IOE_DIR}"
+if [ -f "${FREEIOE_FILE}" ]; then
+	cd "${FREEIOE_PATH}" || exit 1
+	rm -rf ./www ./lualib ./snax ./test ./service ./ext
+	tar xzf "${FREEIOE_FILE}"
 
-	if [ $? -eq 0 ]
-	then
-		echo "FreeIOE upgrade is done!"
+	if [ $? -eq 0 ]; then
+		log "INFO: FreeIOE upgrade is done!"
 	else
-		echo "FreeIOE uncompress error!! Rollback..."
-		rm -f $FREEIOE_FILE
-		sh $IOE_DIR/ipt/rollback.sh
+		log "ERROR: FreeIOE uncompress failed!! Rollback..."
+		rm -f "${FREEIOE_FILE}"
+		sh "${IOE_DIR}/ipt/rollback.sh"
 		exit $?
 	fi
 fi
 
-if [ -f $FREEIOE_PATH/scripts/upgrade_check.sh ]
-	sh $FREEIOE_PATH/scripts/upgrade_check.sh $FREEIOE_PATH $SKYNET_PATH
+# ============================================================================
+# Upgrade Check
+# ============================================================================
+if [ -f "${FREEIOE_PATH}/scripts/upgrade_check.sh" ]; then
+	sh "${FREEIOE_PATH}/scripts/upgrade_check.sh" "${FREEIOE_PATH}" "${SKYNET_PATH}"
 	if [ $? -ne 0 ]; then
-		echo "FreeIOE upgrade checking failed!"
+		log "ERROR: FreeIOE upgrade checking failed!"
 		exit $?
 	fi
 fi
 
-if [ -f $IOE_DIR/ipt/strip_mode ]
-then
-	rm -f $IOE_DIR/ipt/rollback
-	rm -f $IOE_DIR/ipt/upgrade_no_ack
+# ============================================================================
+# Handle Mode Files
+# ============================================================================
+if [ -f "${IOE_DIR}/ipt/strip_mode" ]; then
+	rm -f "${IOE_DIR}/ipt/rollback" "${IOE_DIR}/ipt/upgrade_no_ack"
 
-	if [ -f $IOE_DIR/ipt/rollback.sh.new ]
-	then
-		mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+	if [ -f "${IOE_DIR}/ipt/rollback.sh.new" ]; then
+		mv -f "${IOE_DIR}/ipt/rollback.sh.new" "${IOE_DIR}/ipt/rollback.sh"
 	fi
 
-	[ -f $SKYNET_FILE ] && rm -f $SKYNET_FILE
-	[ -f $FREEIOE_FILE ] && rm -f $FREEIOE_FILE
+	[ -f "${SKYNET_FILE}" ] && rm -f "${SKYNET_FILE}"
+	[ -f "${FREEIOE_FILE}" ] && rm -f "${FREEIOE_FILE}"
 
 	exit 0
 fi
 
-if [ -f $IOE_DIR/ipt/upgrade_no_ack ]
-then
-	rm -f $IOE_DIR/ipt/rollback
-	rm -f $IOE_DIR/ipt/upgrade_no_ack
+if [ -f "${IOE_DIR}/ipt/upgrade_no_ack" ]; then
+	rm -f "${IOE_DIR}/ipt/rollback" "${IOE_DIR}/ipt/upgrade_no_ack"
 
-	if [ -f $IOE_DIR/ipt/rollback.sh.new ]
-	then
-		mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+	if [ -f "${IOE_DIR}/ipt/rollback.sh.new" ]; then
+		mv -f "${IOE_DIR}/ipt/rollback.sh.new" "${IOE_DIR}/ipt/rollback.sh"
 	fi
 
-	if [ -f $SKYNET_FILE ]
-	then
-		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz
+	if [ -f "${SKYNET_FILE}" ]; then
+		mv -f "${SKYNET_FILE}" "${IOE_DIR}/ipt/skynet.tar.gz"
 	fi
-	if [ -f $FREEIOE_FILE ]
-	then
-		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz
+	if [ -f "${FREEIOE_FILE}" ]; then
+		mv -f "${FREEIOE_FILE}" "${IOE_DIR}/ipt/freeioe.tar.gz"
 	fi
 else
-	if [ -f $SKYNET_FILE ]
-	then
-		mv -f $SKYNET_FILE $IOE_DIR/ipt/skynet.tar.gz.new
+	if [ -f "${SKYNET_FILE}" ]; then
+		mv -f "${SKYNET_FILE}" "${IOE_DIR}/ipt/skynet.tar.gz.new"
 	fi
-	if [ -f $FREEIOE_FILE ]
-	then
-		mv -f $FREEIOE_FILE $IOE_DIR/ipt/freeioe.tar.gz.new
+	if [ -f "${FREEIOE_FILE}" ]; then
+		mv -f "${FREEIOE_FILE}" "${IOE_DIR}/ipt/freeioe.tar.gz.new"
 	fi
 fi
 
 sync
 
 exit 0
-
 ]]
 
 local rollback_sh_str = [[
 #!/bin/sh
+# strict mode: exit on error and undefined variable
+set -eu
 
-IOE_DIR=%s
-SKYNET_PATH=%s
-FREEIOE_PATH=%s
+IOE_DIR="%s"
+SKYNET_PATH="%s"
+FREEIOE_PATH="%s"
 
-if [ -f $IOE_DIR/ipt/skynet.tar.gz ]
-then
-	cd $IOE_DIR
-	cd $SKYNET_PATH
-	tar xzf $IOE_DIR/ipt/skynet.tar.gz
+# ============================================================================
+# Rollback Skynet
+# ============================================================================
+cd "${IOE_DIR}"
+if [ -f "${IOE_DIR}/ipt/skynet.tar.gz" ]; then
+	cd "${SKYNET_PATH}" || exit 1
+	tar xzf "${IOE_DIR}/ipt/skynet.tar.gz"
 fi
 
-if [ -f $IOE_DIR/ipt/freeioe.tar.gz ]
-then
-	cd $IOE_DIR
-	cd $FREEIOE_PATH
-	tar xzf $IOE_DIR/ipt/freeioe.tar.gz
+# ============================================================================
+# Rollback FreeIOE
+# ============================================================================
+cd "${IOE_DIR}"
+if [ -f "${IOE_DIR}/ipt/freeioe.tar.gz" ]; then
+	cd "${FREEIOE_PATH}" || exit 1
+	tar xzf "${IOE_DIR}/ipt/freeioe.tar.gz"
 fi
 
-if [ -f $IOE_DIR/ipt/cfg.json.bak ]
-then
-	cp -f $IOE_DIR/ipt/cfg.json.bak $SKYNET_PATH/cfg.json
-	cp -f $IOE_DIR/ipt/cfg.json.md5.bak $SKYNET_PATH/cfg.json.md5
+# ============================================================================
+# Restore Configuration
+# ============================================================================
+if [ -f "${IOE_DIR}/ipt/cfg.json.bak" ]; then
+	cp -f "${IOE_DIR}/ipt/cfg.json.bak" "${SKYNET_PATH}/cfg.json"
+	cp -f "${IOE_DIR}/ipt/cfg.json.md5.bak" "${SKYNET_PATH}/cfg.json.md5"
 fi
 
 sync
+
+exit 0
 ]]
 
 local upgrade_ack_sh_str = [[
 #!/bin/sh
+# strict mode: exit on error and undefined variable
+set -eu
 
-IOE_DIR=%s
+IOE_DIR="%s"
 
-if [ -f $IOE_DIR/ipt/skynet.tar.gz.new ]
-then
-	mv -f $IOE_DIR/ipt/skynet.tar.gz.new $IOE_DIR/ipt/skynet.tar.gz
+# ============================================================================
+# Acknowledge Upgrade Files
+# ============================================================================
+if [ -f "${IOE_DIR}/ipt/skynet.tar.gz.new" ]; then
+	mv -f "${IOE_DIR}/ipt/skynet.tar.gz.new" "${IOE_DIR}/ipt/skynet.tar.gz"
 fi
 
-if [ -f $IOE_DIR/ipt/freeioe.tar.gz.new ]
-then
-	mv -f $IOE_DIR/ipt/freeioe.tar.gz.new $IOE_DIR/ipt/freeioe.tar.gz
+if [ -f "${IOE_DIR}/ipt/freeioe.tar.gz.new" ]; then
+	mv -f "${IOE_DIR}/ipt/freeioe.tar.gz.new" "${IOE_DIR}/ipt/freeioe.tar.gz"
 fi
 
-if [ -f $IOE_DIR/ipt/rollback.sh.new ]
-then
-	mv -f $IOE_DIR/ipt/rollback.sh.new $IOE_DIR/ipt/rollback.sh
+if [ -f "${IOE_DIR}/ipt/rollback.sh.new" ]; then
+	mv -f "${IOE_DIR}/ipt/rollback.sh.new" "${IOE_DIR}/ipt/rollback.sh"
 fi
 
-rm -f $IOE_DIR/ipt/rollback
+rm -f "${IOE_DIR}/ipt/rollback"
 
 sync
 
+exit 0
 ]]
 
 local function write_script(fn, str)
@@ -698,17 +719,19 @@ local function write_script(fn, str)
 	return true
 end
 
-local function start_upgrade_proc(ioe_path, skynet_path)
-	assert(ioe_path or skynet_path)
-	local ioe_path = ioe_path or '/IamNotExits.unknown'
-	local skynet_path = skynet_path or '/IamNotExits.unknown'
+local function start_upgrade_proc(freeioe_file, skynet_file)
+	assert(freeioe_file or skynet_file)
+	freeioe_file = freeioe_file or '/IamNotExits.unknown'
+	skynet_file = skynet_file or '/IamNotExits.unknown'
 	log.warning("Core system upgradation starting....")
-	log.trace(ioe_path, skynet_path)
+	log.trace(freeioe_file, skynet_file)
 	--local ps_e = get_ps_e()
 
 	local base_dir = get_ioe_dir()
+	local skynet_dir = get_skynet_dir()
+	local freeioe_dir = get_freeioe_dir()
 
-	local str = string.format(rollback_sh_str, base_dir, "skynet", "freeioe")
+	local str = string.format(rollback_sh_str, base_dir, skynet_dir, freeioe_dir)
 	local r, err = write_script(base_dir.."/ipt/rollback.sh.new", str)
 	if not r then
 		return false, err
@@ -720,7 +743,7 @@ local function start_upgrade_proc(ioe_path, skynet_path)
 		return false, err
 	end
 
-	local str = string.format(upgrade_sh_str, base_dir, skynet_path, "skynet", ioe_path, "freeioe")
+	local str = string.format(upgrade_sh_str, base_dir, skynet_file, skynet_dir, freeioe_file, freeioe_dir)
 	local r, err = write_script(base_dir.."/ipt/upgrade.sh", str)
 	if not r then
 		return false, err
@@ -734,7 +757,7 @@ end
 
 function command.upgrade_core(id, args)
 	--local is_windows = package.config:sub(1,1) == '\\'
-	
+
 	local cjson = require 'cjson.safe'
 	log.warning("Upgrade Core", cjson.encode(args) or 'failed to json args')
 
@@ -900,4 +923,3 @@ skynet.start(function()
 
 	skynet.register ".upgrader"
 end)
-
