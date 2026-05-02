@@ -1,10 +1,30 @@
+---
+-- Value Concatenation Module
+--
+-- This module provides delayed value collection and calculation triggering.
+-- Useful for collecting values from multiple sources before processing.
+---
+
 local class = require 'middleclass'
 local ioe = require 'ioe'
 local skynet = require 'skynet'
 local cancelable_timeout = require 'cancelable_timeout'
 
+---
+-- Concatenation Class
+--
+-- Collects values from multiple sources and triggers calculation
+-- after optional delay.
+---
 local concat = class('APP_UTILS_CONCAT')
 
+---
+-- Initialize concat instance
+-- @param func: calculation function to call with collected values
+-- @param need_all: if true, wait for all sources before calculating
+-- @param delay: optional delay in milliseconds before calculation
+-- @param timeout: optional timeout in milliseconds for value expiration
+---
 function concat:initialize(func, need_all, delay, timeout)
 	assert(func, "Calculate function missing")
 
@@ -16,6 +36,13 @@ function concat:initialize(func, need_all, delay, timeout)
 	self._source = {}
 end
 
+---
+-- Add a value source to collect
+-- @param key: unique identifier for this source
+-- @param default: default value if source times out or has bad quality
+-- @param delay: optional delay specific to this source
+-- @param timeout: optional timeout specific to this source
+---
 function concat:add(key, default, delay, timeout)
 	self._source[key] = {
 		name = key,
@@ -27,6 +54,13 @@ function concat:add(key, default, delay, timeout)
 	}
 end
 
+---
+-- Update value from a source
+-- @param key: source identifier
+-- @param value: new value
+-- @param timestamp: optional value timestamp
+-- @param quality: optional quality flag (0 = good, non-zero = bad)
+---
 function concat:update(key, value, timestamp, quality)
 	local timestamp = timestamp or ioe.time()
 	local quality = quality == nil and 0 or quality
@@ -51,6 +85,10 @@ function concat:update(key, value, timestamp, quality)
 	end
 end
 
+---
+-- Call calculation function with collected values
+-- Checks timeouts and applies defaults where needed
+---
 function concat:call_calc()
 	--print('call_calc')
 	local values = {}

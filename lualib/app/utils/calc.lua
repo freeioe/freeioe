@@ -1,9 +1,28 @@
+---
+-- Calculation Trigger Module
+--
+-- This module provides a calculation engine that triggers callbacks
+-- based on input value changes with support for cyclic execution.
+---
+
 local class = require 'middleclass'
 local ioe = require 'ioe'
 local cov = require 'cov'
 
+---
+-- Calculation Trigger Class
+--
+-- Monitors device inputs and triggers callbacks when values change
+-- or on cyclic intervals.
+---
 local calc = class("APP_UTILS_CALC")
 
+---
+-- Initialize calculation trigger engine
+-- @param sys: system API object
+-- @param api: data API object
+-- @param logger: logger instance
+---
 function calc:initialize(sys, api, logger)
 	self._sys = sys
 	self._api = api
@@ -15,12 +34,15 @@ function calc:initialize(sys, api, logger)
 end
 
 ---
--- name: Trigger name(unique)
--- inputs: input array. e.g { {sn='xxxx', input='xxxx', prop='value', default=0} }
--- trigger_cb: your trigger callback function
--- cycle_time: if you want to cycle calling your callback during a time. integer in seconds
+-- Add a trigger that watches device inputs and fires callback on changes
+-- @param name: unique trigger name
+-- @param inputs: array of input specifications {sn, input, prop, default}
+-- @param trigger_cb: callback function(trigger_values...)
+-- @param cycle_time: optional cycle time in seconds for periodic firing
+-- @return: function to manually trigger the callback
+---
 function calc:add(name, inputs, trigger_cb, cycle_time)
-	assert(self._triggers[name] == nil, "Trigger "..name.." already exits!")
+	assert(self._triggers[name] == nil, "Trigger "..name.." already exists!")
 	local cycle_time = math.tointeger(cycle_time)
 
 	local trigger = {
@@ -37,7 +59,7 @@ function calc:add(name, inputs, trigger_cb, cycle_time)
 	self._triggers[name] = trigger
 
 	self:_complete_trigger(trigger)
-	
+
 	if cycle_time then
 		trigger.cycle =  {
 			next_time = (ioe.time() // 1) + cycle_time,
@@ -55,16 +77,32 @@ function calc:add(name, inputs, trigger_cb, cycle_time)
 	end
 end
 
+---
+-- Remove a trigger by name
+-- @param name: trigger name to remove
+---
 function calc:remove(name)
 	self._triggers[name] = nil
 	-- TODO: cleanup watch_map and _cycle_triggers
 end
 
+---
+-- Generate watch key for device input
+-- @param sn: device serial number
+-- @param input: input name
+-- @param prop: property name
+-- @return: watch key string
+---
 function calc:_watch_key(sn, input, prop)
 	local prop = prop or 'value'
 	return sn.."/"..input.."/"..prop
 end
 
+---
+-- Add a watch for a device input
+-- @param trigger: trigger object
+-- @param input: input specification
+---
 function calc:_add_watch(trigger, input)
 	assert(input.sn and input.input and input.prop)
 
@@ -78,7 +116,7 @@ function calc:_add_watch(trigger, input)
 
 	local device = self._api:get_device(input.sn)
 	if not device then
-		return 
+		return
 	end
 
 	local value, timestamp, quality = device:get_input_prop(input.input, input.prop)
@@ -88,6 +126,11 @@ function calc:_add_watch(trigger, input)
 	end
 end
 
+---
+-- Complete trigger execution with current input values
+-- @param trigger: trigger object
+-- @return: callback result or nil, error message on failure
+---
 function calc:_complete_trigger(trigger)
 	local inputs = trigger.inputs
 	local values = {}
@@ -103,6 +146,12 @@ function calc:_complete_trigger(trigger)
 	return self:_complete_call(trigger, table.unpack(values))
 end
 
+---
+-- Execute trigger callback with error protection
+-- @param trigger: trigger object
+-- @param ...: callback arguments
+-- @return: callback result or nil, error message on failure
+---
 function calc:_complete_call(trigger, ...)
 	local f= trigger.callback
 	assert(f)
@@ -115,6 +164,10 @@ function calc:_complete_call(trigger, ...)
 	return er, er and tostring(err) or nil
 end
 
+---
+-- Clean input values for all triggers watching a key
+-- @param key: watch key string
+---
 function calc:_clean_watch(key)
 	local triggers = self._watch_map[key] or {}
 
@@ -129,6 +182,12 @@ function calc:_clean_watch(key)
 	end
 end
 
+---
+-- Handle device addition event
+-- @param app_src: source application name
+-- @param sn: device serial number
+-- @param props: device properties
+---
 function calc:_on_add_device(app_src, sn, props)
 	--[[
 	local inputs = props.inputs or {}
@@ -143,6 +202,11 @@ function calc:_on_add_device(app_src, sn, props)
 	]]--
 end
 
+---
+-- Handle device deletion event
+-- @param app_src: source application name
+-- @param sn: device serial number
+---
 function calc:_on_del_device(app_src, sn)
 	for k, v in ipairs(self._watch_map) do
 		if k:sub(1, len) == key then
@@ -152,11 +216,27 @@ function calc:_on_del_device(app_src, sn)
 	end
 end
 
+---
+-- Handle device modification event
+-- @param app_src: source application name
+-- @param sn: device serial number
+-- @param props: device properties
+---
 function calc:_on_mod_device(app_src, sn, props)
 	self:_on_del_device(app_src, sn)
 	self:_on_add_device(app_src, sn, props)
 end
 
+---
+-- Handle input value change event
+-- @param app_src: source application name
+-- @param sn: device serial number
+-- @param input: input name
+-- @param prop: property name
+-- @param value: new value
+-- @param timestamp: value timestamp
+-- @param quality: quality flag
+---
 function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 	local key = self:_watch_key(sn, input, prop)
 
@@ -174,6 +254,14 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 	return self:_on_cov_input(key, value, timestamp, quality)
 end
 
+---
+-- Handle COV (Change-of-Value) input event
+-- Updates all triggers watching the changed input
+-- @param key: watch key string
+-- @param value: new value
+-- @param timestamp: value timestamp
+-- @param quality: quality flag
+---
 function calc:_on_cov_input(key, value, timestamp, quality)
 	self._log:trace("Value changed for watched key: "..key, value, timestamp, quality)
 	local triggers = self._watch_map[key] or {}
@@ -194,6 +282,11 @@ function calc:_on_cov_input(key, value, timestamp, quality)
 	end
 end
 
+---
+-- Create handler table for device and input events
+-- @param calc: calculation engine instance
+-- @return: handler table with callback functions
+---
 local function create_handler(calc)
 	local calc = calc
 	return {
@@ -222,6 +315,12 @@ local function create_handler(calc)
 	}
 end
 
+---
+-- Map calc handler function to user handler with error protection
+-- @param handler: user's handler table
+-- @param calc_handler: calc's handler table
+-- @param func: function name to map
+---
 function calc:_map_handler_func(handler, calc_handler, func)
 	local hf = handler[func] or function() end
 	local calc_func = calc_handler[func]
@@ -235,6 +334,11 @@ function calc:_map_handler_func(handler, calc_handler, func)
 	handler[func] = map_f
 end
 
+---
+-- Map calc handlers to user's handler table
+-- @param handler: user's handler table to extend
+-- @return: extended handler table
+---
 function calc:_map_handler(handler)
 	assert(self._cov, "Calc util needs to be started and then map handler")
 	local calc_handler = create_handler(self)
@@ -245,6 +349,12 @@ function calc:_map_handler(handler)
 	return handler
 end
 
+---
+-- Start the calculation engine
+-- Starts COV monitoring and cycle trigger loop
+-- @param handler: handler table to extend with calc handlers
+-- @return: extended handler table
+---
 function calc:start(handler)
 	assert(handler, "Calc util need the api handler")
 	self._cov = cov:new(function(...)
@@ -276,6 +386,10 @@ function calc:start(handler)
 	return self:_map_handler(handler)
 end
 
+---
+-- Stop the calculation engine
+-- Stops COV monitoring and cycle trigger loop
+---
 function calc:stop()
 	if not self._stop then
 		self._stop = true

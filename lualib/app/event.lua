@@ -1,3 +1,10 @@
+---
+-- Event Constants and Utilities Module
+--
+-- This module defines event severity levels and event type constants
+-- used throughout FreeIOE for event handling and reporting.
+--
+---
 
 local LEVELS = {
 	LEVEL_DEBUG = 0,
@@ -26,6 +33,11 @@ local EVENT_NAMES = {
 ]]--
 local EVENT_NAMES = {}
 
+---
+-- Convert event type to string representation
+-- @param type_: event type number or string
+-- @return: event type string (e.g., "SYS", "DEV", "COMM", "DATA", "APP")
+---
 local function type_to_string(type_)
 	if type(type_) == 'number' then
 		assert(type_ > 0 and type_ <= #EVENTS)
@@ -48,4 +60,3 @@ end
 _M.type_to_string = type_to_string
 
 return _M
-

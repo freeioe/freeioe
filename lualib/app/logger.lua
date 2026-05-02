@@ -7,7 +7,7 @@ local logger = class("APP_MGR_LOG")
 function logger:initialize(name, logger_m)
 	assert(name)
 	self._name = name
-	self._log = loggger_m or log
+	self._log = logger_m or log
 	self._log_buf = {}
 end
 

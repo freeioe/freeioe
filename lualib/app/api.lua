@@ -1,3 +1,11 @@
+---
+-- Application API Module
+--
+-- This module provides the core API interface for FreeIOE applications.
+-- It manages device lifecycle, handles data/control/communication dispatching,
+-- and provides integration with the application manager.
+---
+
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local ioe = require 'ioe'
@@ -9,8 +17,21 @@ local app_event = require 'app.event'
 local app_logger = require 'app.logger'
 local threshold_buffer = require 'buffer.threshold'
 
+---
+-- Application API Class
+--
+-- Main class that provides the interface for applications to interact
+-- with FreeIOE system services including device management, data handling,
+-- and event processing.
+---
 local api = class("APP_MGR_API")
 
+---
+-- Initialize the API instance
+-- @param app_name: application name
+-- @param mgr_snax: appmgr service handle (optional, will query if nil)
+-- @param logger: logger instance (optional, creates default if nil)
+---
 function api:initialize(app_name, mgr_snax, logger)
 	self._app_name = app_name
 	self._mgr_snax = mgr_snax or snax.queryservice('appmgr')
@@ -19,6 +40,10 @@ function api:initialize(app_name, mgr_snax, logger)
 	self._logger = logger or app_logger:new(app_name)
 end
 
+---
+-- Cleanup API resources
+-- Removes all devices and closes handler
+---
 function api:cleanup()
 	self:close_handler()
 	for sn, dev in pairs(self._devices) do
@@ -27,6 +52,14 @@ function api:cleanup()
 	self._devices = {}
 end
 
+---
+-- Split batch input data into individual calls
+-- @param f: handler function
+-- @param app: application name
+-- @param sn: device serial number
+-- @param datas: table of data batches
+-- @return: true
+---
 function api:input_batch_split(f, app, sn, datas)
 	for _, v in ipairs(datas) do
 		f(app, sn, table.unpack(v))
@@ -34,6 +67,15 @@ function api:input_batch_split(f, app, sn, datas)
 	return true
 end
 
+---
+-- Dispatch data channel messages to appropriate handlers
+-- @param channel: channel name
+-- @param source: message source
+-- @param cmd: command type (input, output, command, input_batch)
+-- @param app: application name
+-- @param ...: additional arguments
+-- @return: handler result or nil if no handler found
+---
 function api:data_dispatch(channel, source, cmd, app, ...)
 	-- self._logger:trace('Data Dispatch', channel, source, cmd, app, ...)
 	local f = self._handler['on_'..cmd]
@@ -51,6 +93,16 @@ function api:data_dispatch(channel, source, cmd, app, ...)
 	end
 end
 
+---
+-- Dispatch control channel messages to appropriate handlers
+-- Handles synchronous commands with automatic result publishing
+-- @param channel: channel name
+-- @param source: message source
+-- @param ctrl: control command type
+-- @param app_src: source application
+-- @param app: target application
+-- @param ...: command arguments
+---
 function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 	if app ~= self._app_name then
 		--- Skip the destination is other application one
@@ -79,7 +131,7 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, false, results[2])
 			else
 				if results[2] == nil then
-					-- Table unpack will left returns lost
+					-- Table unpack loses nil returns
 					results[2] = false
 				end
 				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, table.unpack(results, 2))
@@ -90,6 +142,13 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 	end
 end
 
+---
+-- Dispatch communication data to handler
+-- @param channel: channel name
+-- @param source: message source
+-- @param app: application name
+-- @param ...: communication data
+---
 function api:comm_dispatch(channel, source, app, ...)
 	--self._logger:trace('Comm Dispatch', channel, source, ...)
 	local f = self._handler.on_comm
@@ -100,6 +159,13 @@ function api:comm_dispatch(channel, source, app, ...)
 	end
 end
 
+---
+-- Dispatch statistics data to handler
+-- @param channel: channel name
+-- @param source: message source
+-- @param app: application name
+-- @param ...: statistics data
+---
 function api:stat_dispatch(channel, source, app, ...)
 	--self._logger:trace('Stat Dispatch', channel, source, ...)
 	local f = self._handler.on_stat
@@ -110,6 +176,13 @@ function api:stat_dispatch(channel, source, app, ...)
 	end
 end
 
+---
+-- Dispatch event data to handler
+-- @param channel: channel name
+-- @param source: message source
+-- @param app: application name
+-- @param ...: event data
+---
 function api:event_dispatch(channel, source, app, ...)
 	--self._logger:trace('Event Dispatch', channel, source, ...)
 	local f = self._handler.on_event
@@ -120,6 +193,9 @@ function api:event_dispatch(channel, source, app, ...)
 	end
 end
 
+---
+-- Close all multicast channels and cleanup handlers
+---
 function api:close_handler()
 	if self._data_chn then
 		self._data_chn:unsubscribe()
@@ -143,6 +219,11 @@ function api:close_handler()
 	end
 end
 
+---
+-- Set handler for application callbacks and subscribe to channels
+-- @param handler: table containing callback functions (on_input, on_output, on_command, etc.)
+-- @param watch_data: boolean, if true subscribe to data channel for watching all device data
+---
 function api:set_handler(handler, watch_data)
 	self._handler = handler
 	if not self._handler then
@@ -205,9 +286,11 @@ function api:set_handler(handler, watch_data)
 	self:_set_event_threshold(20)
 end
 
---[[
--- List devices
---]]
+---
+-- List all devices in the system
+-- @param with_data: boolean, if true includes current input/output values
+-- @return: table of devices with optional data values
+---
 function api:list_devices(with_data)
 	local devs = dc.get('DEVICES')
 	if not with_data then
@@ -235,6 +318,11 @@ function api:list_devices(with_data)
 	return devs
 end
 
+---
+-- Validate device metadata table
+-- @param meta: table containing device metadata
+-- @raises: assertion error if required fields are missing
+---
 function valid_device_meta(meta)
 	local meta_assert = function(name)
 		assert(meta[name], "Device "..name.." is required in meta info!")
@@ -247,6 +335,10 @@ function valid_device_meta(meta)
 	meta_assert("link")
 end
 
+---
+-- Get default device metadata template
+-- @return: table with default device metadata fields
+---
 function api:default_meta()
 	return {
 		name = "Unknown",
@@ -257,15 +349,34 @@ function api:default_meta()
 	}
 end
 
+---
+-- Validate device serial number format
+-- @param sn: device serial number string
+-- @return: true if valid, false if contains invalid characters
+---
 local function valid_device_sn(sn)
 	--return nil == string.find(sn, '%s')
 	return nil == string.find(sn, "[^%w_%-%.]")
 end
 
+---
+-- Validate property/input/output name format
+-- @param name: property name string
+-- @return: true if valid, false if contains invalid characters
+---
 local function valid_prop_name(name)
 	return nil == string.find(name, "[^%w_]")
 end
 
+---
+-- Add a new device to the application
+-- @param sn: device serial number (unique identifier)
+-- @param meta: table with device metadata (name, description, manufacturer, series, link)
+-- @param inputs: array of input definitions {name, desc, unit}
+-- @param outputs: array of output definitions {name, desc, unit}
+-- @param commands: array of command definitions {name, desc}
+-- @return: device object for accessing the device
+---
 function api:add_device(sn, meta, inputs, outputs, commands)
 	assert(self._handler, "Cannot add device before initialize your API handler by calling set_handler")
 	assert(sn and meta, "Device Serial Number and Meta Information is required!")
@@ -294,32 +405,59 @@ function api:add_device(sn, meta, inputs, outputs, commands)
 	return dev
 end
 
+---
+-- Delete a device from the application
+-- @param dev: device object to delete
+-- @return: true
+---
 function api:del_device(dev)
 	dev:cleanup()
 	return true
 end
 
--- Get device object to access input, fire command and write output
---  With correct secret will be able to write the input
+---
+-- Get device object to access inputs, outputs, and commands
+-- With correct secret will be able to write input values
+-- @param sn: device serial number
+-- @param secret: optional secret for write access
+-- @return: device object or nil, error message if not found
+---
 function api:get_device(sn, secret)
 	assert(sn, "Device Serial Number is required!")
 	local props = dc.get('DEVICES', sn)
 	if not props then
-		return nil, string.format("Device %s does not exits", sn)
+		return nil, string.format("Device %s does not exist", sn)
 	end
 	return dev_api:new(self, sn, props, true, secret)
 end
 
--- Applicaiton control
+---
+-- Send control command to another application
+-- @param app: target application name
+-- @param ctrl: control command type
+-- @param params: command parameters
+-- @param priv: private data for result correlation
+---
 function api:send_ctrl(app, ctrl, params, priv)
 	self._ctrl_chn:publish('ctrl', self._app_name, app, ctrl, params, priv)
 end
 
+---
+-- Dump communication data to comm channel
+-- @param sn: device serial number
+-- @param dir: direction (send/recv)
+-- @param ...: communication data to dump
+-- @return: publish result
+---
 function api:_dump_comm(sn, dir, ...)
 	assert(sn)
 	return self._comm_chn:publish(self._app_name, sn, dir, ioe.time(), ...)
 end
 
+---
+-- Set event firing threshold limit (events per minute)
+-- @param count_per_min: maximum events allowed per minute (1-127)
+---
 function api:_set_event_threshold(count_per_min)
 	assert(count_per_min > 0 and count_per_min < 128)
 	self._event_fire_buf = threshold_buffer:new(60, count_per_min, function(...)
@@ -329,6 +467,16 @@ function api:_set_event_threshold(count_per_min)
 	end)
 end
 
+---
+-- Fire an event to the event channel
+-- @param sn: device serial number
+-- @param level: event severity level (debug, info, warning, error, fatal)
+-- @param type_: event type string
+-- @param info: event description string
+-- @param data: optional event data table
+-- @param timestamp: optional event timestamp (defaults to current time)
+-- @return: buffer push result
+---
 function api:_fire_event(sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)
 	local type_ = app_event.type_to_string(type_)
