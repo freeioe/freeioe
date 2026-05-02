@@ -1,24 +1,46 @@
 #!/usr/bin/env bash
+#
+# Build All Extensions
+# Iterates over all supported platforms and builds extension libraries
+#
+# Usage: build_ext_all.sh [build_lib]
+#
+# Arguments:
+#   build_lib - Optional. Specify "opcua" to build OPC-UA extension
+#
+# Process:
+#   1. Loads platform definitions from plats.sh
+#   2. For each platform:
+#      - Optionally builds OPC-UA extension if specified
+#      - Builds standard extension libraries
+#      - Copies output to prebuild_exts directory
+#
+# Examples:
+#   build_ext_all.sh           # Build standard extensions for all platforms
+#   build_ext_all.sh opcua     # Also build OPC-UA extension
+#
 
 set -e
 
-# Absolute path to this script, e.g. /home/user/bin/foo.sh
+# Get script directory
 SCRIPT=$(readlink -f "$0")
-# Absolute path this script is in, thus /home/user/bin
 SCRIPTPATH=$(dirname "$SCRIPT")
-echo $SCRIPTPATH
+echo "$SCRIPTPATH"
 
 BUILD_LIB=$1
-CUR_DIR=`pwd`
+CUR_DIR=$(pwd)
 
-# Get all platforms
-source $SCRIPTPATH/plats.sh
+# Load all supported platforms
+source "$SCRIPTPATH/plats.sh"
 
-for item in "${!plats[@]}"; 
-do
-	if [ "$BUILD_LIB" == "opcua" ]; then
-		bash $SCRIPTPATH/build_ext_opcua.sh $item ${plats[$item]} $CUR_DIR/../..
+# Build for each platform
+for item in "${!plats[@]}"; do
+	# Build OPC-UA extension if requested
+	if [ "$BUILD_LIB" = "opcua" ]; then
+		bash "$SCRIPTPATH/build_ext_opcua.sh" "$item" "${plats[$item]}" "$CUR_DIR/../.."
 	fi
-	mkdir -p $SCRIPTPATH/../feeds/prebuild_exts/$item/
-	bash $SCRIPTPATH/build_ext.sh $item ${plats[$item]} $SCRIPTPATH/../feeds/prebuild_exts/$item/
+
+	# Build standard extension libraries
+	mkdir -p "$SCRIPTPATH/../feeds/prebuild_exts/$item/"
+	bash "$SCRIPTPATH/build_ext.sh" "$item" "${plats[$item]}" "$SCRIPTPATH/../feeds/prebuild_exts/$item/"
 done

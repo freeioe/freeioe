@@ -1,9 +1,27 @@
 #!/usr/bin/env bash
+#
+# Clean Skynet Release Files by Version
+# Removes Skynet release archives for a specific version across all platforms
+#
+# Usage: clean_skynet_by_version.sh <version>
+#
+# Arguments:
+#   version - Version number to clean (e.g., 1234)
+#
+# Process:
+#   1. Loads platform definitions from plats.sh
+#   2. For each platform, removes:
+#      - __release/bin/<platform>/skynet/<version>.tar.gz
+#      - __release/bin/<platform>/skynet/<version>.tar.gz.md5
+#
+# Examples:
+#   clean_skynet_by_version.sh 1234
+#
+
 set -e
 
-# Absolute path to this script, e.g. /home/user/bin/foo.sh
+# Get script directory
 SCRIPT=$(readlink -f "$0")
-# Absolute path this script is in, thus /home/user/bin
 SCRIPTPATH=$(dirname "$SCRIPT")
 echo "$SCRIPTPATH"
 
@@ -12,12 +30,12 @@ echo "$VERSION"
 
 RELEASE_DIR=$SCRIPTPATH/../__release/bin
 
-# Get all platforms
+# Load all supported platforms
 source "$SCRIPTPATH/plats.sh"
 
+# Remove release files for specified version across all platforms
 for item in "${!plats[@]}"; do
     echo "Deleting ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz"
     rm "${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz.md5"
     rm "${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz"
 done
-

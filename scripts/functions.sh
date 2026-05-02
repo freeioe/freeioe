@@ -1,6 +1,36 @@
 #!/bin/sh
+#
+# Common Utility Functions
+# Library of shared functions used by other scripts
+#
+# Usage:
+#   source scripts/functions.sh
+#
+# Functions:
+#   read_version <file>
+#       Reads version information from a file
+#       Returns: <version> <branch> (on stdout, two lines)
+#
+# Version File Format:
+#   Line 1: Version number (integer)
+#   Line 2: Branch name (e.g., "develop", "master")
+#
+# Examples:
+#   source scripts/functions.sh
+#   set -- $(read_version version.txt)
+#   version=$1
+#   branch=$2
+#
 
 # Read version file: first line is version number, second line is branch
+#
+# Arguments:
+#   file - Path to version file
+#
+# Outputs:
+#   Line 1: Version number (integer, 0 if invalid)
+#   Line 2: Branch name (defaults to "develop" if empty)
+#
 read_version() {
     local fn="$1"
     local v=0

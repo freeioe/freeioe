@@ -1,34 +1,63 @@
 #!/usr/bin/env bash
+#
+# Upload Skynet Releases
+# Uploads Skynet release packages for all platforms to remote server
+#
+# Usage: upload_skynet.sh <version>
+#
+# Arguments:
+#   version - Skynet version to upload (e.g., 1234)
+#
+# Process:
+#   1. Loads platform definitions from plats.sh
+#   2. For each platform:
+#      - Copies Skynet tarball and checksum to temporary directory
+#      - Organizes by platform structure
+#   3. Uploads entire directory structure to kooiot.com
+#   4. Cleans up temporary directory
+#
+# Prerequisites:
+#   - SSH access to kooiot.com
+#   - Skynet releases must exist in __release/bin/<platform>/skynet/
+#
+# Output on server:
+#   /var/www/openwrt/download/bin/<platform>/skynet/<version>.tar.gz
+#
+# Examples:
+#   upload_skynet.sh 1234
+#
 
 set -e
 
-# Absolute path to this script, e.g. /home/user/bin/foo.sh
+# Get script directory
 SCRIPT=$(readlink -f "$0")
-# Absolute path this script is in, thus /home/user/bin
 SCRIPTPATH=$(dirname "$SCRIPT")
-echo $SCRIPTPATH
+echo "$SCRIPTPATH"
 
 VERSION=$1
-echo $VERSION
+echo "$VERSION"
 
 RELEASE_DIR=$SCRIPTPATH/../__release/bin
 
-# Get all platforms
-source $SCRIPTPATH/plats.sh
-
+# Create temporary upload directory
 mkdir -p /tmp/__kooiot_openwrt_upload/bin
 
-for item in "${!plats[@]}"; 
-do
-	ls -lh ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz
+# Load all supported platforms
+source "$SCRIPTPATH/plats.sh"
 
-	mkdir -p /tmp/__kooiot_openwrt_upload/bin/${item}/skynet/
+# Copy release files for each platform
+for item in "${!plats[@]}"; do
+	ls -lh "${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz"
 
-	cp -p ${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz* /tmp/__kooiot_openwrt_upload/bin/${item}/skynet/
+	mkdir -p /tmp/__kooiot_openwrt_upload/bin/"${item}"/skynet/
 
-	ls -lh /tmp/__kooiot_openwrt_upload/bin/${item}/skynet/${VERSION}.tar.gz
+	cp -p "${RELEASE_DIR}/${item}/skynet/${VERSION}.tar.gz"* /tmp/__kooiot_openwrt_upload/bin/"${item}"/skynet/
+
+	ls -lh /tmp/__kooiot_openwrt_upload/bin/"${item}"/skynet/"${VERSION}".tar.gz
 done
 
+# Upload to remote server
 scp -rp /tmp/__kooiot_openwrt_upload/bin kooiot.com:/var/www/openwrt/download/
 
+# Cleanup
 rm -rf /tmp/__kooiot_openwrt_upload
