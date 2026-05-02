@@ -1,3 +1,14 @@
+---
+-- Application Wrapper Service
+--
+-- This service wraps application instances, providing:
+-- - Application lifecycle management (start, stop, restart)
+-- - Configuration management and reload
+-- - Inter-application communication via appmgr
+-- - Heartbeat monitoring and error recovery
+-- - Log buffering and forwarding
+---
+
 local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local cache = require "skynet.codecache"
@@ -6,7 +17,25 @@ local app_util = require 'app.util'
 local event = require 'app.event'
 local ioe = require 'ioe'
 
+-- ============================================================================
+-- Global Variables
+-- ============================================================================
+
 G_APP_NAME = 'APP'
+
+-- ============================================================================
+-- Constants
+-- ============================================================================
+
+-- Timing constants (in centiseconds, as used by skynet)
+local PING_TIMEOUT_CS = 60 * 100  -- 60 seconds
+local PING_TIMEOUT_ERR_MAX = 10 * PING_TIMEOUT_CS  -- max timeout on error
+local DEFAULT_TIMEOUT = 1000     -- default run loop timeout
+local LOG_BUFFER_SIZE = 512      -- size of log buffer
+
+-- ============================================================================
+-- Module State
+-- ============================================================================
 
 local app = nil
 local app_closing = false
@@ -17,11 +46,28 @@ local mgr_snax = nil
 local sys_api = nil
 local log_buffer = nil
 
-local app_ping_timeout = 60 * 1000 -- 60 seconds
 local cancel_ping_timer = nil
 
+-- ============================================================================
+-- Utility Functions
+-- ============================================================================
+
+---
+-- Safely call an application method with error protection
+-- @param app: application instance
+-- @param func: function name to call
+-- @param ...: arguments to pass to the function
+-- @return: true,result or nil,error_message
+---
 local function protect_call(app, func, ...)
-	assert(app and func)
+	if not app then
+		return nil, "Application instance is nil"
+	end
+
+	if not func or type(func) ~= 'string' then
+		return nil, "Invalid function name"
+	end
+
 	local f = app[func]
 	if not f then
 		return nil, "Application has no function "..func
@@ -34,6 +80,11 @@ local function protect_call(app, func, ...)
 	return er, err and tostring(err) or 'UNKNOWN ERROR'
 end
 
+---
+-- Cleanup function called on application close
+-- @param ...: arguments to pass to app close method
+-- @return: result from cleanup or close operation
+---
 local on_close = function(...)
 	local clean_up = function(...)
 		if sys_api then
@@ -52,50 +103,56 @@ local on_close = function(...)
 	return clean_up(true)
 end
 
+---
+-- Fire exception event to appmgr
+-- @param info: exception information string
+-- @param data: additional data table
+-- @param level: event level (default: event.LEVEL_ERROR)
+-- @return: result from post call
+---
 local function fire_exception_event(info, data, level)
-	if not mgr_snax then
-		return
-	end
+	assert(mgr_snax, "mgr_snax not available")
+	assert(app_name, "App name missing")
+	assert(ioe.id(), "IOE ID missing")
+	assert(info, "Exception info missing")
+
 	local data = data or {}
 	data.app = app_name
-	assert(app_name, 'App name missing')
-	assert(ioe.id(), 'IOE ID(SN) missing')
-	assert(info, 'Info missing')
-	assert(data, 'Data missing')
+
 	return mgr_snax.post.fire_event(app_name, ioe.id(), level or event.LEVEL_ERROR, event.EVENT_APP, info, data)
 end
 
+---
+-- Application work loop processor
+-- Handles application run() method, heartbeat, and error recovery
+---
 local function work_proc()
-	local timeout_err_max = app_ping_timeout * 10 -- max timeout
-	local def_timeout = 1000
-	local timeout = def_timeout
-	--- Sleep one seconds
+	local timeout = DEFAULT_TIMEOUT
+	--- Initial sleep before starting work loop
 	skynet.sleep(timeout // 10)
 
 	if not app.run then
+		--- Create fake run function for heartbeat only
 		local start = nil
-		--- Using fake run for hearbeat
 		app.run = function(tms)
 			local now = skynet.now()
-			--- for each ping timeout
-			if not start or (now - start) * 10 >= app_ping_timeout then
-				assert(mgr_snax)
-				start = now
+			--- Send heartbeat at each ping timeout interval
+			if not start or (now - start) * 10 >= PING_TIMEOUT_CS then
 				mgr_snax.post.app_heartbeat(app_name, now)
+				start = now
 			end
 			return tms
 		end
 	else
-		--- Using timer for heartbeat
-		local ping_mgr = nil
-		ping_mgr = function()
-			assert(mgr_snax)
+		--- Use timer for heartbeat when app has run() method
+		local ping_mgr = function()
 			mgr_snax.post.app_heartbeat(app_name, skynet.now())
-			cancel_ping_timer = sys_api:cancelable_timeout(app_ping_timeout, ping_mgr)
+			cancel_ping_timer = sys_api:cancelable_timeout(PING_TIMEOUT_CS, ping_mgr)
 		end
 		ping_mgr()
 	end
 
+	--- Main application work loop
 	while app and not app_closing do
 		local t, err = protect_call(app, 'run', timeout)
 		if t then
@@ -105,19 +162,24 @@ local function work_proc()
 				app_log:warning('App.run returns error:', err)
 				fire_exception_event('Application run loop error!', { err=err }, event.LEVEL_WARNING)
 
-				timeout = timeout * 2 -- Double timeout
-				if timeout >= timeout_err_max then
-					timeout = timeout_err_max
+				--- Exponential backoff on error
+				timeout = timeout * 2
+				if timeout >= PING_TIMEOUT_ERR_MAX then
+					timeout = PING_TIMEOUT_ERR_MAX
 				end
 			end
 		end
 
-		--- Sleep before while app do checking
+		--- Sleep before next iteration
 		if timeout >= 0 then
 			skynet.sleep(timeout // 10)
 		else
-			timeout = def_timeout --- reset the timeout
+			timeout = DEFAULT_TIMEOUT
 		end
+	end
+	if not cancel_ping_timer then
+		cancel_ping_timer()
+		cancel_ping_timer = nil
 	end
 end
 
@@ -145,10 +207,22 @@ local function logger_proc()
 	skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 end
 
+-- ============================================================================
+-- Response Handlers
+-- ============================================================================
+
+---
+-- Ping handler for health check
+-- @return: "Pong <app_name>"
+---
 function response.ping()
 	return "Pong "..app_name
 end
 
+---
+-- Start the application
+-- @return: true on success, nil,err on failure
+---
 function response.start()
 	if app then
 		local r, err = protect_call(app, 'start')
@@ -160,7 +234,7 @@ function response.start()
 		skynet.timeout(100, work_proc)
 
 		if app.on_logger then
-			log_buffer = require('buffer.cycle'):new(publish_log, 512)
+			log_buffer = require('buffer.cycle'):new(publish_log, LOG_BUFFER_SIZE)
 			skynet.fork(logger_proc)
 		end
 
@@ -173,43 +247,81 @@ function response.start()
 	end
 end
 
+---
+-- Stop the application
+-- @param ...: arguments to pass to close method
+-- @return: result from on_close
+---
 function response.stop(...)
 	return on_close(...)
 end
 
+---
+-- Set application configuration
+-- @param conf: configuration table
+-- @return: true on success, nil,err on failure
+---
 function response.set_conf(conf)
 	if not app then
 		return nil, "app is nil"
 	end
+
+	if not sys_api then
+		return nil, "sys_api not available"
+	end
+
 	sys_api:set_conf(conf)
+
 	if app.reload then
 		return protect_call(app, 'reload', conf)
 	end
-	--- This called from appmgr then we cannot call the mgr_snax.req.restart. so use post
-	mgr_snax.post.app_restart(app_name, "Confiruation change restart")
+
+	--- This called from appmgr so we cannot call mgr_snax.req.restart, use post instead
+	mgr_snax.post.app_restart(app_name, "Configuration change restart")
+
 	return true
 end
 
+---
+-- Handle application request messages
+-- @param msg: message name
+-- @param ...: message arguments
+-- @return: result from app handler or nil,err
+---
 function response.app_req(msg, ...)
 	if not app then
 		return nil, "app is nil"
 	end
+
+	assert(msg, "Message name is required")
 	if app.response then
 		return protect_call(app, 'response', msg, ...)
 	else
-		local msg = 'on_req_'..msg
-		if app[msg] then
-			return protect_call(app, msg, ...)
+		local handler_name = 'on_req_'..msg
+		if app[handler_name] then
+			return protect_call(app, handler_name, ...)
 		end
 	end
+
 	return nil, "no handler for request message "..msg
 end
 
+-- ============================================================================
+-- Accept Handlers
+-- ============================================================================
+
+---
+-- Handle application post messages (asynchronous)
+-- @param msg: message name
+-- @param ...: message arguments
+---
 function accept.app_post(msg, ...)
 	if not app then
-		app_log:warning("App is nil when fire event", msg)
+		app_log:warning("App is nil when firing event", msg)
 		return false
 	end
+
+	assert(msg, "Message name is nil in app_post")
 
 	if app.accept then
 		local r, err = protect_call(app, 'accept', msg, ...)
@@ -218,9 +330,9 @@ function accept.app_post(msg, ...)
 			app_log:trace(err)
 		end
 	else
-		local msg = 'on_post_'..msg
-		if app[msg] then
-			local r, err = protect_call(app, msg, ...)
+		local handler_name = 'on_post_'..msg
+		if app[handler_name] then
+			local r, err = protect_call(app, handler_name, ...)
 			if not r and err then
 				app_log:warning("Failed to call accept function in application for msg", msg)
 				app_log:trace(err)
@@ -231,34 +343,59 @@ function accept.app_post(msg, ...)
 	end
 end
 
+---
+-- Handle log messages from logger service
+-- @param ts: timestamp
+-- @param lvl: log level
+-- @param msg: log message
+-- @param ...: additional log arguments
+---
 function accept.log(ts, lvl, msg, ...)
-	assert(msg)
+	assert(msg, 'message is nil')
 	if log_buffer then
 		log_buffer:push(ts, lvl, msg, ...)
 	end
 end
 
-function init(name, conf, mgr_handle, mgr_type)
-	-- Disable Skynet Code Cache!!
-	cache.mode('EXIST')
-	G_APP_NAME = name
+-- ============================================================================
+-- Service Lifecycle
+-- ============================================================================
 
+---
+-- Initialize application wrapper service
+-- @param name: application name
+-- @param conf: application configuration
+-- @param mgr_handle: appmgr service handle
+-- @param mgr_type: appmgr service type
+-- @return: true on success, nil,err on failure
+---
+function init(name, conf, mgr_handle, mgr_type)
+	assert(name, "Application name is required")
+	-- Disable Skynet Code Cache for app development
+	cache.mode('EXIST')
+
+	G_APP_NAME = name
 	app_name = name
-	mgr_snax = snax.bind(mgr_handle, mgr_type)
+
+	mgr_snax = assert(snax.bind(mgr_handle, mgr_type))
 	sys_api = app_sys:new(app_name, mgr_snax, snax.self())
 	app_log = sys_api:logger()
 
+	--- Determine application folder
 	local app_folder = ioe.dir()..'/apps/'..name
-	if name == app_util.dev_app_name() and conf.__dev_app_path then
-		app_folder =  conf.__dev_app_path
+	if name == app_util.dev_app_name() and conf and conf.__dev_app_path then
+		app_folder = conf.__dev_app_path
 	end
 
 	app_log:info("Application starting...")
+
+	--- Update package path for application
 	--package.path = package.path..';'..ioe.dir()..'/lualib/compat/?.lua' 
 	package.path = package.path..";"..app_folder.."/?.lua;"..app_folder.."/?.luac"..";"..app_folder.."/lualib/?.lua;"..app_folder.."/lualib/?.luac"
 	package.cpath = package.cpath..";"..app_folder.."/luaclib/?.so"
-	--local r, m = pcall(require, "app")
-	local f, err = io.open(""..app_folder.."/app.lua", "r")
+
+	--- Check if app.lua exists
+	local f, err = io.open(app_folder.."/app.lua", "r")
 	if not f then
 		app_log:warning("There is no app.lua!, Try to install it")
 		app_installing = true
@@ -272,6 +409,7 @@ function init(name, conf, mgr_handle, mgr_type)
 	end
 	f:close()
 
+	--- Install application dependencies
 	local r, err = skynet.call(".ioe_ext", "lua", "install_depends", name)
 	if not r then
 		app_log:error("Failed to install depends for ", name, "error:", err)
@@ -280,13 +418,15 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, info
 	end
 
-	local lf, err = loadfile(""..app_folder.."/app.lua")
+	--- Load application module
+	local lf, err = loadfile(app_folder.."/app.lua")
 	if not lf then
 		local info = "Loading application failed."
 		app_log:error(info, err)
 		fire_exception_event(info, {err=err})
 		return nil, err
 	end
+
 	local r, m = xpcall(lf, debug.traceback)
 	if not r then
 		local info = "Loading application failed."
@@ -294,11 +434,18 @@ function init(name, conf, mgr_handle, mgr_type)
 		fire_exception_event(info, {err=m})
 		return nil, m
 	end
-	assert(m, "Application class module not found!")
 
+	if not m then
+		local err = "Application class module not found!"
+		app_log:error(err)
+		fire_exception_event(err, {})
+		return nil, err
+	end
+
+	--- Check API version compatibility
 	if m.API_VER and (m.API_VER < app_sys.API_MIN_VER or m.API_VER > app_sys.API_VER) then
 		local s = string.format("API Version required is out of range. Required: %d. Current %d-%d",
-								m.API_VER, sys_api.API_MIN_VER, sys_api.API_VER)
+								m.API_VER, app_sys.API_MIN_VER, app_sys.API_VER)
 		app_log:error(s)
 		if m.API_VER > app_sys.API_VER then
 			app_log:error("Please **UPGRADE** FreeIOE to latest version for running this application.")
@@ -314,6 +461,7 @@ function init(name, conf, mgr_handle, mgr_type)
 		end
 	end
 
+	--- Create application instance
 	if not m.new and m.App then
 		r, err = xpcall(m.App.new, debug.traceback, app_name, sys_api, conf)
 		if not r then
@@ -322,7 +470,7 @@ function init(name, conf, mgr_handle, mgr_type)
 			return nil, err
 		end
 		app = err
-		return
+		return true
 	end
 
 	r, err = xpcall(m.new, debug.traceback, m, app_name, sys_api, conf)
@@ -332,8 +480,13 @@ function init(name, conf, mgr_handle, mgr_type)
 		return nil, err
 	end
 	app = err
+	return true
 end
 
+---
+-- Cleanup and shutdown application wrapper service
+-- @param ...: arguments to pass to on_close
+---
 function exit(...)
 	app_log:info("Application closing...")
 	local r, err = on_close(...)

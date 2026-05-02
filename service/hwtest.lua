@@ -22,11 +22,12 @@ skynet.start(function()
 	end
 
 	log.warning("Hardware Test Finished!!!")
-	os.execute("echo Hardware Test Finished!!! > /dev/console")
+	os.execute([[echo "Hardware Test Finished!!!" > /dev/kmsg]])
 
 	local result, err = cjson.encode(runner:result())
 	if not result then
-		os.execute("echo "..(err or "N???").." > /dev/console")
+		log.error("Failed to encode hwtest result:", err)
+		os.execute([[echo "Failed to encode hwtest result:]]..tostring(err)..[[" > /dev/kmsg]])
 		return
 	else
 		log.notice(result)
@@ -35,8 +36,9 @@ skynet.start(function()
 		if f then
 			f:write(result)
 			f:close()
+			log.info("Hardware test result saved to /tmp/hwtest.result")
 		else
-			os.execute("echo AAAAAAAAAAAAAAAAAAAAAAAAAAAA > /dev/console")
+			log.error("Failed to write hwtest result file:", err)
 		end
 	end
 	-- Do not quit this service
