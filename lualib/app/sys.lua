@@ -7,7 +7,7 @@ local ioe = require 'ioe'
 local api = require 'app.api'
 local logger = require 'app.logger'
 local conf_api = require 'app.conf.api'
-local util = require 'app.util'
+local utils = require 'app.utils'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
@@ -180,7 +180,7 @@ end
 ---
 -- Get current application dir
 function sys:app_dir()
-	return util.app_path(self._app_name)
+	return utils.app_path(self._app_name)
 end
 
 ---

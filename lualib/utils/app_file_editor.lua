@@ -3,7 +3,7 @@ local dc = require 'skynet.datacenter'
 local uuid = require 'uuid'
 local lfs = require 'lfs'
 local ioe = require 'ioe'
-local util = require 'app.util'
+local utils = require 'app.utils'
 
 local pack_target_path = "/tmp/ioe/"
 
@@ -20,7 +20,7 @@ local function path_join(...)
 end
 
 local function get_app_path(app, ...)
-	local path = util.app_path(app)
+	local path = utils.app_path(app)
 	--path = string.gsub(path, "\\", "/"):gsub("//", "/"):gsub("//","/")
 	path = string.gsub(path, "\\", "/")
 	return path

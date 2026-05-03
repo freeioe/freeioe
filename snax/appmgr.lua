@@ -3,7 +3,7 @@ local snax = require 'skynet.snax'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 local ioe = require 'ioe'
-local app_util = require 'app.util'
+local app_utils = require 'app.utils'
 local event = require 'app.event'
 local cjson = require 'cjson.safe'
 
@@ -32,7 +32,7 @@ function response.start(name, conf, skip_mode_check)
 		return nil, err
 	end
 
-	if name == app_util.dev_app_name() and conf.__app_path then
+	if name == app_utils.dev_app_name() and conf.__app_path then
 		log.info("Start developing application in "..conf.__app_path)
 	else
 		log.info("Start application "..name)
@@ -228,7 +228,7 @@ function response.app_rename(inst, new_name, reason)
 	if not inst or not new_name then
 		return nil, "Incorrect params"
 	end
-	if not app_util.valid_inst(new_name) then
+	if not app_utils.valid_inst(new_name) then
 		return nil, 'Invalid new instance name'
 	end
 	local reason = reason or "Rename from "..inst.." to "..new_name
@@ -276,7 +276,7 @@ function accept.app_start(inst, skip_mode_check)
 end
 
 function accept.dev_app_start(app_path)
-	local inst = app_util.dev_app_name()
+	local inst = app_utils.dev_app_name()
 	local conf = { __app_path = local_dev_path }
 	applist[inst] = { conf = conf }
 	dc.set("APPS", inst, 'conf', app.conf)
@@ -415,7 +415,7 @@ function init(...)
 	skynet.fork(function()
 		local apps = dc.get("APPS") or {}
 		for k,v in pairs(apps) do
-			if not app_util.valid_inst(k) then
+			if not app_utils.valid_inst(k) then
 				apps[k] = nil -- 删除不合法的inst_name
 			end
 		end
@@ -429,7 +429,7 @@ function init(...)
 		end
 
 		-- 启动 ioe 应用
-		local sys_app = app_util.sys_app_name()
+		local sys_app = app_utils.sys_app_name()
 		assert(not apps[sys_app])
 		snax.self().req.start(sys_app, {}, true)
 

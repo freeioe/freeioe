@@ -13,7 +13,7 @@ local skynet = require 'skynet'
 local snax = require 'skynet.snax'
 local cache = require "skynet.codecache"
 local app_sys = require 'app.sys'
-local app_util = require 'app.util'
+local app_utils = require 'app.utils'
 local event = require 'app.event'
 local ioe = require 'ioe'
 
@@ -383,7 +383,7 @@ function init(name, conf, mgr_handle, mgr_type)
 
 	--- Determine application folder
 	local app_folder = ioe.dir()..'/apps/'..name
-	if name == app_util.dev_app_name() and conf and conf.__dev_app_path then
+	if name == app_utils.dev_app_name() and conf and conf.__dev_app_path then
 		app_folder = conf.__dev_app_path
 	end
 
