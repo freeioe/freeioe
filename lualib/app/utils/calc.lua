@@ -1,8 +1,8 @@
 ---
--- Calculation Trigger Module
+-- 计算触发器模块
 --
--- This module provides a calculation engine that triggers callbacks
--- based on input value changes with support for cyclic execution.
+-- 本模块提供基于输入值变化触发回调的计算引擎，
+-- 支持周期性执行。
 ---
 
 local class = require 'middleclass'
@@ -10,36 +10,35 @@ local ioe = require 'ioe'
 local cov = require 'cov'
 
 ---
--- Calculation Trigger Class
+-- 计算触发器类
 --
--- Monitors device inputs and triggers callbacks when values change
--- or on cyclic intervals.
+-- 监控设备输入并在值变化时或周期性间隔时触发回调。
 ---
 local calc = class("APP_UTILS_CALC")
 
 ---
--- Initialize calculation trigger engine
--- @param sys: system API object
--- @param api: data API object
--- @param logger: logger instance
+-- 初始化计算触发器引擎
+-- @param sys: 系统API对象
+-- @param api: 数据API对象
+-- @param logger: 日志记录器实例
 ---
 function calc:initialize(sys, api, logger)
 	self._sys = sys
 	self._api = api
 	self._log = logger
-	self._triggers = {} --- all triggers key by trigger name
-	self._watch_map = {}  -- key is: sn/input/prop
-	self._cycle_triggers = {} -- key by trigger name
+	self._triggers = {} --- 所有触发器，按触发器名称索引
+	self._watch_map = {}  -- 键为: sn/input/prop
+	self._cycle_triggers = {} -- 按触发器名称索引
 	self._cov = nil
 end
 
 ---
--- Add a trigger that watches device inputs and fires callback on changes
--- @param name: unique trigger name
--- @param inputs: array of input specifications {sn, input, prop, default}
--- @param trigger_cb: callback function(trigger_values...)
--- @param cycle_time: optional cycle time in seconds for periodic firing
--- @return: function to manually trigger the callback
+-- 添加一个监控设备输入的触发器，在变化时触发回调
+-- @param name: 唯一的触发器名称
+-- @param inputs: 输入规范数组 {sn, input, prop, default}
+-- @param trigger_cb: 回调函数(trigger_values...)
+-- @param cycle_time: 可选的周期性触发周期时间（秒）
+-- @return: 手动触发回调的函数
 ---
 function calc:add(name, inputs, trigger_cb, cycle_time)
 	assert(self._triggers[name] == nil, "Trigger "..name.." already exists!")
@@ -78,20 +77,20 @@ function calc:add(name, inputs, trigger_cb, cycle_time)
 end
 
 ---
--- Remove a trigger by name
--- @param name: trigger name to remove
+-- 按名称移除触发器
+-- @param name: 要移除的触发器名称
 ---
 function calc:remove(name)
 	self._triggers[name] = nil
-	-- TODO: cleanup watch_map and _cycle_triggers
+	-- TODO: 清理watch_map和_cycle_triggers
 end
 
 ---
--- Generate watch key for device input
--- @param sn: device serial number
--- @param input: input name
--- @param prop: property name
--- @return: watch key string
+-- 为设备输入生成监控键
+-- @param sn: 设备序列号
+-- @param input: 输入名称
+-- @param prop: 属性名称
+-- @return: 监控键字符串
 ---
 function calc:_watch_key(sn, input, prop)
 	local prop = prop or 'value'
@@ -99,9 +98,9 @@ function calc:_watch_key(sn, input, prop)
 end
 
 ---
--- Add a watch for a device input
--- @param trigger: trigger object
--- @param input: input specification
+-- 为设备输入添加监控
+-- @param trigger: 触发器对象
+-- @param input: 输入规范
 ---
 function calc:_add_watch(trigger, input)
 	assert(input.sn and input.input and input.prop)
@@ -127,9 +126,9 @@ function calc:_add_watch(trigger, input)
 end
 
 ---
--- Complete trigger execution with current input values
--- @param trigger: trigger object
--- @return: callback result or nil, error message on failure
+-- 使用当前输入值完成触发器执行
+-- @param trigger: 触发器对象
+-- @return: 回调结果或nil、失败时的错误信息
 ---
 function calc:_complete_trigger(trigger)
 	local inputs = trigger.inputs
@@ -147,10 +146,10 @@ function calc:_complete_trigger(trigger)
 end
 
 ---
--- Execute trigger callback with error protection
--- @param trigger: trigger object
--- @param ...: callback arguments
--- @return: callback result or nil, error message on failure
+-- 带错误保护执行触发器回调
+-- @param trigger: 触发器对象
+-- @param ...: 回调参数
+-- @return: 回调结果或nil、失败时的错误信息
 ---
 function calc:_complete_call(trigger, ...)
 	local f= trigger.callback
@@ -165,8 +164,8 @@ function calc:_complete_call(trigger, ...)
 end
 
 ---
--- Clean input values for all triggers watching a key
--- @param key: watch key string
+-- 清理监控某个键的所有触发器的输入值
+-- @param key: 监控键字符串
 ---
 function calc:_clean_watch(key)
 	local triggers = self._watch_map[key] or {}
@@ -183,10 +182,10 @@ function calc:_clean_watch(key)
 end
 
 ---
--- Handle device addition event
--- @param app_src: source application name
--- @param sn: device serial number
--- @param props: device properties
+-- 处理设备添加事件
+-- @param app_src: 源应用名称
+-- @param sn: 设备序列号
+-- @param props: 设备属性
 ---
 function calc:_on_add_device(app_src, sn, props)
 	--[[
@@ -203,9 +202,9 @@ function calc:_on_add_device(app_src, sn, props)
 end
 
 ---
--- Handle device deletion event
--- @param app_src: source application name
--- @param sn: device serial number
+-- 处理设备删除事件
+-- @param app_src: 源应用名称
+-- @param sn: 设备序列号
 ---
 function calc:_on_del_device(app_src, sn)
 	for k, v in ipairs(self._watch_map) do
@@ -217,10 +216,10 @@ function calc:_on_del_device(app_src, sn)
 end
 
 ---
--- Handle device modification event
--- @param app_src: source application name
--- @param sn: device serial number
--- @param props: device properties
+-- 处理设备修改事件
+-- @param app_src: 源应用名称
+-- @param sn: 设备序列号
+-- @param props: 设备属性
 ---
 function calc:_on_mod_device(app_src, sn, props)
 	self:_on_del_device(app_src, sn)
@@ -228,14 +227,14 @@ function calc:_on_mod_device(app_src, sn, props)
 end
 
 ---
--- Handle input value change event
--- @param app_src: source application name
--- @param sn: device serial number
--- @param input: input name
--- @param prop: property name
--- @param value: new value
--- @param timestamp: value timestamp
--- @param quality: quality flag
+-- 处理输入值变化事件
+-- @param app_src: 源应用名称
+-- @param sn: 设备序列号
+-- @param input: 输入名称
+-- @param prop: 属性名称
+-- @param value: 新值
+-- @param timestamp: 值时间戳
+-- @param quality: 质量标志
 ---
 function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 	local key = self:_watch_key(sn, input, prop)
@@ -246,7 +245,7 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 	end
 
 	if self._cov then
-		-- If cov enabled
+		-- 如果启用了COV
 		--self._log:trace("COV push watched value", key, value, timestamp, quality)
 		return self._cov:handle(key, value, timestamp, quality)
 	end
@@ -255,12 +254,12 @@ function calc:_on_input(app_src, sn, input, prop, value, timestamp, quality)
 end
 
 ---
--- Handle COV (Change-of-Value) input event
--- Updates all triggers watching the changed input
--- @param key: watch key string
--- @param value: new value
--- @param timestamp: value timestamp
--- @param quality: quality flag
+-- 处理COV（值变化）输入事件
+-- 更新监控变化输入的所有触发器
+-- @param key: 监控键字符串
+-- @param value: 新值
+-- @param timestamp: 值时间戳
+-- @param quality: 质量标志
 ---
 function calc:_on_cov_input(key, value, timestamp, quality)
 	self._log:trace("Value changed for watched key: "..key, value, timestamp, quality)
@@ -283,9 +282,9 @@ function calc:_on_cov_input(key, value, timestamp, quality)
 end
 
 ---
--- Create handler table for device and input events
--- @param calc: calculation engine instance
--- @return: handler table with callback functions
+-- 为设备和输入事件创建处理程序表
+-- @param calc: 计算引擎实例
+-- @return: 带回调函数的处理程序表
 ---
 local function create_handler(calc)
 	local calc = calc
@@ -316,10 +315,10 @@ local function create_handler(calc)
 end
 
 ---
--- Map calc handler function to user handler with error protection
--- @param handler: user's handler table
--- @param calc_handler: calc's handler table
--- @param func: function name to map
+-- 将计算处理程序函数映射到用户处理程序，带错误保护
+-- @param handler: 用户的处理程序表
+-- @param calc_handler: 计算器的处理程序表
+-- @param func: 要映射的函数名称
 ---
 function calc:_map_handler_func(handler, calc_handler, func)
 	local hf = handler[func] or function() end
@@ -335,9 +334,9 @@ function calc:_map_handler_func(handler, calc_handler, func)
 end
 
 ---
--- Map calc handlers to user's handler table
--- @param handler: user's handler table to extend
--- @return: extended handler table
+-- 将计算器处理程序映射到用户的处理程序表
+-- @param handler: 要扩展的用户处理程序表
+-- @return: 扩展后的处理程序表
 ---
 function calc:_map_handler(handler)
 	assert(self._cov, "Calc util needs to be started and then map handler")
@@ -350,10 +349,10 @@ function calc:_map_handler(handler)
 end
 
 ---
--- Start the calculation engine
--- Starts COV monitoring and cycle trigger loop
--- @param handler: handler table to extend with calc handlers
--- @return: extended handler table
+-- 启动计算引擎
+-- 启动COV监控和周期触发器循环
+-- @param handler: 要用计算器处理程序扩展的处理程序表
+-- @return: 扩展后的处理程序表
 ---
 function calc:start(handler)
 	assert(handler, "Calc util need the api handler")
@@ -387,8 +386,8 @@ function calc:start(handler)
 end
 
 ---
--- Stop the calculation engine
--- Stops COV monitoring and cycle trigger loop
+-- 停止计算引擎
+-- 停止COV监控和周期触发器循环
 ---
 function calc:stop()
 	if not self._stop then

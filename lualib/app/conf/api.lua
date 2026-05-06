@@ -1,8 +1,8 @@
 ---
--- Configuration API Module
+-- 配置API模块
 --
--- This module provides access to application configuration and templates
--- from a central configuration server with local caching support.
+-- 本模块提供从中央配置服务器访问应用配置和模板的功能，
+-- 支持本地缓存以提高性能和离线能力。
 --
 ---
 
@@ -15,30 +15,30 @@ local ioe = require 'ioe'
 local lfs = require 'lfs'
 
 ---
--- Configuration API Class
+-- 配置API类
 --
--- Handles configuration and template retrieval with local caching
--- for improved performance and offline capability.
+-- 处理配置和模板检索，支持本地缓存
+-- 以提高性能和离线能力。
 ---
 local api = class("FREEIOE_APP_CONF_CENTER_API")
 
 ---
--- HTTP headers for API requests
+-- API请求的HTTP头
 ---
 local api_header = {
 	Accpet = "application/json"
 }
 
 ---
--- Constructor
--- @param sys: system API object
--- @param app: application ID
--- @param conf: configuration ID
--- @param ext: local file extension (csv, conf, xml, etc.), default 'csv'
--- @param dir: template save directory (full path), default 'tpl'
+-- 构造函数
+-- @param sys: 系统API对象
+-- @param app: 应用ID
+-- @param conf: 配置ID
+-- @param ext: 本地文件扩展名（csv、conf、xml等），默认为'csv'
+-- @param dir: 模板保存目录（完整路径），默认为'tpl'
 ---
 function api:initialize(sys, app, conf, ext, dir)
-	-- Service host (ip or domain)
+	-- 服务主机（IP或域名）
 	self._host = ioe.cnf_host_url()
 	self._sys = sys
 	self._app = app
@@ -52,18 +52,18 @@ function api:initialize(sys, app, conf, ext, dir)
 end
 
 ---
--- Check application configuration update
--- @return: latest version number
+-- 检查应用配置更新
+-- @return: 最新版本号
 ---
 function api:version()
 	return pkg_api.conf_latest_version(self._sn, self._app, self._conf)
 end
 
 ---
--- Get application configuration/template data by version
--- Tries local cache first, then downloads from remote
--- @param version: configuration version (nil for latest)
--- @return: data string, version or nil, error message
+-- 按版本获取应用配置/模板数据
+-- 首先尝试本地缓存，然后从远程下载
+-- @param version: 配置版本（nil表示最新版本）
+-- @return: 数据字符串、版本或nil、错误信息
 ---
 function api:data(version)
 	local version = version
@@ -84,9 +84,9 @@ function api:data(version)
 end
 
 ---
--- Fetch configuration and return local file path
--- @param version: configuration version (nil for latest)
--- @return: local file path or nil, error message
+-- 获取配置并返回本地文件路径
+-- @param version: 配置版本（nil表示最新版本）
+-- @return: 本地文件路径或nil、错误信息
 ---
 function api:fetch(version)
 	local data, version = self:data(version)
@@ -97,18 +97,18 @@ function api:fetch(version)
 end
 
 ---
--- Generate local filename for cached configuration
--- @param version: configuration version
--- @return: local file path
+-- 为缓存配置生成本地文件名
+-- @param version: 配置版本
+-- @return: 本地文件路径
 ---
 function api:_local_filename(version)
 	return self._dir.."/"..self._conf.."_"..version.."."..self._ext
 end
 
 ---
--- Try to read locally cached configuration data
--- @param version: configuration version
--- @return: data string or nil, error message
+-- 尝试读取本地缓存的配置数据
+-- @param version: 配置版本
+-- @return: 数据字符串或nil、错误信息
 ---
 function api:_try_read_local_data(version)
 	local f, err = io.open(self:_local_filename(version), "r")
@@ -121,10 +121,10 @@ function api:_try_read_local_data(version)
 end
 
 ---
--- Save configuration data to local cache
--- @param data: configuration data string
--- @param version: configuration version
--- @return: nil, error message on failure
+-- 将配置数据保存到本地缓存
+-- @param data: 配置数据字符串
+-- @param version: 配置版本
+-- @return: nil，失败时返回错误信息
 ---
 function api:_save_local_data(data, version)
 	local f, err = io.open(self:_local_filename(version), "w+")

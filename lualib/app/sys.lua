@@ -16,23 +16,23 @@ sys.API_VER = 17 -- 2026.04.22 :: Improved app depends download
 sys.API_MIN_VER = 1
 
 ---
--- Write log with level
--- @tparam level string Log level string (error, info, notice, debug, trace)
+-- 按级别写入日志
+-- @tparam level string 日志级别字符串（error、info、notice、debug、trace）
 function sys:log(level, ...)
 	return self._logger:log(level, ...)
 end
 
 ---
--- Get logger interface object
--- @treturn logger object
+-- 获取日志记录器接口对象
+-- @treturn logger object 日志记录器对象
 function sys:logger()
 	return self._logger
 end
 
 ---
--- Dump communication stream data
--- @tparam sn string Device serial number
--- @tparam dir string Direction description
+-- 转储通信流数据
+-- @tparam sn string 设备序列号
+-- @tparam dir string 方向描述
 -- @treturn nil
 function sys:dump_comm(sn, dir, ...)
 	local sn = sn or self:app_sn()
@@ -40,70 +40,70 @@ function sys:dump_comm(sn, dir, ...)
 end
 
 ---
--- Fire application event
--- @tparam sn string Device serial number
--- @tparam level number Event level (refer to app.event module's LEVELS)
--- @tparam type_ number Event type (refere to app.event module's EVENTS)
--- @tparam info string Event information
--- @tparam data table Event data table object
--- @tparam timestamp number Event occur timestamp (or iot.time())
+-- 触发应用事件
+-- @tparam sn string 设备序列号
+-- @tparam level number 事件级别（参考app.event模块的LEVELS）
+-- @tparam type_ number 事件类型（参考app.event模块的EVENTS）
+-- @tparam info string 事件信息
+-- @tparam data table 事件数据表对象
+-- @tparam timestamp number 事件发生时间戳（或iot.time()）
 function sys:fire_event(sn, level, type_, info, data, timestamp)
 	return self._data_api:_fire_event(sn or self:app_sn(), level, type_, info, data or {}, timestamp or ioe.time())
 end
 
 ---
--- Fork a new coroutine to run a function
--- @tparam func function Excution function
--- @tparam ... args
+-- 派生新协程来运行函数
+-- @tparam func function 执行函数
+-- @tparam ... args 参数
 function sys:fork(func, ...)
 	skynet.fork(func, ...)
 end
 
 ---
--- Set an timeout function execution
--- @tparam ms number Time in milli-seconds
--- @tparam func function Execution function
+-- 设置超时函数执行
+-- @tparam ms number 时间（毫秒）
+-- @tparam func function 执行函数
 function sys:timeout(ms, func)
 	return skynet.timeout(ms / 10, func)
 end
 
 ---
--- Create can cancelable timeout function execution
--- @tparam ms number Time in milli-seconds
--- @tparam func function Execution function
--- @treturn function An cancel function holder
+-- 创建可取消的超时函数执行
+-- @tparam ms number 时间（毫秒）
+-- @tparam func function 执行函数
+-- @treturn function 取消函数持有者
 function sys:cancelable_timeout(ms, func)
 	local cancel = cancelable_timeout(ms / 10, func)
 	return cancel
 end
 
 ---
--- Quit current application process
---   this won't save 
+-- 退出当前应用进程
+--   这不会保存数据
 function sys:exit()
 	skynet.exit()
 end
 
 ---
--- Abort FreeIOE application in five seconds
+-- 在五秒后中止FreeIOE应用
 function sys:abort()
 	self._logger:warning("FreeIOE will be closed after 5 seconds!")
 	ioe.abort(5000)
 end
 
 ---
--- Get FreeIOE uptime in ms
--- @treturn number ms
+-- 获取FreeIOE运行时间（毫秒）
+-- @treturn number 毫秒数
 function sys:now()
 	return skynet.now() * 10
 end
 
 ---
--- Try to fix FreeIOE time issue (caused by NTP)
+-- 尝试修复FreeIOE时间问题（由NTP引起）
 function sys:fix_time()
 	if skynet.fix_time then
 		local r = skynet.fix_time()
-		--- previous fix_time does not returns any value, so r will be nil
+		--- 之前的fix_time不返回任何值，所以r将为nil
 		if r or r == nil then
 			return
 		end
@@ -114,43 +114,43 @@ function sys:fix_time()
 end
 
 ---
--- Get current time seconds (UTC now)
--- @treturn number refer to ioe.time()
+-- 获取当前时间秒数（UTC当前时间）
+-- @treturn number 参考ioe.time()
 function sys:time()
 	return ioe.time()
 end
 
 ---
--- Get FreeIOE start time (in UTC, seconds)
--- @treturn number refer to ioe.starttime()
+-- 获取FreeIOE启动时间（UTC，秒）
+-- @treturn number 参考ioe.starttime()
 function sys:start_time()
 	return ioe.starttime()
 end
 
 ---
--- Yield current coroutine
+-- 让当前协程让出执行权
 function sys:yield()
 	return skynet.yield()
 end
 
 ---
--- Sleep current coroutine, let others run
--- @tparam ms number Sleep time in ms
--- @tparam token The token can be used to abort sleep
+-- 休眠当前协程，让其他协程运行
+-- @tparam ms number 休眠时间（毫秒）
+-- @tparam token 可用于中止休眠的令牌
 function sys:sleep(ms, token)
 	local ts = math.floor(ms / 10)
 	return skynet.sleep(ts, token)
 end
 
 ---
--- Get data access api
--- @treturn object refer to app.api
+-- 获取数据访问API
+-- @treturn object 参考app.api
 function sys:data_api()
 	return self._data_api
 end
 
 ---
--- Get debug api(not implemented)
+-- 获取调试API（未实现）
 function sys:debug_api()
 	if self._debug_api then
 		self._debug_api = debug_utils:new(app_name, self._logger)
@@ -159,33 +159,33 @@ function sys:debug_api()
 end
 
 ---
--- Get current coroutine object
+-- 获取当前协程对象
 function sys:self_co()
 	return coroutine.running()
 end
 
 ---
--- Wait for be wakeup by token
--- @tparam any The token used to wakeup this wait
+-- 等待被令牌唤醒
+-- @tparam any 用于唤醒此等待的令牌
 function sys:wait(token)
 	return skynet.wait(token)
 end
 
 ---
--- Wakeup sepecified token's coroutine
--- @tparam any Sleep/Wait coroutine token
+-- 唤醒指定令牌的协程
+-- @tparam any 休眠/等待协程令牌
 function sys:wakeup(token)
 	return skynet.wakeup(token)
 end
 
 ---
--- Get current application dir
+-- 获取当前应用目录
 function sys:app_dir()
 	return utils.app_path(self._app_name)
 end
 
 ---
--- Get Application SN
+-- 获取应用序列号
 function sys:app_sn()
 	local app_sn = self._app_sn
 	if app_sn then
@@ -206,12 +206,12 @@ function sys:app_sn()
 end
 
 ---
--- Get application configuration
+-- 获取应用配置
 function sys:get_conf(default_config)
 	app = dc.get("APPS", self._app_name)
 	local conf = {}
 	if app and app.conf then
-		conf = app.conf 
+		conf = app.conf
 	end
 	if not default_config then
 		return conf
@@ -220,7 +220,7 @@ function sys:get_conf(default_config)
 end
 
 ---
--- Set application configuration
+-- 设置应用配置
 function sys:set_conf(config)
 	app = dc.get("APPS", self._app_name)
 	if app then
@@ -230,10 +230,10 @@ function sys:set_conf(config)
 	end
 end
 
---- Get cloud configuration api
--- @tparam string conf_name Cloud application configuration id
--- @tparam string ext Local saving file extension. e.g. csv conf xml. default csv
--- @tparam string dir Application template file saving directory. <current_path>/tpl
+--- 获取云配置API
+-- @tparam string conf_name 云应用配置ID
+-- @tparam string ext 本地保存文件扩展名。例如csv conf xml。默认为csv
+-- @tparam string dir 应用模板文件保存目录。<当前路径>/tpl
 -- @treturn conf_api
 function sys:conf_api(conf_name, ext, dir)
 	local dir = self:app_dir()..(dir or 'tpl')
@@ -242,49 +242,49 @@ function sys:conf_api(conf_name, ext, dir)
 end
 
 ---
--- Get application name, version
--- @treturn string Application instance name
--- @treturn number Application version number
+-- 获取应用名称和版本
+-- @treturn string 应用实例名称
+-- @treturn number 应用版本号
 function sys:version()
 	app = dc.get("APPS", self._app_name)
 	return app.name, app.version
 end
 
 ---
--- Generate device serial number
--- @tparam string device name used to generate serial number
+-- 生成设备序列号
+-- @tparam string device 用于生成序列号的设备名称
 function sys:gen_sn(dev_name)
 	local cloud = snax.queryservice('cloud')
 	return cloud.req.gen_sn(self._app_name.."."..dev_name)
 end
 
 ---
--- Get system ID
+-- 获取系统ID
 function sys:id()
 	return ioe.id()
 end
 
 ---
--- Get hardware ID
+-- 获取硬件ID
 function sys:hw_id()
 	return ioe.hw_id()
 end
 
 ---
--- Fire request to app self, which will call your app.response or on_req_<msg> if on_post does not exists
+-- 向应用自身发起请求，如果on_post不存在将调用app.response或on_req_<msg>
 function sys:req(msg, ...)
 	assert(self._wrap_snax)
 	return self._wrap_snax.req.app_req(msg, ...)
 end
 
 ---
--- Post message to app self, which will call your app.accept or on_post_<msg> if on_post does not exists
+-- 向应用自身发送消息，如果on_post不存在将调用app.accept或on_post_<msg>
 function sys:post(msg, ...)
 	assert(self._wrap_snax)
 	return self._wrap_snax.post.app_post(msg, ...)
 end
 
---- POST to cloud
+--- POST到云端
 local CLOUD_WHITE_LIST_POST = {
 	'enable_data_one_short',
 	'enable_event',
@@ -293,10 +293,10 @@ local CLOUD_WHITE_LIST_POST = {
 	'fire_data_snapshot',
 	'batch_script',
 }
---- 
--- Call cloud post actions
--- @tparam func string Action name
--- @tparam ... args Action parameters
+---
+-- 调用云端post操作
+-- @tparam func string 操作名称
+-- @tparam ... args 操作参数
 function sys:cloud_post(func, ...)
 	local found = false
 	for _, v in ipairs(CLOUD_WHITE_LIST_POST) do
@@ -320,10 +320,10 @@ function sys:cloud_post(func, ...)
 end
 
 local CLOUD_WHILTE_LIST_REQ = {}
---- 
--- Call cloud request actions
--- @tparam func string Action name
--- @tparam ... args Action parameters
+---
+-- 调用云端请求操作
+-- @tparam func string 操作名称
+-- @tparam ... args 操作参数
 function sys:cloud_req(func, ...)
 	local found = false
 	for _, v in ipairs(CLOUD_WHILTE_LIST_REQ) do
@@ -346,10 +346,10 @@ end
 local CFG_WHITE_LIST_CALL = {
 	'SAVE',
 }
---- 
--- Call system cfg service actions
--- @tparam func string Action name
--- @tparam ... args Action parameters
+---
+-- 调用系统cfg服务操作
+-- @tparam func string 操作名称
+-- @tparam ... args 操作参数
 function sys:cfg_call(func, ...)
 	local found = false
 	for _, v in ipairs(CLOUD_WHILTE_LIST_REQ) do
@@ -369,17 +369,17 @@ function sys:cfg_call(func, ...)
 end
 
 ---
--- Set event fire threshold
--- @tparam count_per_min number The max count fired per minute
+-- 设置事件触发阈值
+-- @tparam count_per_min number 每分钟最大触发次数
 function sys:set_event_threshold(count_per_min)
 	self._data_api:_set_event_threshold(count_per_min)
 end
 
 ---
--- API initialiation function
--- @tparam app_name string Application instance name
--- @tparam mgr_snax api Application manager snax object
--- @tparam wrap_snax api Application snax object
+-- API初始化函数
+-- @tparam app_name string 应用实例名称
+-- @tparam mgr_snax api 应用管理器snax对象
+-- @tparam wrap_snax api 应用snax对象
 function sys:initialize(app_name, mgr_snax, wrap_snax)
 	self._mgr_snax = mgr_snax
 	self._wrap_snax = wrap_snax
@@ -390,7 +390,7 @@ function sys:initialize(app_name, mgr_snax, wrap_snax)
 end
 
 ---
--- Cleanup current object
+-- 清理当前对象
 function sys:cleanup()
 	if self._data_api then
 		self._data_api:cleanup()

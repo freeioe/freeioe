@@ -1,10 +1,16 @@
+---
+-- 端口辅助模块
+--
+-- 本模块提供Socket和串口数据读取的辅助功能
+---
+
 local _M = {}
 
 ---
--- Read specified length data from socket
--- @tparam sock TCP socket channel object
--- @tparam len Required length
--- @tparam dump Stream dump function. e.g. function(str) print(str) end
+-- 从Socket读取指定长度的数据
+-- @tparam sock TCP Socket通道对象
+-- @tparam len 需要的长度
+-- @tparam dump 流转储函数。例如 function(str) print(str) end
 function _M.read_socket(sock, len, dump)
 	--local logger = require 'utils.logger'.new()
 	--logger.trace('Start reading from socket stream. required len:', len)
@@ -26,11 +32,11 @@ function _M.read_socket(sock, len, dump)
 end
 
 ---
--- Read specified length data from serial 
--- @tparam serial Serial port channel object
--- @tparam len Required length
--- @tparam dump Stream dump function. e.g. function(str) print(str) end
--- @tparam timeout Reading timeout in ms. Default is 3000 ms
+-- 从串口读取指定长度的数据
+-- @tparam serial 串口通道对象
+-- @tparam len 需要的长度
+-- @tparam dump 流转储函数。例如 function(str) print(str) end
+-- @tparam timeout 读取超时时间（毫秒）。默认为3000毫秒
 function _M.read_serial(serial, len, dump, timeout)
 	--local logger = require 'utils.logger'.new()
 	--logger.trace('Start reading from serial port. required len:', len, 'timeout(ms):', timeout)

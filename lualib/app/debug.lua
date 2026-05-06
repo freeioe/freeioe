@@ -1,8 +1,8 @@
 ---
--- Debug Utilities Module
+-- 调试工具模块
 --
--- This module provides debugging utilities for applications,
--- including buffer packing for diagnostic purposes.
+-- 本模块为应用提供调试工具，
+-- 包括用于诊断目的的缓冲区打包功能。
 ---
 
 local skynet = require 'skynet'
@@ -14,17 +14,17 @@ local class = require 'middleclass'
 local app_logger = require 'app.logger'
 
 ---
--- Debug Utilities Class
+-- 调试工具类
 --
--- Provides methods for collecting and saving application
--- debug information including communication logs and system logs.
+-- 提供收集和保存应用调试信息的方法，
+-- 包括通信日志和系统日志。
 ---
 local debug = class("APP_LIB_DEBUG")
 
 ---
--- Initialize debug utilities instance
--- @param app_name: application name
--- @param logger: optional logger instance (creates default if nil)
+-- 初始化调试工具实例
+-- @param app_name: 应用名称
+-- @param logger: 可选的日志记录器实例（如为nil则创建默认实例）
 ---
 function debug:initialize(app_name, logger)
 	self._app_name = app_name
@@ -32,9 +32,9 @@ function debug:initialize(app_name, logger)
 end
 
 ---
--- Pack all application communication and log data into a file
--- Queries buffer service for app-specific data and saves to JSON file
--- @return: filename on success, nil and error message on failure
+-- 将所有应用通信和日志数据打包到文件中
+-- 从缓冲区服务查询应用特定数据并保存为JSON文件
+-- @return: 成功返回文件名，失败返回nil和错误信息
 ---
 function debug:pack_all()
 	local buffer, err = snax.queryservice('buffer')

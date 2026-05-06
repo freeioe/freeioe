@@ -1,19 +1,18 @@
----
--- Device Statistics Module
+--- 设备统计模块
 --
--- This module provides statistics tracking and reporting for devices.
--- It manages counters and ratios for communication performance monitoring.
+-- 本模块为设备提供统计跟踪和报告功能
+-- 管理通信性能监控的计数器和比率
 --
--- Standard Statistics Properties:
---   status - Current device status
---   success_ratio - Success operation ratio (percentage)
---   error_ratio - Error operation ratio (percentage)
---   packets_in - Total packets received
---   packets_out - Total packets sent
---   packets_error - Total packet errors
---   bytes_in - Total bytes received
---   bytes_out - Total bytes sent
---   bytes_error - Total byte errors
+-- 标准统计属性：
+--   status - 当前设备状态
+--   success_ratio - 成功操作比率（百分比）
+--   error_ratio - 错误操作比率（百分比）
+--   packets_in - 接收的数据包总数
+--   packets_out - 发送的数据包总数
+--   packets_error - 数据包错误总数
+--   bytes_in - 接收的字节总数
+--   bytes_out - 发送的字节总数
+--   bytes_error - 字节错误总数
 ---
 
 local skynet = require 'skynet'
@@ -22,32 +21,31 @@ local class = require 'middleclass'
 local mc = require 'skynet.multicast'
 local dc = require 'skynet.datacenter'
 
----
--- Statistics Class
+--- 统计类
 --
--- Manages device statistics with automatic persistence and
--- multicast publishing of updates.
+-- 管理设备统计，支持自动持久化和多播发布更新
 ---
 local stat = class("APP_MGR_DEV_API")
 
+--- 标准属性列表
 local standard_props = {
-	'status',
-	'success_ratio',
-	'error_ratio',
-	'packets_in',
-	'packets_out',
-	'packets_error',
-	'bytes_in',
-	'bytes_out',
-	'bytes_error'
+	'status',         -- 状态
+	'success_ratio', -- 成功率
+	'error_ratio',   -- 错误率
+	'packets_in',    -- 接收包数
+	'packets_out',   -- 发送包数
+	'packets_error', -- 错误包数
+	'bytes_in',      -- 接收字节数
+	'bytes_out',     -- 发送字节数
+	'bytes_error'    -- 错误字节数
 }
 
 ---
--- Initialize statistics instance for a device
--- @param api: parent API object
--- @param sn: device serial number
--- @param name: statistics name (e.g., 'comm', 'data')
--- @param readonly: true if this is a guest (read-only) statistics object
+-- 初始化设备的统计实例
+-- @param api: 父API对象
+-- @param sn: 设备序列号
+-- @param name: 统计名称（例如'comm'、'data'）
+-- @param readonly: 如果为true则表示这是一个访客（只读）统计对象
 ---
 function stat:initialize(api, sn, name, readonly)
 	self._api = api
@@ -68,7 +66,7 @@ function stat:initialize(api, sn, name, readonly)
 end
 
 ---
--- Internal cleanup of statistics references
+-- 内部清理统计引用
 ---
 function stat:_cleanup()
 	self._readonly = true
@@ -80,8 +78,8 @@ function stat:_cleanup()
 end
 
 ---
--- Cleanup statistics object
--- For owner statistics, clears internal references
+-- 清理统计对象
+-- 对于所有者统计对象，清除内部引用
 ---
 function stat:cleanup()
 	if self._readonly then
@@ -93,28 +91,28 @@ function stat:cleanup()
 end
 
 ---
--- Get statistics property value
--- @param prop: property name
--- @return: property value or nil if not found
+-- 获取统计属性值
+-- @param prop: 属性名称
+-- @return: 属性值，未找到时返回nil
 ---
 function stat:get(prop)
 	return dc.get('STAT', self._sn, self._name, prop)
 end
 
 ---
--- Reset statistics property to zero
--- @param prop: property name
--- @return: set result
+-- 将统计属性重置为零
+-- @param prop: 属性名称
+-- @return: 设置结果
 ---
 function stat:reset(prop)
 	return self:set(prop, 0)
 end
 
 ---
--- Increment statistics property by value
--- @param prop: property name
--- @param value: increment amount (must be positive)
--- @return: true on success, nil and error message on failure
+-- 按值递增统计属性
+-- @param prop: 属性名称
+-- @param value: 递增量（必须为正数）
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function stat:inc(prop, value)
 	assert(not self._readonly, "Device statistics owner issue")
@@ -131,10 +129,10 @@ function stat:inc(prop, value)
 end
 
 ---
--- Set statistics property to specific value
--- @param prop: property name
--- @param value: new property value
--- @return: true on success, nil and error message on failure
+-- 将统计属性设置为特定值
+-- @param prop: 属性名称
+-- @param value: 新的属性值
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function stat:set(prop, value)
 	assert(not self._readonly, "Device statistics owner issue")

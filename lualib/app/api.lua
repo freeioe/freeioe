@@ -1,9 +1,7 @@
----
--- Application API Module
+--- 应用API模块
 --
--- This module provides the core API interface for FreeIOE applications.
--- It manages device lifecycle, handles data/control/communication dispatching,
--- and provides integration with the application manager.
+-- 本模块为FreeIOE应用提供核心API接口
+-- 管理设备生命周期，处理数据/控制/通信分发，并提供与应用管理器的集成
 ---
 
 local skynet = require 'skynet'
@@ -18,19 +16,18 @@ local app_logger = require 'app.logger'
 local threshold_buffer = require 'buffer.threshold'
 
 ---
--- Application API Class
+-- 应用API类
 --
--- Main class that provides the interface for applications to interact
--- with FreeIOE system services including device management, data handling,
--- and event processing.
+-- 提供应用与FreeIOE系统服务交互的主要接口，
+-- 包括设备管理、数据处理和事件处理。
 ---
 local api = class("APP_MGR_API")
 
 ---
--- Initialize the API instance
--- @param app_name: application name
--- @param mgr_snax: appmgr service handle (optional, will query if nil)
--- @param logger: logger instance (optional, creates default if nil)
+-- 初始化API实例
+-- @param app_name: 应用名称
+-- @param mgr_snax: appmgr服务句柄（可选，为nil时将查询）
+-- @param logger: 日志记录器实例（可选，为nil时创建默认实例）
 ---
 function api:initialize(app_name, mgr_snax, logger)
 	self._app_name = app_name
@@ -41,8 +38,8 @@ function api:initialize(app_name, mgr_snax, logger)
 end
 
 ---
--- Cleanup API resources
--- Removes all devices and closes handler
+-- 清理API资源
+-- 删除所有设备并关闭处理程序
 ---
 function api:cleanup()
 	self:close_handler()
@@ -53,11 +50,11 @@ function api:cleanup()
 end
 
 ---
--- Split batch input data into individual calls
--- @param f: handler function
--- @param app: application name
--- @param sn: device serial number
--- @param datas: table of data batches
+-- 将批量输入数据拆分为单独的调用
+-- @param f: 处理器函数
+-- @param app: 应用名称
+-- @param sn: 设备序列号
+-- @param datas: 数据批次表
 -- @return: true
 ---
 function api:input_batch_split(f, app, sn, datas)
@@ -68,13 +65,13 @@ function api:input_batch_split(f, app, sn, datas)
 end
 
 ---
--- Dispatch data channel messages to appropriate handlers
--- @param channel: channel name
--- @param source: message source
--- @param cmd: command type (input, output, command, input_batch)
--- @param app: application name
--- @param ...: additional arguments
--- @return: handler result or nil if no handler found
+-- 将数据通道消息分发到相应的处理程序
+-- @param channel: 通道名称
+-- @param source: 消息源
+-- @param cmd: 命令类型（input、output、command、input_batch）
+-- @param app: 应用名称
+-- @param ...: 附加参数
+-- @return: 处理程序结果，未找到处理程序返回nil
 ---
 function api:data_dispatch(channel, source, cmd, app, ...)
 	-- self._logger:trace('Data Dispatch', channel, source, cmd, app, ...)
@@ -94,25 +91,25 @@ function api:data_dispatch(channel, source, cmd, app, ...)
 end
 
 ---
--- Dispatch control channel messages to appropriate handlers
--- Handles synchronous commands with automatic result publishing
--- @param channel: channel name
--- @param source: message source
--- @param ctrl: control command type
--- @param app_src: source application
--- @param app: target application
--- @param ...: command arguments
+-- 将控制通道消息分发到相应的处理程序
+-- 处理同步命令并自动发布结果
+-- @param channel: 通道名称
+-- @param source: 消息源
+-- @param ctrl: 控制命令类型
+-- @param app_src: 源应用
+-- @param app: 目标应用
+-- @param ...: 命令参数
 ---
 function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 	if app ~= self._app_name then
-		--- Skip the destination is other application one
+		--- 跳过目标是其他应用的请求
 		return
 	end
 
 	self._logger:trace('Ctrl Dispatch', channel, source, ctrl, app_src, app, ...)
 	local f = self._handler['on_'..ctrl]
 	if f then
-		--- check if this is result dispatch
+		--- 检查是否为结果分发
 		if string.match(ctrl, '(.+)_result$') then
 			skynet.fork(function(...)
 				f(app_src, ...)
@@ -121,17 +118,17 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 			return
 		end
 
-		--- priv is the end parameters
+		--- priv是最后一个参数
 		local priv = select(-1, ...)
 
-		--- create an new coroutine to execute the command/output/ctrl and wait for result
+		--- 创建一个新协程来执行command/output/ctrl并等待结果
 		skynet.fork(function(...)
 			local results = table.pack(xpcall(f, debug.traceback, app_src, ...))
 			if not results[1] then
 				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, false, results[2])
 			else
 				if results[2] == nil then
-					-- Table unpack loses nil returns
+					-- Table unpack丢失nil返回
 					results[2] = false
 				end
 				self._ctrl_chn:publish(ctrl..'_result', app, app_src, priv, table.unpack(results, 2))
@@ -143,11 +140,11 @@ function api:ctrl_dispatch(channel, source, ctrl, app_src, app, ...)
 end
 
 ---
--- Dispatch communication data to handler
--- @param channel: channel name
--- @param source: message source
--- @param app: application name
--- @param ...: communication data
+-- 将通信数据分发到处理程序
+-- @param channel: 通道名称
+-- @param source: 消息源
+-- @param app: 应用名称
+-- @param ...: 通信数据
 ---
 function api:comm_dispatch(channel, source, app, ...)
 	--self._logger:trace('Comm Dispatch', channel, source, ...)
@@ -160,11 +157,11 @@ function api:comm_dispatch(channel, source, app, ...)
 end
 
 ---
--- Dispatch statistics data to handler
--- @param channel: channel name
--- @param source: message source
--- @param app: application name
--- @param ...: statistics data
+-- 将统计数据分发到处理程序
+-- @param channel: 通道名称
+-- @param source: 消息源
+-- @param app: 应用名称
+-- @param ...: 统计数据
 ---
 function api:stat_dispatch(channel, source, app, ...)
 	--self._logger:trace('Stat Dispatch', channel, source, ...)
@@ -177,11 +174,11 @@ function api:stat_dispatch(channel, source, app, ...)
 end
 
 ---
--- Dispatch event data to handler
--- @param channel: channel name
--- @param source: message source
--- @param app: application name
--- @param ...: event data
+-- 将事件数据分发到处理程序
+-- @param channel: 通道名称
+-- @param source: 消息源
+-- @param app: 应用名称
+-- @param ...: 事件数据
 ---
 function api:event_dispatch(channel, source, app, ...)
 	--self._logger:trace('Event Dispatch', channel, source, ...)
@@ -194,7 +191,7 @@ function api:event_dispatch(channel, source, app, ...)
 end
 
 ---
--- Close all multicast channels and cleanup handlers
+-- 关闭所有多播通道并清理处理程序
 ---
 function api:close_handler()
 	if self._data_chn then
@@ -220,9 +217,9 @@ function api:close_handler()
 end
 
 ---
--- Set handler for application callbacks and subscribe to channels
--- @param handler: table containing callback functions (on_input, on_output, on_command, etc.)
--- @param watch_data: boolean, if true subscribe to data channel for watching all device data
+-- 为应用回调设置处理程序并订阅通道
+-- @param handler: 包含回调函数的表（on_input、on_output、on_command等）
+-- @param watch_data: 布尔值，如果为true则订阅数据通道以监视所有设备数据
 ---
 function api:set_handler(handler, watch_data)
 	self._handler = handler
@@ -287,9 +284,9 @@ function api:set_handler(handler, watch_data)
 end
 
 ---
--- List all devices in the system
--- @param with_data: boolean, if true includes current input/output values
--- @return: table of devices with optional data values
+-- 列出系统中的所有设备
+-- @param with_data: 布尔值，如果为true则包含当前输入/输出值
+-- @return: 设备表，可选择包含数据值
 ---
 function api:list_devices(with_data)
 	local devs = dc.get('DEVICES')
@@ -297,7 +294,7 @@ function api:list_devices(with_data)
 		return devs
 	end
 
-	-- Get dc snapshot
+	-- 获取dc快照
 	local inputs = dc.get('INPUT') or {}
 	local outputs = dc.get('OUTPUT') or {}
 	local dev_in_apps = dc.get('DEV_IN_APP') or {}
@@ -314,14 +311,14 @@ function api:list_devices(with_data)
 			output.props = ovals[output.name]
 		end
 	end
-	-- Return all devices with their data
+	-- 返回所有设备及其数据
 	return devs
 end
 
 ---
--- Validate device metadata table
--- @param meta: table containing device metadata
--- @raises: assertion error if required fields are missing
+-- 验证设备元数据表
+-- @param meta: 包含设备元数据的表
+-- @raises: 如果缺少必填字段则断言错误
 ---
 function valid_device_meta(meta)
 	local meta_assert = function(name)
@@ -336,8 +333,8 @@ function valid_device_meta(meta)
 end
 
 ---
--- Get default device metadata template
--- @return: table with default device metadata fields
+-- 获取默认设备元数据模板
+-- @return: 包含默认设备元数据字段的表
 ---
 function api:default_meta()
 	return {
@@ -350,9 +347,9 @@ function api:default_meta()
 end
 
 ---
--- Validate device serial number format
--- @param sn: device serial number string
--- @return: true if valid, false if contains invalid characters
+-- 验证设备序列号格式
+-- @param sn: 设备序列号字符串
+-- @return: 如果有效返回true，如果包含无效字符返回false
 ---
 local function valid_device_sn(sn)
 	--return nil == string.find(sn, '%s')
@@ -360,22 +357,22 @@ local function valid_device_sn(sn)
 end
 
 ---
--- Validate property/input/output name format
--- @param name: property name string
--- @return: true if valid, false if contains invalid characters
+-- 验证属性/输入/输出名称格式
+-- @param name: 属性名称字符串
+-- @return: 如果有效返回true，如果包含无效字符返回false
 ---
 local function valid_prop_name(name)
 	return nil == string.find(name, "[^%w_]")
 end
 
 ---
--- Add a new device to the application
--- @param sn: device serial number (unique identifier)
--- @param meta: table with device metadata (name, description, manufacturer, series, link)
--- @param inputs: array of input definitions {name, desc, unit}
--- @param outputs: array of output definitions {name, desc, unit}
--- @param commands: array of command definitions {name, desc}
--- @return: device object for accessing the device
+-- 向应用添加新设备
+-- @param sn: 设备序列号（唯一标识符）
+-- @param meta: 设备元数据表（name、description、manufacturer、series、link）
+-- @param inputs: 输入定义数组 {name, desc, unit}
+-- @param outputs: 输出定义数组 {name, desc, unit}
+-- @param commands: 命令定义数组 {name, desc}
+-- @return: 用于访问设备的设备对象
 ---
 function api:add_device(sn, meta, inputs, outputs, commands)
 	assert(self._handler, "Cannot add device before initialize your API handler by calling set_handler")
@@ -388,7 +385,7 @@ function api:add_device(sn, meta, inputs, outputs, commands)
 	valid_device_meta(meta or default_meta())
 	meta.app_inst = self._app_name
 	meta.app = dc.get('APPS', self._app_name, 'name') or 'FreeIOE'
-	meta.inst = meta.inst or meta.name -- 实际设备实例名称, 如:BMS #2,PLC #2
+	meta.inst = meta.inst or meta.name -- 实际设备实例名称，如:BMS #2,PLC #2
 	local dev = self._devices[sn]
 	if dev then
 		return dev
@@ -406,8 +403,8 @@ function api:add_device(sn, meta, inputs, outputs, commands)
 end
 
 ---
--- Delete a device from the application
--- @param dev: device object to delete
+-- 从应用中删除设备
+-- @param dev: 要删除的设备对象
 -- @return: true
 ---
 function api:del_device(dev)
@@ -416,11 +413,11 @@ function api:del_device(dev)
 end
 
 ---
--- Get device object to access inputs, outputs, and commands
--- With correct secret will be able to write input values
--- @param sn: device serial number
--- @param secret: optional secret for write access
--- @return: device object or nil, error message if not found
+-- 获取设备对象以访问输入、输出和命令
+-- 使用正确的密钥将能够写入输入值
+-- @param sn: 设备序列号
+-- @param secret: 写入访问的可选密钥
+-- @return: 设备对象，未找到返回nil和错误信息
 ---
 function api:get_device(sn, secret)
 	assert(sn, "Device Serial Number is required!")
@@ -432,22 +429,22 @@ function api:get_device(sn, secret)
 end
 
 ---
--- Send control command to another application
--- @param app: target application name
--- @param ctrl: control command type
--- @param params: command parameters
--- @param priv: private data for result correlation
+-- 向另一个应用发送控制命令
+-- @param app: 目标应用名称
+-- @param ctrl: 控制命令类型
+-- @param params: 命令参数
+-- @param priv: 用于结果关联的私有数据
 ---
 function api:send_ctrl(app, ctrl, params, priv)
 	self._ctrl_chn:publish('ctrl', self._app_name, app, ctrl, params, priv)
 end
 
 ---
--- Dump communication data to comm channel
--- @param sn: device serial number
--- @param dir: direction (send/recv)
--- @param ...: communication data to dump
--- @return: publish result
+-- 将通信数据转储到通信通道
+-- @param sn: 设备序列号
+-- @param dir: 方向（send/recv）
+-- @param ...: 要转储的通信数据
+-- @return: 发布结果
 ---
 function api:_dump_comm(sn, dir, ...)
 	assert(sn)
@@ -455,8 +452,8 @@ function api:_dump_comm(sn, dir, ...)
 end
 
 ---
--- Set event firing threshold limit (events per minute)
--- @param count_per_min: maximum events allowed per minute (1-127)
+-- 设置事件触发阈值限制（每分钟事件数）
+-- @param count_per_min: 每分钟允许的最大事件数（1-127）
 ---
 function api:_set_event_threshold(count_per_min)
 	assert(count_per_min > 0 and count_per_min < 128)
@@ -468,14 +465,14 @@ function api:_set_event_threshold(count_per_min)
 end
 
 ---
--- Fire an event to the event channel
--- @param sn: device serial number
--- @param level: event severity level (debug, info, warning, error, fatal)
--- @param type_: event type string
--- @param info: event description string
--- @param data: optional event data table
--- @param timestamp: optional event timestamp (defaults to current time)
--- @return: buffer push result
+-- 触发事件到事件通道
+-- @param sn: 设备序列号
+-- @param level: 事件严重性级别（debug、info、warning、error、fatal）
+-- @param type_: 事件类型字符串
+-- @param info: 事件描述字符串
+-- @param data: 可选的事件数据表
+-- @param timestamp: 可选的事件时间戳（默认为当前时间）
+-- @return: 缓冲区推送结果
 ---
 function api:_fire_event(sn, level, type_, info, data, timestamp)
 	assert(sn and level and type_ and info)

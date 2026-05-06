@@ -1,23 +1,22 @@
 ---
--- Stream Buffer Module
+-- 流缓冲区模块
 --
--- This module provides a buffer for streaming data with pattern matching.
--- Useful for parsing protocols with start/end markers.
+-- 本模块提供用于模式匹配的流数据缓冲区。
+-- 用于解析带有开始/结束标记的协议。
 ---
 
 local class = require 'middleclass'
 
 ---
--- Stream Buffer Class
+-- 流缓冲区类
 --
--- Buffers streaming data and extracts packets delimited by
--- start and end marker strings.
+-- 缓冲流数据并提取由开始和结束标记字符串分隔的数据包。
 ---
 local buffer = class("APP_UTILS_STREAM_BUFFER")
 
 ---
--- Initialize stream buffer
--- @param max_len: maximum buffer length before forced cleanup
+-- 初始化流缓冲区
+-- @param max_len: 强制清理前的最大缓冲区长度
 ---
 function buffer:initialize(max_len)
 	self._buf = {}
@@ -26,23 +25,23 @@ function buffer:initialize(max_len)
 end
 
 ---
--- Concatenate all buffer chunks into single string
--- @return: concatenated buffer string
+-- 将所有缓冲区块连接为单个字符串
+-- @return: 连接后的缓冲区字符串
 ---
 function buffer:concat()
 	if #self._buf > 1 then
 		local buf = table.concat(self._buf)
-		--- Keep the buffer
+		--- 保留缓冲区
 		self._buf = { buf }
 	end
 	return self._buf[1]
 end
 
 ---
--- Find packet delimited by start and end keys
--- @param sk: start key string
--- @param ek: end key string (optional)
--- @return: packet data and length, or nil and error message
+-- 查找由开始和结束键分隔的数据包
+-- @param sk: 开始键字符串
+-- @param ek: 结束键字符串（可选）
+-- @return: 数据包数据和长度，或nil和错误信息
 ---
 function buffer:find(sk, ek)
 	local buf = self:concat()
@@ -55,15 +54,15 @@ function buffer:find(sk, ek)
 		return nil, "Buffer not enough"
 	end
 
-	--- Try to find start key
+	--- 尝试查找开始键
 	local pos = string.find(buf, sk, 1, true)
 
-	--- If there no is start key
+	--- 如果没有开始键
 	if not pos then
-		--- Drop the noise data
+		--- 丢弃噪声数据
 		if #buf > #sk then
 			if #sk > 1 then
-				--- droped size
+				--- 丢弃的大小
 				self._droped = #buf - #sk
 				buf = string.sub(buf, 0 - #sk)
 				self._buf = { buf }
@@ -108,8 +107,8 @@ function buffer:find(sk, ek)
 end
 
 ---
--- Pop specified length from buffer
--- @param len: number of bytes to remove
+-- 从缓冲区弹出指定长度
+-- @param len: 要移除的字节数
 ---
 function buffer:pop(len)
 	local data = self._buf[1]
@@ -134,8 +133,8 @@ function buffer:pop(len)
 end
 
 ---
--- Get current buffer length
--- @return: total bytes in buffer
+-- 获取当前缓冲区长度
+-- @return: 缓冲区中的总字节数
 ---
 function buffer:len()
 	local len = 0
@@ -146,24 +145,24 @@ function buffer:len()
 end
 
 ---
--- Get number of dropped bytes
--- @return: dropped byte count
+-- 获取丢弃的字节数
+-- @return: 丢弃的字节计数
 ---
 function buffer:droped()
 	return self._droped
 end
 
 ---
--- Append data chunk to buffer
--- @param data: data string to append
+-- 将数据块追加到缓冲区
+-- @param data: 要追加的数据字符串
 ---
 function buffer:append(data)
 	self._buf[#self._buf + 1] = data
 end
 
 ---
--- Clean all buffer contents
--- Marks all current data as dropped
+-- 清理所有缓冲区内容
+-- 将所有当前数据标记为已丢弃
 ---
 function buffer:clean()
 	if #self._buf == 0 then

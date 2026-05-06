@@ -1,6 +1,18 @@
+---
+-- 基础应用模块
+--
+-- 本模块提供FreeIOE应用的基础类
+-- 包含应用生命周期管理和事件处理
+---
+
 local class = require 'middleclass'
 local app_conf = require 'app.conf'
 
+---
+-- 基础应用类
+--
+-- 提供应用开发的基础框架和接口
+---
 local app = class('BASIC_APP_CLASS')
 app.static.API_VER = 4
 

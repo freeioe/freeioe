@@ -1,10 +1,9 @@
----
--- Event Constants and Utilities Module
+--- 事件常量和工具模块
 --
--- This module defines event severity levels and event type constants
--- used throughout FreeIOE for event handling and reporting.
---
+-- 本模块定义事件严重性级别和事件类型常量
+-- 用于FreeIOE系统中的事件处理和报告
 ---
+
 
 local LEVELS = {
 	LEVEL_DEBUG = 0,
@@ -33,10 +32,9 @@ local EVENT_NAMES = {
 ]]--
 local EVENT_NAMES = {}
 
----
--- Convert event type to string representation
--- @param type_: event type number or string
--- @return: event type string (e.g., "SYS", "DEV", "COMM", "DATA", "APP")
+--- 将事件类型转换为字符串表示
+-- @param type_: 事件类型数字或字符串
+-- @return: 事件类型字符串（如"SYS"、"DEV"、"COMM"、"DATA"、"APP"）
 ---
 local function type_to_string(type_)
 	if type(type_) == 'number' then

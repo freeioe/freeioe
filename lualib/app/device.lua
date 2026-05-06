@@ -1,9 +1,9 @@
 ---
--- Device API Module
+-- 设备API模块
 --
--- This module provides the device management interface for applications.
--- Devices represent I/O points, communication channels, or data sources
--- that applications can create, manage, and interact with.
+-- 本模块为应用提供设备管理接口。
+-- 设备代表I/O点、通信通道或数据源，
+-- 应用可以创建、管理和与之交互。
 ---
 
 local skynet = require 'skynet'
@@ -14,34 +14,34 @@ local dc = require 'skynet.datacenter'
 local stat_api = require 'app.stat'
 
 ---
--- Device API Class
+-- 设备API类
 --
--- Represents a device instance with inputs, outputs, and commands.
--- Provides methods for data handling, communication dumping, and device management.
+-- 表示具有输入、输出和命令的设备实例。
+-- 提供数据处理、通信转储和设备管理的方法。
 ---
 local device = class("APP_MGR_DEV_API")
 
 ---
--- Enable new batch update mode
--- When enabled, input updates are batched and published periodically
--- instead of immediately for better performance
+-- 启用新的批量更新模式
+-- 启用后，输入更新将被批量处理并定期发布，
+-- 而不是立即发布，以提高性能。
 ---
 local USE_NEW_BATCH_UPDATE = 1
 
 ---
--- Initialize device instance
--- @param api: parent API object
--- @param sn: device serial number
--- @param props: device properties table
---   - name: device name
---   - desc: device description
---   - inputs: array of input definitions {name, desc, unit}
---   - outputs: array of output definitions
---   - commands: array of command definitions
--- @param guest: true if this is a guest (read-only) device
--- @param secret: device secret key
+-- 初始化设备实例
+-- @param api: 父API对象
+-- @param sn: 设备序列号
+-- @param props: 设备属性表
+--   - name: 设备名称
+--   - desc: 设备描述
+--   - inputs: 输入定义数组 {name, desc, unit}
+--   - outputs: 输出定义数组
+--   - commands: 命令定义数组
+-- @param guest: 如果为true则表示这是一个访客（只读）设备
+-- @param secret: 设备密钥
 ---
---- Do not call this directly, but throw the api.lua
+--- 不要直接调用此函数，而是通过api.lua调用
 function device:initialize(api, sn, props, guest, secret)
 	self._api = api
 	self._logger = api._logger
@@ -80,7 +80,7 @@ function device:initialize(api, sn, props, guest, secret)
 			while not self._close_wait do
 				skynet.sleep(300, self._data_cache_map_token)
 				if #self._data_cache_map > 0 then
-					skynet.sleep(5) -- wait more data coming
+					skynet.sleep(5) -- 等待更多数据到来
 					local data = self._data_cache_map
 					self._data_cache_map = {}
 					self._data_chn:publish('input_batch', self._app_name, self._sn, data)
@@ -92,8 +92,8 @@ function device:initialize(api, sn, props, guest, secret)
 end
 
 ---
--- Internal cleanup of device references
--- Clears all internal references to allow garbage collection
+-- 内部清理设备引用
+-- 清除所有内部引用以允许垃圾回收
 ---
 function device:_cleanup()
 	self._guest = true
@@ -110,8 +110,8 @@ function device:_cleanup()
 end
 
 ---
--- Cleanup and remove device from system
--- Stops all services, removes device from datacenter, publishes deletion event
+-- 清理并从系统中删除设备
+-- 停止所有服务，从数据中心删除设备，发布删除事件
 ---
 function device:cleanup()
 	if self._guest then
@@ -119,7 +119,7 @@ function device:cleanup()
 	end
 	if USE_NEW_BATCH_UPDATE and self._data_cache_map_token then
 		self._close_wait = {}
-		-- wakeup just mark this token is to be wakeup
+		-- 唤醒只是标记此令牌将被唤醒
 		skynet.wakeup(self._data_cache_map_token)
 		skynet.sleep(200, self._close_wait)
 	end
@@ -149,21 +149,21 @@ function device:cleanup()
 end
 
 ---
--- Validate property name format
--- @param name: property name string
--- @return: true if valid (contains only word characters and underscores)
+-- 验证属性名称格式
+-- @param name: 属性名称字符串
+-- @return: 如果有效返回true（仅包含单词字符和下划线）
 ---
 local function valid_prop_name(name)
 	return nil == string.find(name, "[^%w_]")
 end
 
 ---
--- Modify device inputs, outputs, and commands
--- Replaces existing definitions with new ones
--- @param inputs: array of input definitions {name, desc, unit}
--- @param outputs: array of output definitions
--- @param commands: array of command definitions
--- @return: true on success
+-- 修改设备输入、输出和命令
+-- 用新定义替换现有定义
+-- @param inputs: 输入定义数组 {name, desc, unit}
+-- @param outputs: 输出定义数组
+-- @param commands: 命令定义数组
+-- @return: 成功返回true
 ---
 function device:mod(inputs, outputs, commands)
 	assert(not self._guest, "Device permission denied!")
@@ -189,11 +189,11 @@ function device:mod(inputs, outputs, commands)
 end
 
 ---
--- Add new inputs, outputs, and commands to existing device
--- Appends to existing definitions instead of replacing
--- @param inputs: array of input definitions to add
--- @param outputs: array of output definitions to add
--- @param commands: array of command definitions to add
+-- 向现有设备添加新输入、输出和命令
+-- 追加到现有定义而不是替换
+-- @param inputs: 要添加的输入定义数组
+-- @param outputs: 要添加的输出定义数组
+-- @param commands: 要添加的命令定义数组
 ---
 function device:add(inputs, outputs, commands)
 	assert(not self._guest, "Device permission denied!")
@@ -217,10 +217,10 @@ function device:add(inputs, outputs, commands)
 end
 
 ---
--- Get input property value from datacenter
--- @param input: input name
--- @param prop: property name (value, timestamp, quality)
--- @return: value, timestamp, quality or nil if not found
+-- 从数据中心获取输入属性值
+-- @param input: 输入名称
+-- @param prop: 属性名称（value、timestamp、quality）
+-- @return: value、timestamp、quality，未找到返回nil
 ---
 function device:get_input_prop(input, prop)
 	local t = dc.get('INPUT', self._sn, input, prop)
@@ -230,30 +230,30 @@ function device:get_input_prop(input, prop)
 end
 
 ---
--- Internal method to publish input value to data channel
--- Uses batch mode if enabled, otherwise publishes immediately
--- @param input: input name
--- @param prop: property name
--- @param value: property value
--- @param timestamp: value timestamp
--- @param quality: value quality flag
+-- 内部方法：将输入值发布到数据通道
+-- 如果启用批量模式则使用批量模式，否则立即发布
+-- @param input: 输入名称
+-- @param prop: 属性名称
+-- @param value: 属性值
+-- @param timestamp: 值时间戳
+-- @param quality: 值质量标志
 ---
 function device:_publish_input(input, prop, value, timestamp, quality)
 	assert(timestamp)
 	if not USE_NEW_BATCH_UPDATE then
 		return self._data_chn:publish('input', self._app_name, self._sn, input, prop, value, timestamp, quality)
 	end
-	--- New mode for data fires
+	--- 数据触发的新模式
 	self._data_cache_map[#self._data_cache_map + 1] = { input, prop, value, timestamp, quality }
 	skynet.wakeup(self._data_cache_map_token)
 end
 
 ---
--- Set multiple input properties in batch
--- Accepts either table format {input, prop, value, timestamp, quality}
--- or object format {{input=, prop=, value=, timestamp=, quality=}, ...}
--- @param ...: variable arguments of input data
--- @return: true on success, nil and error message on failure
+-- 批量设置多个输入属性
+-- 接受表格式 {input, prop, value, timestamp, quality}
+-- 或对象格式 {{input=, prop=, value=, timestamp=, quality=}, ...}
+-- @param ...: 输入数据的可变参数
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function device:set_input_prop_batch(...)
 	local inputs = {...}
@@ -277,28 +277,28 @@ function device:set_input_prop_batch(...)
 	if self._cov then
 		local changed_inputs = self._cov:handle_batch(inputs)
 		if #changed_inputs == 0 then
-			return true -- all input data are not changed
+			return true -- 所有输入数据未变化
 		end
 		inputs = changed_inputs
 	end
 
-	-- Copy inputs into cached map then wakeup data_cache_map_token
+	-- 将inputs复制到缓存映射中然后唤醒data_cache_map_token
 	table.move(inputs, 1, #inputs, #self._data_cache_map + 1, #self._data_cache_map)
 	skynet.wakeup(self._data_cache_map_token)
-	-- TODO: Should we sleep here?
+	-- TODO: 我们应该在这里sleep吗？
 
 	return true
 end
 
 ---
--- Set a single input property value
--- Validates input name and performs type conversion based on input definition
--- @param input: input name
--- @param prop: property name (typically 'value')
--- @param value: property value
--- @param timestamp: optional timestamp (defaults to current time)
--- @param quality: optional quality flag (defaults to 0)
--- @return: true on success, nil and error message on failure
+-- 设置单个输入属性值
+-- 验证输入名称并根据输入定义执行类型转换
+-- @param input: 输入名称
+-- @param prop: 属性名称（通常为'value'）
+-- @param value: 属性值
+-- @param timestamp: 可选时间戳（默认为当前时间）
+-- @param quality: 可选质量标志（默认为0）
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function device:set_input_prop(input, prop, value, timestamp, quality)
 	assert(input and prop and (value ~= nil), "Input/Prop/Value are required as not nil value")
@@ -345,14 +345,14 @@ function device:set_input_prop(input, prop, value, timestamp, quality)
 end
 
 ---
--- Set input property value with emergency flag
--- Publishes an emergency event before setting the value
--- @param input: input name
--- @param prop: property name
--- @param value: property value
--- @param timestamp: optional timestamp
--- @param quality: optional quality flag
--- @return: true on success, nil and error message on failure
+-- 设置带紧急标志的输入属性值
+-- 在设置值之前发布紧急事件
+-- @param input: 输入名称
+-- @param prop: 属性名称
+-- @param value: 属性值
+-- @param timestamp: 可选时间戳
+-- @param quality: 可选质量标志
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
 	assert(input and prop and value, "Input/Prop/Value are required as not nil value")
@@ -391,10 +391,10 @@ function device:set_input_prop_emergency(input, prop, value, timestamp, quality)
 end
 
 ---
--- Get output property value from datacenter
--- @param output: output name
--- @param prop: property name
--- @return: value, timestamp
+-- 从数据中心获取输出属性值
+-- @param output: 输出名称
+-- @param prop: 属性名称
+-- @return: value、timestamp
 ---
 function device:get_output_prop(output, prop)
 	local t = dc.get('OUTPUT', self._sn, output, prop)
@@ -402,14 +402,14 @@ function device:get_output_prop(output, prop)
 end
 
 ---
--- Set output property value
--- Publishes to control channel for applications to handle
--- @param output: output name
--- @param prop: property name
--- @param value: property value
--- @param timestamp: optional timestamp
--- @param priv: optional private data for result correlation
--- @return: true on success, nil and error message on failure
+-- 设置输出属性值
+-- 发布到控制通道供应用处理
+-- @param output: 输出名称
+-- @param prop: 属性名称
+-- @param value: 属性值
+-- @param timestamp: 可选时间戳
+-- @param priv: 用于结果关联的可选私有数据
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function device:set_output_prop(output, prop, value, timestamp, priv)
 	local priv = priv or '__NO_RESULT__CALL__'
@@ -425,12 +425,12 @@ function device:set_output_prop(output, prop, value, timestamp, priv)
 end
 
 ---
--- Send command to device
--- Publishes to control channel for applications to handle
--- @param command: command name
--- @param param: command parameter
--- @param priv: optional private data for result correlation
--- @return: true on success, nil and error message on failure
+-- 向设备发送命令
+-- 发布到控制通道供应用处理
+-- @param command: 命令名称
+-- @param param: 命令参数
+-- @param priv: 用于结果关联的可选私有数据
+-- @return: 成功返回true，失败返回nil和错误信息
 ---
 function device:send_command(command, param, priv)
 	local priv = priv or '__NO_RESULT__CALL__'
@@ -444,32 +444,32 @@ function device:send_command(command, param, priv)
 end
 
 ---
--- Get device serial number
--- @return: device serial number string
+-- 获取设备序列号
+-- @return: 设备序列号字符串
 ---
 function device:sn()
 	return self._sn
 end
 
 ---
--- Get application instance name that created this device
--- @return: application name
+-- 获取创建此设备的应用实例名称
+-- @return: 应用名称
 ---
 function device:app_name()
 	return self._app_name
 end
 
 ---
--- Get device properties table
--- @return: table containing device metadata, inputs, outputs, commands
+-- 获取设备属性表
+-- @return: 包含设备元数据、输入、输出、命令的表
 ---
 function device:list_props()
 	return self._props
 end
 
 ---
--- List all input values and pass to callback
--- @param data_cb: callback function(input, prop, value, timestamp, quality)
+-- 列出所有输入值并传递给回调
+-- @param data_cb: 回调函数(input, prop, value, timestamp, quality)
 ---
 function device:list_inputs(data_cb)
 	local inputs = self._props.inputs or {}
@@ -482,9 +482,9 @@ function device:list_inputs(data_cb)
 end
 
 ---
--- Configure Change-of-Value (COV) monitoring for inputs
--- When enabled, only publishes input values that actually change
--- @param opt: COV options table or nil to disable
+-- 为输入配置值变化（COV）监控
+-- 启用后，仅发布实际发生变化的输入值
+-- @param opt: COV选项表，nil表示禁用
 ---
 function device:cov(opt)
 	assert(not self._guest, "Device permission denied!")
@@ -504,16 +504,16 @@ function device:cov(opt)
 end
 
 ---
--- Get all input data for this device
--- @return: table of input values from datacenter
+-- 获取此设备的所有输入数据
+-- @return: 来自数据中心的输入值表
 ---
 function device:data()
 	return dc.get('INPUT', self._sn)
 end
 
 ---
--- Flush all input data to data channel
--- Forces immediate publication of all current input values
+-- 将所有输入数据刷新到数据通道
+-- 强制立即发布所有当前输入值
 ---
 function device:flush_data()
 	assert(not self._guest, "Device permission denied!")
@@ -523,10 +523,10 @@ function device:flush_data()
 end
 
 ---
--- Dump communication data to comm channel
--- @param dir: direction (send/recv)
--- @param ...: communication data
--- @return: publish result
+-- 将通信数据转储到通信通道
+-- @param dir: 方向（send/recv）
+-- @param ...: 通信数据
+-- @return: 发布结果
 ---
 function device:dump_comm(dir, ...)
 	assert(not self._guest, "Device permission denied!")
@@ -534,13 +534,13 @@ function device:dump_comm(dir, ...)
 end
 
 ---
--- Fire an event for this device
--- @param level: event severity level
--- @param type_: event type string
--- @param info: event description
--- @param data: optional event data table
--- @param timestamp: optional event timestamp
--- @return: event fire result
+-- 为此设备触发事件
+-- @param level: 事件严重性级别
+-- @param type_: 事件类型字符串
+-- @param info: 事件描述
+-- @param data: 可选的事件数据表
+-- @param timestamp: 可选的事件时间戳
+-- @return: 事件触发结果
 ---
 function device:fire_event(level, type_, info, data, timestamp)
 	assert(not self._guest, "Device permission denied!")
@@ -548,9 +548,9 @@ function device:fire_event(level, type_, info, data, timestamp)
 end
 
 ---
--- Create a statistics counter for this device
--- @param name: statistics name (e.g., packets_in, bytes_out)
--- @return: statistics object
+-- 为此设备创建统计计数器
+-- @param name: 统计名称（例如packets_in、bytes_out）
+-- @return: 统计对象
 ---
 function device:stat(name)
 	-- assert(not self._guest, "Device permission denied!")
@@ -560,9 +560,9 @@ function device:stat(name)
 end
 
 ---
--- Share this device with other applications using a secret key
--- Applications with the correct secret can write input values to this device
--- @param secret: secret key string or nil to disable sharing
+-- 使用密钥与其他应用共享此设备
+-- 拥有正确密钥的应用可以向此设备写入输入值
+-- @param secret: 密钥字符串，nil表示禁用共享
 ---
 function device:share(secret)
 	self._secret = secret

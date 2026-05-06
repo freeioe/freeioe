@@ -1,11 +1,26 @@
+---
+-- Socket代理模块
+--
+-- 本模块提供Socket通道的代理服务
+-- 支持请求/响应模式和超时控制
+---
+
 local skynet = require "skynet"
 local dc = require 'skynet.datacenter'
 local service = require "skynet.service"
 local class = require 'middleclass'
 local uuid = require 'uuid'
 
+---
+-- 应用端口类
+--
+-- 封装Socket通道代理服务
+---
 local app_port = class('FREEIOE_APP_PORT_CLASS')
 
+---
+-- 代理服务函数
+-- @param ... 服务参数（名称、配置）
 local function agent_service(...)
 	local skynet = require "skynet"
 	local socketchannel = require "skynet.socketchannel"
@@ -65,14 +80,23 @@ local function agent_service(...)
 	end)
 end
 
+---
+-- 检查函数是否只有一个upvalue
+-- @param func 要检查的函数
 local function check(func)
 	local info = debug.getinfo(func, "u")
 	assert(info.nups == 1)
 	assert(debug.getupvalue(func,1) == "_ENV")
 end
 
-local timeout_error = setmetatable({}, {__tostring = function() return "[Error: socket timeout]" end })	-- alias for error object
+--- 超时错误对象 */
+local timeout_error = setmetatable({}, {__tostring = function() return "[Error: socket timeout]" end })
 
+---
+-- 超时调用函数
+-- @param ti 超时时间
+-- @param ... 要调用的函数和参数
+-- @return 函数执行结果或超时错误
 local function timeout_call(ti, ...)
 	local token = {}
 	local ret
@@ -90,11 +114,15 @@ local function timeout_call(ti, ...)
 			error(ret[2])
 		end
 	else
-		-- timeout
+		-- 超时
 		return false, timeout_error
 	end
 end
 
+---
+-- 初始化Socket端口对象
+-- @param conf Socket配置
+-- @param share_name 共享名称
 function app_port:initialize(conf, share_name)
 	assert(conf)
 	self._name = share_name or uuid()
@@ -103,14 +131,25 @@ function app_port:initialize(conf, share_name)
 	self._agent = service.new(".app_socket_port_"..self._name, agent_service, self._name, self._conf)
 end
 
+---
+-- 获取端口名称
+-- @return 端口名称
 function app_port:get_name()
 	return self._name
 end
 
+---
+-- 获取端口配置
+-- @return 配置表
 function app_port:get_conf()
 	return self._conf
 end
 
+---
+-- 连接端口
+-- @param only_once 是否只连接一次
+-- @param timeout 超时时间（毫秒）
+-- @return 连接结果
 function app_port:connect(only_once, timeout)
 	if timeout then
 		return self:timeout_call(timeout, "connect", only_once)
@@ -119,6 +158,12 @@ function app_port:connect(only_once, timeout)
 	end
 end
 
+---
+-- 超时调用函数
+-- @param timeout 超时时间
+-- @param func 要调用的函数
+-- @param ... 函数参数
+-- @return 调用结果或错误
 function app_port:timeout_call(timeout, func, ...)
 	local r, err = timeout_call(timeout, self._agent, "lua", func, ...)
 	if not r and err == timeout_error then
@@ -127,6 +172,13 @@ function app_port:timeout_call(timeout, func, ...)
 	return r, err
 end
 
+---
+-- 发送请求并等待响应
+-- @param request 请求数据
+-- @param response 响应处理函数
+-- @param padding 填充数据
+-- @param timeout 超时时间（毫秒）
+-- @return 响应数据或错误
 function app_port:request(request, response, padding, timeout)
 	check(response)
 	local code = string.dump(response)
@@ -137,10 +189,17 @@ function app_port:request(request, response, padding, timeout)
 	end
 end
 
+---
+-- 重新打开端口
+-- @param conf 新的配置（可选）
+-- @return 操作结果
 function app_port:reopen(conf)
 	return skynet.call(self._agent, "lua", "reopen", conf)
 end
 
+---
+-- 关闭端口
+-- @return 操作结果
 function app_port:close()
 	return skynet.call(self._agent, "lua", "close", conf)
 end

@@ -1,9 +1,30 @@
+---
+-- 配置辅助模块
+--
+-- 本模块提供配置加载和模板管理的辅助功能
+-- 支持从云端下载设备模板和配置
+---
+
 local class = require 'middleclass'
 local skynet = require 'skynet'
 local cjson = require 'cjson.safe'
+local lfs = require 'lfs'
 
+---
+-- 配置辅助类
+--
+-- 处理应用配置、模板下载和设备管理
+---
 local helper = class("FREEIOE_APP_CONF_API_HELPER")
 
+---
+-- 初始化配置辅助对象
+-- @param sys_api 系统API对象
+-- @param conf 配置名称或配置表
+-- @param templates_ext 模板文件扩展名（默认为"csv"）
+-- @param templates_dir 模板保存目录（默认为"tpl"）
+-- @param templates_node 配置中的模板节点名（默认为"tpls"）
+-- @param devices_node 配置中的设备节点名（默认为"devs"）
 function helper:initialize(sys_api, conf, templates_ext, templates_dir, templates_node, devices_node)
 	assert(sys_api and conf)
 	self._sys = sys_api
@@ -22,6 +43,9 @@ function helper:initialize(sys_api, conf, templates_ext, templates_dir, template
 	end
 end
 
+---
+-- 从云端加载配置
+-- @return 配置表
 function helper:_load_conf()
 	local conf_name, version = string.match(self._conf, "([^%.]+).(%d+)")
 	conf_name = conf_name or self._conf
@@ -29,7 +53,7 @@ function helper:_load_conf()
 
 	local api = self._sys:conf_api(conf_name, "cnf", self._templates_dir)
 
-	--- Fetch latest version
+	--- 获取最新版本
 	if not version then
 		local ver, err = api:version()
 		if not ver then
@@ -39,7 +63,7 @@ function helper:_load_conf()
 		version = ver
 	end
 
-	--- Fetch configuration now!
+	--- 现在获取配置！
 	self._log:notice("Loading cloud configuration", conf_name, version)
 
 	local config, err = api:data(version)
@@ -47,7 +71,7 @@ function helper:_load_conf()
 		self._log:warning("Cloud configuration loading failed", err)
 		return {}
 	end
-	-- Decode as json
+	-- 解码为JSON
 	local conf, err = cjson.decode(config)
 	if not conf then
 		self._log:error("Cloud configuration decode error: "..err)
@@ -56,6 +80,8 @@ function helper:_load_conf()
 	return conf
 end
 
+---
+-- 实际执行模板和设备获取
 function helper:_real_fetch()
 	if type(self._conf) == 'string' then
 		self._conf = self:_load_conf()
@@ -114,6 +140,9 @@ function helper:_real_fetch()
 	end
 end
 
+---
+-- 获取模板和设备
+-- @param async 是否异步获取
 function helper:fetch(async)
 	if not async then
 		return self:_real_fetch()
@@ -124,10 +153,16 @@ function helper:fetch(async)
 	end
 end
 
+---
+-- 获取配置
+-- @return 配置表
 function helper:config()
 	return self._conf
 end
 
+---
+-- 获取模板列表
+-- @return 模板表
 function helper:templates()
 	local templates = {}
 	for _, v in ipairs(self._conf[self._templates_node] or {}) do
@@ -139,6 +174,9 @@ function helper:templates()
 	return templates
 end
 
+---
+-- 获取设备列表
+-- @return 设备表
 function helper:devices()
 	local devices = {}
 	for _, v in ipairs(self._conf[self._devices_node] or {}) do
@@ -150,6 +188,10 @@ function helper:devices()
 	return devices
 end
 
+---
+-- 下载模板文件
+-- @param tpl 模板信息
+-- @return 成功状态、版本号
 function helper:_download_tpl(tpl)
 	self._log:debug("conf_helper download template", tpl.id, tpl.name, tpl.ver)
 	local api = self._sys:conf_api(tpl.id, self._templates_ext, self._templates_dir)
