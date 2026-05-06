@@ -1,8 +1,20 @@
+--- Prometheus指标模块
+-- @module db.prometheus.metric
+-- @author FreeIOE
+-- @license MIT
+-- @release 2025.05.06
+-- @description 定义和管理Prometheus指标，支持标签和多值记录
+
 local skynet = require 'skynet'
 local class = require 'middleclass'
 
 local metric = class('db.prometheus')
 
+--- 初始化指标
+-- @param name 指标名称
+-- @param labels 可选，标签表
+-- @param typ 可选，指标类型（gauge、counter等）
+-- @param help 可选，指标帮助文本
 function metric:initialize(name, labels, typ, help)
 	assert(name)
 	self._name = name
@@ -12,18 +24,28 @@ function metric:initialize(name, labels, typ, help)
 	self._values = {}
 end
 
+--- 获取指标名称
+-- @return string 指标名称
 function metric:metric_name()
 	return self._name
 end
 
+--- 获取标签表
+-- @return table 标签表
 function metric:labels()
 	return self._labels
 end
 
+--- 设置标签值
+-- @param name 标签名
+-- @param value 标签值
 function metric:set_label(name, value)
 	self._labels[name] = value
 end
 
+--- 添加值到指标
+-- @param value 数值（可以是数字或数字字符串）
+-- @param timestamp 可选，时间戳，默认使用当前时间
 function metric:push_value(value, timestamp)
 	if type(value) == 'string' then
 		value = assert(tonumber(value))
@@ -34,14 +56,21 @@ function metric:push_value(value, timestamp)
 	})
 end
 
+--- 获取所有值
+-- @return table 值数组
 function metric:values()
 	return self._values
 end
 
+--- 清空所有值
 function metric:clean()
 	self._values = {}
 end
 
+--- 编码单个值和时间为Prometheus格式
+-- @param value 数值
+-- @param timestamp 时间戳
+-- @return string Prometheus格式的行
 function metric:_encode_value(value, timestamp)
 	local val = tostring(value)
 	local ts = math.floor(timestamp * 1000)
@@ -57,6 +86,8 @@ function metric:_encode_value(value, timestamp)
 	return string.format("%s{%s} %s %d", self._name, table.concat(llist, ','), val, ts)
 end
 
+--- 编码所有值为Prometheus格式
+-- @return table Prometheus格式行数组
 function metric:_encode_values()
 	local list = {}
 	for _, v in ipairs(self._values) do
@@ -65,6 +96,9 @@ function metric:_encode_values()
 	return list
 end
 
+--- 编码指标为Prometheus文本格式
+-- @param auto_clean 是否在编码后自动清理数据
+-- @return table Prometheus格式行数组
 function metric:encode(auto_clean)
 	local lines = self:_encode_values()
 	if self._help then
@@ -79,6 +113,9 @@ function metric:encode(auto_clean)
 	return lines
 end
 
+--- 从Prometheus格式解码（未实现）
+-- @param lines Prometheus格式行
+-- @return nil
 function metric:decode(lines)
 	assert(nil, "Not implemented")
 end

@@ -1,3 +1,10 @@
+--- InfluxDB对象模块
+-- @module db.influxdb.object
+-- @author FreeIOE
+-- @license MIT
+-- @release 2025.05.06
+-- @description 提供面向对象的InfluxDB写入接口，支持缓冲和批量写入
+
 local _M = {}
 
 local skynet = require 'skynet'
@@ -15,21 +22,26 @@ local floor    = math.floor
 
 _M.version = "0.2"
 
-
+--- 对象元表
 local mt = {
-		__index = _M,
-		__tostring = function(self)
-			return str_fmt(
-				"%s,%s,%s,%s,%s,%s",
-				tostring(self._measurement),
-				tostring(self._stamp),
-				tostring(self._tag_cnt),
-				tostring(tbl_cat(self._tag_set, '|')),
-				tostring(self._field_cnt),
-				tostring(tbl_cat(self._field_set, '|'))
-			) end
+	__index = _M,
+	__tostring = function(self)
+		return str_fmt(
+			"%s,%s,%s,%s,%s,%s",
+			tostring(self._measurement),
+			tostring(self._stamp),
+			tostring(self._tag_cnt),
+			tostring(tbl_cat(self._tag_set, '|')),
+			tostring(self._field_cnt),
+			tostring(tbl_cat(self._field_set, '|'))
+		)
+	end
 }
 
+--- 执行写入操作
+-- @param msg 要写入的消息
+-- @return boolean 成功返回true
+-- @return string|nil 错误信息
 function _M.do_write(self, msg)
 	local proto = self.proto
 	if proto == 'http' then
@@ -41,15 +53,21 @@ function _M.do_write(self, msg)
 	end
 end
 
+--- 添加标签
+-- @param key 标签键
+-- @param value 标签值
 function _M.add_tag(self, key, value)
 	local tag_cnt = self._tag_cnt + 1
 
 	self._tag_cnt = tag_cnt
 
-	-- TODO sort tags by keys
+	-- TODO: 按键名排序标签
 	self._tag_set[tag_cnt] = { [key] = value }
 end
 
+--- 添加字段
+-- @param key 字段键
+-- @param value 字段值
 function _M.add_field(self, key, value)
 	local field_cnt = self._field_cnt + 1
 
@@ -58,10 +76,16 @@ function _M.add_field(self, key, value)
 	self._field_set[field_cnt] = { [key] = value }
 end
 
+--- 设置测量名称
+-- @param measurement 测量名称
 function _M.set_measurement(self, measurement)
 	self._measurement = lp.quote_measurement(measurement)
 end
 
+--- 设置或获取时间戳
+-- @param time 可选，指定时间戳
+-- @return string 时间戳字符串
+-- @description 如果不提供参数，根据精度设置自动生成时间戳
 function _M.stamp(self, time)
 	if time then
 		if (type(time) == 'number') then
@@ -82,6 +106,9 @@ function _M.stamp(self, time)
 	end
 end
 
+--- 获取时间戳
+-- @return string 时间戳字符串
+-- @description 如果时间戳不存在则自动生成
 function _M.timestamp(self)
 	local stamp = self._stamp
 	if not stamp then
@@ -92,6 +119,8 @@ function _M.timestamp(self)
 	end
 end
 
+--- 清空对象数据
+-- @return boolean 成功返回true
 function _M.clear(self)
 	self._measurement = nil
 	self._stamp = nil
@@ -103,6 +132,9 @@ function _M.clear(self)
 	return true
 end
 
+--- 检查是否准备好缓冲
+-- @return boolean 准备好返回true
+-- @return string|nil 错误信息
 function _M.buffer_ready(self)
 	if not self._measurement then
 		return false, 'no measurement'
@@ -115,6 +147,9 @@ function _M.buffer_ready(self)
 	return true
 end
 
+--- 检查是否准备好刷新
+-- @return boolean 准备好返回true
+-- @return string|nil 错误信息
 function _M.flush_ready(self)
 	if self._measurement then
 		return false, 'unbuffered measurement'
@@ -131,6 +166,9 @@ function _M.flush_ready(self)
 	return true
 end
 
+--- 将当前数据添加到缓冲区
+-- @return boolean 成功返回true
+-- @return string|nil 错误信息
 function _M.buffer(self)
 	local ready, err_msg = self:buffer_ready()
 	if not ready then
@@ -148,10 +186,13 @@ function _M.buffer(self)
 	self._msg_cnt = msg_cnt
 	self._msg_buf[msg_cnt] = msg
 
-	-- clear entries for another elt
+	-- 清空条目以便下一次使用
 	return self:clear()
 end
 
+--- 刷新缓冲区，写入所有数据
+-- @return boolean 成功返回true
+-- @return string|nil 错误信息
 function _M.flush(self)
 	local ready, err_msg = self:flush_ready()
 	if not ready then
@@ -166,6 +207,9 @@ function _M.flush(self)
 	return self:do_write(msg)
 end
 
+--- 立即写入当前数据
+-- @return boolean 成功返回true
+-- @return string|nil 错误信息
 function _M.write(self)
 	local ready, err_msg = self:buffer_ready()
 	if not ready then
@@ -185,6 +229,10 @@ function _M.write(self)
 	return self:clear()
 end
 
+--- 创建新的InfluxDB对象
+-- @param opts 配置选项表
+-- @return table|nil InfluxDB对象，失败返回nil
+-- @return string|nil 错误信息
 function _M.new(self, opts)
 	local ok, err = util.validate_options(opts)
 	if not ok then
@@ -192,7 +240,7 @@ function _M.new(self, opts)
 	end
 
 	local t = {
-		-- user opts
+		-- 用户配置
 		host      = opts.host,
 		port      = opts.port,
 		db        = opts.db,
@@ -202,7 +250,7 @@ function _M.new(self, opts)
 		ssl       = opts.ssl,
 		auth      = opts.auth,
 
-		-- obj fields
+		-- 对象字段
 		_tag_cnt   = 0,
 		_tag_set   = {},
 		_field_cnt = 0,

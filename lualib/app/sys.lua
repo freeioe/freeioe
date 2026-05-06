@@ -8,6 +8,7 @@ local api = require 'app.api'
 local logger = require 'app.logger'
 local conf_api = require 'app.conf.api'
 local utils = require 'app.utils'
+local debug_utils = require 'app.debug'
 local cancelable_timeout = require 'cancelable_timeout'
 
 local sys = class("APP_MGR_SYS")
@@ -152,7 +153,7 @@ end
 -- Get debug api(not implemented)
 function sys:debug_api()
 	if self._debug_api then
-		self._debug_api = debug:new(app_name, self._logger)
+		self._debug_api = debug_utils:new(app_name, self._logger)
 	end
 	return  self._debug_api
 end

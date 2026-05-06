@@ -1,9 +1,19 @@
+--- SiriDB HTTP客户端模块
+-- @module db.siridb.client
+-- @author FreeIOE
+-- @license MIT
+-- @release 2025.05.06
+-- @description 提供SiriDB数据库管理的HTTP客户端接口
+
 local class = require 'middleclass'
 local restful = require 'http.restful'
 local cjson = require 'cjson.safe'
 
 local client = class('db.siridb.http')
 
+--- 将配置选项转换为URL
+-- @param options 配置选项表
+-- @return string 完整的URL字符串
 local function option_to_url(options)
 	local proto = 'http'
 	if options.ssl then
@@ -15,6 +25,8 @@ local function option_to_url(options)
 	return string.format('%s://%s:%d', proto, host, port)
 end
 
+--- 初始化客户端
+-- @param options 配置选项表，包含host、port、ssl、username、password等
 function client:initialize(options)
 	self._options = options
 	local host = option_to_url(self._options)
@@ -22,6 +34,12 @@ function client:initialize(options)
 	self._rest = restful:new(host, self._options.timeout, nil, auth)
 end
 
+--- 发送POST请求
+-- @param url 请求URL
+-- @param params 查询参数
+-- @param data 请求体数据
+-- @return table|nil 响应数据（JSON解码），失败返回nil
+-- @return string|nil 响应体或错误信息
 function client:post(url, params, data)
 	local sts, body = self._rest:post(url, params, data)
 	if tonumber(sts) == 200 then
@@ -30,6 +48,12 @@ function client:post(url, params, data)
 	return nil, body
 end
 
+--- 发送GET请求
+-- @param url 请求URL
+-- @param params 查询参数
+-- @param data 请求数据
+-- @return table|nil 响应数据（JSON解码），失败返回nil
+-- @return string|nil 错误信息
 function client:get(url, params, data)
 	local sts, body = self._rest:get(url, params, data)
 	if tonumber(sts) == 200 then
@@ -42,6 +66,14 @@ function client:get(url, params, data)
 	return nil, body
 end
 
+--- 创建新数据库
+-- @param dbname 数据库名称
+-- @param time_precision 可选，时间精度（s/ms/us/ns），默认'ms'
+-- @param buffer_size 可选，缓冲区大小，默认1024
+-- @param duration_num 可选，持续时间数量
+-- @param duration_log 可选，持续时间日志
+-- @return boolean|nil 成功返回true
+-- @return string|nil 错误信息
 function client:new_database(dbname, time_precision, buffer_size, duration_num, duration_log)
 	assert(dbname)
 	local data = {
@@ -58,6 +90,11 @@ function client:new_database(dbname, time_precision, buffer_size, duration_num, 
 	return nil, err or r
 end
 
+--- 创建新账户
+-- @param user 用户名
+-- @param passwd 密码
+-- @return table|nil 响应数据，失败返回nil
+-- @return string|nil 错误信息
 function client:new_account(user, passwd)
 	assert(user, "User missing")
 	assert(passwd, "Password missing")
@@ -67,6 +104,11 @@ function client:new_account(user, passwd)
 	})
 end
 
+--- 修改密码
+-- @param user 用户名
+-- @param password 新密码
+-- @return table|nil 响应数据，失败返回nil
+-- @return string|nil 错误信息
 function client:change_password(user, password)
 	assert(user, "User missing")
 	assert(passwd, "Password missing")
@@ -76,6 +118,10 @@ function client:change_password(user, password)
 	})
 end
 
+--- 删除账户
+-- @param user 用户名
+-- @return table|nil 响应数据，失败返回nil
+-- @return string|nil 错误信息
 function client:drop_account(user)
 	assert(user, "User missing")
 	return self:post('/drop-account', nil, {
@@ -83,6 +129,14 @@ function client:drop_account(user)
 	})
 end
 
+--- 创建连接池
+-- @param dbname 数据库名称
+-- @param user 用户名
+-- @param passwd 密码
+-- @param host 主机地址
+-- @param port 端口号
+-- @return table|nil 响应数据，失败返回nil
+-- @return string|nil 错误信息
 function client:new_pool(dbname, user, passwd, host, port)
 	assert(dbname, 'dbname missing')
 	return self:post('/new-pool', nil, {
@@ -94,6 +148,15 @@ function client:new_pool(dbname, user, passwd, host, port)
 	})
 end
 
+--- 创建副本
+-- @param dbname 数据库名称
+-- @param user 用户名
+-- @param passwd 密码
+-- @param host 主机地址
+-- @param port 端口号
+-- @param pool 连接池名称
+-- @return table|nil 响应数据，失败返回nil
+-- @return string|nil 错误信息
 function client:new_replica(dbname, user, passwd, host, port, pool)
 	assert(dbname, 'dbname missing')
 	return self:post('/new-pool', nil, {
@@ -106,6 +169,11 @@ function client:new_replica(dbname, user, passwd, host, port, pool)
 	})
 end
 
+--- 删除数据库
+-- @param dbname 数据库名称
+-- @param ignore_offline 是否忽略离线状态
+-- @return table|nil 响应数据，失败返回nil
+-- @return string|nil 错误信息
 function client:drop_database(dbname, ignore_offline)
 	assert(dbname, "dbname missing")
 	return self:post('/drop-account', nil, {
@@ -114,6 +182,9 @@ function client:drop_database(dbname, ignore_offline)
 	})
 end
 
+--- 获取服务器版本
+-- @return string|nil 版本号，失败返回nil
+-- @return string|nil 错误信息
 function client:get_version()
 	local data, err = self:get('/get-version')
 	if data then
@@ -122,10 +193,14 @@ function client:get_version()
 	return nil, err
 end
 
+--- 获取所有账户
+-- @return table|nil 账户列表，失败返回nil
 function client:get_accounts()
 	return self:get('/get-accounts')
 end
 
+--- 获取所有数据库
+-- @return table|nil 数据库列表，失败返回nil
 function client:get_databases()
 	return self:get('/get-databases')
 end
