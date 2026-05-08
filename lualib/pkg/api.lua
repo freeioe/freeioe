@@ -32,6 +32,9 @@ function _M.http_post(url, data, not_log)
 	local ret = {}
 	if status == 200 then
 		local msg, err = cjson.decode(body)
+		if not msg then
+			return nil, err
+		end
 		if msg.code ~= 0 or not msg.data then
 			return nil, msg.msg or 'Response Message Error'
 		end
@@ -81,7 +84,7 @@ end
 
 function _M.user_access(auth_code)
 	local headers = {
-		Accpet = "application/json",
+		Accept = "application/json",
 		['user-token'] = auth_code
 	}
 
@@ -174,7 +177,7 @@ function _M.create_download_func(app, version, ext, is_extension, token, is_core
 		if status and status == 200 then
 			local sum, err = helper.md5sum(path)
 			if not sum then
-				return nil, "Cannot caculate md5, error:\t"..err
+				return nil, "Cannot calculate md5, error:\t"..err
 			end
 			log.notice("Downloaded file md5 sum", sum)
 			local md5, cf = body:match('^(%w+)[^%g]+(.+)$')

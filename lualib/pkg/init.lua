@@ -22,6 +22,10 @@ end
 
 function _M.get_app_folder(inst_name)
 	assert(string.len(inst_name or '') > 0, "Instance name cannot be empty")
+	-- 防止路径遍历攻击，验证不包含路径分隔符
+	if inst_name:match('[/\\]') then
+		return nil, "Invalid instance name: contains path separators"
+	end
 	return ioe.dir().."/apps/"..inst_name.."/"
 end
 
@@ -45,6 +49,10 @@ end
 
 function _M.get_ext_folder(inst_name)
 	assert(string.len(inst_name or '') > 0, "Instance name cannot be empty")
+	-- 防止路径遍历攻击，验证不包含路径分隔符
+	if inst_name:match('[/\\]') then
+		return nil, "Invalid instance name: contains path separators"
+	end
 	return ioe.dir(true).."/ext/"..inst_name
 end
 
@@ -73,8 +81,11 @@ end
 
 function _M.generate_tmp_path(app_name, version, ext)
 	assert(app_name, "App name is nil")
-	local app_name_escape = string.gsub(app_name, '/', '__')
-	return "/tmp/"..app_name_escape.."_"..version..os.time()..ext
+	-- 转义所有路径分隔符和危险字符
+	local app_name_escape = string.gsub(app_name, '[/\\:%.%c]', '__')
+	-- 添加随机数以防止预测和竞态条件
+	local random_suffix = string.format("%04x", math.random(0, 65535))
+	return "/tmp/"..app_name_escape.."_"..version.."_"..os.time().."_"..random_suffix..ext
 end
 
 function _M.gen_token(id)

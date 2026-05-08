@@ -71,10 +71,14 @@ function _M.post_install(inst, ext, folder)
 	local ext_version = replace_patt(ext.version)
 	local owner, repo = string.match(ext_repo, '([^/]+)/(.+)')
 	local sub_folder = folder..'/'..repo..'-'..ext_version
-	print(sub_folder)
+	log.notice('Post install sub folder:', sub_folder)
 	if lfs.attributes(sub_folder, 'mode') == 'directory' then
 		move_all_files(sub_folder, folder)
-		os.execute("rmdir "..sub_folder)
+		-- 使用 shell 转义来避免命令注入
+		local function shell_escape(s)
+			return '"' .. string.gsub(s, '"', '\\"') .. '"'
+		end
+		os.execute("rmdir "..shell_escape(sub_folder))
 	end
 end
 
@@ -125,6 +129,11 @@ function _M.create_download_func(ext)
 			file_path = string.gsub(file_path, '/', '__')
 
 			local path = pkg.generate_tmp_path(repo_path, branch_tag, "."..file_path)
+			local file, err = io.open(path, "w+")
+			if not file then
+				return nil, err
+			end
+
 			local url = string.format(_M.url_sub_fmt, repo_path, branch_tag, path)
 			local status, header, body = httpdown.get(_M.host, url, {})
 			if not status then
