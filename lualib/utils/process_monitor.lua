@@ -115,6 +115,14 @@ function pm:stop()
 		return nil, err
 	end
 
+	-- 验证PID是有效的数字且在合理范围内
+	if type(pid) ~= 'number' then
+		return nil, "Invalid PID type"
+	end
+	if pid <= 0 or pid >= 32768 then
+		return nil, "PID out of valid range"
+	end
+
 	local r = {os.execute('kill '..tostring(pid))}
 	skynet.sleep(100)
 	self._started = nil
@@ -129,6 +137,14 @@ function pm:status()
 	local pid, err = self:get_pid()
 	if not pid then
 		return nil, err
+	end
+
+	-- 验证PID是有效的数字且在合理范围内
+	if type(pid) ~= 'number' then
+		return nil, "Invalid PID type"
+	end
+	if pid <= 0 or pid >= 32768 then
+		return nil, "PID out of valid range"
 	end
 
 	--- Kill -0 just check whether the pid exists

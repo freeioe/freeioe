@@ -91,7 +91,9 @@ _M.md5sum = function(file_path)
 		return nil, err
 	end
 	local md5sum_exe = check_exists('md5sum') or 'md5sum'
-	local f, err = io.popen(md5sum_exe..' "'..file_path..'"')
+	-- 使用shell转义确保安全
+	local safe_path = '"'..string.gsub(file_path, '"', '\\"')..'"'
+	local f, err = io.popen(md5sum_exe..' '..safe_path)
 	if not f then
 		return nil, err
 	end

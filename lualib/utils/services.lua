@@ -86,6 +86,16 @@ function services:create(check_exits)
 	if self._pm then
 		return true
 	end
+
+	-- 验证最终命令字符串的安全性
+	if not self._cmd or type(self._cmd) ~= 'string' then
+		return nil, "Invalid command"
+	end
+	-- 检查命令中没有危险字符
+	if string.match(self._cmd, '[;|&`$%c]') then
+		return nil, "Dangerous characters in command"
+	end
+
 	local s = string.format(procd_file, self._cmd, self._pid)
 
 	if lfs.attributes(self._file, "mode") == 'file' then

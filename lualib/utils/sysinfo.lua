@@ -6,10 +6,52 @@ local skynet = require 'skynet'
 
 local _M = {}
 
+-- 允许的安全命令白名单模式
+local SAFE_COMMAND_PATTERNS = {
+	'^uname%s',  -- uname 命令
+	'^df%s',     -- df 命令
+	'^ls%s',     -- ls 命令
+	'^grep%s',   -- grep 命令
+	'^cat%s',    -- cat 命令
+	'^ifconfig%s',  -- ifconfig 命令
+	'^dmesg%s',  -- dmesg 命令
+}
+
+-- 验证命令安全性
+local function validate_command(cmd)
+	if not cmd or type(cmd) ~= 'string' then
+		return nil, "Invalid command type"
+	end
+
+	-- 拒绝特殊字符和管道
+	if string.match(cmd, '[;|&$`%c]') then
+		return nil, "Dangerous characters in command"
+	end
+
+	-- 检查是否在白名单中
+	for _, pattern in ipairs(SAFE_COMMAND_PATTERNS) do
+		if string.match(cmd, pattern) then
+			return true
+		end
+	end
+
+	-- 允许读取 /proc 和 /sys 下的文件
+	if string.match(cmd, '^cat%s+/[a-z][a-z0-9_/]+%s*') then
+		return true
+	end
+
+	return nil, "Command not in whitelist"
+end
 
 --- Get output of shell command
 --
 _M.exec = function(cmd, not_inplace)
+	-- 验证命令安全性
+	local ok, err = validate_command(cmd)
+	if not ok then
+		return nil, "Command validation failed: "..err
+	end
+
 	local cmd = cmd..' 2>/dev/null'
 	if true or inplace then
 		local f, err = io.popen(cmd)
@@ -164,6 +206,18 @@ end
 -- @tparam string ifname The interface name
 -- @treturn table
 local function network_if(ifname)
+	-- 验证接口名称
+	if not ifname or type(ifname) ~= 'string' then
+		return nil, "Invalid interface name type"
+	end
+	-- 网络接口名只允许字母数字和下划线，长度2-16
+	if not string.match(ifname, '^[a-zA-Z][a-zA-Z0-9_]+$') then
+		return nil, "Invalid interface name format"
+	end
+	if #ifname > 16 or #ifname < 2 then
+		return nil, "Interface name length must be 2-16 characters"
+	end
+
 	local patt = '%g'
 	if _VERSION == 'Lua 5.1' then
 		patt = '[^%s]'

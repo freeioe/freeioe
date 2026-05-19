@@ -5,12 +5,17 @@ local _M = {}
 
 -- 验证串口设备名称
 local function validate_port(port)
-	-- 只允许 /dev/ttyXXX 或 /dev/ttyUSBXX 格式
+	-- 只允许 /dev/ttyXXX 或 /dev/ttyUSBXX 格式，更严格的验证
 	if not port or type(port) ~= 'string' then
 		return nil, "Invalid port type"
 	end
-	if not string.match(port, '^/dev/tty[%w]+') then
+	-- 更严格的模式：只允许字母数字，限制长度
+	if not string.match(port, '^/dev/tty[A-Z][A-Za-z0-9_]+$') then
 		return nil, "Invalid port format"
+	end
+	-- 拒绝路径遍历
+	if string.match(port, '%.%.') then
+		return nil, "Path traversal not allowed"
 	end
 	return true
 end
@@ -20,13 +25,17 @@ local function validate_script(script)
 	if not script or type(script) ~= 'string' then
 		return nil, "Invalid script type"
 	end
-	-- 只允许字母数字、下划点、短横线
-	if not string.match(script, '^[%w%._-]+$') then
+	-- 更严格的验证：只允许字母数字、下划线、短横线，不允许点
+	if not string.match(script, '^[%w_-]+$') then
 		return nil, "Invalid script name"
 	end
 	-- 拒绝路径遍历
 	if string.match(script, '%.%.') then
 		return nil, "Path traversal not allowed"
+	end
+	-- 限制长度
+	if #script > 64 then
+		return nil, "Script name too long"
 	end
 	return true
 end

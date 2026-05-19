@@ -21,15 +21,31 @@ function file:_save_file(path, content, content_md5sum)
 
 	local mfile, merr = io.open(path..".md5", "w+")
 	if not mfile then
+		file:close()
 		return nil, merr
 	end
 	self._modification = os.time()
 
-	file:write(content)
-	file:close()
+	-- 使用pcall确保资源清理
+	local write_ok, write_err = pcall(function()
+		file:write(content)
+	end)
 
-	mfile:write(content_md5sum)
+	local md5_ok, md5_err = pcall(function()
+		mfile:write(content_md5sum)
+	end)
+
+	-- 关闭文件
+	file:close()
 	mfile:close()
+
+	-- 检查错误
+	if not write_ok then
+		return nil, write_err or "Failed to write content"
+	end
+	if not md5_ok then
+		return nil, md5_err or "Failed to write md5sum"
+	end
 
 	return true
 end

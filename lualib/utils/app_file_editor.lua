@@ -173,7 +173,10 @@ local get_ops = {
 			if lfs.attributes(path) then
 				return nil, "File already exits"
 			end
-			local f = assert(io.open(path, 'w+'))
+			local f, err = io.open(path, 'w+')
+			if not f then
+				return nil, err
+			end
 			f:close()
 			return {
 				id = id,
@@ -245,7 +248,10 @@ local get_ops = {
 		local mode = lfs.attributes(path, 'mode')
 		local size = lfs.attributes(path, 'size')
 		if ext ~= 'so' and mode == 'file' and size < 4 * 1024 * 1024  then
-			local f = assert(io.open(path, 'r'))
+			local f, err = io.open(path, 'r')
+			if not f then
+				return nil, err
+			end
 			local content = f:read('a')
 			f:close()
 			return {
@@ -267,7 +273,10 @@ local post_ops = {
 			return { status = 'Failed' }
 		end
 		local path = get_app_path(app, node)
-		local f = assert(io.open(path, 'w'))
+		local f, err = io.open(path, 'w')
+		if not f then
+			return { status = 'Failed', error = err }
+		end
 		f:write(content)
 		f:close()
 		local appmgr = snax.queryservice("appmgr")

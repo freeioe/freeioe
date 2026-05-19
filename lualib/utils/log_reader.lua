@@ -39,12 +39,39 @@ local function parse_log(s)
 	return logs
 end
 
+-- 验证目录路径安全性
+local function validate_directory_path(dir)
+	if not dir or type(dir) ~= 'string' then
+		return nil, "Invalid directory type"
+	end
+	-- 拒绝路径遍历
+	if string.match(dir, '%.%.') then
+		return nil, "Path traversal not allowed"
+	end
+	-- 拒绝特殊字符
+	if string.match(dir, '[;|&$`%c]') then
+		return nil, "Invalid characters in directory"
+	end
+	-- 拒绝绝对路径（除非是标准系统路径）
+	if string.match(dir, '^/') then
+		-- 只允许特定的系统路径
+		if not string.match(dir, '^/(var|tmp|opt|home|usr)%f') then
+			return nil, "Absolute paths not allowed except standard system paths"
+		end
+	end
+	return true
+end
+
 local function tail_log_file(file, max_line)
 	local ok, err = validate_log_filename(file)
 	if not ok then
 		return nil, err
 	end
 	local dir = lfs.currentdir()
+	local ok, err = validate_directory_path(dir)
+	if not ok then
+		return nil, err
+	end
 	local cmd = 'tail -n '..max_line..' "'..dir..'/logs/'..file..'"'
 	local f, err = io.popen(cmd)
 	if not f then
@@ -61,6 +88,10 @@ local function filter_log_file(file, max_line, s_match)
 		return nil, err
 	end
 	local dir = lfs.currentdir()
+	local ok, err = validate_directory_path(dir)
+	if not ok then
+		return nil, err
+	end
 	local cmd = 'tail -n '..max_line..' "'..dir..'/logs/'..file..'"'
 	local f, err = io.popen(cmd)
 	if not f then
