@@ -7,6 +7,31 @@ local utils = require 'app.utils'
 
 local pack_target_path = "/tmp/ioe/"
 
+-- Shell 转义函数，防止命令注入
+local function shell_escape(s)
+	if type(s) ~= 'string' then
+		s = tostring(s)
+	end
+	return '"' .. string.gsub(s, '"', '\\"') .. '"'
+end
+
+-- 验证路径安全性，防止路径遍历
+local function validate_path(path)
+	-- 拒绝绝对路径
+	if string.match(path, '^/') then
+		return nil, "Absolute paths not allowed"
+	end
+	-- 拒绝路径遍历
+	if string.match(path, '%.%.') then
+		return nil, "Path traversal not allowed"
+	end
+	-- 拒绝特殊字符
+	if string.match(path, '[\x00\r\n]') then
+		return nil, "Invalid characters in path"
+	end
+	return true
+end
+
 local function get_file_ext(filename)
 	local ext = string.match(filename, '%.(%w-)$')
 	return ext or 'text'
@@ -95,11 +120,12 @@ local function pack_app(inst, version)
 	--local target_file = inst.."_v"..version..".tar.gz"
 	local target_file = inst.."_ver_"..version..".zip"
 	local target_file_escape = string.gsub(target_file, " ", "__")
-	os.execute("mkdir -p "..pack_target_path)
-	os.execute("rm -f "..pack_target_path..target_file_escape)
+	os.execute("mkdir -p "..shell_escape(pack_target_path))
+	os.execute("rm -f "..shell_escape(pack_target_path..target_file_escape))
 
 	--local cmd = "tar -cvzf "..pack_target_path..target_file_escape.." "..string.gsub(get_app_path(inst, "*"), " ", "\\ ")
-	local cmd = "cd "..string.gsub(get_app_path(inst), " ", "\\ ").." && zip -r -q "..pack_target_path..target_file_escape.." ./*"
+	local app_path = get_app_path(inst)
+	local cmd = "cd "..shell_escape(app_path).." && zip -r -q "..shell_escape(pack_target_path..target_file_escape).." ./*"
 	local r, status, code = os.execute(cmd)
 	if not r then
 		return nil, "failed to pack application"..inst
@@ -185,8 +211,9 @@ local get_ops = {
 	move_node = function(app, node, opt)
 		local dst = opt.parent ~= '/' and opt.parent or ''
 		local dst_path = get_app_path(app, dst)..'/'
-		os.execute('mv '..get_app_path(app, node)..' '..dst_path)
-		return { 
+		local src_path = get_app_path(app, node)
+		os.execute('mv '..shell_escape(src_path)..' '..shell_escape(dst_path))
+		return {
 			id = path_join(dst, basename(node))
 		}
 	end,
@@ -208,7 +235,8 @@ local get_ops = {
 	copy_node = function(app, node, opt)
 		local dst = opt.parent ~= '/' and opt.parent or ''
 		local dst_path = get_app_path(app, dst)..'/'
-		os.execute('cp -r '..get_app_path(app, node)..' '..dst_path)
+		local src_path = get_app_path(app, node)
+		os.execute('cp -r '..shell_escape(src_path)..' '..shell_escape(dst_path))
 		return { status = 'OK' }
 	end,
 	get_content = function(app, node, opt)
@@ -258,7 +286,7 @@ local post_ops = {
 			if not folder then
 				return { status = 'Failed' }
 			end
-			os.execute('mkdir -p '..folder)
+			os.execute('mkdir -p '..shell_escape(folder))
 			f, err = io.open(path, 'w')
 		end
 		f:write(content)

@@ -1,6 +1,23 @@
 local sysinfo = require 'utils.sysinfo'
+local lfs = require 'lfs'
 
 local _M  = {}
+
+-- 验证文件路径安全性
+local function validate_file_path(file_path)
+	if not file_path or type(file_path) ~= 'string' then
+		return nil, "Invalid file path type"
+	end
+	-- 拒绝路径遍历
+	if string.match(file_path, '%.%.') then
+		return nil, "Path traversal not allowed"
+	end
+	-- 拒绝shell元字符
+	if string.match(file_path, '[;|&$`%c]') then
+		return nil, "Invalid characters in file path"
+	end
+	return true
+end
 
 local html_escape_entities = {
 	['&'] = '&amp;',
@@ -69,8 +86,12 @@ local function check_exists(exec)
 end
 
 _M.md5sum = function(file_path)
+	local ok, err = validate_file_path(file_path)
+	if not ok then
+		return nil, err
+	end
 	local md5sum_exe = check_exists('md5sum') or 'md5sum'
-	local f, err = io.popen(md5sum_exe..' '..file_path)
+	local f, err = io.popen(md5sum_exe..' "'..file_path..'"')
 	if not f then
 		return nil, err
 	end

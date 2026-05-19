@@ -3,7 +3,39 @@ local lfs = require 'lfs'
 
 local _M = {}
 
+-- 验证串口设备名称
+local function validate_port(port)
+	-- 只允许 /dev/ttyXXX 或 /dev/ttyUSBXX 格式
+	if not port or type(port) ~= 'string' then
+		return nil, "Invalid port type"
+	end
+	if not string.match(port, '^/dev/tty[%w]+') then
+		return nil, "Invalid port format"
+	end
+	return true
+end
+
+-- 验证脚本文件名
+local function validate_script(script)
+	if not script or type(script) ~= 'string' then
+		return nil, "Invalid script type"
+	end
+	-- 只允许字母数字、下划点、短横线
+	if not string.match(script, '^[%w%._-]+$') then
+		return nil, "Invalid script name"
+	end
+	-- 拒绝路径遍历
+	if string.match(script, '%.%.') then
+		return nil, "Path traversal not allowed"
+	end
+	return true
+end
+
 _M.exec = function(port, script)
+	local ok, err = validate_port(port)
+	if not ok then return nil, err end
+	local ok, err = validate_script(script)
+	if not ok then return nil, err end
 	return sysinfo.exec('gcom -d '..port..' -s '..script)
 end
 
@@ -13,17 +45,17 @@ _M.get_boardname = function()
 	end
 	local f, err = io.open('/tmp/sysinfo/board_name', 'r')
 	if f then
-		s = f:read("l")
-		if string.match(s, 'Q2040') then
-			_M._board_name = 'Q204'
-		end
-		if string.match(s, 'tgw303x') then
-			_M._board_name = 'Q102'
-		end
-		if string.match(s, 'F202') then
-			_M._board_name = 'F208'
-		end
+		local s = f:read("l")
 		f:close()
+		if s then
+			if string.match(s, 'Q2040') then
+				_M._board_name = 'Q204'
+			elseif string.match(s, 'tgw303x') then
+				_M._board_name = 'Q102'
+			elseif string.match(s, 'F202') then
+				_M._board_name = 'F208'
+			end
+		end
 	end
 	return _M._board_name or 'Unknown'
 end
@@ -68,7 +100,9 @@ _M.gen_gcom_script = function(at_cmd)
 end
 
 _M.create_gcom_script = function(script, at_cmd)
-	local path = '/tmp/__gcom_'..script
+	-- 生成安全的临时文件名，包含随机数防止竞态条件
+	local random_suffix = string.format("%04x", math.random(0, 65535))
+	local path = '/tmp/__gcom_'..script..'_'..random_suffix
 	local f, err = io.open(path, 'w+')
 	if not f then
 		return nil, err
@@ -81,6 +115,12 @@ end
 _M.auto_port_exec = function(script, at_cmd)
 	local port, err = _M.detect_device()
 	if not port then
+		return nil, err
+	end
+
+	-- 验证脚本名称
+	local ok, err = validate_script(script)
+	if not ok then
 		return nil, err
 	end
 

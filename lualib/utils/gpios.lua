@@ -12,7 +12,7 @@ local function list_gpios()
 		local gpios_path = '/sys/class/gpio'
 		if lfs.attributes(gpios_path, 'mode') == 'directory' then
 			for filename in lfs.dir(gpios_path) do
-				local value_path = gpios_path.."/"..filename.."/value",
+				local value_path = gpios_path.."/"..filename.."/value"
 				-- export, unexport file are not gpio folder
 				if filename ~= 'export' and filename ~= 'unexport' and lfs.attributes(value_path, 'mode') == 'file' then
 					list[filename] = {
@@ -37,7 +37,9 @@ local gpio_class = {}
 
 function gpio_class:value(value)
 	if value then
-		os.execute("echo "..tostring(value).." > "..self.value_path)
+		-- 使用shell转义防止命令注入
+		local cmd = 'echo '..tostring(value)..' > "'..self.value_path..'"'
+		os.execute(cmd)
 		return value
 	else
 		local f, err = io.open(self.value_path)
@@ -81,7 +83,7 @@ function gpio_class:blink(sec, dark_sec)
 		blink_state = blink_state == 0 and 1 or 0
 
 		local timeout = blink_timeout
-		if dard_sec ~= nil and blink_state == 0 then
+		if dark_sec ~= nil and blink_state == 0 then
 			timeout = math.floor(dark_sec * 100)
 		end
 		self._cancel_trigger = cancelable_timeout(timeout, blink_func)

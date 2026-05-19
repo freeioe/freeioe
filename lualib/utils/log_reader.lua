@@ -5,6 +5,26 @@ local cjson = require 'cjson.safe'
 
 local _M = {}
 
+-- 验证日志文件名
+local function validate_log_filename(file)
+	if not file or type(file) ~= 'string' then
+		return nil, "Invalid filename type"
+	end
+	-- 只允许字母数字、下划线、点、短横线
+	if not string.match(file, '^[%w%._-]+$') then
+		return nil, "Invalid filename"
+	end
+	-- 拒绝路径遍历
+	if string.match(file, '%.%.') then
+		return nil, "Path traversal not allowed"
+	end
+	-- 拒绝绝对路径
+	if string.match(file, '^/') then
+		return nil, "Absolute paths not allowed"
+	end
+	return true
+end
+
 local function parse_log(s)
 	local logs = {}
 	for line in string.gmatch(s, "[^\n]+") do
@@ -20,8 +40,12 @@ local function parse_log(s)
 end
 
 local function tail_log_file(file, max_line)
+	local ok, err = validate_log_filename(file)
+	if not ok then
+		return nil, err
+	end
 	local dir = lfs.currentdir()
-	local cmd = 'tail -n '..max_line..' '..dir..'/logs/'..file
+	local cmd = 'tail -n '..max_line..' "'..dir..'/logs/'..file..'"'
 	local f, err = io.popen(cmd)
 	if not f then
 		return {}
@@ -32,8 +56,12 @@ local function tail_log_file(file, max_line)
 end
 
 local function filter_log_file(file, max_line, s_match)
+	local ok, err = validate_log_filename(file)
+	if not ok then
+		return nil, err
+	end
 	local dir = lfs.currentdir()
-	local cmd = 'tail -n '..max_line..' '..dir..'/logs/'..file
+	local cmd = 'tail -n '..max_line..' "'..dir..'/logs/'..file..'"'
 	local f, err = io.popen(cmd)
 	if not f then
 		return {}

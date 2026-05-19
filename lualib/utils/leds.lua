@@ -55,7 +55,9 @@ local led_class = {}
 
 function led_class:brightness(value)
 	if value then
-		os.execute("echo "..tostring(value).." > "..self.brightness_path)
+		-- 使用shell转义防止命令注入
+		local cmd = 'echo '..tostring(value)..' > "'..self.brightness_path..'"'
+		os.execute(cmd)
 		return value
 	else
 		local f, err = io.open(self.brightness_path)
@@ -99,7 +101,7 @@ function led_class:blink(sec, dark_sec)
 		blink_state = blink_state == 0 and 1 or 0
 
 		local timeout = blink_timeout
-		if dard_sec ~= nil and blink_state == 0 then
+		if dark_sec ~= nil and blink_state == 0 then
 			timeout = math.floor(dark_sec * 100)
 		end
 		self._cancel_blink = cancelable_timeout(timeout, blink_func)

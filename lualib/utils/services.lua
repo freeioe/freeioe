@@ -1,5 +1,5 @@
 ---
--- Services Control Utils 
+-- Services Control Utils
 --
 local lfs = require 'lfs'
 local skynet = require 'skynet'
@@ -9,12 +9,48 @@ local pm = require 'utils.process_monitor'
 
 local services = class("FREEIOE_SERVICES_CONTRL_API")
 
+-- Shell转义函数
+local function shell_escape(s)
+	if type(s) ~= 'string' then
+		s = tostring(s)
+	end
+	return '"' .. string.gsub(s, '"', '\\"') .. '"'
+end
+
+-- 验证服务名称
+local function validate_service_name(name)
+	if not name or type(name) ~= 'string' then
+		return nil, "Invalid service name type"
+	end
+	-- 只允许字母数字、下划线、短横线
+	if not string.match(name, '^[%w_-]+$') then
+		return nil, "Invalid service name"
+	end
+	-- 拒绝路径遍历
+	if string.match(name, '%.%.') then
+		return nil, "Path traversal not allowed"
+	end
+	return true
+end
+
 function services:initialize(name, cmd, args, options)
 	assert(name and cmd)
+
+	local ok, err = validate_service_name(name)
+	if not ok then
+		error(err)
+	end
+
 	self._name = "ioe_"..name
 	self._cmd = cmd
+
+	-- 安全处理args
 	if args then
-		self._cmd = cmd .. ' ' .. table.concat(args, ' ')
+		local escaped_args = {}
+		for _, v in ipairs(args) do
+			table.insert(escaped_args, shell_escape(v))
+		end
+		self._cmd = cmd .. ' ' .. table.concat(escaped_args, ' ')
 	end
 
 	self._pid = "/tmp/service_"..self._name..".pid"
@@ -42,7 +78,8 @@ start_service () {
 ]]
 
 function services:_ctrl(action)
-	return os.execute(self._file.." "..action)
+	local cmd = shell_escape(self._file).." "..action
+	return os.execute(cmd)
 end
 
 function services:create(check_exits)
@@ -67,7 +104,7 @@ function services:create(check_exits)
 
 	f:write(s)
 	f:close()
-	os.execute("chmod a+x "..self._file)
+	os.execute("chmod a+x "..shell_escape(self._file))
 	--return self:_ctrl("enable")
 	return true
 end
@@ -84,7 +121,7 @@ function services:remove()
 	end
 
 	self:_ctrl("disable")
-	os.execute('rm -f '..self._file)
+	os.execute('rm -f '..shell_escape(self._file))
 end
 
 function services:__gc()
@@ -158,8 +195,8 @@ function services:status()
 		return nil, err
 	end
 
-	--- Kill -0 just check whther the pid exists
-	return os.execute('kill -0 '..pid)
+	--- Kill -0 just check whether the pid exists
+	return os.execute('kill -0 '..tostring(pid))
 end
 
 return services
