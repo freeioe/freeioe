@@ -46,13 +46,20 @@ function blob_msg.static:parse(blob_info, raw, pos)
 	self._len = head:len() - self:hdr_len()
 
 	pos = self:hdr_len() + 1
-	local bi = blob_msg.blob_info[head:id()]
+
+	-- 验证head:id()有效性
+	local head_id = head:id()
+	if not head_id or head_id < 0 or head_id > 255 then
+		return nil, "Invalid blob ID: "..tostring(head_id)
+	end
+
+	local bi = blob_msg.blob_info[head_id]
 	local data_len = 0
 	if bi and bi.fmt then
 		self._data = string.unpack(bi.fmt, data, pos)
 		data_len = bi.len or 0
 	else
-		if head:id() == blob_msg.STRING then
+		if head_id == blob_msg.STRING then
 			data_len = head:len() - self:hdr_len()
 			self._data = string.sub(data, pos, pos + self._len - 2)
 		end
@@ -77,7 +84,9 @@ function blob_msg.static:parse(blob_info, raw, pos)
 end
 
 function blob_msg.static:from_blob(blob_info, blob_obj)
-	assert(blob_obj)
+	if not blob_obj then
+		return nil, "blob_obj is nil"
+	end
 	return blob_msg:parse(blob_info, tostring(blob_obj))
 end
 
@@ -91,7 +100,10 @@ function blob_msg.static:from_lua(blob_info, name, val)
 	if type(val) == 'boolean' then
 		val = val and 1 or 0
 	end
-	assert(val)
+	-- 替换assert为错误处理
+	if val == nil then
+		return nil, "Cannot convert nil value to blob_msg"
+	end
 	local self = self:allocate()
 	self._blob_info = blob_info
 	self._id = blob_msg.UNSPEC

@@ -7,7 +7,13 @@ function blob_buf.static:parse(blob_info, raw, pos)
 	--local basexx = require 'basexx'
 	--print('parse blob_buf', basexx.to_hex(string.sub(raw, pos or 1)))
 	local self = self:allocate()
-	local head = assert(blob:parse(blob_info, raw, pos))
+
+	-- 替换assert为错误处理
+	local head, err = blob:parse(blob_info, raw, pos)
+	if not head then
+		return nil, "Failed to parse blob header: "..tostring(err)
+	end
+
 	self._id = head:id()
 	self._blob_info = blob_info
 
@@ -16,10 +22,28 @@ function blob_buf.static:parse(blob_info, raw, pos)
 
 	local blobs = {}
 	local ipos = 1
-	while string.len(data) > ipos + blob.ATTR_ALIGN do
-		local b = assert(blob:parse(blob_info, data, ipos))
+	local max_blobs = 10000  -- 防止内存耗尽
+	local count = 0
+	local last_ipos = ipos
+
+	while string.len(data) > ipos + blob.ATTR_ALIGN and count < max_blobs do
+		local b, parse_err = blob:parse(blob_info, data, ipos)
+		if not b then
+			return nil, "Failed to parse nested blob: "..tostring(parse_err)
+		end
 		table.insert(blobs, b)
 		ipos = ipos + b:pad_len()
+
+		-- 检查进度，防止无限循环
+		if ipos <= last_ipos then
+			return nil, "Invalid blob length detected (no progress)"
+		end
+		last_ipos = ipos
+		count = count + 1
+	end
+
+	if count >= max_blobs then
+		return nil, "Too many blobs in buffer (max: "..max_blobs..")"
 	end
 
 	self._blobs = blobs

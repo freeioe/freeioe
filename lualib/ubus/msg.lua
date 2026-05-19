@@ -58,13 +58,21 @@ function umsg.static:read_sock(sock, blob_info)
 end
 
 function umsg:parse_hdr(blob_info, raw)
-	local ver, typ, seq, peer = string.unpack(umsg.HDR_FORMAT, raw)
+	-- 使用pcall处理string.unpack可能的错误
+	local ok, ver, typ, seq, peer = pcall(string.unpack, umsg.HDR_FORMAT, raw)
+	if not ok then
+		return nil, "Failed to unpack message header"
+	end
 	--print('UMSG Header VERSION:', ver, 'TYPE:', typ, 'SEQ:', seq, 'PEER:', peer)
 	if typ == umsg.HELLO and ver ~= umsg.MSG_VERSION then
 		return nil, "Invalid ubus message version: "..ver
 	end
 
-	local bmsg = assert(ublob:parse(blob_info, raw, umsg.HDR_LEN + 1, true))
+	-- 替换assert为错误处理
+	local bmsg, err = ublob:parse(blob_info, raw, umsg.HDR_LEN + 1, true)
+	if not bmsg then
+		return nil, "Failed to parse blob message: "..tostring(err)
+	end
 	if bmsg:raw_len() < ublob.ATTR_HDR_LEN then
 		return nil, "Invalid data length found. "..bmsg:raw_len()
 	end

@@ -51,11 +51,30 @@ local blob_type_unpack = {
 		end
 		local blobs = {}
 		local ipos = 1
-		while string.len(data) > ipos + blob.ATTR_ALIGN do
+		local max_blobs = 10000  -- 防止内存耗尽攻击
+		local count = 0
+		local last_ipos = ipos
+
+		while string.len(data) > ipos + blob.ATTR_ALIGN and count < max_blobs do
 			local b = blob:parse(blob_info, data, ipos)
+			if not b then
+				return nil, "Failed to parse nested blob"
+			end
 			table.insert(blobs, b)
 			ipos = ipos + b:pad_len()
+
+			-- 检查进度，防止无限循环
+			if ipos <= last_ipos then
+				return nil, "Invalid blob length detected (no progress)"
+			end
+			last_ipos = ipos
+			count = count + 1
 		end
+
+		if count >= max_blobs then
+			return nil, "Too many nested blobs (max: "..max_blobs..")"
+		end
+
 		return blobs
 	end,
 	string = function(blob_info, data, pos, len)
@@ -121,7 +140,13 @@ function blob.static:parse(blob_info, raw, pos, only_hdr)
 
 	self._id = (id_len & blob.ATTR_ID_MASK) >> blob.ATTR_ID_SHIFT
 	self._ext = (id_len & blob.ATTR_EXTENDED) == blob.ATTR_EXTENDED
-	self._len = (id_len & blob.ATTR_LEN_MASK) - blob.ATTR_HDR_LEN
+
+	-- 验证长度计算，防止整数溢出
+	local len = (id_len & blob.ATTR_LEN_MASK) - blob.ATTR_HDR_LEN
+	if len < 0 or len > 0x00ffffff then
+		return nil, "Invalid blob length: "..tostring(len)
+	end
+	self._len = len
 
 	self._blob_info = blob_info
 	local info = self._blob_info and self._blob_info[self._id] or nil
@@ -145,7 +170,11 @@ function blob.static:parse(blob_info, raw, pos, only_hdr)
 		local start_pos = pos + blob.ATTR_HDR_LEN
 		local end_pos = pos + raw_len - 1
 		--print('Blob[data]: ', basexx.to_hex(string.sub(raw, pos, end_pos)))
-		assert(string.len(raw) >= end_pos, 'raw string len:'..string.len(raw)..' required: '..end_pos)
+
+		-- 替换assert为错误处理
+		if string.len(raw) < end_pos then
+			return nil, 'Buffer underrun: need '..end_pos..' bytes, have '..string.len(raw)
+		end
 
 		local raw_data = string.sub(raw, start_pos, end_pos)
 		if raw_data and info and not self._ext then

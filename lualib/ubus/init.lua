@@ -131,7 +131,12 @@ function ubus.static:connect(...)
 end
 
 function ubus:initialize(timeout)
-	self.__timeout = (timeout or 30) * 100
+	local timeout = timeout or 30
+	-- 验证timeout范围
+	if timeout < 0 or timeout > 3600 then
+		error("Invalid timeout value: must be between 0 and 3600 seconds")
+	end
+	self.__timeout = timeout * 100
 	self.__req_seq = 1
 	self.__thread = {}
 	self.__result = {}
@@ -149,7 +154,20 @@ function ubus:_default_sock()
 end
 
 function ubus:connect(addr, port)
-	local addr  = addr or self:_default_sock()
+	local addr = addr or self:_default_sock()
+	-- 验证socket路径
+	if type(addr) ~= 'string' then
+		return nil, "Invalid socket address type"
+	end
+	-- 拒绝路径遍历
+	if string.match(addr, '%.%.') then
+		return nil, "Path traversal not allowed in socket path"
+	end
+	-- 只允许/var/run/ubus/路径
+	if not string.match(addr, '^/var/run/ubus/') then
+		return nil, "Socket path must be under /var/run/ubus/"
+	end
+
 	local client, err = lsocket.connect(addr, port)
 	if not client then
 		return nil, err
@@ -616,7 +634,7 @@ function ubus:subscribe(path, on_notify, on_remove)
 end
 
 function ubus:__gc()
-	self:clsoe()
+	self:close()
 end
 
 return ubus
