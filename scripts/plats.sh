@@ -38,7 +38,8 @@ plats["linux/htnice_2022.02.6/aarch64"]="htnice_gt675x.sh"
 # OpenWrt 17.01
 # ============================================================================
 
-plats["openwrt/17.01/arm_cortex-a9_neon"]="tgw3030_exports.sh"
+# 17.01 is unsupported as openssl-1.0.2 is too old for us
+# plats["openwrt/17.01/arm_cortex-a9_neon"]="tgw3030_exports.sh"
 
 # ============================================================================
 # OpenWrt 19.07
@@ -67,6 +68,7 @@ plats["openwrt/22.03/aarch64_generic"]="aarch64_generic_22.03.sh"
 # ============================================================================
 
 plats["openwrt/24.10/arm_cortex-a7_neon-vfpv4"]="sunxi_a7_24.10.sh"
+plats["openwrt/24.10/aarch64_generic"]="aarch64_generic_24.10.sh"
 
 # ============================================================================
 # OpenWrt 25.12
