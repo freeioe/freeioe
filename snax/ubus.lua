@@ -22,60 +22,19 @@ local sysinfo = require 'utils.sysinfo'
 local app_api = require 'app.api'
 local ioe = require 'ioe'
 
--- ============================================================================
--- Constants
--- ============================================================================
-
 local VALID_CFG_KEYS = {
 	SYS = true,
 	CLOUD = true,
 }
 
--- ============================================================================
--- Module State
--- ============================================================================
-
 local api = nil
 local bus = nil
 local log = nil
 
--- ============================================================================
--- API Handlers
--- ============================================================================
-
----
--- API Handler for communication and event data
--- Currently logs communication data for debugging purposes
----
 local Handler = {
-	---
-	-- Handle communication data from applications
-	-- @param app: application name
-	-- @param sn: serial number
-	-- @param dir: communication direction
-	-- @param ts: timestamp
-	-- @param ...: variable arguments (communication data)
-	---
 	on_comm = function(app, sn, dir, ts, ...)
-		--local hex = crypt.hexencode(table.concat({...}, '\t'))
-		--hex = string.gsub(hex, "%w%w", "%1 ")
-		local content = crypt.base64encode(table.concat({...}, '\t'))
-		-- Communication data is encoded but not currently processed
-		-- Can be extended to log or forward to UBus subscribers
 	end,
-
-	---
-	-- Handle event data from applications
-	-- @param app: application name
-	-- @param sn: serial number
-	-- @param level: event level
-	-- @param type_: event type
-	-- @param info: event info
-	-- @param data: event data
-	-- @param timestamp: event timestamp
-	---
 	on_event = function(app, sn, level, type_, info, data, timestamp)
-		-- Event data can be forwarded to UBus subscribers in future
 	end,
 }
 
@@ -461,45 +420,14 @@ function create_methods(bus)
 	}
 end
 
--- ============================================================================
--- Service Lifecycle
--- ============================================================================
-
----
--- Initialize UBus service
--- @param ...: connection parameters passed to bus:connect()
----
 function init(...)
 	log = require 'utils.logger'.new('UBUS')
 
 	bus = ubus:new()
-	-- bus:connect(...)
+	bus:connect(...)
 	-- bus:connect("172.30.19.103", 11000)
 	-- bus:connect("172.30.11.230", 11000)
 	-- bus:connect("/tmp/ubus.sock")
-
-	-- Attempt to connect with retry logic
-	local max_retries = 3
-	local retry_delay = 2000 -- 2 seconds in centiseconds
-
-	for attempt = 1, max_retries do
-		local ok, err = pcall(bus.connect, bus, ...)
-		if ok then
-			local s, status_err = bus:status()
-			if s then
-				break -- Connection successful
-			else
-				log:warning('UBus connection check failed:', status_err)
-			end
-		else
-			log:warning('UBus connection attempt', attempt, 'failed:', err)
-		end
-
-		if attempt < max_retries then
-			log:info('Retrying UBus connection in', retry_delay / 100, 'seconds...')
-			skynet.sleep(retry_delay)
-		end
-	end
 
 	-- Check final connection status
 	local s, err = bus:status()
@@ -508,12 +436,10 @@ function init(...)
 		return
 	end
 
-	log:info('UBus connection established')
-
 	-- Create and register UBus methods
 	local methods = create_methods(bus)
 	local obj_id, obj_type = bus:add('freeioe', methods, function(...)
-		log:trace('UBus subscribe callback:', ...)
+		log:trace('ubus subscribe callback:', ...)
 	end)
 
 	log.notice("System ubus service started!")
@@ -525,9 +451,6 @@ function init(...)
 	end)
 end
 
----
--- Cleanup and shutdown UBus service
----
 function exit(...)
 	log.notice("System ubus service stopped!")
 end

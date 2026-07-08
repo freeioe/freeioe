@@ -13,22 +13,11 @@ local snax = require 'skynet.snax'
 local crypt = require 'skynet.crypt'
 local app_api = require 'app.api'
 
--- ============================================================================
--- Constants
--- ============================================================================
-
-local DEFAULT_BUFFER_SIZE = 256
-local BUFFER_SHRINK_THRESHOLD = 64  -- Shrink buffer when below this size
-local BUFFER_CHECK_INTERVAL = 60000 -- Check buffer size every 60 seconds
-local LOG_LISTEN_INTERVAL = 50      -- Log buffer fire interval (ms)
-
--- ============================================================================
--- Module State
--- ============================================================================
 
 local api = nil
 local log = nil
 
+local DEFAULT_BUFFER_SIZE = 256
 -- Communication Data Buffer
 local comm_buffer = {}
 local max_comm_buf_size = DEFAULT_BUFFER_SIZE
@@ -45,10 +34,6 @@ local max_event_buf_size = DEFAULT_BUFFER_SIZE
 -- Listener Registry
 local listen_map = {}
 
--- ============================================================================
--- Utility Functions
--- ============================================================================
-
 ---
 -- Convert handle to process string with caching
 -- @param handle: numeric handle value
@@ -60,42 +45,10 @@ local function handle_to_process(handle)
 end
 
 ---
--- Manage buffer size to prevent unbounded growth
--- @param buffer: the buffer table
--- @param max_size: maximum allowed size
--- @return: trimmed buffer if necessary
----
-local function manage_buffer_size(buffer, max_size)
-	if #buffer <= max_size then
-		return buffer
-	end
-
-	-- Remove oldest entries to maintain max_size
-	local remove_count = #buffer - max_size
-	for i = 1, remove_count do
-		table.remove(buffer, 1)
-	end
-
-	return buffer
-end
-
--- ============================================================================
--- API Handlers
--- ============================================================================
-
----
 -- API Handler for communication and event data
 -- Handles incoming data from applications and forwards to listeners
 ---
 local Handler = {
-	---
-	-- Handle communication data from applications
-	-- @param app: application name
-	-- @param sn: serial number
-	-- @param dir: communication direction
-	-- @param ts: timestamp
-	-- @param ...: variable arguments (communication data)
-	---
 	on_comm = function(app, sn, dir, ts, ...)
 		assert(app, 'app is nil')
 		--local hex = crypt.hexencode(table.concat({...}, '\t'))
@@ -109,8 +62,9 @@ local Handler = {
 			ts = ts,
 			data = content
 		}
-
-		list = manage_buffer_size(list, max_comm_buf_size)
+		if #list > max_log_buf_size then
+			table.remove(list, 1)
+		end
 		comm_buffer[app] = list
 
 		-- Forward to all registered listeners
@@ -119,16 +73,6 @@ local Handler = {
 		end
 	end,
 
-	---
-	-- Handle event data from applications
-	-- @param app: application name
-	-- @param sn: serial number
-	-- @param level: event level
-	-- @param type_: event type
-	-- @param info: event info
-	-- @param data: event data
-	-- @param timestamp: event timestamp
-	---
 	on_event = function(app, sn, level, type_, info, data, timestamp)
 		if not app then
 			log:warning("on_event: app is nil")
@@ -144,8 +88,9 @@ local Handler = {
 			data = data,
 			timestamp = timestamp,
 		}
-
-		event_buffer = manage_buffer_size(event_buffer, max_event_buf_size)
+		if #event_buffer > max_event_buf_size then
+			table.remove(event_buffer, 1)
+		end
 
 		-- Forward to all registered listeners
 		for handle, srv in pairs(listen_map) do
@@ -219,19 +164,13 @@ end
 -- @param ...: additional arguments
 ---
 function accept.log(ts, lvl, content, ...)
-	if type(content) ~= 'string' then
-		return
-	end
-
-	local process, data = string.match(content, '^%[(.+)%]: (.+)$')
+	local process, data = string.match(content, '^%[(.-)%]: (.+)$')
 	if not process or not data then
-		log:trace("Log format mismatch, content:", content)
 		return
 	end
 
 	-- Validate process format
 	if not process:match('^%w+$') then
-		log:warning("Invalid process name in log:", process)
 		return
 	end
 
@@ -312,7 +251,7 @@ end
 ---
 function accept.app_list(list)
 	for k, v in pairs(list or {}) do
-		if v.inst and v.inst.handle then
+		if v.inst then
 			nh_map[k] = v.inst.handle
 		end
 	end
@@ -356,20 +295,11 @@ local function connect_log_server(enable)
 	end
 
 	if enable then
-		local ok, err = pcall(skynet.call, ".logger", "lua", "__LISTEN__", obj.handle, obj.type)
-		if not ok then
-			log:error("Failed to connect to logger:", err)
-			return false
-		end
+		skynet.call(".logger", "lua", "__LISTEN__", obj.handle, obj.type)
 		appmgr.post.listen(obj.handle, obj.type, true)
-		log:info("Connected to log server and appmgr")
 	else
-		local ok, err = pcall(skynet.call, ".logger", "lua", "__UNLISTEN__", obj.handle)
-		if not ok then
-			log:warning("Failed to disconnect from logger:", err)
-		end
+		skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 		appmgr.post.unlisten(obj.handle)
-		log:info("Disconnected from log server and appmgr")
 	end
 
 	return true

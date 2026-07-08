@@ -16,45 +16,18 @@ local uevent_loaded, uevent = pcall(require, 'luevent')
 local inspect = require 'inspect'
 local log = require 'utils.logger'.new('UEVENT')
 
--- ============================================================================
--- Constants
--- ============================================================================
-
 local MAX_UEVENT_MSG_LIST_SIZE = 1000
 local UEVENT_SLEEP_INTERVAL = 5   -- sleep between uevent runs (50ms)
-
--- ============================================================================
--- Module State
--- ============================================================================
 
 local uevent_chn = nil
 local uevent_msg_list = {}
 
--- ============================================================================
--- Internal Functions
--- ============================================================================
-
----
--- Handle parsed uevent message
--- @param msg: parsed uevent message table
----
 local handle_uevent_msg = function(msg)
-	if not msg or type(msg) ~= 'table' then
-		log:warning('Invalid uevent message, skipping')
-		return
-	end
-
-	-- Manage buffer size to prevent unbounded growth
-	if #uevent_msg_list >= MAX_UEVENT_MSG_LIST_SIZE then
-		-- Remove oldest messages
-		local remove_count = math.floor(MAX_UEVENT_MSG_LIST_SIZE / 10)
-		for i = 1, remove_count do
-			table.remove(uevent_msg_list, 1)
-		end
-		log:warning('UEvent message buffer full, removed', remove_count, 'old messages')
-	end
-
 	table.insert(uevent_msg_list, msg)
+
+	if #uevent_msg_list >= MAX_UEVENT_MSG_LIST_SIZE then
+		table.remove(uevent_msg_list, 1)
+	end
 end
 
 ---
@@ -62,10 +35,6 @@ end
 -- @param msg: raw uevent message string
 ---
 local handle_msg = function(msg)
-	if not msg or type(msg) ~= 'string' then
-		return
-	end
-
 	-- Skip libudev messages
 	if string.lower(string.sub(msg, 1, 7)) == 'libudev' then
 		return
@@ -117,26 +86,6 @@ local handle_msg = function(msg)
 	return handle_uevent_msg(tmsg)
 end
 
----
--- Publish accumulated uevent messages to multicast channel
----
-local publish_uevent_messages = function()
-	if not uevent_chn or #uevent_msg_list == 0 then
-		return
-	end
-
-	for _, v in ipairs(uevent_msg_list) do
-		uevent_chn:publish(v)
-	end
-
-	-- Clear published messages
-	uevent_msg_list = {}
-end
-
--- ============================================================================
--- Command Interface
--- ============================================================================
-
 local command = {}
 
 ---
@@ -146,10 +95,6 @@ local command = {}
 function command.CHANNEL()
 	return uevent_chn and uevent_chn.channel or nil
 end
-
--- ============================================================================
--- Service Lifecycle
--- ============================================================================
 
 skynet.start(function()
 	uevent_chn = mc.new()
@@ -176,22 +121,23 @@ skynet.start(function()
 			return handle_msg(msg)
 		end)
 
-		log:notice("UEvent monitoring started")
-
 		-- Main uevent processing loop with retry logic
 		while true do
 			local r, err = uevent_conn:run()
 			if not r then
 				log:error('UEvent run failed:', err)
 			end
-
-			-- Publish any accumulated messages before retry
-			publish_uevent_messages()
+			--  publish uevent messages
+			if #uevent_msg_list > 0 then
+				for _, v in ipairs(uevent_msg_list) do
+					uevent_chn:publish(v)
+				end
+				uevent_msg_list = {}
+			end
 			-- Added sleep to handle skynet messages
 			skynet.sleep(UEVENT_SLEEP_INTERVAL)
 		end
 	end)
 
 	skynet.register ".uevent"
-	log.notice("UEvent service started!")
 end)

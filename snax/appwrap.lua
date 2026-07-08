@@ -17,25 +17,13 @@ local app_utils = require 'app.utils'
 local event = require 'app.event'
 local ioe = require 'ioe'
 
--- ============================================================================
--- Global Variables
--- ============================================================================
-
 G_APP_NAME = 'APP'
 
--- ============================================================================
--- Constants
--- ============================================================================
-
 -- Timing constants (in centiseconds, as used by skynet)
-local PING_TIMEOUT_CS = 60 * 100  -- 60 seconds
-local PING_TIMEOUT_ERR_MAX = 10 * PING_TIMEOUT_CS  -- max timeout on error
+local PING_TIMEOUT_MS = 60 * 1000  -- 60 seconds
+local PING_TIMEOUT_ERR_MAX = 10 * PING_TIMEOUT_MS  -- max timeout on error
 local DEFAULT_TIMEOUT = 1000     -- default run loop timeout
 local LOG_BUFFER_SIZE = 512      -- size of log buffer
-
--- ============================================================================
--- Module State
--- ============================================================================
 
 local app = nil
 local app_closing = false
@@ -48,25 +36,8 @@ local log_buffer = nil
 
 local cancel_ping_timer = nil
 
--- ============================================================================
--- Utility Functions
--- ============================================================================
-
----
--- Safely call an application method with error protection
--- @param app: application instance
--- @param func: function name to call
--- @param ...: arguments to pass to the function
--- @return: true,result or nil,error_message
----
 local function protect_call(app, func, ...)
-	if not app then
-		return nil, "Application instance is nil"
-	end
-
-	if not func or type(func) ~= 'string' then
-		return nil, "Invalid function name"
-	end
+	assert(app and func and type(func) == 'string')
 
 	local f = app[func]
 	if not f then
@@ -80,12 +51,12 @@ local function protect_call(app, func, ...)
 	return er, err and tostring(err) or 'UNKNOWN ERROR'
 end
 
----
--- Cleanup function called on application close
--- @param ...: arguments to pass to app close method
--- @return: result from cleanup or close operation
----
 local on_close = function(...)
+	if not cancel_ping_timer then
+		cancel_ping_timer()
+		cancel_ping_timer = nil
+	end
+
 	local clean_up = function(...)
 		if sys_api then
 			sys_api:cleanup()
@@ -103,18 +74,15 @@ local on_close = function(...)
 	return clean_up(true)
 end
 
----
--- Fire exception event to appmgr
--- @param info: exception information string
--- @param data: additional data table
--- @param level: event level (default: event.LEVEL_ERROR)
--- @return: result from post call
----
 local function fire_exception_event(info, data, level)
 	assert(mgr_snax, "mgr_snax not available")
 	assert(app_name, "App name missing")
 	assert(ioe.id(), "IOE ID missing")
 	assert(info, "Exception info missing")
+
+	if not mgr_snax then
+		return
+	end
 
 	local data = data or {}
 	data.app = app_name
@@ -137,7 +105,7 @@ local function work_proc()
 		app.run = function(tms)
 			local now = skynet.now()
 			--- Send heartbeat at each ping timeout interval
-			if not start or (now - start) * 10 >= PING_TIMEOUT_CS then
+			if not start or (now - start) * 10 >= PING_TIMEOUT_MS then
 				mgr_snax.post.app_heartbeat(app_name, now)
 				start = now
 			end
@@ -147,7 +115,7 @@ local function work_proc()
 		--- Use timer for heartbeat when app has run() method
 		local ping_mgr = function()
 			mgr_snax.post.app_heartbeat(app_name, skynet.now())
-			cancel_ping_timer = sys_api:cancelable_timeout(PING_TIMEOUT_CS, ping_mgr)
+			cancel_ping_timer = sys_api:cancelable_timeout(PING_TIMEOUT_MS, ping_mgr)
 		end
 		ping_mgr()
 	end
@@ -177,10 +145,6 @@ local function work_proc()
 			timeout = DEFAULT_TIMEOUT
 		end
 	end
-	if not cancel_ping_timer then
-		cancel_ping_timer()
-		cancel_ping_timer = nil
-	end
 end
 
 local function publish_log(ts, lvl, ...)
@@ -206,10 +170,6 @@ local function logger_proc()
 	end
 	skynet.call(".logger", "lua", "__UNLISTEN__", obj.handle)
 end
-
--- ============================================================================
--- Response Handlers
--- ============================================================================
 
 ---
 -- Ping handler for health check
@@ -266,10 +226,6 @@ function response.set_conf(conf)
 		return nil, "app is nil"
 	end
 
-	if not sys_api then
-		return nil, "sys_api not available"
-	end
-
 	sys_api:set_conf(conf)
 
 	if app.reload then
@@ -306,10 +262,6 @@ function response.app_req(msg, ...)
 	return nil, "no handler for request message "..msg
 end
 
--- ============================================================================
--- Accept Handlers
--- ============================================================================
-
 ---
 -- Handle application post messages (asynchronous)
 -- @param msg: message name
@@ -321,8 +273,7 @@ function accept.app_post(msg, ...)
 		return false
 	end
 
-	assert(msg, "Message name is nil in app_post")
-
+	assert(msg, "Message name is required")
 	if app.accept then
 		local r, err = protect_call(app, 'accept', msg, ...)
 		if not r and err then
@@ -357,10 +308,6 @@ function accept.log(ts, lvl, msg, ...)
 	end
 end
 
--- ============================================================================
--- Service Lifecycle
--- ============================================================================
-
 ---
 -- Initialize application wrapper service
 -- @param name: application name
@@ -371,7 +318,7 @@ end
 ---
 function init(name, conf, mgr_handle, mgr_type)
 	assert(name, "Application name is required")
-	-- Disable Skynet Code Cache for app development
+	-- Disable Skynet Code Cache!!
 	cache.mode('EXIST')
 
 	G_APP_NAME = name
