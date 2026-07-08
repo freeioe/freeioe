@@ -62,7 +62,7 @@ local Handler = {
 			ts = ts,
 			data = content
 		}
-		if #list > max_log_buf_size then
+		if #list > max_comm_buf_size then
 			table.remove(list, 1)
 		end
 		comm_buffer[app] = list
@@ -182,7 +182,9 @@ function accept.log(ts, lvl, content, ...)
 		content = data
 	}
 
-	list = manage_buffer_size(list, max_log_buf_size)
+	if #list > max_log_buf_size then
+		table.remove(list, 1)
+	end
 	log_buffer[process] = list
 
 	-- Forward to all registered listeners
