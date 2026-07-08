@@ -69,7 +69,7 @@ local Handler = {
 
 		-- Forward to all registered listeners
 		for handle, srv in pairs(listen_map) do
-			srv.port.on_comm(list[#list])
+			srv.post.on_comm(list[#list])
 		end
 	end,
 
