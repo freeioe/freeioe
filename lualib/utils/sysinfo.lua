@@ -8,6 +8,7 @@ local _M = {}
 
 -- 允许的安全命令白名单模式
 local SAFE_COMMAND_PATTERNS = {
+	'^free',	 -- free 命令
 	'^uname%s',  -- uname 命令
 	'^df%s',     -- df 命令
 	'^ls%s',     -- ls 命令
@@ -40,7 +41,7 @@ local function validate_command(cmd)
 		return true
 	end
 
-	return nil, "Command not in whitelist"
+	return nil, string.format("Command (%s) not in whitelist", cmd)
 end
 
 --- Get output of shell command
