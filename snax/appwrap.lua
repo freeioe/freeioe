@@ -48,7 +48,7 @@ local function protect_call(app, func, ...)
 	if not r then
 		return nil, er and tostring(er) or tostring(err)
 	end
-	return er, err and tostring(err) or 'UNKNOWN ERROR'
+	return er, err and tostring(err) or 'UNKNOWN ERROR when call funcion:'..func
 end
 
 local on_close = function(...)
@@ -105,7 +105,7 @@ local function work_proc()
 		app.run = function(tms)
 			local now = skynet.now()
 			--- Send heartbeat at each ping timeout interval
-			if not start or (now - start) * 10 >= PING_TIMEOUT_MS then
+			if not start or (now - start) * 2 >= PING_TIMEOUT_MS then
 				mgr_snax.post.app_heartbeat(app_name, now)
 				start = now
 			end
@@ -113,9 +113,10 @@ local function work_proc()
 		end
 	else
 		--- Use timer for heartbeat when app has run() method
-		local ping_mgr = function()
+		local ping_mgr = nil
+		ping_mgr = function()
 			mgr_snax.post.app_heartbeat(app_name, skynet.now())
-			cancel_ping_timer = sys_api:cancelable_timeout(PING_TIMEOUT_MS, ping_mgr)
+			cancel_ping_timer = sys_api:cancelable_timeout(PING_TIMEOUT_MS // 2, ping_mgr)
 		end
 		ping_mgr()
 	end
