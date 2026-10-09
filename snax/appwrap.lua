@@ -52,7 +52,7 @@ local function protect_call(app, func, ...)
 end
 
 local on_close = function(...)
-	if not cancel_ping_timer then
+	if cancel_ping_timer then
 		cancel_ping_timer()
 		cancel_ping_timer = nil
 	end
