@@ -641,6 +641,11 @@ _M.TZ = function()
 end
 
 _M.update_cloud_status = function(status, status_last_update_time)
+	local is_windows = package.config:sub(1, 1) == '\\'
+	if is_windows then
+		return true
+	end
+
 	local f, err = io.open('/tmp/sysinfo/cloud_status', 'w+')
 	if not f then
 		return nil, err

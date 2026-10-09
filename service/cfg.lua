@@ -149,6 +149,12 @@ local function set_cloud_defaults(data)
 		data.DATA_CACHE = false
 	end
 
+	-- do not export host in windows
+	local is_windows = package.config:sub(1, 1) == '\\'
+	if is_windows then
+		return data
+	end
+
 	--- export host to /tmp/sysinfo/cloud
 	os.execute('mkdir -p /tmp/sysinfo')
 	os.execute('echo "'..data.HOST..'" > /tmp/sysinfo/cloud')
