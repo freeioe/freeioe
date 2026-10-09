@@ -10,7 +10,7 @@ local _M = {}
 --
 _M.exec = function(cmd, not_inplace)
 	local cmd = cmd..' 2>/dev/null'
-	if true or inplace then
+	if true or not not_inplace then
 		local f, err = io.popen(cmd)
 		if not f then
 			return nil, err
