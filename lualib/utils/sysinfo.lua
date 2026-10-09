@@ -404,7 +404,7 @@ local function read_os_id()
 end
 
 _M.os_id = function()
-	_M._OS_ID = _M._OS_ID or read_os_id() or os.getenv("MSYSTEM") or os.getenv("IOE_OS_ID")
+	_M._OS_ID = _M._OS_ID or read_os_id() or os.getenv("OS") or os.getenv("MSYSTEM") or os.getenv("IOE_OS_ID")
 	if string.lower(_M._OS_ID) == 'buildroot' then
 		if lfs.attributes('/dev/htniceid', "mode") ~= nil then
 			_M._OS_ID = 'htnice'
@@ -462,6 +462,15 @@ _M.os_version = function()
 				ver = 'testing'
 			end
 			_M._OS_VERSION = ver
+		elseif _M.os_id() == 'Windows_NT' then
+			local handle = io.popen("ver")
+			local s = handle:read("*a")
+			handle:close()
+			local ver = string.match(s, "(%d+%.%d+%.%d+%.%d+)")
+			if not ver then
+				ver = string.match(s, "(%d+%.%d+%.%d+)")
+			end
+			_M._OS_VERSION = ver or 'win10'
 		end
 	end
 	return assert(_M._OS_VERSION)
