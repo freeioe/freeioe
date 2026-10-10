@@ -66,13 +66,14 @@ _M.app_path = function(app_inst)
 		return _M.dev_app_path()
 	end
 	local ioe_dir = ioe.dir(true)
-	if string.len(ioe_dir) > 1 and string.sub(ioe_dir, -1) == '/' then
+	local sep = package.config:sub(1, 1)
+	if string.len(ioe_dir) > 1 and string.sub(ioe_dir, -1) == sep then
 		ioe_dir = string.sub(ioe_dir, 1, -2)
 	end
-	if not app_inst or string.len(app_inst) == 0 or app_inst == '/' then
-		return ioe_dir.."/apps/"
+	if not app_inst or string.len(app_inst) == 0 or app_inst == sep then
+		return ioe_dir..sep.."apps"..sep
 	end
-	return ioe_dir.."/apps/"..app_inst.."/"
+	return ioe_dir..sep.."apps"..sep..app_inst..sep
 end
 
 return _M
