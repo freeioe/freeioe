@@ -150,8 +150,12 @@ function handler.pong(id, data)
 	end
 end
 
-function handler.error(id)
-	log.error("ws error from: " .. tostring(id))
+function handler.error(id, err)
+	log.error("ws error from: " .. tostring(id) .. 'err: ' .. tostring(err))
+	if client_map[id] then
+		local v = client_map[id]
+		v:close(nil, err)
+	end
 end
 
 local function auth_user(user, passwd)
@@ -405,7 +409,7 @@ function init()
 	local id = assert(socket.listen(address))
 
 	socket.start(id, function(id, addr)
-		print(string.format("accept client socket_id: %s addr:%s", id, addr))
+		log.notice(string.format("accept client socket_id: %s addr:%s", id, addr))
 		pcall(handle_socket, id, protocol, addr)
 	end)
 	ws_socket = id
