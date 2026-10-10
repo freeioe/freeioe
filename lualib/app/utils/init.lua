@@ -65,6 +65,13 @@ _M.app_path = function(app_inst)
 	if app_inst == _M.dev_app_name() then
 		return _M.dev_app_path()
 	end
+	local ioe_dir = ioe.dir(true)
+	if string.len(ioe_dir) > 1 and string.sub(ioe_dir, -1) == '/' then
+		ioe_dir = string.sub(ioe_dir, 1, -2)
+	end
+	if app_inst == '/' then
+		return ioe.dir(true).."/apps/"
+	end
 	return ioe.dir(true).."/apps/"..app_inst.."/"
 end
 
