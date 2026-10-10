@@ -71,9 +71,9 @@ _M.app_path = function(app_inst)
 		ioe_dir = string.sub(ioe_dir, 1, -2)
 	end
 	if not app_inst or string.len(app_inst) == 0 or app_inst == sep then
-		return ioe_dir..sep.."apps"..sep
+		return ioe_dir..sep.."apps"
 	end
-	return ioe_dir..sep.."apps"..sep..app_inst..sep
+	return ioe_dir..sep.."apps"..sep..app_inst
 end
 
 return _M
