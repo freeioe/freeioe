@@ -45,10 +45,9 @@ local function path_join(...)
 end
 
 local function get_app_path(app, ...)
-	local path = utils.app_path(app)
+	local path = path_join(utils.app_path(app), ...)
 	--path = string.gsub(path, "\\", "/"):gsub("//", "/"):gsub("//","/")
-	path = string.gsub(path, "\\", "/")
-	return path
+	return string.gsub(path, "\\", "/")
 end
 
 local function basename(path)
