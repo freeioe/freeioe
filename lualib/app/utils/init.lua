@@ -70,9 +70,9 @@ _M.app_path = function(app_inst)
 		ioe_dir = string.sub(ioe_dir, 1, -2)
 	end
 	if not app_inst or string.len(app_inst) == 0 or app_inst == '/' then
-		return ioe.dir(true).."/apps/"
+		return ioe_dir.."/apps/"
 	end
-	return ioe.dir(true).."/apps/"..app_inst.."/"
+	return ioe_dir.."/apps/"..app_inst.."/"
 end
 
 return _M
