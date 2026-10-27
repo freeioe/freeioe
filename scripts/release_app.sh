@@ -47,11 +47,12 @@ cd ./feeds/"$FEEDS_DIR"/"$2"
 
 ### Get the version by count the commits
 # Calculate version from git commit count
-VERSION=$(git log --oneline | wc -l | tr -d ' ')
+VERSION=$(git log --oneline . | wc -l | tr -d ' ')
+# VERSION=$((VERSION + 10000))
 
 ### Generate the revision by last commit
 # Generate revision from last commit
-set -- $(git log -1 --format="%ct %h")
+set -- $(git log -1 --format="%ct %h" .)
 R_SECS="$(($1 % 86400))"
 R_YDAY="$(date --utc --date="@$1" "+%y.%j")"
 REVISION="$(printf 'git-%s.%05d-%s' "$R_YDAY" "$R_SECS" "$2")"
