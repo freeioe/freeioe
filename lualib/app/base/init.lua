@@ -169,6 +169,10 @@ function app:gen_sn(key)
 	return string.format('%s.%s', self._sys:id(), self._sys:gen_sn(key))
 end
 
+function app:sub_sn(sub)
+	return string.format('%s.%s', self._sys:id(), sub)
+end
+
 function app:create_calc()
 	assert(not self.__calc_assert, "create_calc only can be called in on_init function")
 
