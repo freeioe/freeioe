@@ -115,9 +115,12 @@ function response.stop(name, reason)
 	if app.inst then
 		local force_kill = function()
 			log.warning("Force to kill app "..name.." as it is not closed within 60 seconds")
-			skynet.kill(app.inst.handle)
-
-			app.inst = nil
+			if not app.inst then
+				log.error("App.inst missing when Force to kill app "..name)
+			else
+				skynet.kill(app.inst.handle)
+				app.inst = nil
+			end
 		end
 
 		skynet.timeout(6000, function()
