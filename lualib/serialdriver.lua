@@ -81,6 +81,10 @@ bind_func(serial, "dtr")
 bind_func(serial, "set_rts")
 bind_func(serial, "rts")
 
+function serial:__tostring()
+	return tostring(self._port)
+end
+
 --- 
 -- serial start function
 -- @tparam function cb callback function. e.g. function(data, err) end
