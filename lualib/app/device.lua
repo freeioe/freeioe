@@ -554,6 +554,13 @@ end
 ---
 function device:stat(name)
 	-- assert(not self._guest, "Device permission denied!")
+	-- Find exits stat object
+	for _, s in ipairs(self._stats) do
+		if s:stat_name() == name then
+			return s
+		end
+	end
+	-- Create new stat object
 	local stat = stat_api:new(self._api, self._sn, name, self._guest)
 	self._stats[#self._stats + 1] = stat
 	return stat

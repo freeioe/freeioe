@@ -66,6 +66,13 @@ function stat:initialize(api, sn, name, readonly)
 end
 
 ---
+-- Get Statitics Name
+---
+function stat:stat_name()
+	return self._name
+end
+
+---
 -- 内部清理统计引用
 ---
 function stat:_cleanup()
